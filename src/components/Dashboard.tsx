@@ -26,8 +26,8 @@ export function Dashboard({ jobs }: DashboardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [customerFilter, setCustomerFilter] = useState("");
-  const [designerFilter, setDesignerFilter] = useState("");
-  const [salesmanFilter, setSalesmanFilter] = useState("");
+  const [designerFilter, setDesignerFilter] = useState("all");
+  const [salesmanFilter, setSalesmanFilter] = useState("all");
 
   const stats = {
     total: jobs.length,
@@ -50,8 +50,8 @@ export function Dashboard({ jobs }: DashboardProps) {
   const filteredJobs = jobs.filter(job => {
     return (
       (customerFilter === "" || job.customer.toLowerCase().includes(customerFilter.toLowerCase())) &&
-      (designerFilter === "" || job.designer === designerFilter) &&
-      (salesmanFilter === "" || job.salesman === salesmanFilter)
+      (designerFilter === "all" || job.designer === designerFilter) &&
+      (salesmanFilter === "all" || job.salesman === salesmanFilter)
     );
   });
 
@@ -208,7 +208,7 @@ export function Dashboard({ jobs }: DashboardProps) {
                   <SelectValue placeholder="All designers" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All designers</SelectItem>
+                  <SelectItem value="all">All designers</SelectItem>
                   {uniqueDesigners.map((designer) => (
                     <SelectItem key={designer} value={designer}>{designer}</SelectItem>
                   ))}
@@ -223,7 +223,7 @@ export function Dashboard({ jobs }: DashboardProps) {
                   <SelectValue placeholder="All salesmen" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All salesmen</SelectItem>
+                  <SelectItem value="all">All salesmen</SelectItem>
                   {uniqueSalesmen.map((salesman) => (
                     <SelectItem key={salesman} value={salesman}>{salesman}</SelectItem>
                   ))}
@@ -282,4 +282,25 @@ export function Dashboard({ jobs }: DashboardProps) {
       />
     </div>
   );
+
+  function getPriorityColor(priority: string) {
+    switch (priority) {
+      case "high": return "bg-red-100 text-red-800 border-red-200";
+      case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "low": return "bg-green-100 text-green-800 border-green-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  }
+
+  function getStatusColor(status: string) {
+    switch (status) {
+      case "pending": return "bg-blue-100 text-blue-800 border-blue-200";
+      case "in-progress": return "bg-orange-100 text-orange-800 border-orange-200";
+      case "designing": return "bg-purple-100 text-purple-800 border-purple-200";
+      case "finished": return "bg-green-100 text-green-800 border-green-200";
+      case "completed": return "bg-green-100 text-green-800 border-green-200";
+      case "overdue": return "bg-red-100 text-red-800 border-red-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  }
 }
