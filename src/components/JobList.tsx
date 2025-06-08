@@ -1,14 +1,17 @@
 
+import { useState } from "react";
 import { Job, JobStatus } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { JobDetails } from "@/components/JobDetails";
 import { 
   Calendar,
   User,
   Clock,
   Building,
-  ChevronRight
+  ChevronRight,
+  Eye
 } from "lucide-react";
 
 interface JobListProps {
@@ -17,6 +20,9 @@ interface JobListProps {
 }
 
 export function JobList({ jobs, onStatusUpdate }: JobListProps) {
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high": return "bg-red-100 text-red-800 border-red-200";
@@ -53,6 +59,11 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
       case "in-progress": return "Complete Job";
       default: return "";
     }
+  };
+
+  const handleViewDetails = (job: Job) => {
+    setSelectedJob(job);
+    setIsDetailsOpen(true);
   };
 
   return (
@@ -107,6 +118,14 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
                   Created: {new Date(job.createdAt).toLocaleDateString()}
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleViewDetails(job)}
+                    variant="outline"
+                    className="border-gray-300 hover:bg-gray-50 transition-colors"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Details
+                  </Button>
                   {getNextStatus(job.status) && (
                     <Button
                       onClick={() => onStatusUpdate(job.id, getNextStatus(job.status)!)}
@@ -116,18 +135,18 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
                       <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   )}
-                  <Button 
-                    variant="outline" 
-                    className="border-gray-300 hover:bg-gray-50 transition-colors"
-                  >
-                    View Details
-                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <JobDetails
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        job={selectedJob}
+      />
     </div>
   );
 }

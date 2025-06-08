@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { JobStatusModal } from "@/components/JobStatusModal";
 import { 
   Briefcase, 
@@ -13,7 +15,8 @@ import {
   CheckCircle, 
   AlertTriangle,
   Palette,
-  Filter
+  Filter,
+  Eye
 } from "lucide-react";
 
 interface DashboardProps {
@@ -25,15 +28,12 @@ export function Dashboard({ jobs }: DashboardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [customerFilter, setCustomerFilter] = useState("");
-  const [designerFilter, setDesignerFilter] = useState("all");
-  const [salesmanFilter, setSalesmanFilter] = useState("all");
 
   const stats = {
     total: jobs.length,
     pending: jobs.filter(job => job.status === "pending").length,
     inProgress: jobs.filter(job => job.status === "in-progress").length,
     designing: jobs.filter(job => job.status === "designing").length,
-    finished: jobs.filter(job => job.status === "finished").length,
     completed: jobs.filter(job => job.status === "completed").length,
     overdue: jobs.filter(job => 
       new Date(job.dueDate) < new Date() && !["completed", "finished"].includes(job.status)
@@ -47,25 +47,8 @@ export function Dashboard({ jobs }: DashboardProps) {
   };
 
   const filteredJobs = jobs.filter(job => {
-    return (
-      (customerFilter === "" || job.customer.toLowerCase().includes(customerFilter.toLowerCase())) &&
-      (designerFilter === "all" || job.designer === designerFilter) &&
-      (salesmanFilter === "all" || job.salesman === salesmanFilter)
-    );
+    return customerFilter === "" || job.customer.toLowerCase().includes(customerFilter.toLowerCase());
   });
-
-  const uniqueCustomers = [...new Set(jobs.map(job => job.customer))];
-  const uniqueDesigners = [...new Set(jobs.map(job => job.designer))];
-  const uniqueSalesmen = [...new Set(jobs.map(job => job.salesman))];
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high": return "bg-red-100 text-red-800 border-red-200";
-      case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "low": return "bg-green-100 text-green-800 border-green-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -86,8 +69,8 @@ export function Dashboard({ jobs }: DashboardProps) {
         <p className="text-gray-600">Overview of your job orders and performance metrics</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      {/* Stats Grid - Removed Finished card */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card 
           className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
           onClick={() => handleStatusCardClick("pending", "Pending")}
@@ -134,21 +117,6 @@ export function Dashboard({ jobs }: DashboardProps) {
         </Card>
 
         <Card 
-          className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-          onClick={() => handleStatusCardClick("finished", "Finished")}
-        >
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-xs font-medium">Finished</p>
-                <p className="text-2xl font-bold">{stats.finished}</p>
-              </div>
-              <CheckCircle className="w-6 h-6 text-green-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card 
           className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
           onClick={() => handleStatusCardClick("completed", "Completed")}
         >
@@ -179,7 +147,7 @@ export function Dashboard({ jobs }: DashboardProps) {
         </Card>
       </div>
 
-      {/* Jobs Filter and Table */}
+      {/* Jobs Filter and Table - Simplified */}
       <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900">
@@ -188,8 +156,8 @@ export function Dashboard({ jobs }: DashboardProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Simplified Filter */}
+          <div className="mb-6">
             <div className="space-y-2">
               <Label htmlFor="customerFilter">Filter by Customer</Label>
               <Input
@@ -197,52 +165,20 @@ export function Dashboard({ jobs }: DashboardProps) {
                 placeholder="Search customer..."
                 value={customerFilter}
                 onChange={(e) => setCustomerFilter(e.target.value)}
+                className="max-w-md"
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="designerFilter">Filter by Designer</Label>
-              <Select value={designerFilter} onValueChange={setDesignerFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All designers" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All designers</SelectItem>
-                  {uniqueDesigners.map((designer) => (
-                    <SelectItem key={designer} value={designer}>{designer}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="salesmanFilter">Filter by Salesman</Label>
-              <Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All salesmen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All salesmen</SelectItem>
-                  {uniqueSalesmen.map((salesman) => (
-                    <SelectItem key={salesman} value={salesman}>{salesman}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
 
-          {/* Jobs Table */}
+          {/* Simplified Jobs Table */}
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Job Order #</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Customer</TableHead>
-                <TableHead>Designer</TableHead>
-                <TableHead>Salesman</TableHead>
-                <TableHead>Priority</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Due Date</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -251,19 +187,17 @@ export function Dashboard({ jobs }: DashboardProps) {
                   <TableCell className="font-mono">{job.jobOrderNumber}</TableCell>
                   <TableCell className="font-medium">{job.title}</TableCell>
                   <TableCell>{job.customer}</TableCell>
-                  <TableCell>{job.designer}</TableCell>
-                  <TableCell>{job.salesman}</TableCell>
-                  <TableCell>
-                    <Badge className={getPriorityColor(job.priority)}>
-                      {job.priority}
-                    </Badge>
-                  </TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(job.status)}>
                       {job.status.replace('-', ' ')}
                     </Badge>
                   </TableCell>
-                  <TableCell>{new Date(job.dueDate).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm">
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Details
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
