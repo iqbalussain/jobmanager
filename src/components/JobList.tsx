@@ -32,6 +32,9 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
       case "in-progress": return "bg-orange-100 text-orange-800 border-orange-200";
       case "completed": return "bg-green-100 text-green-800 border-green-200";
       case "cancelled": return "bg-gray-100 text-gray-800 border-gray-200";
+      case "designing": return "bg-purple-100 text-purple-800 border-purple-200";
+      case "finished": return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      case "overdue": return "bg-red-100 text-red-800 border-red-200";
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
@@ -83,7 +86,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div className="flex items-center gap-2 text-gray-600">
                   <Building className="w-4 h-4" />
-                  <span className="text-sm">{job.client}</span>
+                  <span className="text-sm">{job.customer}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <User className="w-4 h-4" />
