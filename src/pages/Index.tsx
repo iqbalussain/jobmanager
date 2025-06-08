@@ -6,19 +6,24 @@ import { JobForm } from "@/components/JobForm";
 import { JobList } from "@/components/JobList";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
-export type JobStatus = "pending" | "in-progress" | "completed" | "cancelled";
+export type JobStatus = "pending" | "in-progress" | "completed" | "cancelled" | "designing" | "finished" | "overdue";
 
 export interface Job {
   id: string;
+  jobOrderNumber: string;
   title: string;
   description: string;
-  client: string;
+  customer: string;
   assignee: string;
   priority: "low" | "medium" | "high";
   status: JobStatus;
   dueDate: string;
   createdAt: string;
   estimatedHours: number;
+  branch: string;
+  designer: string;
+  salesman: string;
+  jobOrderDetails: string;
 }
 
 const Index = () => {
@@ -26,46 +31,70 @@ const Index = () => {
   const [jobs, setJobs] = useState<Job[]>([
     {
       id: "1",
+      jobOrderNumber: "WK000001",
       title: "HVAC System Maintenance",
       description: "Annual maintenance check for commercial HVAC system",
-      client: "ABC Corporation",
+      customer: "ABC Corporation",
       assignee: "John Smith",
       priority: "high",
       status: "in-progress",
       dueDate: "2024-06-15",
       createdAt: "2024-06-08",
-      estimatedHours: 4
+      estimatedHours: 4,
+      branch: "Wadi Kabeer",
+      designer: "Alice Johnson",
+      salesman: "Emma Brown",
+      jobOrderDetails: "Complete maintenance check including filter replacement and system calibration"
     },
     {
       id: "2",
+      jobOrderNumber: "HO000001",
       title: "Plumbing Repair",
       description: "Fix leaking pipes in office building basement",
-      client: "XYZ Industries",
+      customer: "XYZ Industries",
       assignee: "Sarah Johnson",
       priority: "medium",
-      status: "pending",
+      status: "designing",
       dueDate: "2024-06-12",
       createdAt: "2024-06-07",
-      estimatedHours: 2
+      estimatedHours: 2,
+      branch: "Head Office",
+      designer: "Bob Smith",
+      salesman: "Frank Miller",
+      jobOrderDetails: "Emergency plumbing repair for basement flooding issue"
     },
     {
       id: "3",
+      jobOrderNumber: "WK000002",
       title: "Electrical Installation",
       description: "Install new lighting system in warehouse",
-      client: "Tech Solutions Ltd",
+      customer: "Tech Solutions Ltd",
       assignee: "Mike Davis",
       priority: "low",
-      status: "completed",
+      status: "finished",
       dueDate: "2024-06-10",
       createdAt: "2024-06-05",
-      estimatedHours: 6
+      estimatedHours: 6,
+      branch: "Wadi Kabeer",
+      designer: "Carol Davis",
+      salesman: "Grace Lee",
+      jobOrderDetails: "Full warehouse lighting upgrade with LED fixtures"
     }
   ]);
 
-  const addJob = (job: Omit<Job, "id" | "createdAt">) => {
+  const generateJobOrderNumber = (branch: string) => {
+    const prefix = branch === "Wadi Kabeer" ? "WK" : "HO";
+    const branchJobs = jobs.filter(job => job.branch === branch);
+    const nextNumber = branchJobs.length + 1;
+    return `${prefix}${nextNumber.toString().padStart(6, '0')}`;
+  };
+
+  const addJob = (job: Omit<Job, "id" | "createdAt" | "jobOrderNumber">) => {
+    const jobOrderNumber = generateJobOrderNumber(job.branch);
     const newJob: Job = {
       ...job,
       id: Date.now().toString(),
+      jobOrderNumber,
       createdAt: new Date().toISOString().split('T')[0]
     };
     setJobs([newJob, ...jobs]);

@@ -11,7 +11,7 @@ import { Job } from "@/pages/Index";
 import { Plus, X } from "lucide-react";
 
 interface JobFormProps {
-  onSubmit: (job: Omit<Job, "id" | "createdAt">) => void;
+  onSubmit: (job: Omit<Job, "id" | "createdAt" | "jobOrderNumber">) => void;
   onCancel: () => void;
 }
 
@@ -23,7 +23,7 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
     title: "",
     description: "",
     jobOrderDetails: "",
-    client: "",
+    customer: "",
     assignee: "",
     priority: "medium" as "low" | "medium" | "high",
     status: "pending" as const,
@@ -31,22 +31,27 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
     estimatedHours: 1
   });
 
-  const branches = ["Main Branch", "North Branch", "South Branch", "East Branch"];
+  const branches = ["Wadi Kabeer", "Head Office"];
   const designers = ["Alice Johnson", "Bob Smith", "Carol Davis", "David Wilson"];
   const salesmen = ["Emma Brown", "Frank Miller", "Grace Lee", "Henry Taylor"];
   const jobTitles = ["HVAC Installation", "Plumbing Repair", "Electrical Work", "Maintenance Check", "System Upgrade"];
+  const customers = ["ABC Corporation", "XYZ Industries", "Tech Solutions Ltd", "Global Enterprises", "Metro Holdings"];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
       title: formData.title,
       description: formData.description,
-      client: formData.client,
+      customer: formData.customer,
       assignee: formData.assignee,
       priority: formData.priority,
       status: formData.status,
       dueDate: formData.dueDate,
-      estimatedHours: formData.estimatedHours
+      estimatedHours: formData.estimatedHours,
+      branch: formData.branch,
+      designer: formData.designer,
+      salesman: formData.salesman,
+      jobOrderDetails: formData.jobOrderDetails
     });
   };
 
@@ -93,8 +98,25 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
               </RadioGroup>
             </div>
 
-            {/* Designer, Salesman, Job Title Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Customer, Designer, Salesman, Job Title Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="space-y-2">
+                <Label className="text-gray-700 font-medium">Customer *</Label>
+                <Select 
+                  value={formData.customer} 
+                  onValueChange={(value) => handleInputChange("customer", value)}
+                >
+                  <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectValue placeholder="Select customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer} value={customer}>{customer}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label className="text-gray-700 font-medium">Designer *</Label>
                 <Select 
@@ -161,20 +183,8 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
               />
             </div>
 
-            {/* Client and Description Row */}
+            {/* Assignee and Description Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="client" className="text-gray-700 font-medium">Client *</Label>
-                <Input
-                  id="client"
-                  value={formData.client}
-                  onChange={(e) => handleInputChange("client", e.target.value)}
-                  placeholder="Enter client name"
-                  required
-                  className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="assignee" className="text-gray-700 font-medium">Assignee *</Label>
                 <Input
@@ -186,18 +196,18 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
                   className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-gray-700 font-medium">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-                placeholder="Additional description or notes"
-                rows={3}
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-gray-700 font-medium">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  placeholder="Additional description or notes"
+                  rows={3}
+                  className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
             </div>
 
             {/* Priority, Estimated Hours, Due Date Row */}
