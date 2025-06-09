@@ -195,13 +195,6 @@ export type Database = {
             referencedRelation: "job_titles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "job_orders_salesman_id_fkey"
-            columns: ["salesman_id"]
-            isOneToOne: false
-            referencedRelation: "salesmen"
-            referencedColumns: ["id"]
-          },
         ]
       }
       job_titles: {
@@ -255,27 +248,6 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
-        }
-        Relationships: []
-      }
-      salesmen: {
-        Row: {
-          email: string | null
-          id: string
-          name: string
-          phone: string | null
-        }
-        Insert: {
-          email?: string | null
-          id?: string
-          name: string
-          phone?: string | null
-        }
-        Update: {
-          email?: string | null
-          id?: string
-          name?: string
-          phone?: string | null
         }
         Relationships: []
       }

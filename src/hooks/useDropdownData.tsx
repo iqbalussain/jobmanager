@@ -1,29 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-export interface Customer {
-  id: string;
-  name: string;
-}
-
-export interface Designer {
-  id: string;
-  name: string;
-  phone: string | null;
-}
-
-export interface Salesman {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-}
-
-export interface JobTitle {
-  id: string;
-  job_title_id: string;
-}
+import { Customer, Designer, Salesman, JobTitle } from '@/types/jobOrder';
 
 export function useDropdownData() {
   const { data: customers = [], isLoading: customersLoading } = useQuery({
@@ -125,3 +103,6 @@ export function useDropdownData() {
     isLoading: customersLoading || designersLoading || salesmenLoading || jobTitlesLoading
   };
 }
+
+// Re-export types for backward compatibility
+export type { Customer, Designer, Salesman, JobTitle };
