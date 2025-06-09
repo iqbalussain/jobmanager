@@ -43,18 +43,100 @@ export const exportJobOrderToPDF = async (job: Job) => {
 
     element.innerHTML = `
       <div style="max-width: 100%;">
-        <!-- Header -->
-        <div style="background: linear-gradient(to right, #dbeafe, #e0e7ff); padding: 24px; border-radius: 12px; border: 1px solid #bfdbfe; margin-bottom: 24px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <!-- Header Banner -->
+        <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 24px; border-radius: 12px; margin-bottom: 32px; color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <h1 style="font-size: 24px; font-weight: bold; color: #1f2937; margin: 0 0 8px 0;">
-                📄 Job Order #${job.jobOrderNumber}
-              </h1>
-              <div style="display: flex; gap: 8px; margin-top: 8px;">
-                <span style="background: ${priorityColors.bg}; color: ${priorityColors.text}; border: 1px solid ${priorityColors.border}; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500;">
-                  ${job.priority} priority
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <span style="font-size: 24px;">✓</span>
+                <h1 style="font-size: 28px; font-weight: bold; margin: 0;">${job.jobOrderNumber}</h1>
+              </div>
+              <h2 style="font-size: 20px; margin: 0; opacity: 0.9;">${job.title}</h2>
+            </div>
+            <div style="text-align: right;">
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <span style="background: ${statusColors.bg}; color: ${statusColors.text}; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; text-transform: uppercase;">
+                  ${job.status.replace('-', ' ')}
                 </span>
-                <span style="background: ${statusColors.bg}; color: ${statusColors.text}; border: 1px solid ${statusColors.border}; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500;">
+                <span style="background: ${priorityColors.bg}; color: ${priorityColors.text}; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; text-transform: uppercase;">
+                  ${job.priority} PRIORITY
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px;">
+          
+          <!-- Customer & Team Section -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; color: #3b82f6;">
+              <span style="font-size: 20px;">👥</span>
+              <h3 style="font-size: 18px; font-weight: bold; margin: 0;">Customer & Team</h3>
+            </div>
+            
+            <div style="space-y: 16px;">
+              <div style="margin-bottom: 16px;">
+                <label style="font-weight: 600; color: #475569; font-size: 14px; display: block; margin-bottom: 4px;">Customer:</label>
+                <p style="font-size: 16px; color: #1e293b; margin: 0; font-weight: 500;">${job.customer}</p>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-weight: 600; color: #475569; font-size: 14px; display: block; margin-bottom: 4px;">Assignee:</label>
+                <p style="color: #64748b; margin: 0;">${job.assignee || 'Unassigned'}</p>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-weight: 600; color: #475569; font-size: 14px; display: block; margin-bottom: 4px;">Designer:</label>
+                <p style="color: #64748b; margin: 0;">${job.designer || 'Not assigned'}</p>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-weight: 600; color: #475569; font-size: 14px; display: block; margin-bottom: 4px;">Salesman:</label>
+                <p style="color: #64748b; margin: 0;">${job.salesman || 'Not assigned'}</p>
+              </div>
+
+              <div>
+                <label style="font-weight: 600; color: #475569; font-size: 14px; display: block; margin-bottom: 4px;">Branch:</label>
+                <p style="color: #64748b; margin: 0;">${job.branch || 'Head Office'}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline & Details Section -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; color: #3b82f6;">
+              <span style="font-size: 20px;">📅</span>
+              <h3 style="font-size: 18px; font-weight: bold; margin: 0;">Timeline & Details</h3>
+            </div>
+            
+            <div style="space-y: 16px;">
+              <div style="margin-bottom: 16px;">
+                <label style="font-weight: 600; color: #475569; font-size: 14px; display: block; margin-bottom: 4px;">Created Date:</label>
+                <p style="color: #64748b; margin: 0;">${new Date(job.createdAt).toLocaleDateString()}</p>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-weight: 600; color: #475569; font-size: 14px; display: block; margin-bottom: 4px;">Due Date:</label>
+                <p style="color: #64748b; margin: 0;">${new Date(job.dueDate).toLocaleDateString()}</p>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-weight: 600; color: #475569; font-size: 14px; display: block; margin-bottom: 4px;">Est. Hours:</label>
+                <p style="color: #64748b; margin: 0;">${job.estimatedHours} hours</p>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-weight: 600; color: #475569; font-size: 14px; display: block; margin-bottom: 4px;">Priority:</label>
+                <span style="background: ${priorityColors.bg}; color: ${priorityColors.text}; border: 2px solid ${priorityColors.border}; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; text-transform: uppercase;">
+                  ${job.priority}
+                </span>
+              </div>
+
+              <div>
+                <label style="font-weight: 600; color: #475569; font-size: 14px; display: block; margin-bottom: 4px;">Status:</label>
+                <span style="background: ${statusColors.bg}; color: ${statusColors.text}; border: 2px solid ${statusColors.border}; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; text-transform: uppercase;">
                   ${job.status.replace('-', ' ')}
                 </span>
               </div>
@@ -62,103 +144,36 @@ export const exportJobOrderToPDF = async (job: Job) => {
           </div>
         </div>
 
-        <!-- Job Details -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
-          <div>
-            <div style="margin-bottom: 16px;">
-              <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Job Title</label>
-              <p style="font-size: 18px; font-weight: 600; color: #1f2937; margin: 0;">${job.title}</p>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-              <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Description</label>
-              <p style="color: #6b7280; margin: 0; line-height: 1.5;">${job.description}</p>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-              <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Priority</label>
-              <span style="background: ${priorityColors.bg}; color: ${priorityColors.text}; border: 1px solid ${priorityColors.border}; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500;">
-                ${job.priority} priority
-              </span>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-              <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Due Date</label>
-              <div style="display: flex; align-items: center; gap: 8px; color: #6b7280;">
-                <span>📅</span>
-                <span>${new Date(job.dueDate).toLocaleDateString()}</span>
-              </div>
-            </div>
+        <!-- Job Description Section -->
+        <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; color: #3b82f6;">
+            <span style="font-size: 20px;">📝</span>
+            <h3 style="font-size: 18px; font-weight: bold; margin: 0;">Job Description</h3>
           </div>
-
-          <div>
-            <div style="margin-bottom: 16px;">
-              <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Customer</label>
-              <div style="display: flex; align-items: center; gap: 8px; color: #6b7280;">
-                <span>🏢</span>
-                <span>${job.customer}</span>
-              </div>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-              <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Assignee</label>
-              <div style="display: flex; align-items: center; gap: 8px; color: #6b7280;">
-                <span>👤</span>
-                <span>${job.assignee}</span>
-              </div>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-              <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Designer</label>
-              <div style="display: flex; align-items: center; gap: 8px; color: #6b7280;">
-                <span>👤</span>
-                <span>${job.designer}</span>
-              </div>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-              <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Salesman</label>
-              <div style="display: flex; align-items: center; gap: 8px; color: #6b7280;">
-                <span>👤</span>
-                <span>${job.salesman}</span>
-              </div>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-              <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Estimated Hours</label>
-              <div style="display: flex; align-items: center; gap: 8px; color: #6b7280;">
-                <span>⏰</span>
-                <span>${job.estimatedHours} hours</span>
-              </div>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-              <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Branch</label>
-              <p style="color: #6b7280; margin: 0;">${job.branch || 'N/A'}</p>
-            </div>
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <p style="color: #475569; margin: 0; line-height: 1.6; font-size: 15px;">
+              ${job.description || 'No description provided.'}
+            </p>
           </div>
         </div>
 
-        <!-- Job Order Details -->
-        <div style="margin-bottom: 24px;">
-          <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 8px;">Job Order Details</label>
-          <div style="background: #f9fafb; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; margin: 0; white-space: pre-wrap; line-height: 1.5;">
+        <!-- Job Order Details Section -->
+        <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; color: #3b82f6;">
+            <span style="font-size: 20px;">📋</span>
+            <h3 style="font-size: 18px; font-weight: bold; margin: 0;">Job Order Details</h3>
+          </div>
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <p style="color: #475569; margin: 0; white-space: pre-wrap; line-height: 1.6; font-size: 15px;">
               ${job.jobOrderDetails || 'No additional details provided.'}
             </p>
           </div>
         </div>
 
-        <!-- Timestamps -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-          <div>
-            <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Created At</label>
-            <p style="color: #6b7280; font-size: 12px; margin: 0;">${new Date(job.createdAt).toLocaleString()}</p>
-          </div>
-          <div>
-            <label style="font-weight: 600; color: #374151; font-size: 14px; display: block; margin-bottom: 4px;">Generated</label>
-            <p style="color: #6b7280; font-size: 12px; margin: 0;">${new Date().toLocaleString()}</p>
-          </div>
+        <!-- Footer -->
+        <div style="border-top: 2px solid #e2e8f0; padding-top: 20px; text-align: center; color: #94a3b8;">
+          <p style="margin: 0; font-size: 14px; font-weight: 500;">JobFlow Management System</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
         </div>
       </div>
     `;
