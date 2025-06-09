@@ -53,7 +53,7 @@ export function useJobOrders() {
         .select(`
           *,
           customer:customers(name),
-          assignee:profiles!assignee_id(full_name),
+          assignee:profiles(full_name),
           designer:designers(name),
           salesman:salesmen(name),
           item:items(name)
@@ -77,8 +77,8 @@ export function useJobOrders() {
         priority: item.priority,
         status: item.status,
         due_date: item.due_date,
-        estimated_hours: item.estimated_hours,
-        actual_hours: item.actual_hours,
+        estimated_hours: item.estimated_hours || 0,
+        actual_hours: item.actual_hours || 0,
         branch: item.branch,
         job_order_details: item.job_order_details,
         created_by: item.created_by,

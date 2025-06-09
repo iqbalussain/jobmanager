@@ -45,8 +45,8 @@ const Index = () => {
     createdAt: order.created_at.split('T')[0],
     estimatedHours: order.estimated_hours,
     branch: order.branch || "",
-    designer: order.designer?.full_name || "Unassigned",
-    salesman: order.salesman?.full_name || "Unassigned",
+    designer: order.designer?.name || "Unassigned",
+    salesman: order.salesman?.name || "Unassigned",
     jobOrderDetails: order.job_order_details || ""
   }));
 
