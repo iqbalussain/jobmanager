@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
   currentView: string;
-  onViewChange: (view: "dashboard" | "jobs" | "create") => void;
+  onViewChange: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings") => void;
 }
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
@@ -48,6 +48,21 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       icon: Plus,
       onClick: () => onViewChange("create"),
       isActive: currentView === "create"
+    }
+  ];
+
+  const secondaryMenuItems = [
+    {
+      title: "Calendar",
+      icon: Calendar,
+      onClick: () => onViewChange("calendar"),
+      isActive: currentView === "calendar"
+    },
+    {
+      title: "Settings",
+      icon: Settings,
+      onClick: () => onViewChange("settings"),
+      isActive: currentView === "settings"
     }
   ];
 
@@ -93,18 +108,20 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton className="hover:bg-gray-100 transition-colors">
-                  <Calendar className="w-5 h-5" />
-                  <span>Calendar</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton className="hover:bg-gray-100 transition-colors">
-                  <Settings className="w-5 h-5" />
-                  <span>Settings</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {secondaryMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    onClick={item.onClick}
+                    isActive={item.isActive}
+                    className={`hover:bg-gray-100 transition-colors ${
+                      item.isActive ? 'bg-gray-100 text-gray-900' : ''
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
               <SidebarMenuItem>
                 <Button 
                   onClick={() => setShowProfile(!showProfile)}

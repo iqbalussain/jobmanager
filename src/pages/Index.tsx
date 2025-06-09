@@ -4,6 +4,8 @@ import { Sidebar } from "@/components/Sidebar";
 import { Dashboard } from "@/components/Dashboard";
 import { JobForm } from "@/components/JobForm";
 import { JobList } from "@/components/JobList";
+import { CalendarView } from "@/components/CalendarView";
+import { SettingsView } from "@/components/SettingsView";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
 
@@ -28,7 +30,7 @@ export interface Job {
 }
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<"dashboard" | "jobs" | "create">("dashboard");
+  const [currentView, setCurrentView] = useState<"dashboard" | "jobs" | "create" | "calendar" | "settings">("dashboard");
   const { jobOrders, isLoading, updateStatus } = useJobOrders();
 
   // Transform database job orders to match the existing Job interface
@@ -70,6 +72,10 @@ const Index = () => {
         return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
       case "create":
         return <JobForm onSubmit={() => {}} onCancel={() => setCurrentView("dashboard")} />;
+      case "calendar":
+        return <CalendarView jobs={transformedJobs} />;
+      case "settings":
+        return <SettingsView />;
       default:
         return <Dashboard jobs={transformedJobs} />;
     }
