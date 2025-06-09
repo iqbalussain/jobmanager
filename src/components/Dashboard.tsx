@@ -14,7 +14,7 @@ import {
   Briefcase, 
   Clock, 
   CheckCircle, 
-  AlertTriangle,
+  FileText,
   Palette,
   Filter,
   Eye
@@ -39,9 +39,7 @@ export function Dashboard({ jobs }: DashboardProps) {
     inProgress: jobs.filter(job => job.status === "in-progress").length,
     designing: jobs.filter(job => job.status === "designing").length,
     completed: jobs.filter(job => job.status === "completed").length,
-    overdue: jobs.filter(job => 
-      new Date(job.dueDate) < new Date() && !["completed", "finished"].includes(job.status)
-    ).length
+    invoiced: jobs.filter(job => job.status === "invoiced").length
   };
 
   const handleStatusCardClick = (status: string, title: string) => {
@@ -71,7 +69,7 @@ export function Dashboard({ jobs }: DashboardProps) {
       case "designing": return "bg-purple-100 text-purple-800 border-purple-200";
       case "finished": return "bg-green-100 text-green-800 border-green-200";
       case "completed": return "bg-green-100 text-green-800 border-green-200";
-      case "overdue": return "bg-red-100 text-red-800 border-red-200";
+      case "invoiced": return "bg-emerald-100 text-emerald-800 border-emerald-200";
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
@@ -83,7 +81,7 @@ export function Dashboard({ jobs }: DashboardProps) {
         <p className="text-gray-600">Overview of your job orders and performance metrics</p>
       </div>
 
-      {/* Stats Grid - Removed Finished card */}
+      {/* Stats Grid - Replaced Overdue with Invoiced */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card 
           className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
@@ -146,16 +144,16 @@ export function Dashboard({ jobs }: DashboardProps) {
         </Card>
 
         <Card 
-          className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-          onClick={() => handleStatusCardClick("overdue", "Overdue")}
+          className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+          onClick={() => handleStatusCardClick("invoiced", "Invoiced")}
         >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-red-100 text-xs font-medium">Overdue</p>
-                <p className="text-2xl font-bold">{stats.overdue}</p>
+                <p className="text-green-100 text-xs font-medium">Invoiced</p>
+                <p className="text-2xl font-bold">{stats.invoiced}</p>
               </div>
-              <AlertTriangle className="w-6 h-6 text-red-200" />
+              <FileText className="w-6 h-6 text-green-200" />
             </div>
           </CardContent>
         </Card>

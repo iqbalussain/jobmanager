@@ -5,7 +5,8 @@ import {
   Plus,
   Calendar,
   Settings,
-  User
+  User,
+  Shield
 } from "lucide-react";
 import {
   Sidebar as SidebarBase,
@@ -24,7 +25,7 @@ import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
   currentView: string;
-  onViewChange: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings") => void;
+  onViewChange: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin") => void;
 }
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
@@ -48,6 +49,15 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       icon: Plus,
       onClick: () => onViewChange("create"),
       isActive: currentView === "create"
+    }
+  ];
+
+  const adminMenuItems = [
+    {
+      title: "Admin Panel",
+      icon: Shield,
+      onClick: () => onViewChange("admin"),
+      isActive: currentView === "admin"
     }
   ];
 
@@ -94,6 +104,30 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
                     isActive={item.isActive}
                     className={`hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ${
                       item.isActive ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-600' : ''
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="font-medium">{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-gray-600 font-medium px-3">
+            Administration
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {adminMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    onClick={item.onClick}
+                    isActive={item.isActive}
+                    className={`hover:bg-red-50 hover:text-red-700 transition-all duration-200 ${
+                      item.isActive ? 'bg-red-100 text-red-700 border-r-2 border-red-600' : ''
                     }`}
                   >
                     <item.icon className="w-5 h-5" />
