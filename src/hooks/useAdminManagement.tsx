@@ -1,3 +1,5 @@
+
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -25,16 +27,34 @@ export interface JobTitle {
   job_title_id: string;
 }
 
-export interface UserProfile {
+export interface Profile {
   id: string;
   full_name: string | null;
   email: string;
   role: string;
+  department: string | null;
+  branch: string | null;
+  phone: string | null;
 }
 
 export function useAdminManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Form states
+  const [customerForm, setCustomerForm] = useState({ name: '' });
+  const [designerForm, setDesignerForm] = useState({ name: '', phone: '' });
+  const [salesmanForm, setSalesmanForm] = useState({ name: '', email: '', phone: '' });
+  const [jobTitleForm, setJobTitleForm] = useState({ title: '' });
+  const [userForm, setUserForm] = useState({
+    email: '',
+    password: '',
+    fullName: '',
+    role: '',
+    department: '',
+    branch: '',
+    phone: ''
+  });
 
   const { data: customers = [], isLoading: customersLoading } = useQuery({
     queryKey: ['customers'],
@@ -94,55 +114,45 @@ export function useAdminManagement() {
     queryKey: ['job-titles'],
     queryFn: async () => {
       console.log('Fetching job titles...');
-      // Use raw SQL query since table might not be in types yet
       const { data, error } = await supabase
-        .rpc('exec_sql', { 
-          sql: 'SELECT id, job_title_id FROM public.job_titles ORDER BY job_title_id' 
-        }) as { data: JobTitle[], error: any };
+        .from('job_titles')
+        .select('id, job_title_id')
+        .order('job_title_id');
       
       if (error) {
-        console.error('SQL query failed, trying direct access:', error);
-        // Fallback to direct table access
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('job_titles' as any)
-          .select('id, job_title_id')
-          .order('job_title_id');
-        
-        if (fallbackError) {
-          console.error('Error fetching job titles:', fallbackError);
-          return [];
-        }
-        return fallbackData as JobTitle[];
+        console.error('Error fetching job titles:', error);
+        return [];
       }
       console.log('Job titles fetched:', data);
-      return data;
+      return data as JobTitle[];
     }
   });
 
-  const { data: userProfiles = [], isLoading: userProfilesLoading } = useQuery({
-    queryKey: ['user-profiles'],
+  const { data: profiles = [], isLoading: profilesLoading } = useQuery({
+    queryKey: ['profiles'],
     queryFn: async () => {
-      console.log('Fetching user profiles...');
+      console.log('Fetching profiles...');
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email, role');
+        .select('id, full_name, email, role, department, branch, phone')
+        .order('full_name');
       
       if (error) {
-        console.error('Error fetching user profiles:', error);
+        console.error('Error fetching profiles:', error);
         throw error;
       }
-      console.log('User profiles fetched:', data);
-      return data as UserProfile[];
+      console.log('Profiles fetched:', data);
+      return data as Profile[];
     }
   });
 
   // Add customer mutation
-  const customerMutation = useMutation({
-    mutationFn: async (name: string) => {
-      console.log('Adding customer:', name);
-      const { data, error } = await supabase
+  const addCustomerMutation = useMutation({
+    mutationFn: async (data: { name: string }) => {
+      console.log('Adding customer:', data.name);
+      const { data: result, error } = await supabase
         .from('customers')
-        .insert({ name })
+        .insert({ name: data.name })
         .select()
         .single();
       
@@ -150,10 +160,11 @@ export function useAdminManagement() {
         console.error('Error adding customer:', error);
         throw error;
       }
-      return data;
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+      setCustomerForm({ name: '' });
       toast({
         title: "Success",
         description: "Customer added successfully",
@@ -170,12 +181,12 @@ export function useAdminManagement() {
   });
 
   // Add designer mutation
-  const designerMutation = useMutation({
-    mutationFn: async ({ name, phone }: { name: string; phone: string }) => {
-      console.log('Adding designer:', name, phone);
-      const { data, error } = await supabase
+  const addDesignerMutation = useMutation({
+    mutationFn: async (data: { name: string; phone: string }) => {
+      console.log('Adding designer:', data.name, data.phone);
+      const { data: result, error } = await supabase
         .from('designers')
-        .insert({ name, phone })
+        .insert({ name: data.name, phone: data.phone || null })
         .select()
         .single();
       
@@ -183,10 +194,11 @@ export function useAdminManagement() {
         console.error('Error adding designer:', error);
         throw error;
       }
-      return data;
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['designers'] });
+      setDesignerForm({ name: '', phone: '' });
       toast({
         title: "Success",
         description: "Designer added successfully",
@@ -203,12 +215,16 @@ export function useAdminManagement() {
   });
 
   // Add salesman mutation
-  const salesmanMutation = useMutation({
-    mutationFn: async ({ name, email, phone }: { name: string; email: string; phone: string }) => {
-      console.log('Adding salesman:', name, email, phone);
-      const { data, error } = await supabase
+  const addSalesmanMutation = useMutation({
+    mutationFn: async (data: { name: string; email: string; phone: string }) => {
+      console.log('Adding salesman:', data.name, data.email, data.phone);
+      const { data: result, error } = await supabase
         .from('salesmen')
-        .insert({ name, email, phone })
+        .insert({ 
+          name: data.name, 
+          email: data.email || null, 
+          phone: data.phone || null 
+        })
         .select()
         .single();
       
@@ -216,10 +232,11 @@ export function useAdminManagement() {
         console.error('Error adding salesman:', error);
         throw error;
       }
-      return data;
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salesmen'] });
+      setSalesmanForm({ name: '', email: '', phone: '' });
       toast({
         title: "Success",
         description: "Salesman added successfully",
@@ -237,33 +254,23 @@ export function useAdminManagement() {
 
   // Add job title mutation
   const addJobTitleMutation = useMutation({
-    mutationFn: async (title: string) => {
-      console.log('Adding job title:', title);
-      // Use raw SQL for insert since table might not be in types yet
-      const { data, error } = await supabase
-        .rpc('exec_sql', {
-          sql: `INSERT INTO public.job_titles (job_title_id) VALUES ('${title.replace(/'/g, "''")}') RETURNING *`
-        }) as { data: any[], error: any };
+    mutationFn: async (data: { job_title_id: string }) => {
+      console.log('Adding job title:', data.job_title_id);
+      const { data: result, error } = await supabase
+        .from('job_titles')
+        .insert({ job_title_id: data.job_title_id })
+        .select()
+        .single();
 
       if (error) {
-        console.error('SQL insert failed, trying direct access:', error);
-        // Fallback to direct table access
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('job_titles' as any)
-          .insert({ job_title_id: title })
-          .select()
-          .single();
-
-        if (fallbackError) {
-          throw fallbackError;
-        }
-        return fallbackData;
+        console.error('Error adding job title:', error);
+        throw error;
       }
-      
-      return data[0];
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['job-titles'] });
+      setJobTitleForm({ title: '' });
       toast({
         title: "Success",
         description: "Job title added successfully",
@@ -279,21 +286,97 @@ export function useAdminManagement() {
     }
   });
 
+  // Add user mutation
+  const addUserMutation = useMutation({
+    mutationFn: async (userData: {
+      email: string;
+      password: string;
+      fullName: string;
+      role: string;
+      department: string;
+      branch: string;
+      phone: string;
+    }) => {
+      console.log('Adding user:', userData.email);
+      // For now, we'll just add to profiles table
+      // In a real app, you'd want to create the auth user first
+      const { data: result, error } = await supabase
+        .from('profiles')
+        .insert({
+          email: userData.email,
+          full_name: userData.fullName,
+          role: userData.role,
+          department: userData.department || null,
+          branch: userData.branch || null,
+          phone: userData.phone || null
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding user:', error);
+        throw error;
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      setUserForm({
+        email: '',
+        password: '',
+        fullName: '',
+        role: '',
+        department: '',
+        branch: '',
+        phone: ''
+      });
+      toast({
+        title: "Success",
+        description: "User added successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add user",
+        variant: "destructive",
+      });
+    }
+  });
+
   return {
+    // Data
     customers,
-    customersLoading,
     designers,
-    designersLoading,
     salesmen,
-    salesmenLoading,
     jobTitles,
+    profiles,
+    
+    // Loading states
+    customersLoading,
+    designersLoading,
+    salesmenLoading,
     jobTitlesLoading,
-    userProfiles,
-    userProfilesLoading,
-    addCustomer: customerMutation.mutateAsync,
-    addDesigner: designerMutation.mutateAsync,
-    addSalesman: salesmanMutation.mutateAsync,
-    addJobTitle: addJobTitleMutation.mutateAsync,
-    isAdding: customerMutation.isPending || designerMutation.isPending || salesmanMutation.isPending || addJobTitleMutation.isPending
+    profilesLoading,
+    
+    // Form states
+    customerForm,
+    setCustomerForm,
+    designerForm,
+    setDesignerForm,
+    salesmanForm,
+    setSalesmanForm,
+    jobTitleForm,
+    setJobTitleForm,
+    userForm,
+    setUserForm,
+    
+    // Mutations
+    addCustomerMutation,
+    addDesignerMutation,
+    addSalesmanMutation,
+    addJobTitleMutation,
+    addUserMutation
   };
 }

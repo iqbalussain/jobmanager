@@ -87,13 +87,33 @@ export function useJobOrders() {
       
       console.log('Job orders fetched:', data);
       
-      // Transform the data to ensure proper typing
-      const transformedData = data.map(order => ({
+      // Transform the data to ensure proper typing and handle potential null values
+      const transformedData = data?.map(order => ({
         ...order,
+        // Ensure customer is properly typed
+        customer: order.customer && typeof order.customer === 'object' && 'id' in order.customer 
+          ? order.customer as Customer 
+          : null,
+        // Ensure designer is properly typed  
+        designer: order.designer && typeof order.designer === 'object' && 'id' in order.designer
+          ? order.designer as Designer
+          : null,
+        // Ensure salesman is properly typed
+        salesman: order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman
+          ? order.salesman as Salesman
+          : null,
+        // Ensure assignee is properly typed
+        assignee: order.assignee && typeof order.assignee === 'object' && 'id' in order.assignee
+          ? order.assignee as Assignee
+          : null,
+        // Ensure job_title is properly typed
+        job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title
+          ? order.job_title as JobTitle
+          : null,
         // Add title and description fallbacks if needed
         title: order.job_order_details || `Job Order ${order.job_order_number}`,
         description: order.job_order_details || ''
-      }));
+      })) || [];
       
       return transformedData as JobOrder[];
     }
