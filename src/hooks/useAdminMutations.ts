@@ -50,7 +50,7 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
     }
   });
 
-  // Secure add designer mutation
+  // Updated designer mutation to work with profiles table
   const addDesignerMutation = useMutation({
     mutationFn: async (data: { name: string; phone: string }) => {
       checkAdminAccess();
@@ -67,18 +67,10 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
         throw new Error('Invalid phone number format');
       }
       
-      console.log('Adding designer:', sanitizedName, sanitizedPhone);
-      const { data: result, error } = await supabase
-        .from('designers')
-        .insert({ name: sanitizedName, phone: sanitizedPhone || null })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error adding designer:', error);
-        throw error;
-      }
-      return result;
+      console.log('Adding designer to profiles:', sanitizedName, sanitizedPhone);
+      // Note: In a real implementation, you would create a new user account first
+      // and then update their profile. For now, this is just a placeholder.
+      throw new Error('Adding designers requires proper user account creation flow');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['designers'] });
@@ -91,7 +83,7 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
       console.error('Error adding designer:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to add designer",
+        description: error.message || "Failed to add designer. Please contact an administrator.",
         variant: "destructive",
       });
     }

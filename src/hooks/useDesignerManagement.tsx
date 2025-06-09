@@ -18,35 +18,30 @@ export function useDesignerManagement() {
   const { data: designers = [], isLoading: designersLoading } = useQuery({
     queryKey: ['designers'],
     queryFn: async () => {
-      console.log('Fetching designers...');
+      console.log('Fetching designers from profiles...');
       const { data, error } = await supabase
-        .from('designers')
-        .select('id, name, phone')
-        .order('name');
+        .from('profiles')
+        .select('id, full_name, phone')
+        .eq('role', 'designer')
+        .order('full_name');
       
       if (error) {
         console.error('Error fetching designers:', error);
         throw error;
       }
       console.log('Designers fetched:', data);
-      return data as Designer[];
+      return data.map(profile => ({
+        id: profile.id,
+        name: profile.full_name || 'Unknown Designer',
+        phone: profile.phone
+      })) as Designer[];
     }
   });
 
   const addDesignerMutation = useMutation({
     mutationFn: async (data: { name: string; phone: string }) => {
-      console.log('Adding designer:', data.name, data.phone);
-      const { data: result, error } = await supabase
-        .from('designers')
-        .insert({ name: data.name, phone: data.phone || null })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error adding designer:', error);
-        throw error;
-      }
-      return result;
+      console.log('This mutation is now a placeholder that requires proper user creation flow');
+      throw new Error('Adding designers requires creating user accounts first');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['designers'] });
@@ -60,7 +55,7 @@ export function useDesignerManagement() {
       console.error('Error adding designer:', error);
       toast({
         title: "Error",
-        description: "Failed to add designer",
+        description: "Failed to add designer. Designers must be added through the user management interface.",
         variant: "destructive",
       });
     }
@@ -68,12 +63,10 @@ export function useDesignerManagement() {
 
   const handleAddDesigner = (e: React.FormEvent) => {
     e.preventDefault();
-    if (designerForm.name.trim()) {
-      addDesignerMutation.mutate({
-        name: designerForm.name.trim(),
-        phone: designerForm.phone.trim() || ""
-      });
-    }
+    toast({
+      title: "Information",
+      description: "Designers must be added through the user management interface as they are now users with designer role.",
+    });
   };
 
   return {

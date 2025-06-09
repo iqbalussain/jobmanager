@@ -72,18 +72,23 @@ export function useAdminQueries() {
     queryKey: ['designers'],
     queryFn: async () => {
       checkAdminAccess();
-      console.log('Fetching designers...');
+      console.log('Fetching designers from profiles...');
       const { data, error } = await supabase
-        .from('designers')
-        .select('id, name, phone')
-        .order('name');
+        .from('profiles')
+        .select('id, full_name, phone')
+        .eq('role', 'designer')
+        .order('full_name');
       
       if (error) {
         console.error('Error fetching designers:', error);
         throw error;
       }
       console.log('Designers fetched:', data);
-      return data as Designer[];
+      return data.map(profile => ({
+        id: profile.id,
+        name: profile.full_name || 'Unknown Designer',
+        phone: profile.phone
+      })) as Designer[];
     },
     enabled: !!user
   });
