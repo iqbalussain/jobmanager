@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface CreateJobOrderData {
   title: string;
@@ -22,10 +23,15 @@ export interface CreateJobOrderData {
 export function useCreateJobOrder() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: CreateJobOrderData) => {
       console.log('Creating job order with data:', data);
+      
+      if (!user) {
+        throw new Error('User must be authenticated to create job orders');
+      }
       
       // Generate job order number
       const jobOrderNumber = `JO-${Date.now()}`;
@@ -47,7 +53,7 @@ export function useCreateJobOrder() {
           estimated_hours: data.estimated_hours,
           branch: data.branch,
           job_order_details: data.job_order_details,
-          created_by: '00000000-0000-0000-0000-000000000000' // Placeholder user ID
+          created_by: user.id // Use the authenticated user's ID
         })
         .select()
         .single();

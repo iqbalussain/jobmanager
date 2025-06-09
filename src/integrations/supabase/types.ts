@@ -205,13 +205,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "job_orders_job_type_id_fkey"
-            columns: ["job_type_id"]
-            isOneToOne: false
-            referencedRelation: "job_types"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "job_orders_salesman_id_fkey"
             columns: ["salesman_id"]
             isOneToOne: false
@@ -235,30 +228,6 @@ export type Database = {
           created_at?: string
           id?: string
           title?: string
-        }
-        Relationships: []
-      }
-      job_types: {
-        Row: {
-          created_at: string
-          description: string | null
-          estimated_hours: number | null
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          estimated_hours?: number | null
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          estimated_hours?: number | null
-          id?: string
-          name?: string
         }
         Relationships: []
       }
