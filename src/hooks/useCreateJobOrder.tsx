@@ -25,6 +25,30 @@ export function useCreateJobOrder() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
+  const generateJobOrderNumber = async (branch: string) => {
+    const prefix = branch === 'Wadi Kabeer' ? 'WK' : 'HO';
+    
+    // Get the latest job order number for this branch
+    const { data: latestOrder } = await supabase
+      .from('job_orders')
+      .select('job_order_number')
+      .like('job_order_number', `${prefix}%`)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    let nextNumber = 10001; // Starting number for both branches
+    
+    if (latestOrder && latestOrder.length > 0) {
+      // Extract the numeric part and increment
+      const lastNumber = parseInt(latestOrder[0].job_order_number.substring(2));
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
+    }
+    
+    return `${prefix}${nextNumber}`;
+  };
+
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: CreateJobOrderData) => {
       console.log('Creating job order with data:', data);
@@ -33,8 +57,8 @@ export function useCreateJobOrder() {
         throw new Error('User must be authenticated to create job orders');
       }
       
-      // Generate job order number
-      const jobOrderNumber = `JO-${Date.now()}`;
+      // Generate job order number based on branch
+      const jobOrderNumber = await generateJobOrderNumber(data.branch);
       
       const { data: newJobOrder, error } = await supabase
         .from('job_orders')

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { JobStatusModal } from "@/components/JobStatusModal";
+import { JobDetails } from "@/components/JobDetails";
 import { 
   Briefcase, 
   Clock, 
@@ -28,6 +29,9 @@ export function Dashboard({ jobs }: DashboardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [customerFilter, setCustomerFilter] = useState("");
+  const [salesmanFilter, setSalesmanFilter] = useState("");
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
   const stats = {
     total: jobs.length,
@@ -46,9 +50,19 @@ export function Dashboard({ jobs }: DashboardProps) {
     setIsModalOpen(true);
   };
 
+  const handleViewDetails = (job: Job) => {
+    setSelectedJob(job);
+    setIsJobDetailsOpen(true);
+  };
+
   const filteredJobs = jobs.filter(job => {
-    return customerFilter === "" || job.customer.toLowerCase().includes(customerFilter.toLowerCase());
+    const matchesCustomer = customerFilter === "" || job.customer.toLowerCase().includes(customerFilter.toLowerCase());
+    const matchesSalesman = salesmanFilter === "" || job.salesman.toLowerCase().includes(salesmanFilter.toLowerCase());
+    return matchesCustomer && matchesSalesman;
   });
+
+  // Get unique salesmen for the filter dropdown
+  const uniqueSalesmen = [...new Set(jobs.map(job => job.salesman))].filter(Boolean).sort();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -147,7 +161,7 @@ export function Dashboard({ jobs }: DashboardProps) {
         </Card>
       </div>
 
-      {/* Jobs Filter and Table - Simplified */}
+      {/* Jobs Filter and Table */}
       <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900">
@@ -156,8 +170,8 @@ export function Dashboard({ jobs }: DashboardProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Simplified Filter */}
-          <div className="mb-6">
+          {/* Filters */}
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="customerFilter">Filter by Customer</Label>
               <Input
@@ -165,18 +179,34 @@ export function Dashboard({ jobs }: DashboardProps) {
                 placeholder="Search customer..."
                 value={customerFilter}
                 onChange={(e) => setCustomerFilter(e.target.value)}
-                className="max-w-md"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="salesmanFilter">Filter by Salesman</Label>
+              <Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select salesman" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Salesmen</SelectItem>
+                  {uniqueSalesmen.map((salesman) => (
+                    <SelectItem key={salesman} value={salesman}>
+                      {salesman}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          {/* Simplified Jobs Table */}
+          {/* Jobs Table */}
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Job Order #</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Customer</TableHead>
+                <TableHead>Salesman</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -187,13 +217,18 @@ export function Dashboard({ jobs }: DashboardProps) {
                   <TableCell className="font-mono">{job.jobOrderNumber}</TableCell>
                   <TableCell className="font-medium">{job.title}</TableCell>
                   <TableCell>{job.customer}</TableCell>
+                  <TableCell>{job.salesman}</TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(job.status)}>
                       {job.status.replace('-', ' ')}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewDetails(job)}
+                    >
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
@@ -212,6 +247,13 @@ export function Dashboard({ jobs }: DashboardProps) {
         jobs={jobs}
         status={selectedStatus as any}
         title={modalTitle}
+      />
+
+      {/* Job Details Modal */}
+      <JobDetails
+        isOpen={isJobDetailsOpen}
+        onClose={() => setIsJobDetailsOpen(false)}
+        job={selectedJob}
       />
     </div>
   );
