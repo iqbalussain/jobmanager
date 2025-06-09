@@ -11,86 +11,36 @@ export type Database = {
     Tables: {
       customers: {
         Row: {
-          address: string | null
-          contact_person: string | null
-          email: string | null
           id: string
           name: string
-          phone: string | null
-          updated_at: string
         }
         Insert: {
-          address?: string | null
-          contact_person?: string | null
-          email?: string | null
           id?: string
           name: string
-          phone?: string | null
-          updated_at?: string
         }
         Update: {
-          address?: string | null
-          contact_person?: string | null
-          email?: string | null
           id?: string
           name?: string
-          phone?: string | null
-          updated_at?: string
         }
         Relationships: []
       }
       designers: {
         Row: {
-          email: string | null
           id: string
           name: string
           phone: string | null
         }
         Insert: {
-          email?: string | null
           id?: string
           name: string
           phone?: string | null
         }
         Update: {
-          email?: string | null
           id?: string
           name?: string
           phone?: string | null
         }
         Relationships: []
-      }
-      items: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          description: string | null
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "items_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       job_order_attachments: {
         Row: {
@@ -178,6 +128,7 @@ export type Database = {
           item_id: string | null
           job_order_details: string | null
           job_order_number: string
+          job_title_id: string | null
           job_type_id: string | null
           priority: Database["public"]["Enums"]["priority_level"]
           salesman_id: string | null
@@ -200,6 +151,7 @@ export type Database = {
           item_id?: string | null
           job_order_details?: string | null
           job_order_number: string
+          job_title_id?: string | null
           job_type_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"]
           salesman_id?: string | null
@@ -222,6 +174,7 @@ export type Database = {
           item_id?: string | null
           job_order_details?: string | null
           job_order_number?: string
+          job_title_id?: string | null
           job_type_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"]
           salesman_id?: string | null
@@ -231,17 +184,17 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_job_orders_job_title"
+            columns: ["job_title_id"]
+            isOneToOne: false
+            referencedRelation: "job_titles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "job_orders_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "job_orders_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "items"
             referencedColumns: ["id"]
           },
           {
@@ -252,6 +205,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      job_titles: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
       }
       job_types: {
         Row: {

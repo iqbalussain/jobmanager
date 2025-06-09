@@ -56,7 +56,7 @@ export function useJobOrders() {
 
       if (ordersError) throw ordersError;
 
-      // Fetch related data separately since relationships are broken
+      // Fetch related data separately
       const customerIds = [...new Set(orders?.map(o => o.customer_id).filter(Boolean))];
       const designerIds = [...new Set(orders?.map(o => o.designer_id).filter(Boolean))];
       const salesmanIds = [...new Set(orders?.map(o => o.salesman_id).filter(Boolean))];
@@ -80,17 +80,11 @@ export function useJobOrders() {
         .select('id, name')
         .in('id', salesmanIds);
 
-      // Fetch job titles (with fallback)
-      let jobTitles: any[] = [];
-      try {
-        const { data: titlesData } = await supabase
-          .from('job_titles' as any)
-          .select('id, title')
-          .in('id', jobTitleIds);
-        jobTitles = titlesData || [];
-      } catch (error) {
-        console.log('Could not fetch job titles:', error);
-      }
+      // Fetch job titles
+      const { data: jobTitles } = await supabase
+        .from('job_titles')
+        .select('id, title')
+        .in('id', jobTitleIds);
 
       // Transform the data to match our interface
       return (orders || []).map(item => ({
