@@ -49,9 +49,9 @@ export function useJobOrders() {
         .select(`
           *,
           customer:customers(name),
-          assignee:profiles!assignee_id(full_name),
-          designer:profiles!designer_id(full_name),
-          salesman:profiles!salesman_id(full_name)
+          assignee:profiles!job_orders_assignee_id_fkey(full_name),
+          designer:profiles!job_orders_designer_id_fkey(full_name),
+          salesman:profiles!job_orders_salesman_id_fkey(full_name)
         `)
         .order('created_at', { ascending: false });
 
