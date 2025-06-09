@@ -87,6 +87,20 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
       
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Branch Section - Now moved to the top */}
+          <div>
+            <Label htmlFor="branch">Branch *</Label>
+            <Select value={formData.branch} onValueChange={(value) => setFormData(prev => ({ ...prev, branch: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select branch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Head Office">Head Office</SelectItem>
+                <SelectItem value="Wadi Kabeer">Wadi Kabeer</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Customer Section */}
           <div>
             <Label htmlFor="customer">Customer *</Label>
@@ -219,23 +233,7 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
               />
             </div>
 
-            {/* Branch Section */}
-            <div>
-              <Label htmlFor="branch">Branch *</Label>
-              <Select value={formData.branch} onValueChange={(value) => setFormData(prev => ({ ...prev, branch: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select branch" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Head Office">Head Office</SelectItem>
-                  <SelectItem value="Wadi Kabeer">Wadi Kabeer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Estimated Hours Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Estimated Hours Section */}
             <div>
               <Label htmlFor="estimatedHours">Estimated Hours *</Label>
               <Input
