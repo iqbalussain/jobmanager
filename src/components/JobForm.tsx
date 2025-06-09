@@ -1,14 +1,17 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateJobOrder } from "@/hooks/useCreateJobOrder";
 import { useDropdownData } from "@/hooks/useDropdownData";
+import { BranchSection } from "./job-form/BranchSection";
+import { CustomerSection } from "./job-form/CustomerSection";
+import { JobDetailsSection } from "./job-form/JobDetailsSection";
+import { TeamSection } from "./job-form/TeamSection";
+import { ProjectDetailsSection } from "./job-form/ProjectDetailsSection";
+import { ScheduleSection } from "./job-form/ScheduleSection";
+import { JobOrderDetailsSection } from "./job-form/JobOrderDetailsSection";
+import { FormActions } from "./job-form/FormActions";
 
 export function JobForm({ onCancel }: { onCancel?: () => void }) {
   const { toast } = useToast();
@@ -87,187 +90,54 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
       
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Branch Section - Now moved to the top */}
-          <div>
-            <Label htmlFor="branch">Branch *</Label>
-            <Select value={formData.branch} onValueChange={(value) => setFormData(prev => ({ ...prev, branch: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select branch" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Head Office">Head Office</SelectItem>
-                <SelectItem value="Wadi Kabeer">Wadi Kabeer</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <BranchSection 
+            value={formData.branch} 
+            onChange={(value) => setFormData(prev => ({ ...prev, branch: value }))} 
+          />
 
-          {/* Customer Section */}
-          <div>
-            <Label htmlFor="customer">Customer *</Label>
-            <Select value={formData.customer} onValueChange={(value) => setFormData(prev => ({ ...prev, customer: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select customer" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <CustomerSection 
+            value={formData.customer} 
+            onChange={(value) => setFormData(prev => ({ ...prev, customer: value }))}
+            customers={customers}
+          />
 
-          {/* Job Title Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="jobTitle">Job Title *</Label>
-              <Select value={formData.jobTitle} onValueChange={(value) => setFormData(prev => ({ ...prev, jobTitle: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select job title" />
-                </SelectTrigger>
-                <SelectContent>
-                  {jobTitles.map((title) => (
-                    <SelectItem key={title.id} value={title.id}>
-                      {title.job_title_id}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <JobDetailsSection 
+            jobTitle={formData.jobTitle}
+            assignee={formData.assignee}
+            onJobTitleChange={(value) => setFormData(prev => ({ ...prev, jobTitle: value }))}
+            onAssigneeChange={(value) => setFormData(prev => ({ ...prev, assignee: value }))}
+            jobTitles={jobTitles}
+          />
 
-            {/* Assignee Section */}
-            <div>
-              <Label htmlFor="assignee">Assignee</Label>
-              <Input
-                id="assignee"
-                type="text"
-                placeholder="Assignee"
-                value={formData.assignee}
-                onChange={(e) => setFormData(prev => ({ ...prev, assignee: e.target.value }))}
-              />
-            </div>
-          </div>
+          <TeamSection 
+            designer={formData.designer}
+            salesman={formData.salesman}
+            onDesignerChange={(value) => setFormData(prev => ({ ...prev, designer: value }))}
+            onSalesmanChange={(value) => setFormData(prev => ({ ...prev, salesman: value }))}
+            designers={designers}
+            salesmen={salesmen}
+          />
 
-          {/* Team Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="designer">Designer *</Label>
-              <Select value={formData.designer} onValueChange={(value) => setFormData(prev => ({ ...prev, designer: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select designer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {designers.map((designer) => (
-                    <SelectItem key={designer.id} value={designer.id}>
-                      {designer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <ProjectDetailsSection 
+            priority={formData.priority}
+            status={formData.status}
+            onPriorityChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
+            onStatusChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+          />
 
-            {/* Salesman Section */}
-            <div>
-              <Label htmlFor="salesman">Salesman *</Label>
-              <Select value={formData.salesman} onValueChange={(value) => setFormData(prev => ({ ...prev, salesman: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select salesman" />
-                </SelectTrigger>
-                <SelectContent>
-                  {salesmen.map((salesman) => (
-                    <SelectItem key={salesman.id} value={salesman.id}>
-                      {salesman.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <ScheduleSection 
+            dueDate={formData.dueDate}
+            estimatedHours={formData.estimatedHours}
+            onDueDateChange={(value) => setFormData(prev => ({ ...prev, dueDate: value }))}
+            onEstimatedHoursChange={(value) => setFormData(prev => ({ ...prev, estimatedHours: value }))}
+          />
 
-          {/* Project Details Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="priority">Priority *</Label>
-              <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <JobOrderDetailsSection 
+            value={formData.jobOrderDetails}
+            onChange={(value) => setFormData(prev => ({ ...prev, jobOrderDetails: value }))}
+          />
 
-            <div>
-              <Label htmlFor="status">Status *</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="designing">Designing</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="finished">Finished</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                  <SelectItem value="invoiced">Invoiced</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Schedule Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="dueDate">Due Date *</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-                required
-              />
-            </div>
-
-            {/* Estimated Hours Section */}
-            <div>
-              <Label htmlFor="estimatedHours">Estimated Hours *</Label>
-              <Input
-                id="estimatedHours"
-                type="number"
-                value={formData.estimatedHours}
-                onChange={(e) => setFormData(prev => ({ ...prev, estimatedHours: parseInt(e.target.value) }))}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Job Order Details Section */}
-          <div>
-            <Label htmlFor="jobOrderDetails">Job Order Details</Label>
-            <Textarea
-              id="jobOrderDetails"
-              placeholder="Enter job order details"
-              value={formData.jobOrderDetails}
-              onChange={(e) => setFormData(prev => ({ ...prev, jobOrderDetails: e.target.value }))}
-            />
-          </div>
-
-          {/* Form Actions */}
-          <div className="flex gap-4 pt-4">
-            {onCancel && (
-              <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-                Cancel
-              </Button>
-            )}
-            <Button type="submit" disabled={isCreating} className="flex-1">
-              {isCreating ? "Creating..." : "Create Job Order"}
-            </Button>
-          </div>
+          <FormActions onCancel={onCancel} isCreating={isCreating} />
         </form>
       </CardContent>
     </Card>

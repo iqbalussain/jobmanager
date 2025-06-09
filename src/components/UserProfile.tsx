@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,7 +58,7 @@ export function UserProfile() {
               id: user.id,
               email: user.email || '',
               full_name: user.user_metadata?.full_name || 'User',
-              role: 'user',
+              role: 'employee',
               department: null,
               branch: null
             })
