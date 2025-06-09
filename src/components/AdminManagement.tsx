@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +18,8 @@ import {
   Briefcase,
   Plus,
   Trash2,
-  Edit
+  Edit,
+  FileText
 } from "lucide-react";
 
 interface Customer {
@@ -40,6 +40,11 @@ interface Salesman {
   phone: string | null;
 }
 
+interface JobTitle {
+  id: string;
+  job_title_id: string;
+}
+
 interface Profile {
   id: string;
   email: string;
@@ -58,6 +63,7 @@ export function AdminManagement() {
   const [customerForm, setCustomerForm] = useState({ name: "" });
   const [designerForm, setDesignerForm] = useState({ name: "", phone: "" });
   const [salesmanForm, setSalesmanForm] = useState({ name: "", email: "", phone: "" });
+  const [jobTitleForm, setJobTitleForm] = useState({ title: "" });
   const [userForm, setUserForm] = useState({ 
     email: "", 
     password: "", 
@@ -102,6 +108,18 @@ export function AdminManagement() {
         .order('name');
       if (error) throw error;
       return data as Salesman[];
+    }
+  });
+
+  const { data: jobTitles = [], isLoading: jobTitlesLoading } = useQuery({
+    queryKey: ['admin-job-titles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('job_titles')
+        .select('*')
+        .order('job_title_id');
+      if (error) throw error;
+      return data as JobTitle[];
     }
   });
 
@@ -178,6 +196,27 @@ export function AdminManagement() {
     },
     onError: (error) => {
       toast({ title: "Error adding salesman", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const addJobTitleMutation = useMutation({
+    mutationFn: async (jobTitleData: { job_title_id: string }) => {
+      const { data, error } = await supabase
+        .from('job_titles')
+        .insert([jobTitleData])
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-job-titles'] });
+      queryClient.invalidateQueries({ queryKey: ['job-titles'] });
+      setJobTitleForm({ title: "" });
+      toast({ title: "Job title added successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Error adding job title", description: error.message, variant: "destructive" });
     }
   });
 
@@ -271,6 +310,15 @@ export function AdminManagement() {
     }
   };
 
+  const handleAddJobTitle = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (jobTitleForm.title.trim()) {
+      addJobTitleMutation.mutate({
+        job_title_id: jobTitleForm.title.trim()
+      });
+    }
+  };
+
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
     if (userForm.email.trim() && userForm.password.trim() && userForm.fullName.trim()) {
@@ -286,12 +334,12 @@ export function AdminManagement() {
             <Users className="w-8 h-8 text-blue-600" />
             Admin Management
           </h1>
-          <p className="text-gray-600">Manage customers, salesmen, designers, and users</p>
+          <p className="text-gray-600">Manage customers, salesmen, designers, job titles, and users</p>
         </div>
       </div>
 
       <Tabs defaultValue="customers" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="customers" className="flex items-center gap-2">
             <Building2 className="w-4 h-4" />
             Customers
@@ -303,6 +351,10 @@ export function AdminManagement() {
           <TabsTrigger value="designers" className="flex items-center gap-2">
             <Palette className="w-4 h-4" />
             Designers
+          </TabsTrigger>
+          <TabsTrigger value="job-titles" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Job Titles
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <UserPlus className="w-4 h-4" />
@@ -517,6 +569,67 @@ export function AdminManagement() {
                         <TableRow key={designer.id}>
                           <TableCell className="font-medium">{designer.name}</TableCell>
                           <TableCell>{designer.phone || 'N/A'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Job Titles Tab */}
+        <TabsContent value="job-titles">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  Add New Job Title
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddJobTitle} className="space-y-4">
+                  <div>
+                    <Label htmlFor="jobTitleName">Job Title</Label>
+                    <Input
+                      id="jobTitleName"
+                      value={jobTitleForm.title}
+                      onChange={(e) => setJobTitleForm({ title: e.target.value })}
+                      placeholder="Enter job title"
+                      required
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={addJobTitleMutation.isPending}
+                  >
+                    {addJobTitleMutation.isPending ? "Adding..." : "Add Job Title"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Existing Job Titles</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {jobTitlesLoading ? (
+                  <p>Loading job titles...</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {jobTitles.map((jobTitle) => (
+                        <TableRow key={jobTitle.id}>
+                          <TableCell className="font-medium">{jobTitle.job_title_id}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

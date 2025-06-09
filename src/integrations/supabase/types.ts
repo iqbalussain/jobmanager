@@ -120,20 +120,17 @@ export type Database = {
           created_at: string
           created_by: string
           customer_id: string
-          description: string | null
           designer_id: string | null
           due_date: string | null
           estimated_hours: number | null
           id: string
-          item_id: string | null
           job_order_details: string | null
           job_order_number: string
-          job_title_id: string | null
+          job_title_id: string
           job_type_id: string | null
           priority: Database["public"]["Enums"]["priority_level"]
           salesman_id: string | null
           status: Database["public"]["Enums"]["job_status"]
-          title: string
           updated_at: string
         }
         Insert: {
@@ -143,20 +140,17 @@ export type Database = {
           created_at?: string
           created_by: string
           customer_id: string
-          description?: string | null
           designer_id?: string | null
           due_date?: string | null
           estimated_hours?: number | null
           id?: string
-          item_id?: string | null
           job_order_details?: string | null
           job_order_number: string
-          job_title_id?: string | null
+          job_title_id: string
           job_type_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"]
           salesman_id?: string | null
           status?: Database["public"]["Enums"]["job_status"]
-          title: string
           updated_at?: string
         }
         Update: {
@@ -166,20 +160,17 @@ export type Database = {
           created_at?: string
           created_by?: string
           customer_id?: string
-          description?: string | null
           designer_id?: string | null
           due_date?: string | null
           estimated_hours?: number | null
           id?: string
-          item_id?: string | null
           job_order_details?: string | null
           job_order_number?: string
-          job_title_id?: string | null
+          job_title_id?: string
           job_type_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"]
           salesman_id?: string | null
           status?: Database["public"]["Enums"]["job_status"]
-          title?: string
           updated_at?: string
         }
         Relationships: [
@@ -198,13 +189,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "job_orders_job_title_id_fkey"
-            columns: ["job_title_id"]
-            isOneToOne: false
-            referencedRelation: "job_titles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "job_orders_salesman_id_fkey"
             columns: ["salesman_id"]
             isOneToOne: false
@@ -217,17 +201,17 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          title: string
+          job_title_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          title: string
+          job_title_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          title?: string
+          job_title_id?: string
         }
         Relationships: []
       }
