@@ -86,7 +86,7 @@ export function useJobOrders() {
         customer: order.customer && typeof order.customer === 'object' && 'id' in order.customer 
           ? order.customer as Customer 
           : null,
-        // Ensure designer is properly typed from profiles  
+        // Ensure designer is properly typed from profiles with null check
         designer: order.designer && typeof order.designer === 'object' && 'id' in order.designer
           ? {
               id: order.designer.id,
@@ -94,7 +94,7 @@ export function useJobOrders() {
               phone: order.designer.phone
             } as Designer
           : null,
-        // Ensure salesman is properly typed from profiles
+        // Ensure salesman is properly typed from profiles with null check
         salesman: order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman
           ? {
               id: order.salesman.id,
