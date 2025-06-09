@@ -10,7 +10,7 @@ export function transformJobOrderData(data: any[]): JobOrder[] {
       const designerData = order.designer as any;
       designer = {
         id: designerData.id,
-        name: sanitizeHtml(designerData.full_name || 'Unknown Designer'),
+        name: sanitizeHtml(designerData.name || 'Unknown Designer'),
         phone: designerData.phone
       };
     }
@@ -21,10 +21,16 @@ export function transformJobOrderData(data: any[]): JobOrder[] {
       const salesmanData = order.salesman as any;
       salesman = {
         id: salesmanData.id,
-        name: sanitizeHtml(salesmanData.full_name || 'Unknown Salesman'),
+        name: sanitizeHtml(salesmanData.name || 'Unknown Salesman'),
         email: salesmanData.email,
         phone: salesmanData.phone
       };
+    }
+
+    // Handle job title properly
+    let jobTitleDisplay = '';
+    if (order.job_title && typeof order.job_title === 'object' && 'job_title_id' in order.job_title) {
+      jobTitleDisplay = sanitizeHtml(order.job_title.job_title_id || '');
     }
 
     return {
@@ -37,8 +43,8 @@ export function transformJobOrderData(data: any[]): JobOrder[] {
       job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title
         ? order.job_title as JobTitle
         : null,
-      // Sanitize displayed content
-      title: sanitizeHtml(order.job_order_details || `Job Order ${order.job_order_number}`),
+      // Use the proper job title for display
+      title: jobTitleDisplay || sanitizeHtml(order.job_order_details || `Job Order ${order.job_order_number}`),
       description: sanitizeHtml(order.job_order_details || '')
     };
   }) || [];

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Job } from "@/pages/Index";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,10 +15,12 @@ import {
   Building,
   FileText,
   Save,
-  X as XIcon
+  X as XIcon,
+  Download
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { exportJobOrderToPDF } from "@/utils/pdfExport";
 
 interface JobDetailsProps {
   isOpen: boolean;
@@ -32,6 +35,7 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
   const [designers, setDesigners] = useState<Array<{id: string, name: string}>>([]);
   const [salesmen, setSalesmen] = useState<Array<{id: string, name: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -117,6 +121,28 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
     }
   };
 
+  const handleExportPDF = async () => {
+    if (!job) return;
+
+    setIsExporting(true);
+    try {
+      await exportJobOrderToPDF(job);
+      toast({
+        title: "Success",
+        description: "Job order exported to PDF successfully",
+      });
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to export PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (!job) return null;
 
   const getPriorityColor = (priority: string) => {
@@ -166,6 +192,15 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
                   </Badge>
                 </div>
               </div>
+              <Button
+                onClick={handleExportPDF}
+                disabled={isExporting}
+                variant="outline"
+                className="bg-white hover:bg-gray-50"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                {isExporting ? 'Exporting...' : 'Export PDF'}
+              </Button>
             </div>
           </div>
 
@@ -250,7 +285,7 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
                 <Label>Assignee</Label>
                 <div className="flex items-center gap-2 text-gray-700">
                   <User className="w-4 h-4" />
-                  <span>{job.assignee}</span>
+                  <span>{job.assignee || 'Not assigned'}</span>
                 </div>
               </div>
 
@@ -258,7 +293,7 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
                 <Label>Designer</Label>
                 <div className="flex items-center gap-2 text-gray-700">
                   <User className="w-4 h-4" />
-                  <span>{job.designer}</span>
+                  <span>{job.designer || 'Not assigned'}</span>
                 </div>
               </div>
 
@@ -266,7 +301,7 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
                 <Label>Salesman</Label>
                 <div className="flex items-center gap-2 text-gray-700">
                   <User className="w-4 h-4" />
-                  <span>{job.salesman}</span>
+                  <span>{job.salesman || 'Not assigned'}</span>
                 </div>
               </div>
 
