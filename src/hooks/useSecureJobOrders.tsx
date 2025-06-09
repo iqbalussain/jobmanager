@@ -95,7 +95,7 @@ export function useSecureJobOrders() {
       const transformedData = data?.map(order => {
         // Handle designer with proper null checks
         let designer: Designer | null = null;
-        if (order.designer && typeof order.designer === 'object' && 'id' in order.designer) {
+        if (order.designer && order.designer !== null && typeof order.designer === 'object' && 'id' in order.designer) {
           const designerData = order.designer as any;
           designer = {
             id: designerData.id,
@@ -106,7 +106,7 @@ export function useSecureJobOrders() {
 
         // Handle salesman with proper null checks
         let salesman: Salesman | null = null;
-        if (order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman) {
+        if (order.salesman && order.salesman !== null && typeof order.salesman === 'object' && 'id' in order.salesman) {
           const salesmanData = order.salesman as any;
           salesman = {
             id: salesmanData.id,
