@@ -29,7 +29,7 @@ export function Dashboard({ jobs }: DashboardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [customerFilter, setCustomerFilter] = useState("");
-  const [salesmanFilter, setSalesmanFilter] = useState("");
+  const [salesmanFilter, setSalesmanFilter] = useState("all");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
@@ -57,7 +57,7 @@ export function Dashboard({ jobs }: DashboardProps) {
 
   const filteredJobs = jobs.filter(job => {
     const matchesCustomer = customerFilter === "" || job.customer.toLowerCase().includes(customerFilter.toLowerCase());
-    const matchesSalesman = salesmanFilter === "" || job.salesman.toLowerCase().includes(salesmanFilter.toLowerCase());
+    const matchesSalesman = salesmanFilter === "all" || job.salesman.toLowerCase().includes(salesmanFilter.toLowerCase());
     return matchesCustomer && matchesSalesman;
   });
 
@@ -188,7 +188,7 @@ export function Dashboard({ jobs }: DashboardProps) {
                   <SelectValue placeholder="Select salesman" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Salesmen</SelectItem>
+                  <SelectItem value="all">All Salesmen</SelectItem>
                   {uniqueSalesmen.map((salesman) => (
                     <SelectItem key={salesman} value={salesman}>
                       {salesman}
