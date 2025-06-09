@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Dashboard } from "@/components/Dashboard";
@@ -71,7 +70,7 @@ const Index = () => {
       case "jobs":
         return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
       case "create":
-        return <JobForm onSubmit={() => {}} onCancel={() => setCurrentView("dashboard")} />;
+        return <JobForm onCancel={() => setCurrentView("dashboard")} />;
       case "calendar":
         return <CalendarView jobs={transformedJobs} />;
       case "settings":

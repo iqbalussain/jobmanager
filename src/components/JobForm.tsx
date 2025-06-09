@@ -7,17 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Job } from "@/pages/Index";
 import { Plus, X } from "lucide-react";
 import { useDropdownData } from "@/hooks/useDropdownData";
+import { useCreateJobOrder } from "@/hooks/useCreateJobOrder";
 
 interface JobFormProps {
-  onSubmit: (job: Omit<Job, "id" | "createdAt" | "jobOrderNumber">) => void;
   onCancel: () => void;
 }
 
-export function JobForm({ onSubmit, onCancel }: JobFormProps) {
+export function JobForm({ onCancel }: JobFormProps) {
   const { customers, designers, salesmen, jobTitles, isLoading } = useDropdownData();
+  const { createJobOrder, isCreating } = useCreateJobOrder();
   
   const [formData, setFormData] = useState({
     branch: "",
@@ -40,26 +40,51 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Find selected names for display
-    const selectedCustomer = customers.find(c => c.id === formData.customerId);
-    const selectedDesigner = designers.find(d => d.id === formData.designerId);
-    const selectedSalesman = salesmen.find(s => s.id === formData.salesmanId);
+    // Validate required fields
+    if (!formData.branch || !formData.customerId || !formData.designerId || 
+        !formData.salesmanId || !formData.jobTitleId || !formData.jobOrderDetails || 
+        !formData.assignee || !formData.dueDate) {
+      return;
+    }
+
+    // Find selected job title for the title field
     const selectedJobTitle = jobTitles.find(jt => jt.id === formData.jobTitleId);
     
-    onSubmit({
+    createJobOrder({
       title: selectedJobTitle?.title || formData.title,
       description: formData.description,
-      customer: selectedCustomer?.name || "",
+      customer_id: formData.customerId,
+      job_title_id: formData.jobTitleId,
+      designer_id: formData.designerId,
+      salesman_id: formData.salesmanId,
       assignee: formData.assignee,
       priority: formData.priority,
       status: formData.status,
-      dueDate: formData.dueDate,
-      estimatedHours: formData.estimatedHours,
+      due_date: formData.dueDate,
+      estimated_hours: formData.estimatedHours,
       branch: formData.branch,
-      designer: selectedDesigner?.name || "",
-      salesman: selectedSalesman?.name || "",
-      jobOrderDetails: formData.jobOrderDetails
+      job_order_details: formData.jobOrderDetails
     });
+
+    // Reset form after successful submission
+    setFormData({
+      branch: "",
+      designerId: "",
+      salesmanId: "",
+      title: "",
+      description: "",
+      jobOrderDetails: "",
+      customerId: "",
+      jobTitleId: "",
+      assignee: "",
+      priority: "medium",
+      status: "pending",
+      dueDate: "",
+      estimatedHours: 1
+    });
+
+    // Navigate back to dashboard or jobs list
+    onCancel();
   };
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -274,10 +299,11 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
             <div className="flex gap-4 pt-6 border-t border-gray-100">
               <Button
                 type="submit"
+                disabled={isCreating}
                 className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200 flex-1"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Create Job Order
+                {isCreating ? "Creating..." : "Create Job Order"}
               </Button>
               <Button
                 type="button"
