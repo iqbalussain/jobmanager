@@ -66,8 +66,8 @@ export function useJobOrders() {
         .select(`
           *,
           customer:customers(id, name),
-          designer:designers(id, name, phone),
-          salesman:salesmen(id, name, email, phone),
+          designer:profiles!job_orders_designer_id_fkey(id, full_name, phone),
+          salesman:profiles!job_orders_salesman_id_fkey(id, full_name, email, phone),
           job_title:job_titles(id, job_title_id)
         `)
         .order('created_at', { ascending: false });
@@ -86,13 +86,22 @@ export function useJobOrders() {
         customer: order.customer && typeof order.customer === 'object' && 'id' in order.customer 
           ? order.customer as Customer 
           : null,
-        // Ensure designer is properly typed  
+        // Ensure designer is properly typed from profiles  
         designer: order.designer && typeof order.designer === 'object' && 'id' in order.designer
-          ? order.designer as Designer
+          ? {
+              id: order.designer.id,
+              name: order.designer.full_name || 'Unknown Designer',
+              phone: order.designer.phone
+            } as Designer
           : null,
-        // Ensure salesman is properly typed
+        // Ensure salesman is properly typed from profiles
         salesman: order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman
-          ? order.salesman as Salesman
+          ? {
+              id: order.salesman.id,
+              name: order.salesman.full_name || 'Unknown Salesman',
+              email: order.salesman.email,
+              phone: order.salesman.phone
+            } as Salesman
           : null,
         // Ensure job_title is properly typed
         job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title

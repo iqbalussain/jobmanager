@@ -45,38 +45,49 @@ export function useDropdownData() {
   });
 
   const { data: designers = [], isLoading: designersLoading } = useQuery({
-    queryKey: ['designers'],
+    queryKey: ['users-designers'],
     queryFn: async () => {
-      console.log('Fetching designers...');
+      console.log('Fetching designers from user profiles...');
       const { data, error } = await supabase
-        .from('designers')
-        .select('id, name, phone')
-        .order('name');
+        .from('profiles')
+        .select('id, full_name, phone')
+        .eq('role', 'designer')
+        .order('full_name');
       
       if (error) {
         console.error('Error fetching designers:', error);
         throw error;
       }
       console.log('Designers fetched:', data);
-      return data as Designer[];
+      return data.map(user => ({
+        id: user.id,
+        name: user.full_name || 'Unknown Designer',
+        phone: user.phone
+      })) as Designer[];
     }
   });
 
   const { data: salesmen = [], isLoading: salesmenLoading } = useQuery({
-    queryKey: ['salesmen'],
+    queryKey: ['users-salesmen'],
     queryFn: async () => {
-      console.log('Fetching salesmen...');
+      console.log('Fetching salesmen from user profiles...');
       const { data, error } = await supabase
-        .from('salesmen')
-        .select('id, name, email, phone')
-        .order('name');
+        .from('profiles')
+        .select('id, full_name, email, phone')
+        .eq('role', 'salesman')
+        .order('full_name');
       
       if (error) {
         console.error('Error fetching salesmen:', error);
         throw error;
       }
       console.log('Salesmen fetched:', data);
-      return data as Salesman[];
+      return data.map(user => ({
+        id: user.id,
+        name: user.full_name || 'Unknown Salesman',
+        email: user.email,
+        phone: user.phone
+      })) as Salesman[];
     }
   });
 

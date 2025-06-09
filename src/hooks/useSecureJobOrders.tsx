@@ -78,8 +78,8 @@ export function useSecureJobOrders() {
         .select(`
           *,
           customer:customers(id, name),
-          designer:designers(id, name, phone),
-          salesman:salesmen(id, name, email, phone),
+          designer:profiles!job_orders_designer_id_fkey(id, full_name, phone),
+          salesman:profiles!job_orders_salesman_id_fkey(id, full_name, email, phone),
           job_title:job_titles(id, job_title_id)
         `)
         .order('created_at', { ascending: false });
@@ -98,10 +98,19 @@ export function useSecureJobOrders() {
           ? order.customer as Customer 
           : null,
         designer: order.designer && typeof order.designer === 'object' && 'id' in order.designer
-          ? order.designer as Designer
+          ? {
+              id: order.designer.id,
+              name: sanitizeHtml(order.designer.full_name || 'Unknown Designer'),
+              phone: order.designer.phone
+            } as Designer
           : null,
         salesman: order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman
-          ? order.salesman as Salesman
+          ? {
+              id: order.salesman.id,
+              name: sanitizeHtml(order.salesman.full_name || 'Unknown Salesman'),
+              email: order.salesman.email,
+              phone: order.salesman.phone
+            } as Salesman
           : null,
         job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title
           ? order.job_title as JobTitle
