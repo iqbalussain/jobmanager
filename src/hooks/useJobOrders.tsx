@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -101,8 +102,8 @@ export function useJobOrders() {
         salesman: order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman
           ? order.salesman as Salesman
           : null,
-        // Ensure assignee is properly typed with null check
-        assignee: order.assignee && typeof order.assignee === 'object' && 'id' in order.assignee
+        // Ensure assignee is properly typed with proper null check
+        assignee: order.assignee && typeof order.assignee === 'object' && 'id' in order.assignee && 'full_name' in order.assignee && 'email' in order.assignee
           ? order.assignee as Assignee
           : null,
         // Ensure job_title is properly typed
