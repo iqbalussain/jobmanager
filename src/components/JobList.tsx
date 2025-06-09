@@ -11,8 +11,13 @@ import {
   Clock,
   Building,
   ChevronRight,
-  Eye
+  Eye,
+  Edit,
+  X
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface JobListProps {
   jobs: Job[];
@@ -22,6 +27,26 @@ interface JobListProps {
 export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Check if user is admin
+  useState(() => {
+    const checkAdminRole = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .single();
+        setIsAdmin(!!data);
+      }
+    };
+    checkAdminRole();
+  });
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -64,6 +89,47 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   const handleViewDetails = (job: Job) => {
     setSelectedJob(job);
     setIsDetailsOpen(true);
+    setIsEditMode(false);
+  };
+
+  const handleEditJob = (job: Job) => {
+    setSelectedJob(job);
+    setIsDetailsOpen(true);
+    setIsEditMode(true);
+  };
+
+  const handleCancelJob = async (job: Job) => {
+    if (!isAdmin) {
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can cancel jobs",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to cancel job "${job.title}"?`)) {
+      try {
+        const { error } = await supabase
+          .from('job_orders')
+          .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+          .eq('id', job.id);
+
+        if (error) throw error;
+
+        onStatusUpdate(job.id, 'cancelled');
+        toast({
+          title: "Success",
+          description: "Job has been cancelled",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to cancel job",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   return (
@@ -126,7 +192,25 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
                     <Eye className="w-4 h-4 mr-2" />
                     View Details
                   </Button>
-                  {getNextStatus(job.status) && (
+                  <Button
+                    onClick={() => handleEditJob(job)}
+                    variant="outline"
+                    className="border-blue-300 hover:bg-blue-50 transition-colors"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                  {isAdmin && job.status !== 'cancelled' && (
+                    <Button
+                      onClick={() => handleCancelJob(job)}
+                      variant="outline"
+                      className="border-red-300 hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                  )}
+                  {getNextStatus(job.status) && job.status !== 'cancelled' && (
                     <Button
                       onClick={() => onStatusUpdate(job.id, getNextStatus(job.status)!)}
                       className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200"
@@ -146,6 +230,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         job={selectedJob}
+        isEditMode={isEditMode}
       />
     </div>
   );

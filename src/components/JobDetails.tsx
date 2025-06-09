@@ -1,17 +1,119 @@
+
+import { useState, useEffect } from "react";
 import { Job } from "@/pages/Index";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Download, Calendar, User, Building, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Calendar,
+  User,
+  Clock,
+  Building,
+  FileText,
+  Save,
+  X as XIcon
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface JobDetailsProps {
   isOpen: boolean;
   onClose: () => void;
   job: Job | null;
+  isEditMode?: boolean;
 }
 
-export function JobDetails({ isOpen, onClose, job }: JobDetailsProps) {
+export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDetailsProps) {
+  const [editData, setEditData] = useState<Partial<Job>>({});
+  const [customers, setCustomers] = useState<Array<{id: string, name: string}>>([]);
+  const [designers, setDesigners] = useState<Array<{id: string, name: string}>>([]);
+  const [salesmen, setSalesmen] = useState<Array<{id: string, name: string}>>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (job) {
+      setEditData({
+        title: job.title,
+        description: job.description,
+        priority: job.priority,
+        dueDate: job.dueDate,
+        estimatedHours: job.estimatedHours,
+        branch: job.branch,
+        jobOrderDetails: job.jobOrderDetails
+      });
+    }
+  }, [job]);
+
+  useEffect(() => {
+    if (isEditMode && isOpen) {
+      fetchDropdownData();
+    }
+  }, [isEditMode, isOpen]);
+
+  const fetchDropdownData = async () => {
+    try {
+      const [customersRes, designersRes, salesmenRes] = await Promise.all([
+        supabase.from('customers').select('id, name'),
+        supabase.from('designers').select('id, name'),
+        supabase.from('salesmen').select('id, name')
+      ]);
+
+      if (customersRes.data) setCustomers(customersRes.data);
+      if (designersRes.data) setDesigners(designersRes.data);
+      if (salesmenRes.data) setSalesmen(salesmenRes.data);
+    } catch (error) {
+      console.error('Error fetching dropdown data:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!job) return;
+
+    setIsLoading(true);
+    try {
+      const updateData: any = {
+        title: editData.title,
+        description: editData.description,
+        priority: editData.priority,
+        due_date: editData.dueDate,
+        estimated_hours: editData.estimatedHours,
+        branch: editData.branch,
+        job_order_details: editData.jobOrderDetails,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('job_orders')
+        .update(updateData)
+        .eq('id', job.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Job order updated successfully",
+      });
+      
+      onClose();
+      // Refresh the page to show updated data
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update job order",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!job) return null;
 
   const getPriorityColor = (priority: string) => {
@@ -27,421 +129,225 @@ export function JobDetails({ isOpen, onClose, job }: JobDetailsProps) {
     switch (status) {
       case "pending": return "bg-blue-100 text-blue-800 border-blue-200";
       case "in-progress": return "bg-orange-100 text-orange-800 border-orange-200";
-      case "designing": return "bg-purple-100 text-purple-800 border-purple-200";
-      case "finished": return "bg-green-100 text-green-800 border-green-200";
       case "completed": return "bg-green-100 text-green-800 border-green-200";
+      case "cancelled": return "bg-gray-100 text-gray-800 border-gray-200";
+      case "designing": return "bg-purple-100 text-purple-800 border-purple-200";
+      case "finished": return "bg-emerald-100 text-emerald-800 border-emerald-200";
       case "invoiced": return "bg-emerald-100 text-emerald-800 border-emerald-200";
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
-  const exportToPDF = () => {
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Job Order - ${job.jobOrderNumber}</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            @page { 
-              size: A4; 
-              margin: 15mm; 
-            }
-            body { 
-              font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
-              line-height: 1.5; 
-              color: #1e293b;
-              font-size: 11px;
-              background: white;
-            }
-            .container {
-              max-width: 100%;
-              margin: 0 auto;
-              background: white;
-              border-radius: 12px;
-              box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-              overflow: hidden;
-            }
-            .header {
-              background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-              color: white;
-              padding: 20px 30px;
-              position: relative;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-            }
-            .header::before {
-              content: '';
-              position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-            }
-            .header-left, .header-right { position: relative; z-index: 1; }
-            .header-left {
-              display: flex;
-              align-items: center;
-              gap: 15px;
-            }
-            .company-logo {
-              width: 40px;
-              height: 40px;
-              background: rgba(255, 255, 255, 0.2);
-              border-radius: 8px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              backdrop-filter: blur(10px);
-            }
-            .job-number {
-              font-size: 1.8rem;
-              font-weight: 800;
-              text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-            .header-right {
-              text-align: right;
-            }
-            .job-title {
-              font-size: 1.3rem;
-              font-weight: 600;
-              opacity: 0.95;
-              margin-bottom: 8px;
-            }
-            .status-badges {
-              display: flex;
-              gap: 8px;
-              justify-content: flex-end;
-            }
-            .badge {
-              padding: 6px 12px;
-              border-radius: 16px;
-              font-size: 0.75rem;
-              font-weight: 600;
-              text-transform: uppercase;
-              letter-spacing: 0.05em;
-              background: rgba(255, 255, 255, 0.2);
-              backdrop-filter: blur(10px);
-            }
-            .content {
-              padding: 25px 30px;
-            }
-            .info-grid {
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-              gap: 20px;
-              margin-bottom: 25px;
-            }
-            .info-section {
-              background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-              border-radius: 10px;
-              padding: 18px;
-              border-left: 3px solid #3b82f6;
-            }
-            .section-title {
-              font-size: 1rem;
-              font-weight: 700;
-              color: #1e40af;
-              margin-bottom: 12px;
-              display: flex;
-              align-items: center;
-              gap: 6px;
-            }
-            .info-table {
-              width: 100%;
-              border-collapse: separate;
-              border-spacing: 0;
-            }
-            .info-table tr {
-              border-bottom: 1px solid #e2e8f0;
-            }
-            .info-table tr:last-child {
-              border-bottom: none;
-            }
-            .info-table td {
-              padding: 8px 0;
-              vertical-align: top;
-            }
-            .info-label {
-              font-weight: 600;
-              color: #475569;
-              width: 35%;
-              padding-right: 12px;
-              font-size: 0.9rem;
-            }
-            .info-value {
-              color: #1e293b;
-              font-weight: 500;
-              font-size: 0.9rem;
-            }
-            .description-section {
-              background: linear-gradient(135deg, #fefefe 0%, #f8fafc 100%);
-              border-radius: 10px;
-              padding: 18px;
-              border: 1px solid #e2e8f0;
-              margin-bottom: 16px;
-            }
-            .description-title {
-              font-size: 1rem;
-              font-weight: 700;
-              color: #1e40af;
-              margin-bottom: 12px;
-              padding-bottom: 6px;
-              border-bottom: 2px solid #e2e8f0;
-            }
-            .description-text {
-              background: white;
-              padding: 15px;
-              border-radius: 6px;
-              border-left: 3px solid #3b82f6;
-              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-              line-height: 1.6;
-              font-size: 0.9rem;
-            }
-            .footer {
-              background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-              padding: 15px 30px;
-              text-align: center;
-              color: #64748b;
-              font-size: 0.75rem;
-              border-top: 1px solid #e2e8f0;
-            }
-            .icon {
-              width: 16px;
-              height: 16px;
-              fill: currentColor;
-            }
-            @media print {
-              body { 
-                background: white !important; 
-                -webkit-print-color-adjust: exact;
-                color-adjust: exact;
-              }
-              .container { 
-                box-shadow: none; 
-                border-radius: 0;
-              }
-              .header {
-                page-break-inside: avoid;
-              }
-              .info-section {
-                page-break-inside: avoid;
-                break-inside: avoid;
-              }
-              .description-section {
-                page-break-inside: avoid;
-                break-inside: avoid;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <div class="header-left">
-                <div class="company-logo">
-                  <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" fill="none"/>
-                  </svg>
-                </div>
-                <div class="job-number">${job.jobOrderNumber}</div>
-              </div>
-              <div class="header-right">
-                <div class="job-title">${job.title}</div>
-                <div class="status-badges">
-                  <span class="badge">${job.status.replace('-', ' ').toUpperCase()}</span>
-                  <span class="badge">${job.priority.toUpperCase()} PRIORITY</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="content">
-              <div class="info-grid">
-                <div class="info-section">
-                  <h3 class="section-title">
-                    <svg class="icon" viewBox="0 0 24 24">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <path d="m22 21-3-3m0 0a2 2 0 0 0 0-4 2 2 0 0 0 0 4" stroke="currentColor" stroke-width="2" fill="none"/>
-                    </svg>
-                    Customer & Team
-                  </h3>
-                  <table class="info-table">
-                    <tr>
-                      <td class="info-label">Customer:</td>
-                      <td class="info-value">${job.customer}</td>
-                    </tr>
-                    <tr>
-                      <td class="info-label">Assignee:</td>
-                      <td class="info-value">${job.assignee}</td>
-                    </tr>
-                    <tr>
-                      <td class="info-label">Designer:</td>
-                      <td class="info-value">${job.designer}</td>
-                    </tr>
-                    <tr>
-                      <td class="info-label">Salesman:</td>
-                      <td class="info-value">${job.salesman}</td>
-                    </tr>
-                    <tr>
-                      <td class="info-label">Branch:</td>
-                      <td class="info-value">${job.branch || 'Not specified'}</td>
-                    </tr>
-                  </table>
-                </div>
-
-                <div class="info-section">
-                  <h3 class="section-title">
-                    <svg class="icon" viewBox="0 0 24 24">
-                      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <line x1="16" x2="16" y1="2" y2="6" stroke="currentColor" stroke-width="2"/>
-                      <line x1="8" x2="8" y1="2" y2="6" stroke="currentColor" stroke-width="2"/>
-                      <line x1="3" x2="21" y1="10" y2="10" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    Timeline & Details
-                  </h3>
-                  <table class="info-table">
-                    <tr>
-                      <td class="info-label">Created Date:</td>
-                      <td class="info-value">${new Date(job.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                    <tr>
-                      <td class="info-label">Due Date:</td>
-                      <td class="info-value">${new Date(job.dueDate).toLocaleDateString()}</td>
-                    </tr>
-                    <tr>
-                      <td class="info-label">Est. Hours:</td>
-                      <td class="info-value">${job.estimatedHours} hours</td>
-                    </tr>
-                    <tr>
-                      <td class="info-label">Priority:</td>
-                      <td class="info-value">${job.priority.toUpperCase()}</td>
-                    </tr>
-                    <tr>
-                      <td class="info-label">Status:</td>
-                      <td class="info-value">${job.status.replace('-', ' ').toUpperCase()}</td>
-                    </tr>
-                  </table>
-                </div>
-              </div>
-
-              <div class="description-section">
-                <h3 class="description-title">Job Description</h3>
-                <div class="description-text">${job.description || 'No description provided.'}</div>
-              </div>
-
-              <div class="description-section">
-                <h3 class="description-title">Job Order Details</h3>
-                <div class="description-text">${job.jobOrderDetails || 'No additional details provided.'}</div>
-              </div>
-            </div>
-
-            <div class="footer">
-              <p><strong>JobFlow Management System</strong></p>
-              <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="text-xl font-bold">Job Details - {job.jobOrderNumber}</DialogTitle>
-          <Button onClick={exportToPDF} className="bg-blue-600 hover:bg-blue-700">
-            <Download className="w-4 h-4 mr-2" />
-            Export PDF
-          </Button>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <FileText className="w-6 h-6 text-blue-600" />
+            {isEditMode ? "Edit Job Order" : "Job Order Details"}
+          </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6">
-          {/* Header Info */}
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">{job.title}</h3>
-            <div className="flex gap-2">
-              <Badge className={getPriorityColor(job.priority)}>
-                {job.priority} priority
-              </Badge>
-              <Badge className={getStatusColor(job.status)}>
-                {job.status.replace('-', ' ')}
-              </Badge>
+          {/* Job Order Header */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-100">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Job Order #{job.jobOrderNumber}</h3>
+                <div className="flex gap-2 mt-2">
+                  <Badge className={getPriorityColor(job.priority)}>
+                    {job.priority} priority
+                  </Badge>
+                  <Badge className={getStatusColor(job.status)}>
+                    {job.status.replace('-', ' ')}
+                  </Badge>
+                </div>
+              </div>
             </div>
           </div>
 
-          <Separator />
-
-          {/* Details Grid */}
+          {/* Job Details Form/Display */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Building className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Customer:</span>
-                <span>{job.customer}</span>
+              <div>
+                <Label htmlFor="title">Job Title</Label>
+                {isEditMode ? (
+                  <Input
+                    id="title"
+                    value={editData.title || ''}
+                    onChange={(e) => setEditData({...editData, title: e.target.value})}
+                  />
+                ) : (
+                  <p className="text-lg font-semibold text-gray-900">{job.title}</p>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Assignee:</span>
-                <span>{job.assignee}</span>
+
+              <div>
+                <Label htmlFor="description">Description</Label>
+                {isEditMode ? (
+                  <Textarea
+                    id="description"
+                    value={editData.description || ''}
+                    onChange={(e) => setEditData({...editData, description: e.target.value})}
+                    rows={3}
+                  />
+                ) : (
+                  <p className="text-gray-700">{job.description}</p>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Designer:</span>
-                <span>{job.designer}</span>
+
+              <div>
+                <Label htmlFor="priority">Priority</Label>
+                {isEditMode ? (
+                  <Select value={editData.priority} onValueChange={(value) => setEditData({...editData, priority: value as any})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Badge className={getPriorityColor(job.priority)}>
+                    {job.priority} priority
+                  </Badge>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Salesman:</span>
-                <span>{job.salesman}</span>
+
+              <div>
+                <Label htmlFor="dueDate">Due Date</Label>
+                {isEditMode ? (
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    value={editData.dueDate || ''}
+                    onChange={(e) => setEditData({...editData, dueDate: e.target.value})}
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <Calendar className="w-4 h-4" />
+                    <span>{new Date(job.dueDate).toLocaleDateString()}</span>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Due Date:</span>
-                <span>{new Date(job.dueDate).toLocaleDateString()}</span>
+              <div>
+                <Label>Customer</Label>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Building className="w-4 h-4" />
+                  <span>{job.customer}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Estimated Hours:</span>
-                <span>{job.estimatedHours}h</span>
+
+              <div>
+                <Label>Assignee</Label>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <User className="w-4 h-4" />
+                  <span>{job.assignee}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Building className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Branch:</span>
-                <span>{job.branch}</span>
+
+              <div>
+                <Label>Designer</Label>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <User className="w-4 h-4" />
+                  <span>{job.designer}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Created:</span>
-                <span>{new Date(job.createdAt).toLocaleDateString()}</span>
+
+              <div>
+                <Label>Salesman</Label>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <User className="w-4 h-4" />
+                  <span>{job.salesman}</span>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="estimatedHours">Estimated Hours</Label>
+                {isEditMode ? (
+                  <Input
+                    id="estimatedHours"
+                    type="number"
+                    value={editData.estimatedHours || 0}
+                    onChange={(e) => setEditData({...editData, estimatedHours: parseInt(e.target.value) || 0})}
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <Clock className="w-4 h-4" />
+                    <span>{job.estimatedHours} hours</span>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="branch">Branch</Label>
+                {isEditMode ? (
+                  <Input
+                    id="branch"
+                    value={editData.branch || ''}
+                    onChange={(e) => setEditData({...editData, branch: e.target.value})}
+                  />
+                ) : (
+                  <p className="text-gray-700">{job.branch || 'N/A'}</p>
+                )}
               </div>
             </div>
-          </div>
-
-          <Separator />
-
-          {/* Description */}
-          <div>
-            <h4 className="font-medium mb-2">Description</h4>
-            <p className="text-gray-600 bg-gray-50 p-3 rounded">{job.description}</p>
           </div>
 
           {/* Job Order Details */}
           <div>
-            <h4 className="font-medium mb-2">Job Order Details</h4>
-            <p className="text-gray-600 bg-gray-50 p-3 rounded">{job.jobOrderDetails}</p>
+            <Label htmlFor="jobOrderDetails">Job Order Details</Label>
+            {isEditMode ? (
+              <Textarea
+                id="jobOrderDetails"
+                value={editData.jobOrderDetails || ''}
+                onChange={(e) => setEditData({...editData, jobOrderDetails: e.target.value})}
+                rows={4}
+                placeholder="Additional job order details..."
+              />
+            ) : (
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <p className="text-gray-700 whitespace-pre-wrap">
+                  {job.jobOrderDetails || 'No additional details provided.'}
+                </p>
+              </div>
+            )}
           </div>
+
+          {/* Timestamps */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+            <div>
+              <Label>Created At</Label>
+              <p className="text-sm text-gray-600">{new Date(job.createdAt).toLocaleString()}</p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          {isEditMode && (
+            <div className="flex gap-2 justify-end pt-4 border-t border-gray-200">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                <XIcon className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={isLoading}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isLoading ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
