@@ -56,7 +56,33 @@ export function useJobOrders() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as JobOrder[];
+      
+      // Transform the data to match our interface
+      return (data || []).map(item => ({
+        id: item.id,
+        job_order_number: item.job_order_number,
+        title: item.title,
+        description: item.description,
+        customer_id: item.customer_id,
+        job_type_id: item.job_type_id,
+        assignee_id: item.assignee_id,
+        designer_id: item.designer_id,
+        salesman_id: item.salesman_id,
+        priority: item.priority,
+        status: item.status,
+        due_date: item.due_date,
+        estimated_hours: item.estimated_hours,
+        actual_hours: item.actual_hours,
+        branch: item.branch,
+        job_order_details: item.job_order_details,
+        created_by: item.created_by,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        customer: item.customer ? { name: item.customer.name } : undefined,
+        assignee: item.assignee ? { full_name: item.assignee.full_name } : undefined,
+        designer: item.designer ? { full_name: item.designer.full_name } : undefined,
+        salesman: item.salesman ? { full_name: item.salesman.full_name } : undefined,
+      })) as JobOrder[];
     }
   });
 
