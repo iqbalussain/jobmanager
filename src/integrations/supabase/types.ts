@@ -184,13 +184,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_job_orders_job_title"
-            columns: ["job_title_id"]
-            isOneToOne: false
-            referencedRelation: "job_titles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "job_orders_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -198,10 +191,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "job_orders_designer_id_fkey"
+            columns: ["designer_id"]
+            isOneToOne: false
+            referencedRelation: "designers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_orders_job_title_id_fkey"
+            columns: ["job_title_id"]
+            isOneToOne: false
+            referencedRelation: "job_titles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "job_orders_job_type_id_fkey"
             columns: ["job_type_id"]
             isOneToOne: false
             referencedRelation: "job_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_orders_salesman_id_fkey"
+            columns: ["salesman_id"]
+            isOneToOne: false
+            referencedRelation: "salesmen"
             referencedColumns: ["id"]
           },
         ]

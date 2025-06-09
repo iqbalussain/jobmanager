@@ -25,6 +25,8 @@ export function useCreateJobOrder() {
 
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: CreateJobOrderData) => {
+      console.log('Creating job order with data:', data);
+      
       // Generate job order number
       const jobOrderNumber = `JO-${Date.now()}`;
       
@@ -50,7 +52,12 @@ export function useCreateJobOrder() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Job order created successfully:', newJobOrder);
       return newJobOrder;
     },
     onSuccess: () => {
@@ -71,7 +78,7 @@ export function useCreateJobOrder() {
   });
 
   return {
-    createJobOrder: createJobOrderMutation.mutate,
+    createJobOrder: createJobOrderMutation.mutateAsync,
     isCreating: createJobOrderMutation.isPending
   };
 }

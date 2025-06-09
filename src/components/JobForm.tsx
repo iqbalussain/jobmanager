@@ -37,20 +37,30 @@ export function JobForm({ onCancel }: JobFormProps) {
 
   const branches = ["Wadi Kabeer", "Head Office"];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate required fields
     if (!formData.branch || !formData.customerId || !formData.designerId || 
         !formData.salesmanId || !formData.jobTitleId || !formData.jobOrderDetails || 
         !formData.assignee || !formData.dueDate) {
+      console.log('Missing required fields:', {
+        branch: formData.branch,
+        customerId: formData.customerId,
+        designerId: formData.designerId,
+        salesmanId: formData.salesmanId,
+        jobTitleId: formData.jobTitleId,
+        jobOrderDetails: formData.jobOrderDetails,
+        assignee: formData.assignee,
+        dueDate: formData.dueDate
+      });
       return;
     }
 
     // Find selected job title for the title field
     const selectedJobTitle = jobTitles.find(jt => jt.id === formData.jobTitleId);
     
-    createJobOrder({
+    console.log('Submitting job order with data:', {
       title: selectedJobTitle?.title || formData.title,
       description: formData.description,
       customer_id: formData.customerId,
@@ -66,25 +76,45 @@ export function JobForm({ onCancel }: JobFormProps) {
       job_order_details: formData.jobOrderDetails
     });
 
-    // Reset form after successful submission
-    setFormData({
-      branch: "",
-      designerId: "",
-      salesmanId: "",
-      title: "",
-      description: "",
-      jobOrderDetails: "",
-      customerId: "",
-      jobTitleId: "",
-      assignee: "",
-      priority: "medium",
-      status: "pending",
-      dueDate: "",
-      estimatedHours: 1
-    });
+    try {
+      await createJobOrder({
+        title: selectedJobTitle?.title || formData.title,
+        description: formData.description,
+        customer_id: formData.customerId,
+        job_title_id: formData.jobTitleId,
+        designer_id: formData.designerId,
+        salesman_id: formData.salesmanId,
+        assignee: formData.assignee,
+        priority: formData.priority,
+        status: formData.status,
+        due_date: formData.dueDate,
+        estimated_hours: formData.estimatedHours,
+        branch: formData.branch,
+        job_order_details: formData.jobOrderDetails
+      });
 
-    // Navigate back to dashboard or jobs list
-    onCancel();
+      // Reset form after successful submission
+      setFormData({
+        branch: "",
+        designerId: "",
+        salesmanId: "",
+        title: "",
+        description: "",
+        jobOrderDetails: "",
+        customerId: "",
+        jobTitleId: "",
+        assignee: "",
+        priority: "medium",
+        status: "pending",
+        dueDate: "",
+        estimatedHours: 1
+      });
+
+      // Navigate back to dashboard
+      onCancel();
+    } catch (error) {
+      console.error('Error creating job order:', error);
+    }
   };
 
   const handleInputChange = (field: string, value: string | number) => {
