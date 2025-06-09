@@ -45,17 +45,39 @@ export function JobChat({ job, isOpen, onClose }: JobChatProps) {
   const fetchComments = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // First get the comments
+      const { data: commentsData, error: commentsError } = await supabase
         .from('job_order_comments')
-        .select(`
-          *,
-          user_profile:profiles!job_order_comments_created_by_fkey(full_name)
-        `)
+        .select('*')
         .eq('job_order_id', job.id)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
-      setComments(data || []);
+      if (commentsError) throw commentsError;
+
+      if (commentsData && commentsData.length > 0) {
+        // Get unique user IDs
+        const userIds = [...new Set(commentsData.map(comment => comment.created_by))];
+        
+        // Fetch user profiles separately
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+        }
+
+        // Combine comments with user profiles
+        const commentsWithProfiles = commentsData.map(comment => ({
+          ...comment,
+          user_profile: profilesData?.find(profile => profile.id === comment.created_by) || { full_name: 'Unknown User' }
+        }));
+
+        setComments(commentsWithProfiles);
+      } else {
+        setComments([]);
+      }
     } catch (error) {
       console.error('Error fetching comments:', error);
       toast({
@@ -80,15 +102,24 @@ export function JobChat({ job, isOpen, onClose }: JobChatProps) {
           comment: newComment.trim(),
           created_by: user.id
         })
-        .select(`
-          *,
-          user_profile:profiles!job_order_comments_created_by_fkey(full_name)
-        `)
+        .select()
         .single();
 
       if (error) throw error;
 
-      setComments(prev => [...prev, data]);
+      // Get the user profile for the new comment
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      const newCommentWithProfile = {
+        ...data,
+        user_profile: profileData || { full_name: 'Unknown User' }
+      };
+
+      setComments(prev => [...prev, newCommentWithProfile]);
       setNewComment('');
       
       toast({
