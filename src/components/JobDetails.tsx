@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Job } from "@/pages/Index";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -59,13 +58,17 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
     try {
       const [customersRes, designersRes, salesmenRes] = await Promise.all([
         supabase.from('customers').select('id, name'),
-        supabase.from('designers').select('id, name'),
-        supabase.from('salesmen').select('id, name')
+        supabase.from('profiles').select('id, full_name').eq('role', 'designer'),
+        supabase.from('profiles').select('id, full_name').eq('role', 'salesman')
       ]);
 
       if (customersRes.data) setCustomers(customersRes.data);
-      if (designersRes.data) setDesigners(designersRes.data);
-      if (salesmenRes.data) setSalesmen(salesmenRes.data);
+      if (designersRes.data) {
+        setDesigners(designersRes.data.map(d => ({ id: d.id, name: d.full_name || 'Unknown Designer' })));
+      }
+      if (salesmenRes.data) {
+        setSalesmen(salesmenRes.data.map(s => ({ id: s.id, name: s.full_name || 'Unknown Salesman' })));
+      }
     } catch (error) {
       console.error('Error fetching dropdown data:', error);
     }

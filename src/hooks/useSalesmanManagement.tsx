@@ -19,39 +19,33 @@ export function useSalesmanManagement() {
   const { data: salesmen = [], isLoading: salesmenLoading } = useQuery({
     queryKey: ['salesmen'],
     queryFn: async () => {
-      console.log('Fetching salesmen...');
+      console.log('Fetching salesmen from profiles...');
       const { data, error } = await supabase
-        .from('salesmen')
-        .select('id, name, email, phone')
-        .order('name');
+        .from('profiles')
+        .select('id, full_name, email, phone')
+        .eq('role', 'salesman')
+        .order('full_name');
       
       if (error) {
         console.error('Error fetching salesmen:', error);
         throw error;
       }
       console.log('Salesmen fetched:', data);
-      return data as Salesman[];
+      return data.map(profile => ({
+        id: profile.id,
+        name: profile.full_name || 'Unknown Salesman',
+        email: profile.email,
+        phone: profile.phone
+      })) as Salesman[];
     }
   });
 
   const addSalesmanMutation = useMutation({
     mutationFn: async (data: { name: string; email: string; phone: string }) => {
-      console.log('Adding salesman:', data.name, data.email, data.phone);
-      const { data: result, error } = await supabase
-        .from('salesmen')
-        .insert({ 
-          name: data.name, 
-          email: data.email || null, 
-          phone: data.phone || null 
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error adding salesman:', error);
-        throw error;
-      }
-      return result;
+      console.log('Adding salesman to profiles:', data.name, data.email, data.phone);
+      // Note: In a real implementation, you would create a new user account first
+      // and then update their profile. For now, this is just a placeholder.
+      throw new Error('Adding salesmen requires proper user account creation flow');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salesmen'] });
@@ -65,7 +59,7 @@ export function useSalesmanManagement() {
       console.error('Error adding salesman:', error);
       toast({
         title: "Error",
-        description: "Failed to add salesman",
+        description: "Failed to add salesman. Please contact an administrator.",
         variant: "destructive",
       });
     }
