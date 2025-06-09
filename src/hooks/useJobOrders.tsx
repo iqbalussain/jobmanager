@@ -52,11 +52,11 @@ export function useJobOrders() {
         .from('job_orders')
         .select(`
           *,
-          customer:customers(name),
-          assignee:profiles(full_name),
-          designer:designers(name),
-          salesman:salesmen(name),
-          item:items(name)
+          customers!customer_id(name),
+          profiles!assignee_id(full_name),
+          designers!designer_id(name),
+          salesmen!salesman_id(name),
+          items!item_id(name)
         `)
         .order('created_at', { ascending: false });
 
@@ -84,11 +84,11 @@ export function useJobOrders() {
         created_by: item.created_by,
         created_at: item.created_at,
         updated_at: item.updated_at,
-        customer: item.customer ? { name: item.customer.name } : undefined,
-        assignee: item.assignee ? { full_name: item.assignee.full_name } : undefined,
-        designer: item.designer ? { name: item.designer.name } : undefined,
-        salesman: item.salesman ? { name: item.salesman.name } : undefined,
-        item: item.item ? { name: item.item.name } : undefined,
+        customer: item.customers ? { name: item.customers.name } : undefined,
+        assignee: item.profiles ? { full_name: item.profiles.full_name } : undefined,
+        designer: item.designers ? { name: item.designers.name } : undefined,
+        salesman: item.salesmen ? { name: item.salesmen.name } : undefined,
+        item: item.items ? { name: item.items.name } : undefined,
       })) as JobOrder[];
     }
   });
