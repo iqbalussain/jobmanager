@@ -45,36 +45,35 @@ export function JobChat({ job, isOpen, onClose }: JobChatProps) {
   const fetchComments = async () => {
     setIsLoading(true);
     try {
-      // First get the comments
+      // Use raw SQL query to fetch comments since table might not be in types yet
       const { data: commentsData, error: commentsError } = await supabase
-        .from('job_order_comments')
-        .select('*')
-        .eq('job_order_id', job.id)
-        .order('created_at', { ascending: true });
+        .rpc('exec_sql', {
+          sql: `SELECT * FROM public.job_order_comments WHERE job_order_id = '${job.id}' ORDER BY created_at ASC`
+        }) as { data: any[], error: any };
 
-      if (commentsError) throw commentsError;
+      if (commentsError) {
+        console.error('SQL query failed, trying direct access:', commentsError);
+        // Fallback to direct table access
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('job_order_comments' as any)
+          .select('*')
+          .eq('job_order_id', job.id)
+          .order('created_at', { ascending: true });
+
+        if (fallbackError) {
+          throw fallbackError;
+        }
+        
+        if (fallbackData && fallbackData.length > 0) {
+          await processCommentsWithProfiles(fallbackData);
+        } else {
+          setComments([]);
+        }
+        return;
+      }
 
       if (commentsData && commentsData.length > 0) {
-        // Get unique user IDs
-        const userIds = [...new Set(commentsData.map(comment => comment.created_by))];
-        
-        // Fetch user profiles separately
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', userIds);
-
-        if (profilesError) {
-          console.error('Error fetching profiles:', profilesError);
-        }
-
-        // Combine comments with user profiles
-        const commentsWithProfiles = commentsData.map(comment => ({
-          ...comment,
-          user_profile: profilesData?.find(profile => profile.id === comment.created_by) || { full_name: 'Unknown User' }
-        }));
-
-        setComments(commentsWithProfiles);
+        await processCommentsWithProfiles(commentsData);
       } else {
         setComments([]);
       }
@@ -90,42 +89,100 @@ export function JobChat({ job, isOpen, onClose }: JobChatProps) {
     }
   };
 
+  const processCommentsWithProfiles = async (commentsData: any[]) => {
+    // Get unique user IDs
+    const userIds = [...new Set(commentsData.map(comment => comment.created_by))];
+    
+    // Fetch user profiles separately
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', userIds);
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+    }
+
+    // Combine comments with user profiles
+    const commentsWithProfiles = commentsData.map(comment => ({
+      ...comment,
+      user_profile: profilesData?.find(profile => profile.id === comment.created_by) || { full_name: 'Unknown User' }
+    }));
+
+    setComments(commentsWithProfiles);
+  };
+
   const sendComment = async () => {
     if (!newComment.trim() || !user) return;
 
     setIsSending(true);
     try {
+      // Use raw SQL for insert since table might not be in types yet
       const { data, error } = await supabase
-        .from('job_order_comments')
-        .insert({
-          job_order_id: job.id,
-          comment: newComment.trim(),
-          created_by: user.id
-        })
-        .select()
-        .single();
+        .rpc('exec_sql', {
+          sql: `INSERT INTO public.job_order_comments (job_order_id, comment, created_by) VALUES ('${job.id}', '${newComment.trim().replace(/'/g, "''")}', '${user.id}') RETURNING *`
+        }) as { data: any[], error: any };
 
-      if (error) throw error;
+      if (error) {
+        console.error('SQL insert failed, trying direct access:', error);
+        // Fallback to direct table access
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('job_order_comments' as any)
+          .insert({
+            job_order_id: job.id,
+            comment: newComment.trim(),
+            created_by: user.id
+          })
+          .select()
+          .single();
 
-      // Get the user profile for the new comment
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .single();
+        if (fallbackError) {
+          throw fallbackError;
+        }
+        
+        // Get the user profile for the new comment
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
 
-      const newCommentWithProfile = {
-        ...data,
-        user_profile: profileData || { full_name: 'Unknown User' }
-      };
+        const newCommentWithProfile = {
+          ...fallbackData,
+          user_profile: profileData || { full_name: 'Unknown User' }
+        };
 
-      setComments(prev => [...prev, newCommentWithProfile]);
-      setNewComment('');
-      
-      toast({
-        title: "Success",
-        description: "Comment added successfully",
-      });
+        setComments(prev => [...prev, newCommentWithProfile]);
+        setNewComment('');
+        
+        toast({
+          title: "Success",
+          description: "Comment added successfully",
+        });
+        return;
+      }
+
+      if (data && data.length > 0) {
+        // Get the user profile for the new comment
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+
+        const newCommentWithProfile = {
+          ...data[0],
+          user_profile: profileData || { full_name: 'Unknown User' }
+        };
+
+        setComments(prev => [...prev, newCommentWithProfile]);
+        setNewComment('');
+        
+        toast({
+          title: "Success",
+          description: "Comment added successfully",
+        });
+      }
     } catch (error) {
       console.error('Error sending comment:', error);
       toast({

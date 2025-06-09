@@ -36,11 +36,11 @@ export function SalesmanManagement({
         <CardContent>
           <form onSubmit={onAddSalesman} className="space-y-4">
             <div>
-              <Label htmlFor="salesmanName">Name</Label>
+              <Label htmlFor="salesmanName">Salesman Name</Label>
               <Input
                 id="salesmanName"
                 value={salesmanForm.name}
-                onChange={(e) => setSalesmanForm(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => setSalesmanForm({ ...salesmanForm, name: e.target.value })}
                 placeholder="Enter salesman name"
                 required
               />
@@ -51,7 +51,7 @@ export function SalesmanManagement({
                 id="salesmanEmail"
                 type="email"
                 value={salesmanForm.email}
-                onChange={(e) => setSalesmanForm(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) => setSalesmanForm({ ...salesmanForm, email: e.target.value })}
                 placeholder="Enter email address"
               />
             </div>
@@ -60,7 +60,7 @@ export function SalesmanManagement({
               <Input
                 id="salesmanPhone"
                 value={salesmanForm.phone}
-                onChange={(e) => setSalesmanForm(prev => ({ ...prev, phone: e.target.value }))}
+                onChange={(e) => setSalesmanForm({ ...salesmanForm, phone: e.target.value })}
                 placeholder="Enter phone number"
               />
             </div>

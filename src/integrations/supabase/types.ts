@@ -80,6 +80,38 @@ export type Database = {
           },
         ]
       }
+      job_order_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          created_by: string
+          id: string
+          job_order_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          created_by: string
+          id?: string
+          job_order_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          job_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_order_comments_job_order_id_fkey"
+            columns: ["job_order_id"]
+            isOneToOne: false
+            referencedRelation: "job_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_orders: {
         Row: {
           actual_hours: number | null
@@ -94,6 +126,7 @@ export type Database = {
           id: string
           job_order_details: string | null
           job_order_number: string
+          job_title_id: string | null
           job_type_id: string | null
           priority: Database["public"]["Enums"]["priority_level"]
           salesman_id: string | null
@@ -113,6 +146,7 @@ export type Database = {
           id?: string
           job_order_details?: string | null
           job_order_number: string
+          job_title_id?: string | null
           job_type_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"]
           salesman_id?: string | null
@@ -132,6 +166,7 @@ export type Database = {
           id?: string
           job_order_details?: string | null
           job_order_number?: string
+          job_title_id?: string | null
           job_type_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"]
           salesman_id?: string | null
@@ -154,6 +189,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "job_orders_job_title_id_fkey"
+            columns: ["job_title_id"]
+            isOneToOne: false
+            referencedRelation: "job_titles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "job_orders_salesman_id_fkey"
             columns: ["salesman_id"]
             isOneToOne: false
@@ -161,6 +203,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      job_titles: {
+        Row: {
+          created_at: string
+          id: string
+          job_title_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_title_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_title_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

@@ -84,17 +84,28 @@ export function useDropdownData() {
     queryKey: ['job-titles'],
     queryFn: async () => {
       console.log('Fetching job titles...');
+      // Use raw SQL query since the table might not be in types yet
       const { data, error } = await supabase
-        .from('job_titles')
-        .select('id, job_title_id')
-        .order('job_title_id');
+        .rpc('exec_sql', { 
+          sql: 'SELECT id, job_title_id FROM public.job_titles ORDER BY job_title_id' 
+        }) as { data: JobTitle[], error: any };
       
       if (error) {
         console.error('Error fetching job titles:', error);
-        throw error;
+        // Fallback to direct table access
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('job_titles' as any)
+          .select('id, job_title_id')
+          .order('job_title_id');
+        
+        if (fallbackError) {
+          console.error('Fallback error:', fallbackError);
+          return [];
+        }
+        return fallbackData as JobTitle[];
       }
       console.log('Job titles fetched:', data);
-      return data as JobTitle[];
+      return data;
     }
   });
 

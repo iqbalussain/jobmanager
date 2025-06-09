@@ -36,11 +36,11 @@ export function DesignerManagement({
         <CardContent>
           <form onSubmit={onAddDesigner} className="space-y-4">
             <div>
-              <Label htmlFor="designerName">Name</Label>
+              <Label htmlFor="designerName">Designer Name</Label>
               <Input
                 id="designerName"
                 value={designerForm.name}
-                onChange={(e) => setDesignerForm(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => setDesignerForm({ ...designerForm, name: e.target.value })}
                 placeholder="Enter designer name"
                 required
               />
@@ -50,7 +50,7 @@ export function DesignerManagement({
               <Input
                 id="designerPhone"
                 value={designerForm.phone}
-                onChange={(e) => setDesignerForm(prev => ({ ...prev, phone: e.target.value }))}
+                onChange={(e) => setDesignerForm({ ...designerForm, phone: e.target.value })}
                 placeholder="Enter phone number"
               />
             </div>
