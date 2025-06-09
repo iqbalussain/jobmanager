@@ -103,7 +103,11 @@ export function useJobOrders() {
           ? order.salesman as Salesman
           : null,
         // Ensure assignee is properly typed with proper null check
-        assignee: order.assignee && typeof order.assignee === 'object' && 'id' in order.assignee && 'full_name' in order.assignee && 'email' in order.assignee
+        assignee: order.assignee && 
+          typeof order.assignee === 'object' && 
+          'id' in order.assignee && 
+          'full_name' in order.assignee && 
+          'email' in order.assignee
           ? order.assignee as Assignee
           : null,
         // Ensure job_title is properly typed
