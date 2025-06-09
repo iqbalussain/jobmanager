@@ -66,14 +66,14 @@ export function useCreateJobOrder() {
           job_title_id: data.job_title_id,
           designer_id: data.designer_id,
           salesman_id: data.salesman_id,
-          assignee_id: null, // We'll store assignee name in a separate field if needed
+          assignee_id: data.assignee || null,
           priority: data.priority,
           status: data.status,
           due_date: data.due_date,
           estimated_hours: data.estimated_hours,
           branch: data.branch,
           job_order_details: data.job_order_details,
-          created_by: user.id // Use the authenticated user's ID
+          created_by: user.id
         })
         .select()
         .single();

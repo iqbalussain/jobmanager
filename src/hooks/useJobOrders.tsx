@@ -21,12 +21,6 @@ export interface Salesman {
   phone: string | null;
 }
 
-export interface Assignee {
-  id: string;
-  full_name: string | null;
-  email: string;
-}
-
 export interface JobTitle {
   id: string;
   job_title_id: string;
@@ -54,7 +48,7 @@ export interface JobOrder {
   customer: Customer | null;
   designer: Designer | null;
   salesman: Salesman | null;
-  assignee: Assignee | null;
+  assignee: string | null;
   job_title: JobTitle | null;
   title?: string;
   description?: string;
@@ -75,7 +69,6 @@ export function useJobOrders() {
           customer:customers(id, name),
           designer:designers(id, name, phone),
           salesman:salesmen(id, name, email, phone),
-          assignee:profiles!job_orders_assignee_id_fkey(id, full_name, email),
           job_title:job_titles(id, job_title_id)
         `)
         .order('created_at', { ascending: false });
@@ -102,10 +95,8 @@ export function useJobOrders() {
         salesman: order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman
           ? order.salesman as Salesman
           : null,
-        // Ensure assignee is properly typed with null check
-        assignee: order.assignee && typeof order.assignee === 'object' && 'id' in order.assignee
-          ? order.assignee as Assignee
-          : null,
+        // Handle assignee as string (not object)
+        assignee: order.assignee_id || 'Unassigned',
         // Ensure job_title is properly typed
         job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title
           ? order.job_title as JobTitle
