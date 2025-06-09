@@ -13,7 +13,7 @@ export interface CreateJobOrderData {
   salesman_id: string;
   assignee: string;
   priority: 'low' | 'medium' | 'high';
-  status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'overdue';
+  status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced';
   due_date: string;
   estimated_hours: number;
   branch: string;
