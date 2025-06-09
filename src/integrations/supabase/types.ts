@@ -24,24 +24,6 @@ export type Database = {
         }
         Relationships: []
       }
-      designers: {
-        Row: {
-          id: string
-          name: string
-          phone: string | null
-        }
-        Insert: {
-          id?: string
-          name: string
-          phone?: string | null
-        }
-        Update: {
-          id?: string
-          name?: string
-          phone?: string | null
-        }
-        Relationships: []
-      }
       job_order_attachments: {
         Row: {
           created_at: string
@@ -179,13 +161,6 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "job_orders_designer_id_fkey"
-            columns: ["designer_id"]
-            isOneToOne: false
-            referencedRelation: "designers"
             referencedColumns: ["id"]
           },
           {
