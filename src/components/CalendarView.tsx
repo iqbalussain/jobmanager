@@ -2,9 +2,10 @@
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin } from "lucide-react";
+import { Clock, MapPin, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { Job } from "@/pages/Index";
+import { JobChat } from "@/components/JobChat";
 
 interface CalendarViewProps {
   jobs: Job[];
@@ -12,12 +13,19 @@ interface CalendarViewProps {
 
 export function CalendarView({ jobs }: CalendarViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedJobForChat, setSelectedJobForChat] = useState<Job | null>(null);
 
-  // Get jobs for the selected date
+  // Get jobs for the selected date - fix date comparison
   const getJobsForDate = (date: Date) => {
     if (!date) return [];
     const dateString = date.toISOString().split('T')[0];
-    return jobs.filter(job => job.dueDate === dateString);
+    return jobs.filter(job => {
+      // Handle different date formats
+      const jobDate = job.dueDate.includes('T') 
+        ? job.dueDate.split('T')[0] 
+        : job.dueDate;
+      return jobDate === dateString;
+    });
   };
 
   const selectedDateJobs = selectedDate ? getJobsForDate(selectedDate) : [];
@@ -41,6 +49,20 @@ export function CalendarView({ jobs }: CalendarViewProps) {
     }
   };
 
+  // Create date modifiers to highlight dates with jobs
+  const getDateModifiers = () => {
+    const datesWithJobs = jobs.map(job => {
+      const jobDate = job.dueDate.includes('T') 
+        ? job.dueDate.split('T')[0] 
+        : job.dueDate;
+      return new Date(jobDate);
+    });
+    
+    return {
+      hasJobs: datesWithJobs
+    };
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -59,7 +81,19 @@ export function CalendarView({ jobs }: CalendarViewProps) {
               selected={selectedDate}
               onSelect={setSelectedDate}
               className="rounded-md border"
+              modifiers={getDateModifiers()}
+              modifiersStyles={{
+                hasJobs: { 
+                  backgroundColor: '#dbeafe', 
+                  color: '#1e40af',
+                  fontWeight: 'bold'
+                }
+              }}
             />
+            <div className="mt-4 text-sm text-gray-600">
+              <p>• Dates with jobs are highlighted in blue</p>
+              <p>• Total jobs: {jobs.length}</p>
+            </div>
           </CardContent>
         </Card>
 
@@ -92,15 +126,24 @@ export function CalendarView({ jobs }: CalendarViewProps) {
                     
                     <p className="text-gray-600 mb-3">{job.description}</p>
                     
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        <span>{job.customer}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          <span>{job.customer}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          <span>{job.estimatedHours}h estimated</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{job.estimatedHours}h estimated</span>
-                      </div>
+                      <button
+                        onClick={() => setSelectedJobForChat(job)}
+                        className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Chat
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -109,6 +152,14 @@ export function CalendarView({ jobs }: CalendarViewProps) {
           </CardContent>
         </Card>
       </div>
+
+      {selectedJobForChat && (
+        <JobChat
+          job={selectedJobForChat}
+          isOpen={!!selectedJobForChat}
+          onClose={() => setSelectedJobForChat(null)}
+        />
+      )}
     </div>
   );
 }
