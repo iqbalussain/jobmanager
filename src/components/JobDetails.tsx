@@ -1,4 +1,3 @@
-
 import { Job } from "@/pages/Index";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -46,27 +45,33 @@ export function JobDetails({ isOpen, onClose, job }: JobDetailsProps) {
           <title>Job Order - ${job.jobOrderNumber}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
+            @page { 
+              size: A4; 
+              margin: 15mm; 
+            }
             body { 
               font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
-              line-height: 1.6; 
+              line-height: 1.5; 
               color: #1e293b;
-              background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-              padding: 30px;
+              font-size: 11px;
+              background: white;
             }
             .container {
-              max-width: 800px;
+              max-width: 100%;
               margin: 0 auto;
               background: white;
-              border-radius: 16px;
-              box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+              border-radius: 12px;
+              box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
               overflow: hidden;
             }
             .header {
               background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
               color: white;
-              padding: 40px;
-              text-align: center;
+              padding: 20px 30px;
               position: relative;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
             }
             .header::before {
               content: '';
@@ -77,39 +82,45 @@ export function JobDetails({ isOpen, onClose, job }: JobDetailsProps) {
               bottom: 0;
               background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
             }
-            .header-content { position: relative; z-index: 1; }
+            .header-left, .header-right { position: relative; z-index: 1; }
+            .header-left {
+              display: flex;
+              align-items: center;
+              gap: 15px;
+            }
             .company-logo {
-              width: 60px;
-              height: 60px;
+              width: 40px;
+              height: 40px;
               background: rgba(255, 255, 255, 0.2);
-              border-radius: 12px;
-              margin: 0 auto 20px;
+              border-radius: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               backdrop-filter: blur(10px);
             }
             .job-number {
-              font-size: 2.5rem;
+              font-size: 1.8rem;
               font-weight: 800;
-              margin-bottom: 8px;
               text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
+            .header-right {
+              text-align: right;
+            }
             .job-title {
-              font-size: 1.5rem;
+              font-size: 1.3rem;
               font-weight: 600;
               opacity: 0.95;
-              margin-bottom: 16px;
+              margin-bottom: 8px;
             }
             .status-badges {
               display: flex;
-              gap: 12px;
-              justify-content: center;
+              gap: 8px;
+              justify-content: flex-end;
             }
             .badge {
-              padding: 8px 16px;
-              border-radius: 20px;
-              font-size: 0.875rem;
+              padding: 6px 12px;
+              border-radius: 16px;
+              font-size: 0.75rem;
               font-weight: 600;
               text-transform: uppercase;
               letter-spacing: 0.05em;
@@ -117,28 +128,28 @@ export function JobDetails({ isOpen, onClose, job }: JobDetailsProps) {
               backdrop-filter: blur(10px);
             }
             .content {
-              padding: 40px;
+              padding: 25px 30px;
             }
             .info-grid {
               display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-              gap: 30px;
-              margin-bottom: 40px;
+              grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+              gap: 20px;
+              margin-bottom: 25px;
             }
             .info-section {
               background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-              border-radius: 12px;
-              padding: 24px;
-              border-left: 4px solid #3b82f6;
+              border-radius: 10px;
+              padding: 18px;
+              border-left: 3px solid #3b82f6;
             }
             .section-title {
-              font-size: 1.25rem;
+              font-size: 1rem;
               font-weight: 700;
               color: #1e40af;
-              margin-bottom: 16px;
+              margin-bottom: 12px;
               display: flex;
               align-items: center;
-              gap: 8px;
+              gap: 6px;
             }
             .info-table {
               width: 100%;
@@ -152,71 +163,94 @@ export function JobDetails({ isOpen, onClose, job }: JobDetailsProps) {
               border-bottom: none;
             }
             .info-table td {
-              padding: 12px 0;
+              padding: 8px 0;
               vertical-align: top;
             }
             .info-label {
               font-weight: 600;
               color: #475569;
               width: 35%;
-              padding-right: 16px;
+              padding-right: 12px;
+              font-size: 0.9rem;
             }
             .info-value {
               color: #1e293b;
               font-weight: 500;
+              font-size: 0.9rem;
             }
             .description-section {
               background: linear-gradient(135deg, #fefefe 0%, #f8fafc 100%);
-              border-radius: 12px;
-              padding: 24px;
+              border-radius: 10px;
+              padding: 18px;
               border: 1px solid #e2e8f0;
-              margin-bottom: 24px;
+              margin-bottom: 16px;
             }
             .description-title {
-              font-size: 1.25rem;
+              font-size: 1rem;
               font-weight: 700;
               color: #1e40af;
-              margin-bottom: 16px;
-              padding-bottom: 8px;
+              margin-bottom: 12px;
+              padding-bottom: 6px;
               border-bottom: 2px solid #e2e8f0;
             }
             .description-text {
               background: white;
-              padding: 20px;
-              border-radius: 8px;
-              border-left: 4px solid #3b82f6;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-              line-height: 1.7;
+              padding: 15px;
+              border-radius: 6px;
+              border-left: 3px solid #3b82f6;
+              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+              line-height: 1.6;
+              font-size: 0.9rem;
             }
             .footer {
               background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-              padding: 24px;
+              padding: 15px 30px;
               text-align: center;
               color: #64748b;
-              font-size: 0.875rem;
+              font-size: 0.75rem;
               border-top: 1px solid #e2e8f0;
             }
             .icon {
-              width: 20px;
-              height: 20px;
+              width: 16px;
+              height: 16px;
               fill: currentColor;
             }
             @media print {
-              body { background: white !important; }
-              .container { box-shadow: none; }
+              body { 
+                background: white !important; 
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+              }
+              .container { 
+                box-shadow: none; 
+                border-radius: 0;
+              }
+              .header {
+                page-break-inside: avoid;
+              }
+              .info-section {
+                page-break-inside: avoid;
+                break-inside: avoid;
+              }
+              .description-section {
+                page-break-inside: avoid;
+                break-inside: avoid;
+              }
             }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <div class="header-content">
+              <div class="header-left">
                 <div class="company-logo">
                   <svg class="icon" viewBox="0 0 24 24">
                     <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" fill="none"/>
                   </svg>
                 </div>
                 <div class="job-number">${job.jobOrderNumber}</div>
+              </div>
+              <div class="header-right">
                 <div class="job-title">${job.title}</div>
                 <div class="status-badges">
                   <span class="badge">${job.status.replace('-', ' ').toUpperCase()}</span>
