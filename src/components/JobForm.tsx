@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,8 +16,6 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
   const { customers, designers, salesmen, jobTitles } = useDropdownData();
 
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
     customer: '',
     jobTitle: '',
     assignee: '',
@@ -35,8 +34,6 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
 
     try {
       await createJobOrder({
-        title: formData.title,
-        description: formData.description,
         customer_id: formData.customer,
         job_title_id: formData.jobTitle,
         designer_id: formData.designer,
@@ -57,8 +54,6 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
 
       // Reset form
       setFormData({
-        title: '',
-        description: '',
         customer: '',
         jobTitle: '',
         assignee: '',
@@ -92,30 +87,6 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
       
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title and Description Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter job title"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Enter job description"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              />
-            </div>
-          </div>
-
           {/* Customer Section */}
           <div>
             <Label htmlFor="customer">Customer *</Label>

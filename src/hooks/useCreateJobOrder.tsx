@@ -5,8 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface CreateJobOrderData {
-  title: string;
-  description: string;
   customer_id: string;
   job_title_id: string;
   designer_id: string;
@@ -64,8 +62,6 @@ export function useCreateJobOrder() {
         .from('job_orders')
         .insert({
           job_order_number: jobOrderNumber,
-          title: data.title,
-          description: data.description,
           customer_id: data.customer_id,
           job_title_id: data.job_title_id,
           designer_id: data.designer_id,
