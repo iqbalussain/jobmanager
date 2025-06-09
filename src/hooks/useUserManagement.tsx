@@ -133,11 +133,19 @@ export function useUserManagement() {
     }
   });
 
+  const handleAddUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (userForm.email.trim() && userForm.password.trim() && userForm.fullName.trim()) {
+      addUserMutation.mutate(userForm);
+    }
+  };
+
   return {
     profiles,
     profilesLoading,
     userForm,
     setUserForm,
-    addUserMutation
+    addUserMutation,
+    handleAddUser
   };
 }

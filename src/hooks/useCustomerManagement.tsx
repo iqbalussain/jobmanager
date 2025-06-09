@@ -65,11 +65,19 @@ export function useCustomerManagement() {
     }
   });
 
+  const handleAddCustomer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (customerForm.name.trim()) {
+      addCustomerMutation.mutate({ name: customerForm.name.trim() });
+    }
+  };
+
   return {
     customers,
     customersLoading,
     customerForm,
     setCustomerForm,
-    addCustomerMutation
+    addCustomerMutation,
+    handleAddCustomer
   };
 }

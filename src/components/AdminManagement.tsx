@@ -20,89 +20,11 @@ import { JobTitleManagement } from "@/components/admin/JobTitleManagement";
 import { UserManagement } from "@/components/admin/UserManagement";
 
 export function AdminManagement() {
-  const {
-    customers,
-    customersLoading,
-    customerForm,
-    setCustomerForm,
-    addCustomerMutation
-  } = useCustomerManagement();
-
-  const {
-    designers,
-    designersLoading,
-    designerForm,
-    setDesignerForm,
-    addDesignerMutation
-  } = useDesignerManagement();
-
-  const {
-    salesmen,
-    salesmenLoading,
-    salesmanForm,
-    setSalesmanForm,
-    addSalesmanMutation
-  } = useSalesmanManagement();
-
-  const {
-    jobTitles,
-    jobTitlesLoading,
-    jobTitleForm,
-    setJobTitleForm,
-    addJobTitleMutation
-  } = useJobTitleManagement();
-
-  const {
-    profiles,
-    profilesLoading,
-    userForm,
-    setUserForm,
-    addUserMutation
-  } = useUserManagement();
-
-  const handleAddCustomer = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (customerForm.name.trim()) {
-      addCustomerMutation.mutate({ name: customerForm.name.trim() });
-    }
-  };
-
-  const handleAddDesigner = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (designerForm.name.trim()) {
-      addDesignerMutation.mutate({
-        name: designerForm.name.trim(),
-        phone: designerForm.phone.trim() || ""
-      });
-    }
-  };
-
-  const handleAddSalesman = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (salesmanForm.name.trim()) {
-      addSalesmanMutation.mutate({
-        name: salesmanForm.name.trim(),
-        email: salesmanForm.email.trim() || "",
-        phone: salesmanForm.phone.trim() || ""
-      });
-    }
-  };
-
-  const handleAddJobTitle = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (jobTitleForm.title.trim()) {
-      addJobTitleMutation.mutate({
-        job_title_id: jobTitleForm.title.trim()
-      });
-    }
-  };
-
-  const handleAddUser = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (userForm.email.trim() && userForm.password.trim() && userForm.fullName.trim()) {
-      addUserMutation.mutate(userForm);
-    }
-  };
+  const customerHook = useCustomerManagement();
+  const designerHook = useDesignerManagement();
+  const salesmanHook = useSalesmanManagement();
+  const jobTitleHook = useJobTitleManagement();
+  const userHook = useUserManagement();
 
   return (
     <div className="space-y-6">
@@ -142,56 +64,56 @@ export function AdminManagement() {
 
         <TabsContent value="customers">
           <CustomerManagement
-            customers={customers}
-            customersLoading={customersLoading}
-            customerForm={customerForm}
-            setCustomerForm={setCustomerForm}
-            onAddCustomer={handleAddCustomer}
-            isAdding={addCustomerMutation.isPending}
+            customers={customerHook.customers}
+            customersLoading={customerHook.customersLoading}
+            customerForm={customerHook.customerForm}
+            setCustomerForm={customerHook.setCustomerForm}
+            onAddCustomer={customerHook.handleAddCustomer}
+            isAdding={customerHook.addCustomerMutation.isPending}
           />
         </TabsContent>
 
         <TabsContent value="salesmen">
           <SalesmanManagement
-            salesmen={salesmen}
-            salesmenLoading={salesmenLoading}
-            salesmanForm={salesmanForm}
-            setSalesmanForm={setSalesmanForm}
-            onAddSalesman={handleAddSalesman}
-            isAdding={addSalesmanMutation.isPending}
+            salesmen={salesmanHook.salesmen}
+            salesmenLoading={salesmanHook.salesmenLoading}
+            salesmanForm={salesmanHook.salesmanForm}
+            setSalesmanForm={salesmanHook.setSalesmanForm}
+            onAddSalesman={salesmanHook.handleAddSalesman}
+            isAdding={salesmanHook.addSalesmanMutation.isPending}
           />
         </TabsContent>
 
         <TabsContent value="designers">
           <DesignerManagement
-            designers={designers}
-            designersLoading={designersLoading}
-            designerForm={designerForm}
-            setDesignerForm={setDesignerForm}
-            onAddDesigner={handleAddDesigner}
-            isAdding={addDesignerMutation.isPending}
+            designers={designerHook.designers}
+            designersLoading={designerHook.designersLoading}
+            designerForm={designerHook.designerForm}
+            setDesignerForm={designerHook.setDesignerForm}
+            onAddDesigner={designerHook.handleAddDesigner}
+            isAdding={designerHook.addDesignerMutation.isPending}
           />
         </TabsContent>
 
         <TabsContent value="job-titles">
           <JobTitleManagement
-            jobTitles={jobTitles}
-            jobTitlesLoading={jobTitlesLoading}
-            jobTitleForm={jobTitleForm}
-            setJobTitleForm={setJobTitleForm}
-            onAddJobTitle={handleAddJobTitle}
-            isAdding={addJobTitleMutation.isPending}
+            jobTitles={jobTitleHook.jobTitles}
+            jobTitlesLoading={jobTitleHook.jobTitlesLoading}
+            jobTitleForm={jobTitleHook.jobTitleForm}
+            setJobTitleForm={jobTitleHook.setJobTitleForm}
+            onAddJobTitle={jobTitleHook.handleAddJobTitle}
+            isAdding={jobTitleHook.addJobTitleMutation.isPending}
           />
         </TabsContent>
 
         <TabsContent value="users">
           <UserManagement
-            profiles={profiles}
-            profilesLoading={profilesLoading}
-            userForm={userForm}
-            setUserForm={setUserForm}
-            onAddUser={handleAddUser}
-            isAdding={addUserMutation.isPending}
+            profiles={userHook.profiles}
+            profilesLoading={userHook.profilesLoading}
+            userForm={userHook.userForm}
+            setUserForm={userHook.setUserForm}
+            onAddUser={userHook.handleAddUser}
+            isAdding={userHook.addUserMutation.isPending}
           />
         </TabsContent>
       </Tabs>

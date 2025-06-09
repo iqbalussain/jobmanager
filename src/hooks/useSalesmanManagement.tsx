@@ -71,11 +71,23 @@ export function useSalesmanManagement() {
     }
   });
 
+  const handleAddSalesman = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (salesmanForm.name.trim()) {
+      addSalesmanMutation.mutate({
+        name: salesmanForm.name.trim(),
+        email: salesmanForm.email.trim() || "",
+        phone: salesmanForm.phone.trim() || ""
+      });
+    }
+  };
+
   return {
     salesmen,
     salesmenLoading,
     salesmanForm,
     setSalesmanForm,
-    addSalesmanMutation
+    addSalesmanMutation,
+    handleAddSalesman
   };
 }

@@ -66,11 +66,22 @@ export function useDesignerManagement() {
     }
   });
 
+  const handleAddDesigner = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (designerForm.name.trim()) {
+      addDesignerMutation.mutate({
+        name: designerForm.name.trim(),
+        phone: designerForm.phone.trim() || ""
+      });
+    }
+  };
+
   return {
     designers,
     designersLoading,
     designerForm,
     setDesignerForm,
-    addDesignerMutation
+    addDesignerMutation,
+    handleAddDesigner
   };
 }

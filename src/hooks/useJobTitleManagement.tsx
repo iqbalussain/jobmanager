@@ -65,11 +65,21 @@ export function useJobTitleManagement() {
     }
   });
 
+  const handleAddJobTitle = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (jobTitleForm.title.trim()) {
+      addJobTitleMutation.mutate({
+        job_title_id: jobTitleForm.title.trim()
+      });
+    }
+  };
+
   return {
     jobTitles,
     jobTitlesLoading,
     jobTitleForm,
     setJobTitleForm,
-    addJobTitleMutation
+    addJobTitleMutation,
+    handleAddJobTitle
   };
 }
