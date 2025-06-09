@@ -6,7 +6,8 @@ import {
   Calendar,
   Settings,
   User,
-  Shield
+  Shield,
+  UsersRound
 } from "lucide-react";
 import {
   Sidebar as SidebarBase,
@@ -25,7 +26,7 @@ import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
   currentView: string;
-  onViewChange: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin") => void;
+  onViewChange: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management") => void;
 }
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
@@ -54,10 +55,16 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
   const adminMenuItems = [
     {
-      title: "Admin Panel",
+      title: "Job Management",
       icon: Shield,
       onClick: () => onViewChange("admin"),
       isActive: currentView === "admin"
+    },
+    {
+      title: "User Management",
+      icon: UsersRound,
+      onClick: () => onViewChange("admin-management"),
+      isActive: currentView === "admin-management"
     }
   ];
 
