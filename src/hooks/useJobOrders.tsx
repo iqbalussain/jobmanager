@@ -3,11 +3,38 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+export interface Customer {
+  id: string;
+  name: string;
+}
+
+export interface Designer {
+  id: string;
+  name: string;
+  phone: string | null;
+}
+
+export interface Salesman {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+}
+
+export interface Assignee {
+  id: string;
+  full_name: string | null;
+  email: string;
+}
+
+export interface JobTitle {
+  id: string;
+  job_title_id: string;
+}
+
 export interface JobOrder {
   id: string;
   job_order_number: string;
-  title: string;
-  description: string | null;
   customer_id: string;
   job_type_id: string | null;
   job_title_id: string | null;
@@ -17,28 +44,20 @@ export interface JobOrder {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced';
   due_date: string | null;
-  estimated_hours: number;
-  actual_hours: number;
+  estimated_hours: number | null;
+  actual_hours: number | null;
   branch: string | null;
   job_order_details: string | null;
-  created_by: string;
   created_at: string;
   updated_at: string;
-  customer?: {
-    name: string;
-  };
-  assignee?: {
-    full_name: string;
-  };
-  designer?: {
-    name: string;
-  };
-  salesman?: {
-    name: string;
-  };
-  job_title?: {
-    title: string;
-  };
+  created_by: string;
+  customer: Customer | null;
+  designer: Designer | null;
+  salesman: Salesman | null;
+  assignee: Assignee | null;
+  job_title: JobTitle | null;
+  title?: string;
+  description?: string;
 }
 
 export function useJobOrders() {
@@ -48,134 +67,86 @@ export function useJobOrders() {
   const { data: jobOrders = [], isLoading, error } = useQuery({
     queryKey: ['job-orders'],
     queryFn: async () => {
-      console.log('Fetching job orders with RLS policies...');
-      
-      // Fetch job orders (RLS will automatically filter based on user role)
-      const { data: orders, error: ordersError } = await supabase
+      console.log('Fetching job orders...');
+      const { data, error } = await supabase
         .from('job_orders')
-        .select('*')
+        .select(`
+          *,
+          customer:customers(id, name),
+          designer:designers(id, name, phone),
+          salesman:salesmen(id, name, email, phone),
+          assignee:profiles!job_orders_assignee_id_fkey(id, full_name, email),
+          job_title:job_titles(id, job_title_id)
+        `)
         .order('created_at', { ascending: false });
-
-      if (ordersError) {
-        console.error('Error fetching job orders:', ordersError);
-        throw ordersError;
+      
+      if (error) {
+        console.error('Error fetching job orders:', error);
+        throw error;
       }
-
-      console.log('Job orders fetched:', orders?.length || 0);
-
-      if (!orders || orders.length === 0) {
-        return [];
-      }
-
-      // Fetch related data separately
-      const customerIds = [...new Set(orders.map(o => o.customer_id).filter(Boolean))];
-      const designerIds = [...new Set(orders.map(o => o.designer_id).filter(Boolean))];
-      const salesmanIds = [...new Set(orders.map(o => o.salesman_id).filter(Boolean))];
-      const jobTitleIds = [...new Set(orders.map(o => o.job_title_id).filter(Boolean))];
-
-      // Fetch customers
-      const { data: customers } = await supabase
-        .from('customers')
-        .select('id, name')
-        .in('id', customerIds);
-
-      // Fetch designers
-      const { data: designers } = await supabase
-        .from('designers')
-        .select('id, name')
-        .in('id', designerIds);
-
-      // Fetch salesmen
-      const { data: salesmen } = await supabase
-        .from('salesmen')
-        .select('id, name')
-        .in('id', salesmanIds);
-
-      // Fetch job titles
-      const { data: jobTitles } = await supabase
-        .from('job_titles')
-        .select('id, title')
-        .in('id', jobTitleIds);
-
-      console.log('Related data fetched:', {
-        customers: customers?.length || 0,
-        designers: designers?.length || 0,
-        salesmen: salesmen?.length || 0,
-        jobTitles: jobTitles?.length || 0
-      });
-
-      // Transform the data to match our interface
-      return orders.map(item => ({
-        id: item.id,
-        job_order_number: item.job_order_number,
-        title: item.title,
-        description: item.description,
-        customer_id: item.customer_id,
-        job_type_id: item.job_type_id,
-        job_title_id: item.job_title_id,
-        assignee_id: item.assignee_id,
-        designer_id: item.designer_id,
-        salesman_id: item.salesman_id,
-        priority: item.priority,
-        status: item.status,
-        due_date: item.due_date,
-        estimated_hours: item.estimated_hours || 0,
-        actual_hours: item.actual_hours || 0,
-        branch: item.branch,
-        job_order_details: item.job_order_details,
-        created_by: item.created_by,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        customer: customers?.find(c => c.id === item.customer_id),
-        assignee: undefined, // We don't have profiles relationship anymore
-        designer: designers?.find(d => d.id === item.designer_id),
-        salesman: salesmen?.find(s => s.id === item.salesman_id),
-        job_title: jobTitles?.find(jt => jt.id === item.job_title_id),
-      })) as JobOrder[];
+      
+      console.log('Job orders fetched:', data);
+      
+      // Transform the data to ensure proper typing
+      const transformedData = data.map(order => ({
+        ...order,
+        // Add title and description fallbacks if needed
+        title: order.job_order_details || `Job Order ${order.job_order_number}`,
+        description: order.job_order_details || ''
+      }));
+      
+      return transformedData as JobOrder[];
     }
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced' }) => {
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
       console.log('Updating job order status:', id, status);
-      
       const { data, error } = await supabase
         .from('job_orders')
-        .update({ status, updated_at: new Date().toISOString() })
+        .update({ 
+          status: status as any,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select()
         .single();
-
+      
       if (error) {
         console.error('Error updating job order status:', error);
         throw error;
       }
       
-      console.log('Job order status updated successfully:', data);
+      console.log('Job order status updated:', data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['job-orders'] });
       toast({
-        title: "Success",
-        description: "Job order status updated successfully",
+        title: "Status updated",
+        description: "Job order status has been updated successfully.",
       });
     },
     onError: (error) => {
-      console.error('Error updating job order:', error);
+      console.error('Failed to update status:', error);
       toast({
         title: "Error",
-        description: `Failed to update job order: ${error.message}`,
+        description: "Failed to update job order status. Please try again.",
         variant: "destructive",
       });
     }
+  });
+
+  console.log('Job orders hook state:', {
+    count: jobOrders.length,
+    isLoading,
+    error: error?.message
   });
 
   return {
     jobOrders,
     isLoading,
     error,
-    updateStatus: updateStatusMutation.mutate,
-    isUpdating: updateStatusMutation.isPending
+    updateStatus: updateStatusMutation.mutate
   };
 }

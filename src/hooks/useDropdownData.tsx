@@ -22,7 +22,7 @@ export interface Salesman {
 
 export interface JobTitle {
   id: string;
-  title: string;
+  job_title_id: string;
 }
 
 export function useDropdownData() {
@@ -86,8 +86,8 @@ export function useDropdownData() {
       console.log('Fetching job titles...');
       const { data, error } = await supabase
         .from('job_titles')
-        .select('id, title')
-        .order('title');
+        .select('id, job_title_id')
+        .order('job_title_id');
       
       if (error) {
         console.error('Error fetching job titles:', error);
