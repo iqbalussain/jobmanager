@@ -14,6 +14,7 @@ export type Database = {
           address: string | null
           contact_person: string | null
           created_at: string
+          created_by: string | null
           email: string | null
           id: string
           name: string
@@ -24,6 +25,7 @@ export type Database = {
           address?: string | null
           contact_person?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string | null
           id?: string
           name: string
@@ -34,13 +36,89 @@ export type Database = {
           address?: string | null
           contact_person?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string | null
           id?: string
           name?: string
           phone?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      designers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "designers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_order_attachments: {
         Row: {
@@ -125,6 +203,7 @@ export type Database = {
           due_date: string | null
           estimated_hours: number | null
           id: string
+          item_id: string | null
           job_order_details: string | null
           job_order_number: string
           job_type_id: string | null
@@ -146,6 +225,7 @@ export type Database = {
           due_date?: string | null
           estimated_hours?: number | null
           id?: string
+          item_id?: string | null
           job_order_details?: string | null
           job_order_number: string
           job_type_id?: string | null
@@ -167,6 +247,7 @@ export type Database = {
           due_date?: string | null
           estimated_hours?: number | null
           id?: string
+          item_id?: string | null
           job_order_details?: string | null
           job_order_number?: string
           job_type_id?: string | null
@@ -182,6 +263,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_orders_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
             referencedColumns: ["id"]
           },
           {
@@ -253,6 +341,41 @@ export type Database = {
         }
         Relationships: []
       }
+      salesmen: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salesmen_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -292,7 +415,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "manager" | "employee" | "designer" | "salesman"
+      app_role:
+        | "admin"
+        | "manager"
+        | "employee"
+        | "designer"
+        | "salesman"
+        | "job_order_manager"
       job_status:
         | "pending"
         | "in-progress"
@@ -417,7 +546,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "manager", "employee", "designer", "salesman"],
+      app_role: [
+        "admin",
+        "manager",
+        "employee",
+        "designer",
+        "salesman",
+        "job_order_manager",
+      ],
       job_status: [
         "pending",
         "in-progress",

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Job } from "@/pages/Index";
 import { Plus, X } from "lucide-react";
+import { useDropdownData } from "@/hooks/useDropdownData";
 
 interface JobFormProps {
   onSubmit: (job: Omit<Job, "id" | "createdAt" | "jobOrderNumber">) => void;
@@ -16,14 +17,17 @@ interface JobFormProps {
 }
 
 export function JobForm({ onSubmit, onCancel }: JobFormProps) {
+  const { customers, designers, salesmen, items, isLoading } = useDropdownData();
+  
   const [formData, setFormData] = useState({
     branch: "",
-    designer: "",
-    salesman: "",
+    designerId: "",
+    salesmanId: "",
     title: "",
     description: "",
     jobOrderDetails: "",
-    customer: "",
+    customerId: "",
+    itemId: "",
     assignee: "",
     priority: "medium" as "low" | "medium" | "high",
     status: "pending" as const,
@@ -32,25 +36,28 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
   });
 
   const branches = ["Wadi Kabeer", "Head Office"];
-  const designers = ["Alice Johnson", "Bob Smith", "Carol Davis", "David Wilson"];
-  const salesmen = ["Emma Brown", "Frank Miller", "Grace Lee", "Henry Taylor"];
   const jobTitles = ["HVAC Installation", "Plumbing Repair", "Electrical Work", "Maintenance Check", "System Upgrade"];
-  const customers = ["ABC Corporation", "XYZ Industries", "Tech Solutions Ltd", "Global Enterprises", "Metro Holdings"];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Find selected names for display
+    const selectedCustomer = customers.find(c => c.id === formData.customerId);
+    const selectedDesigner = designers.find(d => d.id === formData.designerId);
+    const selectedSalesman = salesmen.find(s => s.id === formData.salesmanId);
+    
     onSubmit({
       title: formData.title,
       description: formData.description,
-      customer: formData.customer,
+      customer: selectedCustomer?.name || "",
       assignee: formData.assignee,
       priority: formData.priority,
       status: formData.status,
       dueDate: formData.dueDate,
       estimatedHours: formData.estimatedHours,
       branch: formData.branch,
-      designer: formData.designer,
-      salesman: formData.salesman,
+      designer: selectedDesigner?.name || "",
+      salesman: selectedSalesman?.name || "",
       jobOrderDetails: formData.jobOrderDetails
     });
   };
@@ -61,6 +68,14 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
       [field]: value
     }));
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading form data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -98,20 +113,20 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
               </RadioGroup>
             </div>
 
-            {/* Customer, Designer, Salesman, Job Title Row */}
+            {/* Customer, Designer, Salesman, Item Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="space-y-2">
                 <Label className="text-gray-700 font-medium">Customer *</Label>
                 <Select 
-                  value={formData.customer} 
-                  onValueChange={(value) => handleInputChange("customer", value)}
+                  value={formData.customerId} 
+                  onValueChange={(value) => handleInputChange("customerId", value)}
                 >
                   <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue placeholder="Select customer" />
                   </SelectTrigger>
                   <SelectContent>
                     {customers.map((customer) => (
-                      <SelectItem key={customer} value={customer}>{customer}</SelectItem>
+                      <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -120,15 +135,15 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
               <div className="space-y-2">
                 <Label className="text-gray-700 font-medium">Designer *</Label>
                 <Select 
-                  value={formData.designer} 
-                  onValueChange={(value) => handleInputChange("designer", value)}
+                  value={formData.designerId} 
+                  onValueChange={(value) => handleInputChange("designerId", value)}
                 >
                   <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue placeholder="Select designer" />
                   </SelectTrigger>
                   <SelectContent>
                     {designers.map((designer) => (
-                      <SelectItem key={designer} value={designer}>{designer}</SelectItem>
+                      <SelectItem key={designer.id} value={designer.id}>{designer.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -137,36 +152,54 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
               <div className="space-y-2">
                 <Label className="text-gray-700 font-medium">Salesman *</Label>
                 <Select 
-                  value={formData.salesman} 
-                  onValueChange={(value) => handleInputChange("salesman", value)}
+                  value={formData.salesmanId} 
+                  onValueChange={(value) => handleInputChange("salesmanId", value)}
                 >
                   <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue placeholder="Select salesman" />
                   </SelectTrigger>
                   <SelectContent>
                     {salesmen.map((salesman) => (
-                      <SelectItem key={salesman} value={salesman}>{salesman}</SelectItem>
+                      <SelectItem key={salesman.id} value={salesman.id}>{salesman.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-700 font-medium">Job Title *</Label>
+                <Label className="text-gray-700 font-medium">Item/Service *</Label>
                 <Select 
-                  value={formData.title} 
-                  onValueChange={(value) => handleInputChange("title", value)}
+                  value={formData.itemId} 
+                  onValueChange={(value) => handleInputChange("itemId", value)}
                 >
                   <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Select job title" />
+                    <SelectValue placeholder="Select item/service" />
                   </SelectTrigger>
                   <SelectContent>
-                    {jobTitles.map((title) => (
-                      <SelectItem key={title} value={title}>{title}</SelectItem>
+                    {items.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Job Title */}
+            <div className="space-y-2">
+              <Label className="text-gray-700 font-medium">Job Title *</Label>
+              <Select 
+                value={formData.title} 
+                onValueChange={(value) => handleInputChange("title", value)}
+              >
+                <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder="Select job title" />
+                </SelectTrigger>
+                <SelectContent>
+                  {jobTitles.map((title) => (
+                    <SelectItem key={title} value={title}>{title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Job Order Details */}

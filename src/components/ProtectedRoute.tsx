@@ -5,10 +5,16 @@ import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireAuth?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requireAuth = true }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
+
+  // If auth is not required (for customers), show the content directly
+  if (!requireAuth) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (
