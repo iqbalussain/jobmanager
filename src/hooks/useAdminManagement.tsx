@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -312,14 +313,34 @@ export function useAdminManagement() {
         throw new Error(`Invalid role: ${userData.role}. Must be one of: ${allowedRoles.join(', ')}`);
       }
       
-      // For now, we'll just add to profiles table
-      // In a real app, you'd want to create the auth user first
+      // Generate a UUID for the profile
+      const { data: { user }, error: signUpError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            full_name: userData.fullName,
+          }
+        }
+      });
+
+      if (signUpError) {
+        console.error('Error creating user:', signUpError);
+        throw signUpError;
+      }
+
+      if (!user?.id) {
+        throw new Error('Failed to create user');
+      }
+
+      // Add to profiles table with the user ID
       const { data: result, error } = await supabase
         .from('profiles')
         .insert({
+          id: user.id,
           email: userData.email,
           full_name: userData.fullName,
-          role: userData.role as Role, // Now safely typed
+          role: userData.role as Role,
           department: userData.department || null,
           branch: userData.branch || null,
           phone: userData.phone || null
@@ -328,7 +349,7 @@ export function useAdminManagement() {
         .single();
 
       if (error) {
-        console.error('Error adding user:', error);
+        console.error('Error adding profile:', error);
         throw error;
       }
       return result;
