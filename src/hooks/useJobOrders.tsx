@@ -48,22 +48,52 @@ export function useJobOrders() {
   const { data: jobOrders = [], isLoading, error } = useQuery({
     queryKey: ['job-orders'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch job orders first
+      const { data: orders, error: ordersError } = await supabase
         .from('job_orders')
-        .select(`
-          *,
-          customers!customer_id(name),
-          profiles!assignee_id(full_name),
-          designers!designer_id(name),
-          salesmen!salesman_id(name),
-          job_titles!job_title_id(title)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      
+      if (ordersError) throw ordersError;
+
+      // Fetch related data separately since relationships are broken
+      const customerIds = [...new Set(orders?.map(o => o.customer_id).filter(Boolean))];
+      const designerIds = [...new Set(orders?.map(o => o.designer_id).filter(Boolean))];
+      const salesmanIds = [...new Set(orders?.map(o => o.salesman_id).filter(Boolean))];
+      const jobTitleIds = [...new Set(orders?.map(o => o.job_title_id).filter(Boolean))];
+
+      // Fetch customers
+      const { data: customers } = await supabase
+        .from('customers')
+        .select('id, name')
+        .in('id', customerIds);
+
+      // Fetch designers
+      const { data: designers } = await supabase
+        .from('designers')
+        .select('id, name')
+        .in('id', designerIds);
+
+      // Fetch salesmen
+      const { data: salesmen } = await supabase
+        .from('salesmen')
+        .select('id, name')
+        .in('id', salesmanIds);
+
+      // Fetch job titles (with fallback)
+      let jobTitles: any[] = [];
+      try {
+        const { data: titlesData } = await supabase
+          .from('job_titles' as any)
+          .select('id, title')
+          .in('id', jobTitleIds);
+        jobTitles = titlesData || [];
+      } catch (error) {
+        console.log('Could not fetch job titles:', error);
+      }
+
       // Transform the data to match our interface
-      return (data || []).map(item => ({
+      return (orders || []).map(item => ({
         id: item.id,
         job_order_number: item.job_order_number,
         title: item.title,
@@ -84,11 +114,11 @@ export function useJobOrders() {
         created_by: item.created_by,
         created_at: item.created_at,
         updated_at: item.updated_at,
-        customer: item.customers ? { name: item.customers.name } : undefined,
-        assignee: item.profiles ? { full_name: item.profiles.full_name } : undefined,
-        designer: item.designers ? { name: item.designers.name } : undefined,
-        salesman: item.salesmen ? { name: item.salesmen.name } : undefined,
-        job_title: item.job_titles ? { title: item.job_titles.title } : undefined,
+        customer: customers?.find(c => c.id === item.customer_id),
+        assignee: undefined, // We don't have profiles relationship anymore
+        designer: designers?.find(d => d.id === item.designer_id),
+        salesman: salesmen?.find(s => s.id === item.salesman_id),
+        job_title: jobTitles?.find(jt => jt.id === item.job_title_id),
       })) as JobOrder[];
     }
   });

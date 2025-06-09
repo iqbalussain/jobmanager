@@ -65,15 +65,26 @@ export function useDropdownData() {
     }
   });
 
+  // Use a raw query for job_titles since it might not be in types yet
   const { data: jobTitles = [], isLoading: jobTitlesLoading } = useQuery({
     queryKey: ['job-titles'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('job_titles')
-        .select('id, title')
-        .order('title');
+        .rpc('select', { 
+          query: 'SELECT id, title FROM job_titles ORDER BY title' 
+        });
       
-      if (error) throw error;
+      if (error) {
+        // Fallback: try direct query
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('job_titles' as any)
+          .select('id, title')
+          .order('title');
+        
+        if (fallbackError) throw fallbackError;
+        return fallbackData as JobTitle[];
+      }
+      
       return data as JobTitle[];
     }
   });
