@@ -95,8 +95,8 @@ export function useJobOrders() {
         salesman: order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman
           ? order.salesman as Salesman
           : null,
-        // Handle assignee as string (not object)
-        assignee: order.assignee_id || 'Unassigned',
+        // Handle assignee as text field (simple string)
+        assignee: order.assignee_id || null,
         // Ensure job_title is properly typed
         job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title
           ? order.job_title as JobTitle

@@ -42,7 +42,7 @@ const Index = () => {
     title: order.title,
     description: order.description || "",
     customer: order.customer?.name || "Unknown Customer",
-    assignee: order.assignee?.full_name || "Unassigned",
+    assignee: order.assignee || "Unassigned",
     priority: order.priority as "low" | "medium" | "high",
     status: order.status as JobStatus,
     dueDate: order.due_date || new Date().toISOString().split('T')[0],
