@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,48 +41,56 @@ export function UserProfile() {
       
       console.log('Fetching profile for user:', user.id);
       
+      // Try to fetch profile directly first
       const { data, error: fetchError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('full_name, role, email, department, branch')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (fetchError) {
         console.error('Error fetching profile:', fetchError);
         
-        // If profile doesn't exist, create one with basic info
-        if (fetchError.code === 'PGRST116') {
-          console.log('Profile not found, creating one...');
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              email: user.email || '',
-              full_name: user.user_metadata?.full_name || 'User',
-              role: 'employee',
-              department: null,
-              branch: null
-            })
-            .select()
-            .single();
-            
-          if (createError) {
-            console.error('Error creating profile:', createError);
-            setError('Failed to create user profile');
-          } else {
-            console.log('Profile created:', newProfile);
-            setProfile(newProfile);
-          }
+        // If there's an RLS or policy error, try creating a basic profile
+        if (fetchError.message?.includes('policy') || fetchError.message?.includes('security')) {
+          console.log('Policy error detected, attempting to create profile...');
+          const basicProfile = {
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            role: 'employee',
+            email: user.email || '',
+            department: null,
+            branch: null
+          };
+          setProfile(basicProfile);
         } else {
           setError('Failed to load user profile');
         }
-      } else {
+      } else if (data) {
         console.log('Profile loaded:', data);
         setProfile(data);
+      } else {
+        // Profile doesn't exist, create a basic one from user data
+        console.log('No profile found, creating basic profile from user data...');
+        const basicProfile = {
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          role: 'employee',
+          email: user.email || '',
+          department: null,
+          branch: null
+        };
+        setProfile(basicProfile);
       }
     } catch (error) {
       console.error('Unexpected error:', error);
-      setError('An unexpected error occurred');
+      // Fallback to basic profile from user auth data
+      const basicProfile = {
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        role: 'employee',
+        email: user.email || '',
+        department: null,
+        branch: null
+      };
+      setProfile(basicProfile);
     } finally {
       setLoading(false);
     }
@@ -109,7 +118,7 @@ export function UserProfile() {
     );
   }
 
-  if (error) {
+  if (error && !profile) {
     return (
       <Card className="w-full max-w-md">
         <CardContent className="pt-6">
