@@ -37,6 +37,8 @@ export function JobForm({ onCancel }: JobFormProps) {
 
   const branches = ["Wadi Kabeer", "Head Office"];
 
+  console.log('JobForm render - Job titles available:', jobTitles);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -224,20 +226,27 @@ export function JobForm({ onCancel }: JobFormProps) {
 
             {/* Job Title */}
             <div className="space-y-2">
-              <Label className="text-gray-700 font-medium">Job Title *</Label>
+              <Label className="text-gray-700 font-medium">Job Title * {jobTitles.length === 0 && <span className="text-red-500">(No job titles available)</span>}</Label>
               <Select 
                 value={formData.jobTitleId} 
                 onValueChange={(value) => handleInputChange("jobTitleId", value)}
               >
                 <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Select job title" />
+                  <SelectValue placeholder={jobTitles.length > 0 ? "Select job title" : "No job titles available"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {jobTitles.map((jobTitle) => (
-                    <SelectItem key={jobTitle.id} value={jobTitle.id}>{jobTitle.title}</SelectItem>
-                  ))}
+                  {jobTitles.length > 0 ? (
+                    jobTitles.map((jobTitle) => (
+                      <SelectItem key={jobTitle.id} value={jobTitle.id}>{jobTitle.title}</SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-titles" disabled>No job titles available</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
+              {jobTitles.length === 0 && (
+                <p className="text-sm text-red-600">Please contact your administrator to add job titles.</p>
+              )}
             </div>
 
             {/* Job Order Details */}
