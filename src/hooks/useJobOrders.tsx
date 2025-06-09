@@ -117,7 +117,7 @@ export function useJobOrders() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: JobOrder['status'] }) => {
+    mutationFn: async ({ id, status }: { id: string; status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced' }) => {
       const { data, error } = await supabase
         .from('job_orders')
         .update({ status, updated_at: new Date().toISOString() })
