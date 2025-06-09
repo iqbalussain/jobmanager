@@ -10,7 +10,7 @@ export interface JobOrder {
   description: string | null;
   customer_id: string;
   job_type_id: string | null;
-  item_id: string | null;
+  job_title_id: string | null;
   assignee_id: string | null;
   designer_id: string | null;
   salesman_id: string | null;
@@ -36,8 +36,8 @@ export interface JobOrder {
   salesman?: {
     name: string;
   };
-  item?: {
-    name: string;
+  job_title?: {
+    title: string;
   };
 }
 
@@ -56,7 +56,7 @@ export function useJobOrders() {
           profiles!assignee_id(full_name),
           designers!designer_id(name),
           salesmen!salesman_id(name),
-          items!item_id(name)
+          job_titles!job_title_id(title)
         `)
         .order('created_at', { ascending: false });
 
@@ -70,7 +70,7 @@ export function useJobOrders() {
         description: item.description,
         customer_id: item.customer_id,
         job_type_id: item.job_type_id,
-        item_id: item.item_id,
+        job_title_id: item.job_title_id,
         assignee_id: item.assignee_id,
         designer_id: item.designer_id,
         salesman_id: item.salesman_id,
@@ -88,7 +88,7 @@ export function useJobOrders() {
         assignee: item.profiles ? { full_name: item.profiles.full_name } : undefined,
         designer: item.designers ? { name: item.designers.name } : undefined,
         salesman: item.salesmen ? { name: item.salesmen.name } : undefined,
-        item: item.items ? { name: item.items.name } : undefined,
+        job_title: item.job_titles ? { title: item.job_titles.title } : undefined,
       })) as JobOrder[];
     }
   });

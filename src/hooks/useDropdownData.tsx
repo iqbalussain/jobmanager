@@ -10,17 +10,19 @@ export interface Customer {
 export interface Designer {
   id: string;
   name: string;
+  phone: string | null;
 }
 
 export interface Salesman {
   id: string;
   name: string;
+  email: string | null;
+  phone: string | null;
 }
 
-export interface Item {
+export interface JobTitle {
   id: string;
-  name: string;
-  description: string | null;
+  title: string;
 }
 
 export function useDropdownData() {
@@ -42,7 +44,7 @@ export function useDropdownData() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('designers')
-        .select('id, name')
+        .select('id, name, phone')
         .order('name');
       
       if (error) throw error;
@@ -55,7 +57,7 @@ export function useDropdownData() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('salesmen')
-        .select('id, name')
+        .select('id, name, email, phone')
         .order('name');
       
       if (error) throw error;
@@ -63,16 +65,16 @@ export function useDropdownData() {
     }
   });
 
-  const { data: items = [], isLoading: itemsLoading } = useQuery({
-    queryKey: ['items'],
+  const { data: jobTitles = [], isLoading: jobTitlesLoading } = useQuery({
+    queryKey: ['job-titles'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('items')
-        .select('id, name, description')
-        .order('name');
+        .from('job_titles')
+        .select('id, title')
+        .order('title');
       
       if (error) throw error;
-      return data as Item[];
+      return data as JobTitle[];
     }
   });
 
@@ -80,7 +82,7 @@ export function useDropdownData() {
     customers,
     designers,
     salesmen,
-    items,
-    isLoading: customersLoading || designersLoading || salesmenLoading || itemsLoading
+    jobTitles,
+    isLoading: customersLoading || designersLoading || salesmenLoading || jobTitlesLoading
   };
 }

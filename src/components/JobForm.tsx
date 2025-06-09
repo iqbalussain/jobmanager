@@ -17,7 +17,7 @@ interface JobFormProps {
 }
 
 export function JobForm({ onSubmit, onCancel }: JobFormProps) {
-  const { customers, designers, salesmen, items, isLoading } = useDropdownData();
+  const { customers, designers, salesmen, jobTitles, isLoading } = useDropdownData();
   
   const [formData, setFormData] = useState({
     branch: "",
@@ -27,7 +27,7 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
     description: "",
     jobOrderDetails: "",
     customerId: "",
-    itemId: "",
+    jobTitleId: "",
     assignee: "",
     priority: "medium" as "low" | "medium" | "high",
     status: "pending" as const,
@@ -36,7 +36,6 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
   });
 
   const branches = ["Wadi Kabeer", "Head Office"];
-  const jobTitles = ["HVAC Installation", "Plumbing Repair", "Electrical Work", "Maintenance Check", "System Upgrade"];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +44,10 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
     const selectedCustomer = customers.find(c => c.id === formData.customerId);
     const selectedDesigner = designers.find(d => d.id === formData.designerId);
     const selectedSalesman = salesmen.find(s => s.id === formData.salesmanId);
+    const selectedJobTitle = jobTitles.find(jt => jt.id === formData.jobTitleId);
     
     onSubmit({
-      title: formData.title,
+      title: selectedJobTitle?.title || formData.title,
       description: formData.description,
       customer: selectedCustomer?.name || "",
       assignee: formData.assignee,
@@ -113,8 +113,8 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
               </RadioGroup>
             </div>
 
-            {/* Customer, Designer, Salesman, Item Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Customer, Designer, Salesman Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label className="text-gray-700 font-medium">Customer *</Label>
                 <Select 
@@ -165,38 +165,21 @@ export function JobForm({ onSubmit, onCancel }: JobFormProps) {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-2">
-                <Label className="text-gray-700 font-medium">Item/Service *</Label>
-                <Select 
-                  value={formData.itemId} 
-                  onValueChange={(value) => handleInputChange("itemId", value)}
-                >
-                  <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Select item/service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {items.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
 
             {/* Job Title */}
             <div className="space-y-2">
               <Label className="text-gray-700 font-medium">Job Title *</Label>
               <Select 
-                value={formData.title} 
-                onValueChange={(value) => handleInputChange("title", value)}
+                value={formData.jobTitleId} 
+                onValueChange={(value) => handleInputChange("jobTitleId", value)}
               >
                 <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue placeholder="Select job title" />
                 </SelectTrigger>
                 <SelectContent>
-                  {jobTitles.map((title) => (
-                    <SelectItem key={title} value={title}>{title}</SelectItem>
+                  {jobTitles.map((jobTitle) => (
+                    <SelectItem key={jobTitle.id} value={jobTitle.id}>{jobTitle.title}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -13,8 +13,6 @@ export type Database = {
         Row: {
           address: string | null
           contact_person: string | null
-          created_at: string
-          created_by: string | null
           email: string | null
           id: string
           name: string
@@ -24,8 +22,6 @@ export type Database = {
         Insert: {
           address?: string | null
           contact_person?: string | null
-          created_at?: string
-          created_by?: string | null
           email?: string | null
           id?: string
           name: string
@@ -35,58 +31,34 @@ export type Database = {
         Update: {
           address?: string | null
           contact_person?: string | null
-          created_at?: string
-          created_by?: string | null
           email?: string | null
           id?: string
           name?: string
           phone?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "customers_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       designers: {
         Row: {
-          created_at: string
-          created_by: string | null
           email: string | null
           id: string
           name: string
           phone: string | null
         }
         Insert: {
-          created_at?: string
-          created_by?: string | null
           email?: string | null
           id?: string
           name: string
           phone?: string | null
         }
         Update: {
-          created_at?: string
-          created_by?: string | null
           email?: string | null
           id?: string
           name?: string
           phone?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "designers_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       items: {
         Row: {
@@ -343,38 +315,24 @@ export type Database = {
       }
       salesmen: {
         Row: {
-          created_at: string
-          created_by: string | null
           email: string | null
           id: string
           name: string
           phone: string | null
         }
         Insert: {
-          created_at?: string
-          created_by?: string | null
           email?: string | null
           id?: string
           name: string
           phone?: string | null
         }
         Update: {
-          created_at?: string
-          created_by?: string | null
           email?: string | null
           id?: string
           name?: string
           phone?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "salesmen_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_roles: {
         Row: {
