@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,6 +36,14 @@ export interface Profile {
   phone: string | null;
 }
 
+// Define allowed roles and validation
+const allowedRoles = ["admin", "manager", "employee", "designer", "salesman", "job_order_manager"] as const;
+type Role = typeof allowedRoles[number];
+
+function isValidRole(role: string): role is Role {
+  return allowedRoles.includes(role as Role);
+}
+
 export function useAdminManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -56,6 +63,7 @@ export function useAdminManagement() {
     phone: ''
   });
 
+  // Data queries
   const { data: customers = [], isLoading: customersLoading } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
@@ -298,6 +306,12 @@ export function useAdminManagement() {
       phone: string;
     }) => {
       console.log('Adding user:', userData.email);
+      
+      // Validate role before inserting
+      if (!isValidRole(userData.role)) {
+        throw new Error(`Invalid role: ${userData.role}. Must be one of: ${allowedRoles.join(', ')}`);
+      }
+      
       // For now, we'll just add to profiles table
       // In a real app, you'd want to create the auth user first
       const { data: result, error } = await supabase
@@ -305,7 +319,7 @@ export function useAdminManagement() {
         .insert({
           email: userData.email,
           full_name: userData.fullName,
-          role: userData.role,
+          role: userData.role as Role, // Now safely typed
           department: userData.department || null,
           branch: userData.branch || null,
           phone: userData.phone || null
@@ -339,7 +353,7 @@ export function useAdminManagement() {
       console.error('Error adding user:', error);
       toast({
         title: "Error",
-        description: "Failed to add user",
+        description: error.message || "Failed to add user",
         variant: "destructive",
       });
     }
