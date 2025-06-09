@@ -341,7 +341,7 @@ export type Database = {
         | "completed"
         | "finished"
         | "cancelled"
-        | "overdue"
+        | "invoiced"
       priority_level: "low" | "medium" | "high" | "urgent"
     }
     CompositeTypes: {
@@ -473,7 +473,7 @@ export const Constants = {
         "completed",
         "finished",
         "cancelled",
-        "overdue",
+        "invoiced",
       ],
       priority_level: ["low", "medium", "high", "urgent"],
     },
