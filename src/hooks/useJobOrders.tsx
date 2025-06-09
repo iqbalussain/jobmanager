@@ -48,19 +48,30 @@ export function useJobOrders() {
   const { data: jobOrders = [], isLoading, error } = useQuery({
     queryKey: ['job-orders'],
     queryFn: async () => {
-      // Fetch job orders first
+      console.log('Fetching job orders with RLS policies...');
+      
+      // Fetch job orders (RLS will automatically filter based on user role)
       const { data: orders, error: ordersError } = await supabase
         .from('job_orders')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (ordersError) throw ordersError;
+      if (ordersError) {
+        console.error('Error fetching job orders:', ordersError);
+        throw ordersError;
+      }
+
+      console.log('Job orders fetched:', orders?.length || 0);
+
+      if (!orders || orders.length === 0) {
+        return [];
+      }
 
       // Fetch related data separately
-      const customerIds = [...new Set(orders?.map(o => o.customer_id).filter(Boolean))];
-      const designerIds = [...new Set(orders?.map(o => o.designer_id).filter(Boolean))];
-      const salesmanIds = [...new Set(orders?.map(o => o.salesman_id).filter(Boolean))];
-      const jobTitleIds = [...new Set(orders?.map(o => o.job_title_id).filter(Boolean))];
+      const customerIds = [...new Set(orders.map(o => o.customer_id).filter(Boolean))];
+      const designerIds = [...new Set(orders.map(o => o.designer_id).filter(Boolean))];
+      const salesmanIds = [...new Set(orders.map(o => o.salesman_id).filter(Boolean))];
+      const jobTitleIds = [...new Set(orders.map(o => o.job_title_id).filter(Boolean))];
 
       // Fetch customers
       const { data: customers } = await supabase
@@ -86,8 +97,15 @@ export function useJobOrders() {
         .select('id, title')
         .in('id', jobTitleIds);
 
+      console.log('Related data fetched:', {
+        customers: customers?.length || 0,
+        designers: designers?.length || 0,
+        salesmen: salesmen?.length || 0,
+        jobTitles: jobTitles?.length || 0
+      });
+
       // Transform the data to match our interface
-      return (orders || []).map(item => ({
+      return orders.map(item => ({
         id: item.id,
         job_order_number: item.job_order_number,
         title: item.title,
@@ -119,6 +137,8 @@ export function useJobOrders() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced' }) => {
+      console.log('Updating job order status:', id, status);
+      
       const { data, error } = await supabase
         .from('job_orders')
         .update({ status, updated_at: new Date().toISOString() })
@@ -126,7 +146,12 @@ export function useJobOrders() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating job order status:', error);
+        throw error;
+      }
+      
+      console.log('Job order status updated successfully:', data);
       return data;
     },
     onSuccess: () => {
@@ -137,6 +162,7 @@ export function useJobOrders() {
       });
     },
     onError: (error) => {
+      console.error('Error updating job order:', error);
       toast({
         title: "Error",
         description: `Failed to update job order: ${error.message}`,

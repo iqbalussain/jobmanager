@@ -13,7 +13,8 @@ import {
   ChevronRight,
   Eye,
   Edit,
-  X
+  X,
+  AlertCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -131,6 +132,33 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
       }
     }
   };
+
+  // Show empty state if no jobs are available
+  if (jobs.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Orders</h1>
+          <p className="text-gray-600">Manage and track all your work orders</p>
+        </div>
+
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-12 text-center">
+            <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Job Orders Found</h3>
+            <p className="text-gray-500 mb-6">
+              {user ? "You don't have access to any job orders yet, or no job orders have been created." : "Please log in to view job orders."}
+            </p>
+            {user && (
+              <p className="text-sm text-gray-400">
+                If you're a manager or admin and can't see job orders, please contact your system administrator.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
