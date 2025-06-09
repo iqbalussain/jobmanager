@@ -80,37 +80,47 @@ export function useJobOrders() {
       console.log('Job orders fetched:', data);
       
       // Transform the data to ensure proper typing and handle potential null values
-      const transformedData = data?.map(order => ({
-        ...order,
-        // Ensure customer is properly typed
-        customer: order.customer && typeof order.customer === 'object' && 'id' in order.customer 
-          ? order.customer as Customer 
-          : null,
-        // Ensure designer is properly typed from profiles with null check
-        designer: order.designer && typeof order.designer === 'object' && 'id' in order.designer
-          ? {
-              id: order.designer.id,
-              name: order.designer.full_name || 'Unknown Designer',
-              phone: order.designer.phone
-            } as Designer
-          : null,
-        // Ensure salesman is properly typed from profiles with null check
-        salesman: order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman
-          ? {
-              id: order.salesman.id,
-              name: order.salesman.full_name || 'Unknown Salesman',
-              email: order.salesman.email,
-              phone: order.salesman.phone
-            } as Salesman
-          : null,
-        // Ensure job_title is properly typed
-        job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title
-          ? order.job_title as JobTitle
-          : null,
-        // Add title and description fallbacks based on job order details
-        title: order.job_order_details || `Job Order ${order.job_order_number}`,
-        description: order.job_order_details || ''
-      })) || [];
+      const transformedData = data?.map(order => {
+        // Handle designer with proper null checks
+        let designer: Designer | null = null;
+        if (order.designer && typeof order.designer === 'object' && 'id' in order.designer) {
+          const designerData = order.designer as any;
+          designer = {
+            id: designerData.id,
+            name: designerData.full_name || 'Unknown Designer',
+            phone: designerData.phone
+          };
+        }
+
+        // Handle salesman with proper null checks
+        let salesman: Salesman | null = null;
+        if (order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman) {
+          const salesmanData = order.salesman as any;
+          salesman = {
+            id: salesmanData.id,
+            name: salesmanData.full_name || 'Unknown Salesman',
+            email: salesmanData.email,
+            phone: salesmanData.phone
+          };
+        }
+
+        return {
+          ...order,
+          // Ensure customer is properly typed
+          customer: order.customer && typeof order.customer === 'object' && 'id' in order.customer 
+            ? order.customer as Customer 
+            : null,
+          designer,
+          salesman,
+          // Ensure job_title is properly typed
+          job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title
+            ? order.job_title as JobTitle
+            : null,
+          // Add title and description fallbacks based on job order details
+          title: order.job_order_details || `Job Order ${order.job_order_number}`,
+          description: order.job_order_details || ''
+        };
+      }) || [];
       
       return transformedData;
     }
