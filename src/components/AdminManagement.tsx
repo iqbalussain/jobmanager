@@ -8,7 +8,11 @@ import {
   UserPlus,
   FileText
 } from "lucide-react";
-import { useAdminManagement } from "@/hooks/useAdminManagement";
+import { useCustomerManagement } from "@/hooks/useCustomerManagement";
+import { useDesignerManagement } from "@/hooks/useDesignerManagement";
+import { useSalesmanManagement } from "@/hooks/useSalesmanManagement";
+import { useJobTitleManagement } from "@/hooks/useJobTitleManagement";
+import { useUserManagement } from "@/hooks/useUserManagement";
 import { CustomerManagement } from "@/components/admin/CustomerManagement";
 import { SalesmanManagement } from "@/components/admin/SalesmanManagement";
 import { DesignerManagement } from "@/components/admin/DesignerManagement";
@@ -17,39 +21,44 @@ import { UserManagement } from "@/components/admin/UserManagement";
 
 export function AdminManagement() {
   const {
-    // Data
     customers,
-    designers,
-    salesmen,
-    jobTitles,
-    profiles,
-    
-    // Loading states
     customersLoading,
-    designersLoading,
-    salesmenLoading,
-    jobTitlesLoading,
-    profilesLoading,
-    
-    // Form states
     customerForm,
     setCustomerForm,
+    addCustomerMutation
+  } = useCustomerManagement();
+
+  const {
+    designers,
+    designersLoading,
     designerForm,
     setDesignerForm,
+    addDesignerMutation
+  } = useDesignerManagement();
+
+  const {
+    salesmen,
+    salesmenLoading,
     salesmanForm,
     setSalesmanForm,
+    addSalesmanMutation
+  } = useSalesmanManagement();
+
+  const {
+    jobTitles,
+    jobTitlesLoading,
     jobTitleForm,
     setJobTitleForm,
+    addJobTitleMutation
+  } = useJobTitleManagement();
+
+  const {
+    profiles,
+    profilesLoading,
     userForm,
     setUserForm,
-    
-    // Mutations
-    addCustomerMutation,
-    addDesignerMutation,
-    addSalesmanMutation,
-    addJobTitleMutation,
     addUserMutation
-  } = useAdminManagement();
+  } = useUserManagement();
 
   const handleAddCustomer = (e: React.FormEvent) => {
     e.preventDefault();
