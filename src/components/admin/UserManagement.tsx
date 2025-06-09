@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
-import type { Profile } from "@/hooks/useAdminManagement";
+import type { Profile } from "@/hooks/useUserManagement";
 
 interface UserManagementProps {
   profiles: Profile[];
