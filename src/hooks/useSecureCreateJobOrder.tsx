@@ -104,7 +104,7 @@ export function useSecureCreateJobOrder() {
           job_title_id: sanitizedData.job_title_id,
           designer_id: sanitizedData.designer_id,
           salesman_id: sanitizedData.salesman_id,
-          assignee_id: sanitizedData.assignee || null,
+          assignee: sanitizedData.assignee || null,
           priority: sanitizedData.priority,
           status: sanitizedData.status,
           due_date: sanitizedData.due_date,

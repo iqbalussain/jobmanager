@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -33,7 +34,7 @@ export interface JobOrder {
   customer_id: string;
   job_type_id: string | null;
   job_title_id: string | null;
-  assignee_id: string | null;
+  assignee: string | null;
   designer_id: string | null;
   salesman_id: string | null;
   priority: 'low' | 'medium' | 'high' | 'urgent';
@@ -49,7 +50,6 @@ export interface JobOrder {
   customer: Customer | null;
   designer: Designer | null;
   salesman: Salesman | null;
-  assignee: string | null;
   job_title: JobTitle | null;
   title?: string;
   description?: string;
@@ -103,7 +103,6 @@ export function useSecureJobOrders() {
         salesman: order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman
           ? order.salesman as Salesman
           : null,
-        assignee: order.assignee_id || null,
         job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title
           ? order.job_title as JobTitle
           : null,

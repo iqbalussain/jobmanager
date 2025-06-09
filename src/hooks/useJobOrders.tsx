@@ -32,7 +32,7 @@ export interface JobOrder {
   customer_id: string;
   job_type_id: string | null;
   job_title_id: string | null;
-  assignee_id: string | null;
+  assignee: string | null;
   designer_id: string | null;
   salesman_id: string | null;
   priority: 'low' | 'medium' | 'high' | 'urgent';
@@ -48,7 +48,6 @@ export interface JobOrder {
   customer: Customer | null;
   designer: Designer | null;
   salesman: Salesman | null;
-  assignee: string | null;
   job_title: JobTitle | null;
   title?: string;
   description?: string;
@@ -95,8 +94,6 @@ export function useJobOrders() {
         salesman: order.salesman && typeof order.salesman === 'object' && 'id' in order.salesman
           ? order.salesman as Salesman
           : null,
-        // Handle assignee as text field (simple string)
-        assignee: order.assignee_id || null,
         // Ensure job_title is properly typed
         job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title
           ? order.job_title as JobTitle

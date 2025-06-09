@@ -115,7 +115,7 @@ export type Database = {
       job_orders: {
         Row: {
           actual_hours: number | null
-          assignee_id: string | null
+          assignee: string | null
           branch: string | null
           created_at: string
           created_by: string
@@ -135,7 +135,7 @@ export type Database = {
         }
         Insert: {
           actual_hours?: number | null
-          assignee_id?: string | null
+          assignee?: string | null
           branch?: string | null
           created_at?: string
           created_by: string
@@ -155,7 +155,7 @@ export type Database = {
         }
         Update: {
           actual_hours?: number | null
-          assignee_id?: string | null
+          assignee?: string | null
           branch?: string | null
           created_at?: string
           created_by?: string

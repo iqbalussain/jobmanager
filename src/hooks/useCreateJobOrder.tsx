@@ -66,7 +66,7 @@ export function useCreateJobOrder() {
           job_title_id: data.job_title_id,
           designer_id: data.designer_id,
           salesman_id: data.salesman_id,
-          assignee_id: data.assignee || null,
+          assignee: data.assignee || null,
           priority: data.priority,
           status: data.status,
           due_date: data.due_date,
