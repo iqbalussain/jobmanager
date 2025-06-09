@@ -4,7 +4,8 @@ import {
   Briefcase, 
   Plus,
   Calendar,
-  Settings
+  Settings,
+  User
 } from "lucide-react";
 import {
   Sidebar as SidebarBase,
@@ -15,9 +16,11 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   SidebarHeader
 } from "@/components/ui/sidebar";
+import { UserProfile } from "@/components/UserProfile";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
   currentView: string;
@@ -25,6 +28,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
+  const [showProfile, setShowProfile] = useState(false);
+
   const menuItems = [
     {
       title: "Dashboard",
@@ -99,6 +104,21 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
                   <Settings className="w-5 h-5" />
                   <span>Settings</span>
                 </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Button 
+                  onClick={() => setShowProfile(!showProfile)}
+                  variant="ghost"
+                  className="w-full justify-start p-2 h-auto hover:bg-gray-100"
+                >
+                  <User className="w-5 h-5 mr-2" />
+                  <span>Profile</span>
+                </Button>
+                {showProfile && (
+                  <div className="mt-2 px-2">
+                    <UserProfile />
+                  </div>
+                )}
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>

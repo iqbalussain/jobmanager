@@ -5,6 +5,7 @@ import { Dashboard } from "@/components/Dashboard";
 import { JobForm } from "@/components/JobForm";
 import { JobList } from "@/components/JobList";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useJobOrders } from "@/hooks/useJobOrders";
 
 export type JobStatus = "pending" | "in-progress" | "completed" | "cancelled" | "designing" | "finished" | "overdue";
 
@@ -28,95 +29,49 @@ export interface Job {
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<"dashboard" | "jobs" | "create">("dashboard");
-  const [jobs, setJobs] = useState<Job[]>([
-    {
-      id: "1",
-      jobOrderNumber: "WK000001",
-      title: "HVAC System Maintenance",
-      description: "Annual maintenance check for commercial HVAC system",
-      customer: "ABC Corporation",
-      assignee: "John Smith",
-      priority: "high",
-      status: "in-progress",
-      dueDate: "2024-06-15",
-      createdAt: "2024-06-08",
-      estimatedHours: 4,
-      branch: "Wadi Kabeer",
-      designer: "Alice Johnson",
-      salesman: "Emma Brown",
-      jobOrderDetails: "Complete maintenance check including filter replacement and system calibration"
-    },
-    {
-      id: "2",
-      jobOrderNumber: "HO000001",
-      title: "Plumbing Repair",
-      description: "Fix leaking pipes in office building basement",
-      customer: "XYZ Industries",
-      assignee: "Sarah Johnson",
-      priority: "medium",
-      status: "designing",
-      dueDate: "2024-06-12",
-      createdAt: "2024-06-07",
-      estimatedHours: 2,
-      branch: "Head Office",
-      designer: "Bob Smith",
-      salesman: "Frank Miller",
-      jobOrderDetails: "Emergency plumbing repair for basement flooding issue"
-    },
-    {
-      id: "3",
-      jobOrderNumber: "WK000002",
-      title: "Electrical Installation",
-      description: "Install new lighting system in warehouse",
-      customer: "Tech Solutions Ltd",
-      assignee: "Mike Davis",
-      priority: "low",
-      status: "finished",
-      dueDate: "2024-06-10",
-      createdAt: "2024-06-05",
-      estimatedHours: 6,
-      branch: "Wadi Kabeer",
-      designer: "Carol Davis",
-      salesman: "Grace Lee",
-      jobOrderDetails: "Full warehouse lighting upgrade with LED fixtures"
-    }
-  ]);
+  const { jobOrders, isLoading, updateStatus } = useJobOrders();
 
-  const generateJobOrderNumber = (branch: string) => {
-    const prefix = branch === "Wadi Kabeer" ? "WK" : "HO";
-    const branchJobs = jobs.filter(job => job.branch === branch);
-    const nextNumber = branchJobs.length + 1;
-    return `${prefix}${nextNumber.toString().padStart(6, '0')}`;
-  };
+  // Transform database job orders to match the existing Job interface
+  const transformedJobs: Job[] = jobOrders.map(order => ({
+    id: order.id,
+    jobOrderNumber: order.job_order_number,
+    title: order.title,
+    description: order.description || "",
+    customer: order.customer?.name || "Unknown Customer",
+    assignee: order.assignee?.full_name || "Unassigned",
+    priority: order.priority as "low" | "medium" | "high",
+    status: order.status as JobStatus,
+    dueDate: order.due_date || new Date().toISOString().split('T')[0],
+    createdAt: order.created_at.split('T')[0],
+    estimatedHours: order.estimated_hours,
+    branch: order.branch || "",
+    designer: order.designer?.full_name || "Unassigned",
+    salesman: order.salesman?.full_name || "Unassigned",
+    jobOrderDetails: order.job_order_details || ""
+  }));
 
-  const addJob = (job: Omit<Job, "id" | "createdAt" | "jobOrderNumber">) => {
-    const jobOrderNumber = generateJobOrderNumber(job.branch);
-    const newJob: Job = {
-      ...job,
-      id: Date.now().toString(),
-      jobOrderNumber,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    setJobs([newJob, ...jobs]);
-    setCurrentView("jobs");
-  };
-
-  const updateJobStatus = (jobId: string, status: JobStatus) => {
-    setJobs(jobs.map(job => 
-      job.id === jobId ? { ...job, status } : job
-    ));
+  const handleStatusUpdate = (jobId: string, status: JobStatus) => {
+    updateStatus({ id: jobId, status });
   };
 
   const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Loading job orders...</div>
+        </div>
+      );
+    }
+
     switch (currentView) {
       case "dashboard":
-        return <Dashboard jobs={jobs} />;
+        return <Dashboard jobs={transformedJobs} />;
       case "jobs":
-        return <JobList jobs={jobs} onStatusUpdate={updateJobStatus} />;
+        return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
       case "create":
-        return <JobForm onSubmit={addJob} onCancel={() => setCurrentView("dashboard")} />;
+        return <JobForm onSubmit={() => {}} onCancel={() => setCurrentView("dashboard")} />;
       default:
-        return <Dashboard jobs={jobs} />;
+        return <Dashboard jobs={transformedJobs} />;
     }
   };
 
