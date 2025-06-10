@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Dashboard } from "@/components/Dashboard";
@@ -17,18 +16,18 @@ export interface Job {
   id: string;
   jobOrderNumber: string;
   title: string;
-  description: string;
   customer: string;
-  assignee: string;
-  priority: "low" | "medium" | "high";
-  status: JobStatus;
+  assignee?: string;
+  designer?: string;
+  salesman?: string;
+  priority: 'low' | 'medium' | 'high';
+  status: 'pending' | 'in-progress' | 'completed' | 'cancelled' | 'designing' | 'finished' | 'invoiced';
   dueDate: string;
-  createdAt: string;
   estimatedHours: number;
-  branch: string;
-  designer: string;
-  salesman: string;
-  jobOrderDetails: string;
+  createdAt: string;
+  branch?: string;
+  jobOrderDetails?: string;
+  invoiceNumber?: string;
 }
 
 const Index = () => {
