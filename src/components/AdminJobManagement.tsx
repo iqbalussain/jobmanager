@@ -23,7 +23,7 @@ interface AdminJobManagementProps {
 }
 
 export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementProps) {
-  const [customerFilter, setCustomerFilter] = useState("");
+  const [salesmanFilter, setSalesmanFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -39,9 +39,9 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
   ];
 
   const filteredJobs = jobs.filter(job => {
-    const matchesCustomer = customerFilter === "" || job.customer.toLowerCase().includes(customerFilter.toLowerCase());
+    const matchesSalesman = salesmanFilter === "" || job.salesman.toLowerCase().includes(salesmanFilter.toLowerCase());
     const matchesStatus = statusFilter === "all" || job.status === statusFilter;
-    return matchesCustomer && matchesStatus;
+    return matchesSalesman && matchesStatus;
   });
 
   const handleViewDetails = (job: Job) => {
@@ -293,12 +293,12 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
           {/* Filters */}
           <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="customerFilter">Filter by Customer</Label>
+              <Label htmlFor="salesmanFilter">Filter by Salesman</Label>
               <Input
-                id="customerFilter"
-                placeholder="Search customer..."
-                value={customerFilter}
-                onChange={(e) => setCustomerFilter(e.target.value)}
+                id="salesmanFilter"
+                placeholder="Search salesman..."
+                value={salesmanFilter}
+                onChange={(e) => setSalesmanFilter(e.target.value)}
               />
             </div>
             <div className="space-y-2">

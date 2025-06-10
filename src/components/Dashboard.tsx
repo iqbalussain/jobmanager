@@ -29,7 +29,7 @@ export function Dashboard({ jobs }: DashboardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [customerFilter, setCustomerFilter] = useState("");
-  const [salesmanFilter, setSalesmanFilter] = useState("all");
+  const [branchFilter, setBranchFilter] = useState("all");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
@@ -55,12 +55,12 @@ export function Dashboard({ jobs }: DashboardProps) {
 
   const filteredJobs = jobs.filter(job => {
     const matchesCustomer = customerFilter === "" || job.customer.toLowerCase().includes(customerFilter.toLowerCase());
-    const matchesSalesman = salesmanFilter === "all" || job.salesman.toLowerCase().includes(salesmanFilter.toLowerCase());
-    return matchesCustomer && matchesSalesman;
+    const matchesBranch = branchFilter === "all" || (job.branch && job.branch.toLowerCase().includes(branchFilter.toLowerCase()));
+    return matchesCustomer && matchesBranch;
   });
 
-  // Get unique salesmen for the filter dropdown
-  const uniqueSalesmen = [...new Set(jobs.map(job => job.salesman))].filter(Boolean).sort();
+  // Get unique branches for the filter dropdown
+  const uniqueBranches = [...new Set(jobs.map(job => job.branch))].filter(Boolean).sort();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -180,16 +180,16 @@ export function Dashboard({ jobs }: DashboardProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="salesmanFilter">Filter by Salesman</Label>
-              <Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
+              <Label htmlFor="branchFilter">Filter by Branch</Label>
+              <Select value={branchFilter} onValueChange={setBranchFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select salesman" />
+                  <SelectValue placeholder="Select branch" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Salesmen</SelectItem>
-                  {uniqueSalesmen.map((salesman) => (
-                    <SelectItem key={salesman} value={salesman}>
-                      {salesman}
+                  <SelectItem value="all">All Branches</SelectItem>
+                  {uniqueBranches.map((branch) => (
+                    <SelectItem key={branch} value={branch}>
+                      {branch}
                     </SelectItem>
                   ))}
                 </SelectContent>
