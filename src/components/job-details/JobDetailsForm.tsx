@@ -1,18 +1,19 @@
 
-import { useState, useEffect } from "react";
-import { Job } from "@/pages/Index";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Job } from "@/pages/Index";
 import { 
-  Calendar,
-  User,
-  Clock,
-  Building,
+  User, 
+  Calendar, 
+  Clock, 
+  Building, 
+  FileText,
   Users,
-  FileText
+  MapPin
 } from "lucide-react";
 
 interface JobDetailsFormProps {
@@ -46,121 +47,126 @@ export function JobDetailsForm({ job, isEditMode, editData, onEditDataChange }: 
   };
 
   return (
-    <>
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Customer & Team Section */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-6 text-blue-600">
-            <Users className="w-5 h-5" />
-            <h3 className="text-lg font-bold">Customer & Team</h3>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Customer & Team Information */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Users className="w-5 h-5 text-blue-600" />
+            Customer & Team
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-600">Customer</Label>
+              <p className="mt-1 text-sm font-semibold text-gray-900">{job.customer}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-600">Assignee</Label>
+              <p className="mt-1 text-sm text-gray-700">{job.assignee || 'Unassigned'}</p>
+            </div>
           </div>
-          
-          <div className="space-y-4">
-            <div>
-              <Label className="text-sm font-semibold text-gray-600">Customer:</Label>
-              <div className="flex items-center gap-2 mt-1">
-                <Building className="w-4 h-4 text-gray-500" />
-                <span className="text-lg font-medium text-gray-900">{job.customer}</span>
-              </div>
-            </div>
 
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-semibold text-gray-600">Assignee:</Label>
-              <div className="flex items-center gap-2 mt-1 text-gray-700">
-                <User className="w-4 h-4 text-gray-500" />
-                <span>{job.assignee || 'Unassigned'}</span>
-              </div>
+              <Label className="text-sm font-medium text-gray-600">Designer</Label>
+              <p className="mt-1 text-sm text-gray-700">{job.designer || 'Not assigned'}</p>
             </div>
-
             <div>
-              <Label className="text-sm font-semibold text-gray-600">Designer:</Label>
-              <div className="flex items-center gap-2 mt-1 text-gray-700">
-                <User className="w-4 h-4 text-gray-500" />
-                <span>{job.designer || 'Not assigned'}</span>
-              </div>
+              <Label className="text-sm font-medium text-gray-600">Salesman</Label>
+              <p className="mt-1 text-sm text-gray-700">{job.salesman || 'Not assigned'}</p>
             </div>
+          </div>
 
-            <div>
-              <Label className="text-sm font-semibold text-gray-600">Salesman:</Label>
-              <div className="flex items-center gap-2 mt-1 text-gray-700">
-                <User className="w-4 h-4 text-gray-500" />
-                <span>{job.salesman || 'Not assigned'}</span>
-              </div>
-            </div>
+          <div>
+            <Label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+              <MapPin className="w-4 h-4" />
+              Branch
+            </Label>
+            {isEditMode ? (
+              <Input
+                value={editData.branch || ''}
+                onChange={(e) => onEditDataChange({ ...editData, branch: e.target.value })}
+                placeholder="Enter branch"
+                className="mt-1"
+              />
+            ) : (
+              <p className="mt-1 text-sm text-gray-700">{job.branch || 'Head Office'}</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Project Details */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="w-5 h-5 text-green-600" />
+            Project Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium text-gray-600">Title</Label>
+            {isEditMode ? (
+              <Input
+                value={editData.title || ''}
+                onChange={(e) => onEditDataChange({ ...editData, title: e.target.value })}
+                placeholder="Enter job title"
+                className="mt-1"
+              />
+            ) : (
+              <p className="mt-1 text-sm font-semibold text-gray-900">{job.title}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="branch" className="text-sm font-semibold text-gray-600">Branch:</Label>
+              <Label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                Due Date
+              </Label>
               {isEditMode ? (
                 <Input
-                  id="branch"
-                  value={editData.branch || ''}
-                  onChange={(e) => onEditDataChange({...editData, branch: e.target.value})}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="text-gray-700 mt-1">{job.branch || 'Head Office'}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Timeline & Details Section */}
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-6 text-green-600">
-            <Calendar className="w-5 h-5" />
-            <h3 className="text-lg font-bold">Timeline & Details</h3>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <Label className="text-sm font-semibold text-gray-600">Created Date:</Label>
-              <p className="text-gray-700 mt-1">{new Date(job.createdAt).toLocaleDateString()}</p>
-            </div>
-
-            <div>
-              <Label htmlFor="dueDate" className="text-sm font-semibold text-gray-600">Due Date:</Label>
-              {isEditMode ? (
-                <Input
-                  id="dueDate"
                   type="date"
                   value={editData.dueDate || ''}
-                  onChange={(e) => onEditDataChange({...editData, dueDate: e.target.value})}
+                  onChange={(e) => onEditDataChange({ ...editData, dueDate: e.target.value })}
                   className="mt-1"
                 />
               ) : (
-                <div className="flex items-center gap-2 mt-1 text-gray-700">
-                  <Calendar className="w-4 h-4" />
-                  <span>{new Date(job.dueDate).toLocaleDateString()}</span>
-                </div>
+                <p className="mt-1 text-sm text-gray-700">{new Date(job.dueDate).toLocaleDateString()}</p>
               )}
             </div>
-
             <div>
-              <Label htmlFor="estimatedHours" className="text-sm font-semibold text-gray-600">Est. Hours:</Label>
+              <Label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                Estimated Hours
+              </Label>
               {isEditMode ? (
                 <Input
-                  id="estimatedHours"
                   type="number"
-                  value={editData.estimatedHours || 0}
-                  onChange={(e) => onEditDataChange({...editData, estimatedHours: parseInt(e.target.value) || 0})}
+                  value={editData.estimatedHours || ''}
+                  onChange={(e) => onEditDataChange({ ...editData, estimatedHours: parseInt(e.target.value) })}
+                  placeholder="Enter hours"
                   className="mt-1"
                 />
               ) : (
-                <div className="flex items-center gap-2 mt-1 text-gray-700">
-                  <Clock className="w-4 h-4" />
-                  <span>{job.estimatedHours} hours</span>
-                </div>
+                <p className="mt-1 text-sm text-gray-700">{job.estimatedHours} hours</p>
               )}
             </div>
+          </div>
 
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="priority" className="text-sm font-semibold text-gray-600">Priority:</Label>
+              <Label className="text-sm font-medium text-gray-600">Priority</Label>
               {isEditMode ? (
-                <Select value={editData.priority} onValueChange={(value) => onEditDataChange({...editData, priority: value as any})}>
+                <Select 
+                  value={editData.priority || ''} 
+                  onValueChange={(value) => onEditDataChange({ ...editData, priority: value as any })}
+                >
                   <SelectTrigger className="mt-1">
-                    <SelectValue />
+                    <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="low">Low</SelectItem>
@@ -170,95 +176,54 @@ export function JobDetailsForm({ job, isEditMode, editData, onEditDataChange }: 
                 </Select>
               ) : (
                 <div className="mt-1">
-                  <Badge className={`${getPriorityColor(job.priority)} text-xs font-semibold px-3 py-1 rounded-full uppercase`}>
-                    {job.priority}
+                  <Badge className={getPriorityColor(job.priority)}>
+                    {job.priority} priority
                   </Badge>
                 </div>
               )}
             </div>
-
             <div>
-              <Label className="text-sm font-semibold text-gray-600">Status:</Label>
+              <Label className="text-sm font-medium text-gray-600">Status</Label>
               <div className="mt-1">
-                <Badge className={`${getStatusColor(job.status)} text-xs font-semibold px-3 py-1 rounded-full uppercase`}>
+                <Badge className={getStatusColor(job.status)}>
                   {job.status.replace('-', ' ')}
                 </Badge>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Job Title Section */}
-      <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-4 text-purple-600">
-          <FileText className="w-5 h-5" />
-          <h3 className="text-lg font-bold">Job Information</h3>
-        </div>
-        
-        <div>
-          <Label htmlFor="title" className="text-sm font-semibold text-gray-600">Job Title:</Label>
+          <div>
+            <Label className="text-sm font-medium text-gray-600">Created Date</Label>
+            <p className="mt-1 text-sm text-gray-700">{new Date(job.createdAt).toLocaleDateString()}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Job Order Details - Full Width */}
+      <Card className="lg:col-span-2">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Building className="w-5 h-5 text-purple-600" />
+            Job Order Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           {isEditMode ? (
-            <Input
-              id="title"
-              value={editData.title || ''}
-              onChange={(e) => onEditDataChange({...editData, title: e.target.value})}
-              className="mt-1"
+            <Textarea
+              value={editData.jobOrderDetails || ''}
+              onChange={(e) => onEditDataChange({ ...editData, jobOrderDetails: e.target.value })}
+              placeholder="Enter detailed job order information..."
+              className="min-h-[120px] resize-none"
             />
           ) : (
-            <p className="text-xl font-bold text-gray-900 mt-1">{job.title}</p>
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                {job.jobOrderDetails || 'No additional details provided.'}
+              </p>
+            </div>
           )}
-        </div>
-      </div>
-
-      {/* Job Description Section */}
-      <div className="bg-gradient-to-br from-gray-50 to-slate-50 border-2 border-gray-200 rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-4 text-gray-600">
-          <FileText className="w-5 h-5" />
-          <h3 className="text-lg font-bold">Job Description</h3>
-        </div>
-        
-        {isEditMode ? (
-          <Textarea
-            id="description"
-            value={editData.description || ''}
-            onChange={(e) => onEditDataChange({...editData, description: e.target.value})}
-            rows={3}
-            className="w-full"
-          />
-        ) : (
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <p className="text-gray-700 leading-relaxed">
-              {job.description || 'No description provided.'}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Job Order Details Section */}
-      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-4 text-amber-600">
-          <FileText className="w-5 h-5" />
-          <h3 className="text-lg font-bold">Job Order Details</h3>
-        </div>
-        
-        {isEditMode ? (
-          <Textarea
-            id="jobOrderDetails"
-            value={editData.jobOrderDetails || ''}
-            onChange={(e) => onEditDataChange({...editData, jobOrderDetails: e.target.value})}
-            rows={4}
-            placeholder="Additional job order details..."
-            className="w-full"
-          />
-        ) : (
-          <div className="bg-white p-4 rounded-lg border border-amber-200">
-            <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-              {job.jobOrderDetails || 'No additional details provided.'}
-            </p>
-          </div>
-        )}
-      </div>
-    </>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

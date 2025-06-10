@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { Job } from "@/pages/Index";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { exportJobOrderToPDF } from "@/utils/pdfExport";
@@ -18,6 +20,7 @@ interface JobDetailsProps {
 
 export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDetailsProps) {
   const [editData, setEditData] = useState<Partial<Job>>({});
+  const [invoiceNumber, setInvoiceNumber] = useState('');
   const [customers, setCustomers] = useState<Array<{id: string, name: string}>>([]);
   const [designers, setDesigners] = useState<Array<{id: string, name: string}>>([]);
   const [salesmen, setSalesmen] = useState<Array<{id: string, name: string}>>([]);
@@ -29,13 +32,17 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
     if (job) {
       setEditData({
         title: job.title,
-        description: job.description,
         priority: job.priority,
         dueDate: job.dueDate,
         estimatedHours: job.estimatedHours,
         branch: job.branch,
         jobOrderDetails: job.jobOrderDetails
       });
+      
+      // Load existing invoice number if available
+      if (job.invoiceNumber) {
+        setInvoiceNumber(job.invoiceNumber);
+      }
     }
   }, [job]);
 
@@ -72,12 +79,12 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
     try {
       const updateData: any = {
         title: editData.title,
-        description: editData.description,
         priority: editData.priority,
         due_date: editData.dueDate,
         estimated_hours: editData.estimatedHours,
         branch: editData.branch,
         job_order_details: editData.jobOrderDetails,
+        invoice_number: invoiceNumber || null,
         updated_at: new Date().toISOString()
       };
 
@@ -113,7 +120,15 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
 
     setIsExporting(true);
     try {
-      await exportJobOrderToPDF(job);
+      // If there's an invoice number, save it first
+      if (invoiceNumber && invoiceNumber !== job.invoiceNumber) {
+        await supabase
+          .from('job_orders')
+          .update({ invoice_number: invoiceNumber })
+          .eq('id', job.id);
+      }
+
+      await exportJobOrderToPDF(job, invoiceNumber);
       toast({
         title: "Success",
         description: "Job order exported to PDF successfully",
@@ -145,6 +160,27 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Invoice Number Field - Show when exporting or in edit mode */}
+          {(isEditMode || !isEditMode) && (
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="space-y-2">
+                <Label htmlFor="invoiceNumber" className="text-sm font-medium text-blue-900">
+                  Invoice Number (Optional)
+                </Label>
+                <Input
+                  id="invoiceNumber"
+                  value={invoiceNumber}
+                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                  placeholder="Enter invoice number for PDF export"
+                  className="bg-white"
+                />
+                <p className="text-xs text-blue-700">
+                  This will appear at the top of the exported PDF and be saved to the job order.
+                </p>
+              </div>
+            </div>
+          )}
+
           <JobDetailsForm
             job={job}
             isEditMode={isEditMode}
