@@ -167,17 +167,23 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
         <p className="text-gray-600">Manage and track all your work orders</p>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
         {jobs.map((job) => (
           <Card 
             key={job.id} 
-            className="group relative bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:rotate-1 perspective-1000"
+            className="group relative bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 border-0 shadow-xl hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-4 hover:rotate-3 cursor-pointer"
             style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.05)',
+              background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 30%, #e0f2fe 70%, #faf5ff 100%)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.8) inset',
+              transformStyle: 'preserve-3d',
+              perspective: '1000px'
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-purple-50/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* 3D lighting effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-black/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+            
+            {/* Enhanced shadow for 3D effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg blur-lg opacity-0 group-hover:opacity-75 transition-opacity duration-700 -z-10" />
             
             <CardHeader className="pb-3 relative z-10">
               <div className="flex items-start justify-between mb-3">
@@ -186,16 +192,16 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
                   <span className="font-medium">{job.jobOrderNumber}</span>
                 </div>
                 <div className="flex gap-1">
-                  <Badge className={`${getPriorityColor(job.priority)} text-xs px-2 py-1`}>
+                  <Badge className={`${getPriorityColor(job.priority)} text-xs px-2 py-1 shadow-sm`}>
                     {job.priority}
                   </Badge>
-                  <Badge className={`${getStatusColor(job.status)} text-xs px-2 py-1`}>
+                  <Badge className={`${getStatusColor(job.status)} text-xs px-2 py-1 shadow-sm`}>
                     {job.status.replace('-', ' ')}
                   </Badge>
                 </div>
               </div>
               
-              <CardTitle className="text-lg text-gray-900 line-clamp-2 leading-tight mb-2">
+              <CardTitle className="text-xl text-gray-900 line-clamp-2 leading-tight mb-2 group-hover:text-blue-900 transition-colors">
                 {job.title}
               </CardTitle>
             </CardHeader>
@@ -213,7 +219,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-4 pt-2 border-t border-gray-100">
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-4 pt-2 border-t border-gray-200/50">
                 <div className="flex items-center gap-1">
                   <User className="w-3 h-3" />
                   <span>Created by: Admin</span>
@@ -226,7 +232,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
                   onClick={() => handleViewDetails(job)}
                   variant="outline"
                   size="sm"
-                  className="flex-1 border-gray-300 hover:bg-gray-50 transition-colors text-xs"
+                  className="flex-1 border-gray-300 hover:bg-blue-50 hover:border-blue-300 transition-all text-xs shadow-sm"
                 >
                   <Eye className="w-3 h-3 mr-1" />
                   View
@@ -236,7 +242,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
                   onClick={() => handleEditJob(job)}
                   variant="outline"
                   size="sm"
-                  className="flex-1 border-blue-300 hover:bg-blue-50 transition-colors text-xs"
+                  className="flex-1 border-blue-300 hover:bg-blue-50 hover:border-blue-400 transition-all text-xs shadow-sm"
                 >
                   <Edit className="w-3 h-3 mr-1" />
                   Edit
@@ -247,7 +253,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
                     onClick={() => handleCancelJob(job)}
                     variant="outline"
                     size="sm"
-                    className="border-red-300 hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors text-xs px-2"
+                    className="border-red-300 hover:bg-red-50 text-red-600 hover:text-red-700 hover:border-red-400 transition-all text-xs px-2 shadow-sm"
                   >
                     <X className="w-3 h-3" />
                   </Button>
@@ -257,7 +263,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
               {getNextStatus(job.status) && job.status !== 'cancelled' && (
                 <Button
                   onClick={() => onStatusUpdate(job.id, getNextStatus(job.status)!)}
-                  className="w-full mt-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200 text-xs"
+                  className="w-full mt-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-xs transform hover:scale-105"
                   size="sm"
                 >
                   {getStatusButtonText(job.status)}

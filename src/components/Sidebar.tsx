@@ -7,7 +7,8 @@ import {
   Settings,
   User,
   Shield,
-  UsersRound
+  UsersRound,
+  Menu
 } from "lucide-react";
 import {
   Sidebar as SidebarBase,
@@ -18,11 +19,13 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarHeader
+  SidebarHeader,
+  SidebarTrigger
 } from "@/components/ui/sidebar";
 import { UserProfile } from "@/components/UserProfile";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface SidebarProps {
   currentView: string;
@@ -31,24 +34,34 @@ interface SidebarProps {
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const [showProfile, setShowProfile] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
     {
       title: "Dashboard",
       icon: LayoutDashboard,
-      onClick: () => onViewChange("dashboard"),
+      onClick: () => {
+        onViewChange("dashboard");
+        setIsMobileMenuOpen(false);
+      },
       isActive: currentView === "dashboard"
     },
     {
       title: "Job Orders",
       icon: Briefcase,
-      onClick: () => onViewChange("jobs"),
+      onClick: () => {
+        onViewChange("jobs");
+        setIsMobileMenuOpen(false);
+      },
       isActive: currentView === "jobs"
     },
     {
       title: "Create Job",
       icon: Plus,
-      onClick: () => onViewChange("create"),
+      onClick: () => {
+        onViewChange("create");
+        setIsMobileMenuOpen(false);
+      },
       isActive: currentView === "create"
     }
   ];
@@ -57,13 +70,19 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     {
       title: "Job Management",
       icon: Shield,
-      onClick: () => onViewChange("admin"),
+      onClick: () => {
+        onViewChange("admin");
+        setIsMobileMenuOpen(false);
+      },
       isActive: currentView === "admin"
     },
     {
       title: "User Management",
       icon: UsersRound,
-      onClick: () => onViewChange("admin-management"),
+      onClick: () => {
+        onViewChange("admin-management");
+        setIsMobileMenuOpen(false);
+      },
       isActive: currentView === "admin-management"
     }
   ];
@@ -72,19 +91,25 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     {
       title: "Calendar",
       icon: Calendar,
-      onClick: () => onViewChange("calendar"),
+      onClick: () => {
+        onViewChange("calendar");
+        setIsMobileMenuOpen(false);
+      },
       isActive: currentView === "calendar"
     },
     {
       title: "Settings",
       icon: Settings,
-      onClick: () => onViewChange("settings"),
+      onClick: () => {
+        onViewChange("settings");
+        setIsMobileMenuOpen(false);
+      },
       isActive: currentView === "settings"
     }
   ];
 
-  return (
-    <SidebarBase className="border-r border-blue-100 bg-white/80 backdrop-blur-sm">
+  const SidebarContent = () => (
+    <>
       <SidebarHeader className="border-b border-blue-100 p-6">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
@@ -182,6 +207,35 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-    </SidebarBase>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <SidebarBase className="hidden md:flex border-r border-blue-100 bg-white/80 backdrop-blur-sm">
+        <SidebarContent />
+      </SidebarBase>
+
+      {/* Mobile Menu */}
+      <div className="md:hidden">
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="fixed top-4 left-4 z-50 bg-white/90 backdrop-blur-sm border-blue-200 hover:bg-blue-50"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-80">
+            <div className="h-full bg-white/90 backdrop-blur-sm">
+              <SidebarContent />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
   );
 }
