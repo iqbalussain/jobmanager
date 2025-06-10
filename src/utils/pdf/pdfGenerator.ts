@@ -9,8 +9,7 @@ export const generatePDFFromElement = async (element: HTMLElement, fileName: str
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
-      logging: false,
-      dpi: 300 // Higher DPI for crisp text
+      logging: false
     });
 
     const imgData = canvas.toDataURL('image/png', 1.0); // Maximum quality
