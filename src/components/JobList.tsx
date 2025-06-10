@@ -174,7 +174,9 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <CardTitle className="text-xl text-gray-900 mb-2">{job.title}</CardTitle>
-                  <p className="text-gray-600">{job.description}</p>
+                  {job.jobOrderDetails && (
+                    <p className="text-gray-600">{job.jobOrderDetails}</p>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Badge className={getPriorityColor(job.priority)}>
