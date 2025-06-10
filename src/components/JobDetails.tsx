@@ -10,6 +10,7 @@ import { exportJobOrderToPDF } from "@/utils/pdfExport";
 import { JobDetailsHeader } from "./job-details/JobDetailsHeader";
 import { JobDetailsForm } from "./job-details/JobDetailsForm";
 import { JobDetailsActions } from "./job-details/JobDetailsActions";
+import { useAuth } from "@/hooks/useAuth";
 
 interface JobDetailsProps {
   isOpen: boolean;
@@ -26,7 +27,12 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
   const [salesmen, setSalesmen] = useState<Array<{id: string, name: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [userRole, setUserRole] = useState<string>('');
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Check if user is authorized to edit invoice numbers
+  const canEditInvoice = userRole === 'admin' || userRole === 'manager' || userRole === 'job_order_manager';
 
   useEffect(() => {
     if (job) {
@@ -47,10 +53,39 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
   }, [job]);
 
   useEffect(() => {
+    if (user) {
+      fetchUserRole();
+    }
+  }, [user]);
+
+  useEffect(() => {
     if (isEditMode && isOpen) {
       fetchDropdownData();
     }
   }, [isEditMode, isOpen]);
+
+  const fetchUserRole = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return;
+      }
+      
+      if (data) {
+        setUserRole(data.role);
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+  };
 
   const fetchDropdownData = async () => {
     try {
@@ -78,15 +113,19 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
     setIsLoading(true);
     try {
       const updateData: any = {
-        title: editData.title,
+        // Remove 'title' field as it doesn't exist in the database
         priority: editData.priority,
         due_date: editData.dueDate,
         estimated_hours: editData.estimatedHours,
         branch: editData.branch,
         job_order_details: editData.jobOrderDetails,
-        invoice_number: invoiceNumber || null,
         updated_at: new Date().toISOString()
       };
+
+      // Only include invoice_number if user is authorized
+      if (canEditInvoice) {
+        updateData.invoice_number = invoiceNumber || null;
+      }
 
       const { error } = await supabase
         .from('job_orders')
@@ -120,8 +159,8 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
 
     setIsExporting(true);
     try {
-      // If there's an invoice number, save it first
-      if (invoiceNumber && invoiceNumber !== job.invoiceNumber) {
+      // If there's an invoice number and user is authorized, save it first
+      if (invoiceNumber && invoiceNumber !== job.invoiceNumber && canEditInvoice) {
         await supabase
           .from('job_orders')
           .update({ invoice_number: invoiceNumber })
@@ -165,17 +204,21 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <div className="space-y-2">
                 <Label htmlFor="invoiceNumber" className="text-sm font-medium text-blue-900">
-                  Invoice Number (Optional)
+                  Invoice Number (Optional) {!canEditInvoice && '- View Only'}
                 </Label>
                 <Input
                   id="invoiceNumber"
                   value={invoiceNumber}
                   onChange={(e) => setInvoiceNumber(e.target.value)}
-                  placeholder="Enter invoice number for PDF export"
+                  placeholder={canEditInvoice ? "Enter invoice number for PDF export" : "Not authorized to edit"}
                   className="bg-white"
+                  disabled={!canEditInvoice}
                 />
                 <p className="text-xs text-blue-700">
-                  This will appear at the top of the exported PDF and be saved to the job order.
+                  {canEditInvoice 
+                    ? "This will appear at the top of the exported PDF and be saved to the job order." 
+                    : "Only authorized users (Admin, Manager, Job Order Manager) can edit invoice numbers."
+                  }
                 </p>
               </div>
             </div>
