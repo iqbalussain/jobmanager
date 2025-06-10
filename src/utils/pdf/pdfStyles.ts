@@ -1,4 +1,3 @@
-
 export const getPriorityColor = (priority: string) => {
   switch (priority) {
     case "high": return { 
@@ -95,7 +94,8 @@ export const createStyledElement = () => {
   element.style.fontSize = '14px';
   element.style.lineHeight = '1.6';
   element.style.fontWeight = '400';
-  element.style.WebkitFontSmoothing = 'antialiased';
-  element.style.MozOsxFontSmoothing = 'grayscale';
+  // Use bracket notation to avoid TypeScript errors
+  (element.style as any).webkitFontSmoothing = 'antialiased';
+  (element.style as any).mozOsxFontSmoothing = 'grayscale';
   return element;
 };

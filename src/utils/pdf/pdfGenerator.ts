@@ -10,7 +10,6 @@ export const generatePDFFromElement = async (element: HTMLElement, fileName: str
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
-      letterRendering: true, // Better text rendering
       dpi: 300 // Higher DPI for crisp text
     });
 
