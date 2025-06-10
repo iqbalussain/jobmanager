@@ -3,26 +3,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, 
   Building2, 
-  Palette, 
-  Briefcase,
   UserPlus,
   FileText
 } from "lucide-react";
 import { useCustomerManagement } from "@/hooks/useCustomerManagement";
-import { useDesignerManagement } from "@/hooks/useDesignerManagement";
-import { useSalesmanManagement } from "@/hooks/useSalesmanManagement";
 import { useJobTitleManagement } from "@/hooks/useJobTitleManagement";
 import { useUserManagement } from "@/hooks/useUserManagement";
 import { CustomerManagement } from "@/components/admin/CustomerManagement";
-import { SalesmanManagement } from "@/components/admin/SalesmanManagement";
-import { DesignerManagement } from "@/components/admin/DesignerManagement";
 import { JobTitleManagement } from "@/components/admin/JobTitleManagement";
 import { UserManagement } from "@/components/admin/UserManagement";
 
 export function AdminManagement() {
   const customerHook = useCustomerManagement();
-  const designerHook = useDesignerManagement();
-  const salesmanHook = useSalesmanManagement();
   const jobTitleHook = useJobTitleManagement();
   const userHook = useUserManagement();
 
@@ -34,23 +26,15 @@ export function AdminManagement() {
             <Users className="w-8 h-8 text-blue-600" />
             Admin Management
           </h1>
-          <p className="text-gray-600">Manage customers, salesmen, designers, job titles, and users</p>
+          <p className="text-gray-600">Manage customers, job titles, and users</p>
         </div>
       </div>
 
       <Tabs defaultValue="customers" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="customers" className="flex items-center gap-2">
             <Building2 className="w-4 h-4" />
             Customers
-          </TabsTrigger>
-          <TabsTrigger value="salesmen" className="flex items-center gap-2">
-            <Briefcase className="w-4 h-4" />
-            Salesmen
-          </TabsTrigger>
-          <TabsTrigger value="designers" className="flex items-center gap-2">
-            <Palette className="w-4 h-4" />
-            Designers
           </TabsTrigger>
           <TabsTrigger value="job-titles" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
@@ -70,28 +54,6 @@ export function AdminManagement() {
             setCustomerForm={customerHook.setCustomerForm}
             onAddCustomer={customerHook.handleAddCustomer}
             isAdding={customerHook.addCustomerMutation.isPending}
-          />
-        </TabsContent>
-
-        <TabsContent value="salesmen">
-          <SalesmanManagement
-            salesmen={salesmanHook.salesmen}
-            salesmenLoading={salesmanHook.salesmenLoading}
-            salesmanForm={salesmanHook.salesmanForm}
-            setSalesmanForm={salesmanHook.setSalesmanForm}
-            onAddSalesman={salesmanHook.handleAddSalesman}
-            isAdding={salesmanHook.addSalesmanMutation.isPending}
-          />
-        </TabsContent>
-
-        <TabsContent value="designers">
-          <DesignerManagement
-            designers={designerHook.designers}
-            designersLoading={designerHook.designersLoading}
-            designerForm={designerHook.designerForm}
-            setDesignerForm={designerHook.setDesignerForm}
-            onAddDesigner={designerHook.handleAddDesigner}
-            isAdding={designerHook.addDesignerMutation.isPending}
           />
         </TabsContent>
 
