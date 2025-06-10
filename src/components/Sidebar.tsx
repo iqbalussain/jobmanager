@@ -108,7 +108,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     }
   ];
 
-  const SidebarContent = () => (
+  const SidebarContentComponent = () => (
     <>
       <SidebarHeader className="border-b border-blue-100 p-6">
         <div className="flex items-center gap-3">
@@ -214,7 +214,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     <>
       {/* Desktop Sidebar */}
       <SidebarBase className="hidden md:flex border-r border-blue-100 bg-white/80 backdrop-blur-sm">
-        <SidebarContent />
+        <SidebarContentComponent />
       </SidebarBase>
 
       {/* Mobile Menu */}
@@ -231,7 +231,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-80">
             <div className="h-full bg-white/90 backdrop-blur-sm">
-              <SidebarContent />
+              <SidebarContentComponent />
             </div>
           </SheetContent>
         </Sheet>
