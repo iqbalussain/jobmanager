@@ -8,13 +8,13 @@ import { JobDetails } from "@/components/JobDetails";
 import { 
   Calendar,
   User,
-  Clock,
   Building,
   ChevronRight,
   Eye,
   Edit,
   X,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -167,90 +167,103 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
         <p className="text-gray-600">Manage and track all your work orders</p>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {jobs.map((job) => (
-          <Card key={job.id} className="shadow-lg border-0 bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-xl text-gray-900 mb-2">{job.title}</CardTitle>
-                  {job.jobOrderDetails && (
-                    <p className="text-gray-600">{job.jobOrderDetails}</p>
-                  )}
+          <Card 
+            key={job.id} 
+            className="group relative bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:rotate-1 perspective-1000"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.05)',
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-purple-50/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            <CardHeader className="pb-3 relative z-10">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <FileText className="w-3 h-3" />
+                  <span className="font-medium">{job.jobOrderNumber}</span>
                 </div>
-                <div className="flex gap-2">
-                  <Badge className={getPriorityColor(job.priority)}>
-                    {job.priority} priority
+                <div className="flex gap-1">
+                  <Badge className={`${getPriorityColor(job.priority)} text-xs px-2 py-1`}>
+                    {job.priority}
                   </Badge>
-                  <Badge className={getStatusColor(job.status)}>
+                  <Badge className={`${getStatusColor(job.status)} text-xs px-2 py-1`}>
                     {job.status.replace('-', ' ')}
                   </Badge>
                 </div>
               </div>
+              
+              <CardTitle className="text-lg text-gray-900 line-clamp-2 leading-tight mb-2">
+                {job.title}
+              </CardTitle>
             </CardHeader>
             
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <CardContent className="pt-0 relative z-10">
+              <div className="space-y-3 mb-4">
                 <div className="flex items-center gap-2 text-gray-600">
-                  <Building className="w-4 h-4" />
-                  <span className="text-sm">{job.customer}</span>
+                  <Building className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm truncate">{job.customer}</span>
                 </div>
+                
                 <div className="flex items-center gap-2 text-gray-600">
-                  <User className="w-4 h-4" />
-                  <span className="text-sm">{job.assignee}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Calendar className="w-4 h-4" />
+                  <Calendar className="w-4 h-4 flex-shrink-0" />
                   <span className="text-sm">Due: {new Date(job.dueDate).toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm">{job.estimatedHours}h estimated</span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-500">
-                  Created: {new Date(job.createdAt).toLocaleDateString()}
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-4 pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  <span>Created by: Admin</span>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleViewDetails(job)}
-                    variant="outline"
-                    className="border-gray-300 hover:bg-gray-50 transition-colors"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    View Details
-                  </Button>
-                  <Button
-                    onClick={() => handleEditJob(job)}
-                    variant="outline"
-                    className="border-blue-300 hover:bg-blue-50 transition-colors"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                  {isAdmin && job.status !== 'cancelled' && (
-                    <Button
-                      onClick={() => handleCancelJob(job)}
-                      variant="outline"
-                      className="border-red-300 hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Cancel
-                    </Button>
-                  )}
-                  {getNextStatus(job.status) && job.status !== 'cancelled' && (
-                    <Button
-                      onClick={() => onStatusUpdate(job.id, getNextStatus(job.status)!)}
-                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200"
-                    >
-                      {getStatusButtonText(job.status)}
-                      <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
-                  )}
-                </div>
+                <span>{new Date(job.createdAt).toLocaleDateString()}</span>
               </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleViewDetails(job)}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 border-gray-300 hover:bg-gray-50 transition-colors text-xs"
+                >
+                  <Eye className="w-3 h-3 mr-1" />
+                  View
+                </Button>
+                
+                <Button
+                  onClick={() => handleEditJob(job)}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 border-blue-300 hover:bg-blue-50 transition-colors text-xs"
+                >
+                  <Edit className="w-3 h-3 mr-1" />
+                  Edit
+                </Button>
+                
+                {isAdmin && job.status !== 'cancelled' && (
+                  <Button
+                    onClick={() => handleCancelJob(job)}
+                    variant="outline"
+                    size="sm"
+                    className="border-red-300 hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors text-xs px-2"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                )}
+              </div>
+
+              {getNextStatus(job.status) && job.status !== 'cancelled' && (
+                <Button
+                  onClick={() => onStatusUpdate(job.id, getNextStatus(job.status)!)}
+                  className="w-full mt-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200 text-xs"
+                  size="sm"
+                >
+                  {getStatusButtonText(job.status)}
+                  <ChevronRight className="w-3 h-3 ml-1" />
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
