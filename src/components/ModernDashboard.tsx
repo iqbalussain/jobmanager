@@ -84,7 +84,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
     return acc;
   }, {} as Record<string, number>);
 
-  // Create performance data for circular sliders
+  // Create performance data for circular sliders - show all salesmen
   const performanceData = Object.entries(salesmanData).map(([name, count], index) => {
     const completionRate = Math.round((Math.random() * 40) + 60); // Simulated completion rate 60-100%
     const efficiency = Math.round((Math.random() * 30) + 70); // Simulated efficiency 70-100%
@@ -145,7 +145,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
   };
 
   // Circular Progress Component
-  const CircularProgress = ({ percentage, size = 80, strokeWidth = 6, color }: { 
+  const CircularProgress = ({ percentage, size = 60, strokeWidth = 4, color }: { 
     percentage: number; 
     size?: number; 
     strokeWidth?: number; 
@@ -196,98 +196,98 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
         </div>
       </div>
 
-      {/* Top Row - 3 columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Top Left - Job Status Cards (2x3 grid) */}
-        <div className="lg:col-span-1">
+      {/* Top Row - Job Status (30%) + Salesman Performance (45%) + Quick Search (25%) */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Top Left - Job Status Cards (30% width) */}
+        <div className="col-span-4">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Job Status Overview</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-blue-100 text-xs font-medium">Total Jobs</p>
-                    <p className="text-2xl font-bold">{stats.total}</p>
+                    <p className="text-xl font-bold">{stats.total}</p>
                   </div>
-                  <Briefcase className="w-6 h-6 text-blue-200" />
+                  <Briefcase className="w-5 h-5 text-blue-200" />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-100 text-xs font-medium">Active</p>
-                    <p className="text-2xl font-bold">{stats.working + stats.designing}</p>
+                    <p className="text-xl font-bold">{stats.working + stats.designing}</p>
                   </div>
-                  <Activity className="w-6 h-6 text-orange-200" />
+                  <Activity className="w-5 h-5 text-orange-200" />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-100 text-xs font-medium">Pending</p>
-                    <p className="text-2xl font-bold">{stats.pending}</p>
+                    <p className="text-xl font-bold">{stats.pending}</p>
                   </div>
-                  <Clock className="w-6 h-6 text-purple-200" />
+                  <Clock className="w-5 h-5 text-purple-200" />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-green-100 text-xs font-medium">Completed</p>
-                    <p className="text-2xl font-bold">{stats.completed}</p>
+                    <p className="text-xl font-bold">{stats.completed}</p>
                   </div>
-                  <CheckCircle className="w-6 h-6 text-green-200" />
+                  <CheckCircle className="w-5 h-5 text-green-200" />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-emerald-100 text-xs font-medium">Invoiced</p>
-                    <p className="text-2xl font-bold">{stats.invoiced}</p>
+                    <p className="text-xl font-bold">{stats.invoiced}</p>
                   </div>
-                  <FileText className="w-6 h-6 text-emerald-200" />
+                  <FileText className="w-5 h-5 text-emerald-200" />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-red-100 text-xs font-medium">Cancelled</p>
-                    <p className="text-2xl font-bold">{stats.cancelled}</p>
+                    <p className="text-xl font-bold">{stats.cancelled}</p>
                   </div>
-                  <BanIcon className="w-6 h-6 text-red-200" />
+                  <BanIcon className="w-5 h-5 text-red-200" />
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Top Center - Salesman Performance Circular Sliders */}
-        <div className="lg:col-span-1">
+        {/* Top Center - Salesman Performance Circular Sliders (45% width) */}
+        <div className="col-span-5">
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-900">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-gray-900 text-lg">
                 <Users className="w-5 h-5 text-blue-600" />
                 Salesman Performance
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                {performanceData.slice(0, 4).map((salesman) => (
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-3 gap-3">
+                {performanceData.map((salesman) => (
                   <div key={salesman.id} className="flex flex-col items-center space-y-2">
                     <div className="text-xs font-medium text-gray-700 truncate w-full text-center">
                       {salesman.name}
@@ -296,8 +296,8 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
                       <div className="flex flex-col items-center">
                         <CircularProgress 
                           percentage={salesman.completionRate} 
-                          size={50} 
-                          strokeWidth={4}
+                          size={45} 
+                          strokeWidth={3}
                           color={salesman.color}
                         />
                         <span className="text-xs text-gray-500 mt-1">Complete</span>
@@ -305,8 +305,8 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
                       <div className="flex flex-col items-center">
                         <CircularProgress 
                           percentage={salesman.efficiency} 
-                          size={50} 
-                          strokeWidth={4}
+                          size={45} 
+                          strokeWidth={3}
                           color="#10B981"
                         />
                         <span className="text-xs text-gray-500 mt-1">Efficiency</span>
@@ -322,11 +322,11 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
           </Card>
         </div>
 
-        {/* Top Right - Quick Search */}
-        <div className="lg:col-span-1">
+        {/* Top Right - Quick Search (25% width) */}
+        <div className="col-span-3">
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-900">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-gray-900 text-lg">
                 <Search className="w-5 h-5 text-blue-600" />
                 Quick Job Search
               </CardTitle>
@@ -340,16 +340,16 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
                 />
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               {searchQuery ? (
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {filteredJobs.slice(0, 5).map((job) => (
-                    <div key={job.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {filteredJobs.slice(0, 4).map((job) => (
+                    <div key={job.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{job.title}</p>
+                        <p className="font-medium text-xs truncate">{job.title}</p>
                         <p className="text-xs text-gray-500 truncate">{job.jobOrderNumber} • {job.customer}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <Badge className={`text-xs px-2 py-0.5 ${
+                          <Badge className={`text-xs px-1 py-0.5 ${
                             job.status === 'pending' ? 'bg-blue-100 text-blue-800' :
                             job.status === 'working' ? 'bg-orange-100 text-orange-800' :
                             job.status === 'designing' ? 'bg-purple-100 text-purple-800' :
@@ -364,20 +364,20 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
                         size="sm"
                         variant="outline"
                         onClick={() => handleViewDetails(job)}
-                        className="ml-2"
+                        className="ml-2 p-1"
                       >
                         <Eye className="w-3 h-3" />
                       </Button>
                     </div>
                   ))}
                   {filteredJobs.length === 0 && (
-                    <p className="text-gray-500 text-center py-4">No jobs found</p>
+                    <p className="text-gray-500 text-center py-4 text-sm">No jobs found</p>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">Start typing to search for jobs...</p>
+                <div className="text-center py-6">
+                  <Search className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">Start typing to search...</p>
                 </div>
               )}
             </CardContent>
@@ -385,7 +385,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
         </div>
       </div>
 
-      {/* Bottom Row - Daily Job Trends (50%) + Recent Activities + Sticky Notes (50%) */}
+      {/* Bottom Row - Daily Job Trends (50%) + Recent Activities & Sticky Notes (50%) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Job Trends Chart - 50% width */}
         <Card className="shadow-xl border-0 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
@@ -433,34 +433,34 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
           </CardContent>
         </Card>
 
-        {/* Right Column - Recent Activities + Sticky Notes */}
-        <div className="space-y-6">
-          {/* Recent Activities */}
+        {/* Right Column - Recent Activities + Sticky Notes Side by Side */}
+        <div className="grid grid-cols-2 gap-3 h-full">
+          {/* Recent Activities - Portrait Layout */}
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-gray-900 text-sm">
                 <Activity className="w-4 h-4 text-purple-600" />
                 Recent Activities
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               {activitiesLoading ? (
-                <div className="space-y-3">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-start gap-3 animate-pulse">
-                      <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+                <div className="space-y-2">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="flex items-start gap-2 animate-pulse">
+                      <div className="w-5 h-5 bg-gray-200 rounded-full"></div>
                       <div className="flex-1">
-                        <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-2 bg-gray-200 rounded w-3/4 mb-1"></div>
                         <div className="h-2 bg-gray-200 rounded w-1/2"></div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="space-y-3 max-h-32 overflow-y-auto">
-                  {activities.slice(0, 3).map((activity) => (
+                <div className="space-y-2 max-h-72 overflow-y-auto">
+                  {activities.slice(0, 6).map((activity) => (
                     <div key={activity.id} className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                      <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
                         {getActivityIcon(activity.action)}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -471,16 +471,16 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
                     </div>
                   ))}
                   {activities.length === 0 && (
-                    <p className="text-gray-500 text-center py-4 text-sm">No recent activities</p>
+                    <p className="text-gray-500 text-center py-6 text-xs">No recent activities</p>
                   )}
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Sticky Notes */}
+          {/* Sticky Notes - Portrait Layout */}
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-gray-900 text-sm">
                 <FileText className="w-4 h-4 text-yellow-600" />
                 Sticky Notes
@@ -498,11 +498,11 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
+            <CardContent className="pt-0">
+              <div className="space-y-2 max-h-64 overflow-y-auto">
                 {stickyNotes.map((note) => (
                   <div key={note.id} className={`p-2 rounded-lg ${note.color} relative group`}>
-                    <p className="text-xs text-gray-800 pr-6">{note.content}</p>
+                    <p className="text-xs text-gray-800 pr-5">{note.content}</p>
                     <button
                       onClick={() => removeStickyNote(note.id)}
                       className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -512,7 +512,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
                   </div>
                 ))}
                 {stickyNotes.length === 0 && (
-                  <p className="text-gray-500 text-center py-4 text-xs">No notes yet</p>
+                  <p className="text-gray-500 text-center py-6 text-xs">No notes yet</p>
                 )}
               </div>
             </CardContent>
