@@ -77,18 +77,27 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
 
   const chartData = generateDailyChartData();
 
-  // Get salesman job distribution for gauge chart
+  // Get salesman job distribution for performance circular slider
   const salesmanData = jobs.reduce((acc, job) => {
     const salesman = job.salesman || 'Unassigned';
     acc[salesman] = (acc[salesman] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const gaugeData = Object.entries(salesmanData).map(([name, value], index) => ({
-    name,
-    value,
-    color: `hsl(${index * 60}, 70%, 60%)`
-  }));
+  // Create performance data for circular sliders
+  const performanceData = Object.entries(salesmanData).map(([name, count], index) => {
+    const completionRate = Math.round((Math.random() * 40) + 60); // Simulated completion rate 60-100%
+    const efficiency = Math.round((Math.random() * 30) + 70); // Simulated efficiency 70-100%
+    
+    return {
+      id: index,
+      name,
+      jobCount: count,
+      completionRate,
+      efficiency,
+      color: `hsl(${index * 72}, 70%, 60%)` // Different colors for each salesman
+    };
+  });
 
   const filteredJobs = jobs.filter(job => 
     job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -133,6 +142,48 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
 
   const removeStickyNote = (id: number) => {
     setStickyNotes(stickyNotes.filter(note => note.id !== id));
+  };
+
+  // Circular Progress Component
+  const CircularProgress = ({ percentage, size = 80, strokeWidth = 6, color }: { 
+    percentage: number; 
+    size?: number; 
+    strokeWidth?: number; 
+    color: string;
+  }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const offset = circumference - (percentage / 100) * circumference;
+
+    return (
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="transform -rotate-90">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#e5e7eb"
+            strokeWidth={strokeWidth}
+            fill="transparent"
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={color}
+            strokeWidth={strokeWidth}
+            fill="transparent"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            className="transition-all duration-300"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xs font-bold" style={{ color }}>{percentage}%</span>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -225,47 +276,45 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
           </div>
         </div>
 
-        {/* Top Center - Salesman Job Distribution (Half Gauge) */}
+        {/* Top Center - Salesman Performance Circular Sliders */}
         <div className="lg:col-span-1">
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-gray-900">
                 <Users className="w-5 h-5 text-blue-600" />
-                Salesman Job Distribution
+                Salesman Performance
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={gaugeData}
-                    cx="50%"
-                    cy="70%"
-                    startAngle={180}
-                    endAngle={0}
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {gaugeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="mt-4 space-y-2">
-                {gaugeData.slice(0, 4).map((item, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span className="font-medium truncate">{item.name}</span>
+              <div className="grid grid-cols-2 gap-4">
+                {performanceData.slice(0, 4).map((salesman) => (
+                  <div key={salesman.id} className="flex flex-col items-center space-y-2">
+                    <div className="text-xs font-medium text-gray-700 truncate w-full text-center">
+                      {salesman.name}
                     </div>
-                    <span className="text-gray-600">{item.value}</span>
+                    <div className="flex space-x-2">
+                      <div className="flex flex-col items-center">
+                        <CircularProgress 
+                          percentage={salesman.completionRate} 
+                          size={50} 
+                          strokeWidth={4}
+                          color={salesman.color}
+                        />
+                        <span className="text-xs text-gray-500 mt-1">Complete</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <CircularProgress 
+                          percentage={salesman.efficiency} 
+                          size={50} 
+                          strokeWidth={4}
+                          color="#10B981"
+                        />
+                        <span className="text-xs text-gray-500 mt-1">Efficiency</span>
+                      </div>
+                    </div>
+                    <div className="text-xs text-center">
+                      <span className="font-semibold">{salesman.jobCount}</span> jobs
+                    </div>
                   </div>
                 ))}
               </div>
@@ -336,28 +385,29 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
         </div>
       </div>
 
-      {/* Bottom Row - Daily Job Trends (3:1 ratio) + Recent Activities + Sticky Notes */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Daily Job Trends Chart - 3/4 width */}
-        <Card className="lg:col-span-3 shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+      {/* Bottom Row - Daily Job Trends (50%) + Recent Activities + Sticky Notes (50%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Daily Job Trends Chart - 50% width */}
+        <Card className="shadow-xl border-0 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-gray-900">
-              <Activity className="w-5 h-5 text-blue-600" />
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Activity className="w-5 h-5 text-blue-400" />
               Daily Job Trends
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="day" stroke="#666" />
-                <YAxis stroke="#666" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="day" stroke="#9CA3AF" />
+                <YAxis stroke="#9CA3AF" />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e5e7eb',
+                    backgroundColor: '#1F2937', 
+                    border: '1px solid #374151',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                    color: '#F9FAFB'
                   }} 
                 />
                 <Line 
@@ -367,6 +417,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
                   strokeWidth={3}
                   dot={{ fill: '#3B82F6', strokeWidth: 2, r: 5 }}
                   name="Total Jobs"
+                  filter="drop-shadow(0 0 6px #3B82F6)"
                 />
                 <Line 
                   type="monotone" 
@@ -375,6 +426,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
                   strokeWidth={3}
                   dot={{ fill: '#10B981', strokeWidth: 2, r: 5 }}
                   name="Completed"
+                  filter="drop-shadow(0 0 6px #10B981)"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -382,7 +434,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
         </Card>
 
         {/* Right Column - Recent Activities + Sticky Notes */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="space-y-6">
           {/* Recent Activities */}
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
             <CardHeader>
@@ -405,7 +457,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-3 max-h-40 overflow-y-auto">
+                <div className="space-y-3 max-h-32 overflow-y-auto">
                   {activities.slice(0, 3).map((activity) => (
                     <div key={activity.id} className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg">
                       <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
@@ -447,7 +499,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
+              <div className="space-y-2 max-h-32 overflow-y-auto">
                 {stickyNotes.map((note) => (
                   <div key={note.id} className={`p-2 rounded-lg ${note.color} relative group`}>
                     <p className="text-xs text-gray-800 pr-6">{note.content}</p>
