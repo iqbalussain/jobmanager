@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
-import { Dashboard } from "@/components/Dashboard";
+import { ModernDashboard } from "@/components/ModernDashboard";
 import { JobForm } from "@/components/JobForm";
 import { JobList } from "@/components/JobList";
 import { CalendarView } from "@/components/CalendarView";
@@ -69,7 +69,7 @@ const Index = () => {
 
     switch (currentView) {
       case "dashboard":
-        return <Dashboard jobs={transformedJobs} />;
+        return <ModernDashboard jobs={transformedJobs} />;
       case "jobs":
         return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
       case "create":
@@ -83,7 +83,7 @@ const Index = () => {
       case "admin-management":
         return <AdminManagement />;
       default:
-        return <Dashboard jobs={transformedJobs} />;
+        return <ModernDashboard jobs={transformedJobs} />;
     }
   };
 
@@ -91,7 +91,7 @@ const Index = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50">
         <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-        <main className="flex-1 p-6">
+        <main className="flex-1">
           {renderContent()}
         </main>
       </div>
