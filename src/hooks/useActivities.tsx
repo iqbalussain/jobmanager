@@ -20,23 +20,48 @@ export function useActivities() {
   const { data: initialActivities = [], isLoading } = useQuery({
     queryKey: ['activities'],
     queryFn: async (): Promise<Activity[]> => {
-      const { data, error } = await supabase
+      // First get activities
+      const { data: activitiesData, error: activitiesError } = await supabase
         .from('activities')
-        .select(`
-          *,
-          profiles!activities_user_id_fkey(full_name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(10);
       
-      if (error) {
-        console.error('Error fetching activities:', error);
-        throw error;
+      if (activitiesError) {
+        console.error('Error fetching activities:', activitiesError);
+        throw activitiesError;
       }
       
-      return data.map(activity => ({
+      if (!activitiesData || activitiesData.length === 0) {
+        return [];
+      }
+      
+      // Get unique user IDs from activities
+      const userIds = [...new Set(activitiesData.map(activity => activity.user_id))];
+      
+      // Fetch user profiles separately
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+      
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        // Continue without user names if profiles fetch fails
+      }
+      
+      // Create a map of user_id to full_name
+      const userNamesMap = new Map();
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          userNamesMap.set(profile.id, profile.full_name);
+        });
+      }
+      
+      // Combine activities with user names
+      return activitiesData.map(activity => ({
         ...activity,
-        user_name: activity.profiles?.full_name || 'Unknown User'
+        user_name: userNamesMap.get(activity.user_id) || 'Unknown User'
       }));
     }
   });
