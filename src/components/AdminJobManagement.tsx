@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Job, JobStatus } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,9 +23,9 @@ interface AdminJobManagementProps {
 }
 
 export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementProps) {
-  const [salesmanFilter, setSalesmanFilter] = useState("");
+  const [salesmanFilter, setSalesmanFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [customerFilter, setCustomerFilter] = useState("");
+  const [customerFilter, setCustomerFilter] = useState("all");
   const [branchFilter, setBranchFilter] = useState("all");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -151,9 +150,9 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
   }
 
   const filteredJobs = jobsWithInvoices.filter(job => {
-    const matchesSalesman = salesmanFilter === "" || job.salesman.toLowerCase().includes(salesmanFilter.toLowerCase());
+    const matchesSalesman = salesmanFilter === "all" || job.salesman.toLowerCase().includes(salesmanFilter.toLowerCase());
     const matchesStatus = statusFilter === "all" || job.status === statusFilter;
-    const matchesCustomer = customerFilter === "" || job.customer.toLowerCase().includes(customerFilter.toLowerCase());
+    const matchesCustomer = customerFilter === "all" || job.customer.toLowerCase().includes(customerFilter.toLowerCase());
     const matchesBranch = branchFilter === "all" || (job.branch && job.branch.toLowerCase().includes(branchFilter.toLowerCase()));
     return matchesSalesman && matchesStatus && matchesCustomer && matchesBranch;
   });
@@ -218,7 +217,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                   <SelectValue placeholder="Select salesman" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Salesmen</SelectItem>
+                  <SelectItem value="all">All Salesmen</SelectItem>
                   {uniqueSalesmen.map((salesman) => (
                     <SelectItem key={salesman} value={salesman}>
                       {salesman}
@@ -235,7 +234,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Customers</SelectItem>
+                  <SelectItem value="all">All Customers</SelectItem>
                   {uniqueCustomers.map((customer) => (
                     <SelectItem key={customer} value={customer}>
                       {customer}
