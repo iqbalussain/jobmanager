@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { JobDetails } from "@/components/JobDetails";
 import { 
   Filter,
-  Eye,
   Plus,
   Settings
 } from "lucide-react";
@@ -27,6 +26,8 @@ interface AdminJobManagementProps {
 export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementProps) {
   const [salesmanFilter, setSalesmanFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [customerFilter, setCustomerFilter] = useState("");
+  const [branchFilter, setBranchFilter] = useState("all");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -152,16 +153,20 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
   const filteredJobs = jobsWithInvoices.filter(job => {
     const matchesSalesman = salesmanFilter === "" || job.salesman.toLowerCase().includes(salesmanFilter.toLowerCase());
     const matchesStatus = statusFilter === "all" || job.status === statusFilter;
-    return matchesSalesman && matchesStatus;
+    const matchesCustomer = customerFilter === "" || job.customer.toLowerCase().includes(customerFilter.toLowerCase());
+    const matchesBranch = branchFilter === "all" || (job.branch && job.branch.toLowerCase().includes(branchFilter.toLowerCase()));
+    return matchesSalesman && matchesStatus && matchesCustomer && matchesBranch;
   });
 
-  // Get unique salesmen for the filter dropdown
+  // Get unique values for filter dropdowns
   const uniqueSalesmen = [...new Set(jobsWithInvoices.map(job => job.salesman))].filter(Boolean).sort();
+  const uniqueCustomers = [...new Set(jobsWithInvoices.map(job => job.customer))].filter(Boolean).sort();
+  const uniqueBranches = [...new Set(jobsWithInvoices.map(job => job.branch))].filter(Boolean).sort();
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "in-progress": return "bg-orange-100 text-orange-800 border-orange-200";
+      case "working": return "bg-orange-100 text-orange-800 border-orange-200";
       case "designing": return "bg-purple-100 text-purple-800 border-purple-200";
       case "finished": return "bg-green-100 text-green-800 border-green-200";
       case "completed": return "bg-green-100 text-green-800 border-green-200";
@@ -170,51 +175,10 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
     }
   };
 
-  const handleViewDetails = (job: Job) => {
-    setSelectedJob(job);
-    setIsJobDetailsOpen(true);
-    setIsEditMode(false);
-  };
-
   const handleEditJob = (job: Job) => {
     setSelectedJob(job);
     setIsJobDetailsOpen(true);
     setIsEditMode(true);
-  };
-
-  const handleInvoiceUpdate = async (jobId: string, invoiceNumber: string) => {
-    try {
-      const { error } = await supabase
-        .from('job_orders')
-        .update({ 
-          invoice_number: invoiceNumber,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', jobId);
-
-      if (error) throw error;
-
-      // Update local state
-      setJobsWithInvoices(prev => 
-        prev.map(job => 
-          job.id === jobId 
-            ? { ...job, invoiceNumber } 
-            : job
-        )
-      );
-
-      toast({
-        title: "Success",
-        description: "Invoice number updated successfully",
-      });
-    } catch (error) {
-      console.error('Error updating invoice number:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update invoice number",
-        variant: "destructive",
-      });
-    }
   };
 
   return (
@@ -246,16 +210,58 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
         </CardHeader>
         <CardContent>
           {/* Filters */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="salesmanFilter">Filter by Salesman</Label>
-              <Input
-                id="salesmanFilter"
-                placeholder="Search salesman..."
-                value={salesmanFilter}
-                onChange={(e) => setSalesmanFilter(e.target.value)}
-              />
+              <Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select salesman" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Salesmen</SelectItem>
+                  {uniqueSalesmen.map((salesman) => (
+                    <SelectItem key={salesman} value={salesman}>
+                      {salesman}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="customerFilter">Filter by Customer</Label>
+              <Select value={customerFilter} onValueChange={setCustomerFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select customer" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Customers</SelectItem>
+                  {uniqueCustomers.map((customer) => (
+                    <SelectItem key={customer} value={customer}>
+                      {customer}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="branchFilter">Filter by Branch</Label>
+              <Select value={branchFilter} onValueChange={setBranchFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Branches</SelectItem>
+                  {uniqueBranches.map((branch) => (
+                    <SelectItem key={branch} value={branch}>
+                      {branch}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="statusFilter">Filter by Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -265,7 +271,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="working">Working</SelectItem>
                   <SelectItem value="designing">Designing</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="invoiced">Invoiced</SelectItem>
@@ -281,6 +287,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                 <TableHead>Job Order #</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Customer</TableHead>
+                <TableHead>Branch</TableHead>
                 <TableHead>Salesman</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Invoice #</TableHead>
@@ -293,38 +300,26 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                   <TableCell className="font-mono">{job.jobOrderNumber}</TableCell>
                   <TableCell className="font-medium">{job.title}</TableCell>
                   <TableCell>{job.customer}</TableCell>
+                  <TableCell>{job.branch || "N/A"}</TableCell>
                   <TableCell>{job.salesman}</TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(job.status)}>
-                      {job.status.replace('-', ' ')}
+                      {job.status === 'working' ? 'Working' : job.status.replace('-', ' ')}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Input
-                      value={job.invoiceNumber || ""}
-                      onChange={(e) => handleInvoiceUpdate(job.id, e.target.value)}
-                      placeholder="Enter invoice #"
-                      className="w-32"
-                    />
+                    <span className="text-sm text-gray-600">
+                      {job.invoiceNumber || "Not assigned"}
+                    </span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleViewDetails(job)}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditJob(job)}
-                      >
-                        Edit
-                      </Button>
-                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditJob(job)}
+                    >
+                      Edit
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

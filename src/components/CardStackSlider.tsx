@@ -186,11 +186,11 @@ export function CardStackSlider({ jobs, onStatusUpdate }: CardStackSliderProps) 
               </div>
 
               <Button
-                onClick={() => onStatusUpdate(job.id, 'in-progress')}
+                onClick={() => onStatusUpdate(job.id, 'working')}
                 className="w-full mt-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-xs transform hover:scale-105"
                 size="sm"
               >
-                Start Job
+                Start Working
                 <ChevronRight className="w-3 h-3 ml-1" />
               </Button>
             </CardContent>
