@@ -12,19 +12,17 @@ import {
   Clock, 
   CheckCircle, 
   FileText,
-  Palette,
   Search,
   Eye,
   User,
-  Calendar,
-  TrendingUp,
   Activity,
   Plus,
-  BarChart3,
   Users,
-  Building
+  Building,
+  X,
+  BanIcon
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ResponsiveContainer as ResponsiveContainer2 } from "recharts";
 import { format, subDays } from "date-fns";
 
 interface ModernDashboardProps {
@@ -35,6 +33,12 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
+  const [stickyNotes, setStickyNotes] = useState([
+    { id: 1, content: "Follow up with client about design approval", color: "bg-yellow-200" },
+    { id: 2, content: "Team meeting at 3 PM", color: "bg-blue-200" },
+    { id: 3, content: "Update project timeline", color: "bg-pink-200" }
+  ]);
+  const [newNote, setNewNote] = useState("");
   const { activities, isLoading: activitiesLoading } = useActivities();
 
   const stats = {
@@ -43,7 +47,8 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
     working: jobs.filter(job => job.status === "working").length,
     designing: jobs.filter(job => job.status === "designing").length,
     completed: jobs.filter(job => job.status === "completed").length,
-    invoiced: jobs.filter(job => job.status === "invoiced").length
+    invoiced: jobs.filter(job => job.status === "invoiced").length,
+    cancelled: jobs.filter(job => job.status === "cancelled").length
   };
 
   // Generate daily data for the last 7 days
@@ -72,12 +77,18 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
 
   const chartData = generateDailyChartData();
 
-  // Data for the donut chart
-  const donutData = [
-    { name: 'Completed', value: stats.completed + stats.invoiced, color: '#10B981' },
-    { name: 'Working', value: stats.working + stats.designing, color: '#F59E0B' },
-    { name: 'Pending', value: stats.pending, color: '#3B82F6' }
-  ];
+  // Get salesman job distribution for gauge chart
+  const salesmanData = jobs.reduce((acc, job) => {
+    const salesman = job.salesman || 'Unassigned';
+    acc[salesman] = (acc[salesman] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const gaugeData = Object.entries(salesmanData).map(([name, value], index) => ({
+    name,
+    value,
+    color: `hsl(${index * 60}, 70%, 60%)`
+  }));
 
   const filteredJobs = jobs.filter(job => 
     job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -108,6 +119,22 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
     return `${Math.floor(diffInHours / 24)}d ago`;
   };
 
+  const addStickyNote = () => {
+    if (newNote.trim()) {
+      const colors = ["bg-yellow-200", "bg-blue-200", "bg-pink-200", "bg-green-200", "bg-purple-200"];
+      setStickyNotes([...stickyNotes, {
+        id: Date.now(),
+        content: newNote,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      }]);
+      setNewNote("");
+    }
+  };
+
+  const removeStickyNote = (id: number) => {
+    setStickyNotes(stickyNotes.filter(note => note.id !== id));
+  };
+
   return (
     <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       {/* Header */}
@@ -116,87 +143,206 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
           <p className="text-gray-600">Welcome back! Here's what's happening with your projects.</p>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search anything..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 w-80 bg-white/80 backdrop-blur-sm"
-          />
+      </div>
+
+      {/* Top Row - 3 columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Top Left - Job Status Cards (2x3 grid) */}
+        <div className="lg:col-span-1">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Job Status Overview</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-100 text-xs font-medium">Total Jobs</p>
+                    <p className="text-2xl font-bold">{stats.total}</p>
+                  </div>
+                  <Briefcase className="w-6 h-6 text-blue-200" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-100 text-xs font-medium">Active</p>
+                    <p className="text-2xl font-bold">{stats.working + stats.designing}</p>
+                  </div>
+                  <Activity className="w-6 h-6 text-orange-200" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-xs font-medium">Pending</p>
+                    <p className="text-2xl font-bold">{stats.pending}</p>
+                  </div>
+                  <Clock className="w-6 h-6 text-purple-200" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-100 text-xs font-medium">Completed</p>
+                    <p className="text-2xl font-bold">{stats.completed}</p>
+                  </div>
+                  <CheckCircle className="w-6 h-6 text-green-200" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-emerald-100 text-xs font-medium">Invoiced</p>
+                    <p className="text-2xl font-bold">{stats.invoiced}</p>
+                  </div>
+                  <FileText className="w-6 h-6 text-emerald-200" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-red-100 text-xs font-medium">Cancelled</p>
+                    <p className="text-2xl font-bold">{stats.cancelled}</p>
+                  </div>
+                  <BanIcon className="w-6 h-6 text-red-200" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Top Center - Salesman Job Distribution (Half Gauge) */}
+        <div className="lg:col-span-1">
+          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900">
+                <Users className="w-5 h-5 text-blue-600" />
+                Salesman Job Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={gaugeData}
+                    cx="50%"
+                    cy="70%"
+                    startAngle={180}
+                    endAngle={0}
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {gaugeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="mt-4 space-y-2">
+                {gaugeData.slice(0, 4).map((item, index) => (
+                  <div key={index} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="font-medium truncate">{item.name}</span>
+                    </div>
+                    <span className="text-gray-600">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Top Right - Quick Search */}
+        <div className="lg:col-span-1">
+          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900">
+                <Search className="w-5 h-5 text-blue-600" />
+                Quick Job Search
+              </CardTitle>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search jobs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-white/80 backdrop-blur-sm"
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {searchQuery ? (
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {filteredJobs.slice(0, 5).map((job) => (
+                    <div key={job.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{job.title}</p>
+                        <p className="text-xs text-gray-500 truncate">{job.jobOrderNumber} • {job.customer}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge className={`text-xs px-2 py-0.5 ${
+                            job.status === 'pending' ? 'bg-blue-100 text-blue-800' :
+                            job.status === 'working' ? 'bg-orange-100 text-orange-800' :
+                            job.status === 'designing' ? 'bg-purple-100 text-purple-800' :
+                            job.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            'bg-emerald-100 text-emerald-800'
+                          }`}>
+                            {job.status}
+                          </Badge>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleViewDetails(job)}
+                        className="ml-2"
+                      >
+                        <Eye className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  {filteredJobs.length === 0 && (
+                    <p className="text-gray-500 text-center py-4">No jobs found</p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">Start typing to search for jobs...</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Quick Access Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Total Jobs</p>
-                <p className="text-3xl font-bold">{stats.total}</p>
-                <p className="text-blue-200 text-xs mt-1">All time</p>
-              </div>
-              <div className="bg-blue-400/30 p-3 rounded-full">
-                <Briefcase className="w-8 h-8 text-blue-100" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium">Active Jobs</p>
-                <p className="text-3xl font-bold">{stats.working + stats.designing}</p>
-                <p className="text-orange-200 text-xs mt-1">In progress</p>
-              </div>
-              <div className="bg-orange-400/30 p-3 rounded-full">
-                <Activity className="w-8 h-8 text-orange-100" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Completed</p>
-                <p className="text-3xl font-bold">{stats.completed + stats.invoiced}</p>
-                <p className="text-green-200 text-xs mt-1">This month</p>
-              </div>
-              <div className="bg-green-400/30 p-3 rounded-full">
-                <CheckCircle className="w-8 h-8 text-green-100" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-medium">Pending</p>
-                <p className="text-3xl font-bold">{stats.pending}</p>
-                <p className="text-purple-200 text-xs mt-1">Awaiting action</p>
-              </div>
-              <div className="bg-purple-400/30 p-3 rounded-full">
-                <Clock className="w-8 h-8 text-purple-100" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Daily Job Trends Chart */}
-        <Card className="lg:col-span-2 shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+      {/* Bottom Row - Daily Job Trends (3:1 ratio) + Recent Activities + Sticky Notes */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Daily Job Trends Chart - 3/4 width */}
+        <Card className="lg:col-span-3 shadow-xl border-0 bg-white/90 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-gray-900">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+              <Activity className="w-5 h-5 text-blue-600" />
               Daily Job Trends
             </CardTitle>
           </CardHeader>
@@ -235,147 +381,91 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
           </CardContent>
         </Card>
 
-        {/* Job Distribution Donut Chart */}
-        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-gray-900">
-              <BarChart3 className="w-5 h-5 text-green-600" />
-              Job Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={donutData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {donutData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="mt-4 space-y-2">
-              {donutData.map((item, index) => (
-                <div key={index} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="font-medium">{item.name}</span>
-                  </div>
-                  <span className="text-gray-600">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activities */}
-        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-gray-900">
-              <Activity className="w-5 h-5 text-purple-600" />
-              Recent Activities
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {activitiesLoading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex items-start gap-3 animate-pulse">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                    <div className="flex-1">
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4 max-h-80 overflow-y-auto">
-                {activities.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      {getActivityIcon(activity.action)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{activity.user_name}</p>
-                      <p className="text-xs text-gray-600 truncate">{activity.description}</p>
-                      <p className="text-xs text-gray-400">{getTimeAgo(activity.created_at)}</p>
-                    </div>
-                  </div>
-                ))}
-                {activities.length === 0 && (
-                  <p className="text-gray-500 text-center py-8">No recent activities</p>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Quick Search Results */}
-        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-gray-900">
-              <Search className="w-5 h-5 text-blue-600" />
-              Quick Job Search
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {searchQuery ? (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
-                {filteredJobs.slice(0, 5).map((job) => (
-                  <div key={job.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{job.title}</p>
-                      <p className="text-xs text-gray-500 truncate">{job.jobOrderNumber} • {job.customer}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge className={`text-xs px-2 py-0.5 ${
-                          job.status === 'pending' ? 'bg-blue-100 text-blue-800' :
-                          job.status === 'working' ? 'bg-orange-100 text-orange-800' :
-                          job.status === 'designing' ? 'bg-purple-100 text-purple-800' :
-                          job.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          'bg-emerald-100 text-emerald-800'
-                        }`}>
-                          {job.status}
-                        </Badge>
+        {/* Right Column - Recent Activities + Sticky Notes */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Recent Activities */}
+          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900 text-sm">
+                <Activity className="w-4 h-4 text-purple-600" />
+                Recent Activities
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {activitiesLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex items-start gap-3 animate-pulse">
+                      <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-2 bg-gray-200 rounded w-1/2"></div>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleViewDetails(job)}
-                      className="ml-2"
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-40 overflow-y-auto">
+                  {activities.slice(0, 3).map((activity) => (
+                    <div key={activity.id} className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                        {getActivityIcon(activity.action)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-900 truncate">{activity.user_name}</p>
+                        <p className="text-xs text-gray-600 truncate">{activity.description}</p>
+                        <p className="text-xs text-gray-400">{getTimeAgo(activity.created_at)}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {activities.length === 0 && (
+                    <p className="text-gray-500 text-center py-4 text-sm">No recent activities</p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Sticky Notes */}
+          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900 text-sm">
+                <FileText className="w-4 h-4 text-yellow-600" />
+                Sticky Notes
+              </CardTitle>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  placeholder="Add a note..."
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  className="text-xs"
+                  onKeyPress={(e) => e.key === 'Enter' && addStickyNote()}
+                />
+                <Button size="sm" onClick={addStickyNote} className="px-2">
+                  <Plus className="w-3 h-3" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {stickyNotes.map((note) => (
+                  <div key={note.id} className={`p-2 rounded-lg ${note.color} relative group`}>
+                    <p className="text-xs text-gray-800 pr-6">{note.content}</p>
+                    <button
+                      onClick={() => removeStickyNote(note.id)}
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <Eye className="w-3 h-3 mr-1" />
-                      View
-                    </Button>
+                      <X className="w-3 h-3 text-gray-600" />
+                    </button>
                   </div>
                 ))}
-                {filteredJobs.length === 0 && (
-                  <p className="text-gray-500 text-center py-4">No jobs found</p>
+                {stickyNotes.length === 0 && (
+                  <p className="text-gray-500 text-center py-4 text-xs">No notes yet</p>
                 )}
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">Start typing to search for jobs...</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Job Details Modal */}
