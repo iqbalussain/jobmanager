@@ -104,10 +104,15 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
             }
           }
           
+          // Create the title from available data
+          const title = jobOrder.job_title?.job_title_id || 
+                       jobOrder.job_order_details || 
+                       `Job Order ${jobOrder.job_order_number}`;
+          
           return {
             id: jobOrder.id,
             jobOrderNumber: jobOrder.job_order_number,
-            title: jobOrder.title || jobOrder.job_title?.job_title_id || "Untitled Job",
+            title: title,
             customer: jobOrder.customer?.name || "Unknown Customer",
             assignee: jobOrder.assignee || "Unassigned",
             priority: jobOrder.priority as "low" | "medium" | "high",
@@ -384,10 +389,15 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                   }
                 }
                 
+                // Create the title from available data
+                const title = jobOrder.job_title?.job_title_id || 
+                             jobOrder.job_order_details || 
+                             `Job Order ${jobOrder.job_order_number}`;
+                
                 return {
                   id: jobOrder.id,
                   jobOrderNumber: jobOrder.job_order_number,
-                  title: jobOrder.title || jobOrder.job_title?.job_title_id || "Untitled Job",
+                  title: title,
                   customer: jobOrder.customer?.name || "Unknown Customer",
                   assignee: jobOrder.assignee || "Unassigned",
                   priority: jobOrder.priority as "low" | "medium" | "high",
