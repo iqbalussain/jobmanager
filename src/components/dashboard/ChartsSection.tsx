@@ -12,7 +12,7 @@ interface ChartsSectionProps {
 export function ChartsSection({ dailyJobData, gaugeData, chartLoading }: ChartsSectionProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Line Chart */}
+      {/* Line Chart - Daily Created Jobs */}
       <Card className="lg:col-span-2 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900">

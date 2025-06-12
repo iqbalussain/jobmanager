@@ -18,7 +18,6 @@ export function Dashboard({ jobs }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
-  const [stickyNote, setStickyNote] = useState("");
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<{
     status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active';
@@ -87,8 +86,8 @@ export function Dashboard({ jobs }: DashboardProps) {
         />
 
         <ActivitiesSection 
-          stickyNote={stickyNote}
-          setStickyNote={setStickyNote}
+          stickyNote=""
+          setStickyNote={() => {}}
         />
       </div>
 
