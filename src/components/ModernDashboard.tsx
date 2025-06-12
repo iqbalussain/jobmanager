@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -176,74 +175,11 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         </div>
       </div>
 
-      {/* Top Row - Reduced Job Status Cards */}
-      <div className="grid grid-cols-12 gap-4">
-        {/* Job Status Cards - Reduced size */}
-        <div className="col-span-12">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Job Status Overview</h3>
-          <div className="grid grid-cols-5 gap-3">
-            <Card 
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-blue-500/50 aspect-square"
-              onClick={() => handleStatusClick('total', 'All')}
-            >
-              <CardContent className="p-3 flex flex-col items-center justify-center text-center h-full">
-                <Briefcase className="w-5 h-5 text-blue-200 mb-2" />
-                <p className="text-blue-100 text-xs font-medium mb-1">Total</p>
-                <p className="text-xl font-bold">{stats.total}</p>
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-orange-500/50 aspect-square"
-              onClick={() => handleStatusClick('active', 'Active')}
-            >
-              <CardContent className="p-3 flex flex-col items-center justify-center text-center h-full">
-                <Activity className="w-5 h-5 text-orange-200 mb-2" />
-                <p className="text-orange-100 text-xs font-medium mb-1">Active</p>
-                <p className="text-xl font-bold">{stats.working + stats.designing}</p>
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-purple-500/50 aspect-square"
-              onClick={() => handleStatusClick('pending', 'Pending')}
-            >
-              <CardContent className="p-3 flex flex-col items-center justify-center text-center h-full">
-                <Clock className="w-5 h-5 text-purple-200 mb-2" />
-                <p className="text-purple-100 text-xs font-medium mb-1">Pending</p>
-                <p className="text-xl font-bold">{stats.pending}</p>
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-green-500/50 aspect-square"
-              onClick={() => handleStatusClick('completed', 'Completed')}
-            >
-              <CardContent className="p-3 flex flex-col items-center justify-center text-center h-full">
-                <CheckCircle className="w-5 h-5 text-green-200 mb-2" />
-                <p className="text-green-100 text-xs font-medium mb-1">Done</p>
-                <p className="text-xl font-bold">{stats.completed}</p>
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-emerald-500/50 aspect-square"
-              onClick={() => handleStatusClick('invoiced', 'Invoiced')}
-            >
-              <CardContent className="p-3 flex flex-col items-center justify-center text-center h-full">
-                <FileText className="w-5 h-5 text-emerald-200 mb-2" />
-                <p className="text-emerald-100 text-xs font-medium mb-1">Invoiced</p>
-                <p className="text-xl font-bold">{stats.invoiced}</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-
-      {/* Middle Row - Daily Job Trends Chart (60% width) */}
-      <div className="grid grid-cols-5 gap-6">
-        <div className="col-span-3">
-          <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white">
+      {/* Top Row - Daily Trends (70%) + Job Status (30%) */}
+      <div className="grid grid-cols-10 gap-6">
+        {/* Daily Job Trends Chart - 70% width */}
+        <div className="col-span-7">
+          <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
                 <Activity className="w-5 h-5 text-yellow-400" />
@@ -252,11 +188,11 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
             </CardHeader>
             <CardContent>
               {chartLoading ? (
-                <div className="h-[300px] flex items-center justify-center">
+                <div className="h-[350px] flex items-center justify-center">
                   <div className="text-white">Loading chart data...</div>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={350}>
                   <LineChart data={dailyJobData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#8B5CF6" />
                     <XAxis dataKey="day" stroke="#E5E7EB" />
@@ -288,12 +224,65 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
           </Card>
         </div>
 
-        {/* Quick Search - 40% width */}
-        <div className="col-span-2">
+        {/* Job Status Cards - 30% width, 2 columns */}
+        <div className="col-span-3">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Job Status Overview</h3>
+          <div className="grid grid-cols-2 gap-3 h-full">
+            <Card 
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-blue-500/50 aspect-square"
+              onClick={() => handleStatusClick('total', 'All')}
+            >
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
+                <Briefcase className="w-6 h-6 text-blue-200 mb-2" />
+                <p className="text-blue-100 text-xs font-medium mb-1">Total</p>
+                <p className="text-2xl font-bold">{stats.total}</p>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-orange-500/50 aspect-square"
+              onClick={() => handleStatusClick('active', 'Active')}
+            >
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
+                <Activity className="w-6 h-6 text-orange-200 mb-2" />
+                <p className="text-orange-100 text-xs font-medium mb-1">Active</p>
+                <p className="text-2xl font-bold">{stats.working + stats.designing}</p>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-purple-500/50 aspect-square"
+              onClick={() => handleStatusClick('pending', 'Pending')}
+            >
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
+                <Clock className="w-6 h-6 text-purple-200 mb-2" />
+                <p className="text-purple-100 text-xs font-medium mb-1">Pending</p>
+                <p className="text-2xl font-bold">{stats.pending}</p>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-green-500/50 aspect-square"
+              onClick={() => handleStatusClick('completed', 'Completed')}
+            >
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
+                <CheckCircle className="w-6 h-6 text-green-200 mb-2" />
+                <p className="text-green-100 text-xs font-medium mb-1">Done</p>
+                <p className="text-2xl font-bold">{stats.completed}</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Row - Quick Search (30%) + Recent Activities (30%) + Team Chat (40%) */}
+      <div className="grid grid-cols-10 gap-6">
+        {/* Quick Search - 30% width */}
+        <div className="col-span-3">
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
             <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-gray-900 text-sm">
-                <Search className="w-4 h-4 text-blue-600" />
+              <CardTitle className="flex items-center gap-2 text-gray-900 text-base">
+                <Search className="w-5 h-5 text-blue-600" />
                 Quick Search
               </CardTitle>
               <div className="relative">
@@ -302,25 +291,25 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
                   placeholder="Search jobs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-white/80 backdrop-blur-sm text-xs"
+                  className="pl-10 bg-white/80 backdrop-blur-sm"
                 />
               </div>
             </CardHeader>
             <CardContent className="pt-0">
               {searchQuery ? (
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {filteredJobs.slice(0, 3).map((job) => (
-                    <div key={job.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-blue-50 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 cursor-pointer">
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {filteredJobs.slice(0, 4).map((job) => (
+                    <div key={job.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-blue-50 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 cursor-pointer">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-xs truncate">{job.title}</p>
-                        <p className="text-xs text-gray-500 truncate">{job.jobOrderNumber}</p>
+                        <p className="font-medium text-sm truncate">{job.title}</p>
+                        <p className="text-sm text-gray-500 truncate">{job.jobOrderNumber}</p>
                       </div>
-                      <div className="flex gap-1 ml-2">
+                      <div className="flex gap-2 ml-2">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleChatClick(job)}
-                          className="p-1"
+                          className="p-2"
                         >
                           <MessageSquare className="w-3 h-3" />
                         </Button>
@@ -328,7 +317,7 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
                           size="sm"
                           variant="outline"
                           onClick={() => handleViewDetails(job)}
-                          className="p-1"
+                          className="p-2"
                         >
                           <Eye className="w-3 h-3" />
                         </Button>
@@ -336,39 +325,36 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
                     </div>
                   ))}
                   {filteredJobs.length === 0 && (
-                    <p className="text-gray-500 text-center py-4 text-xs">No jobs found</p>
+                    <p className="text-gray-500 text-center py-4 text-sm">No jobs found</p>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-6">
-                  <Search className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-gray-500 text-xs">Start typing...</p>
+                <div className="text-center py-8">
+                  <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">Start typing to search...</p>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      {/* Bottom Row - Recent Activities (20%) + Team Chat (20%) with avatars */}
-      <div className="grid grid-cols-5 gap-6">
-        {/* Recent Activities - 20% width */}
-        <div className="col-span-1">
+        {/* Recent Activities - 30% width */}
+        <div className="col-span-3">
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-900 text-sm">
-                <MessageSquare className="w-4 h-4 text-purple-600" />
+              <CardTitle className="flex items-center gap-2 text-gray-900 text-base">
+                <MessageSquare className="w-5 h-5 text-purple-600" />
                 Recent Activities
               </CardTitle>
             </CardHeader>
             <CardContent>
               {activitiesLoading ? (
                 <div className="space-y-3">
-                  {[...Array(3)].map((_, i) => (
+                  {[...Array(4)].map((_, i) => (
                     <div key={i} className="flex items-start gap-3 animate-pulse">
-                      <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+                      <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
                       <div className="flex-1">
-                        <div className="h-2 bg-gray-200 rounded w-3/4 mb-1"></div>
+                        <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
                         <div className="h-2 bg-gray-200 rounded w-1/2"></div>
                       </div>
                     </div>
@@ -376,20 +362,20 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
                 </div>
               ) : (
                 <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {activities.slice(0, 4).map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                        <MessageSquare className="w-3 h-3 text-blue-500" />
+                  {activities.slice(0, 5).map((activity) => (
+                    <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <MessageSquare className="w-4 h-4 text-blue-500" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs font-medium text-gray-900">{activity.user_name}</p>
-                        <p className="text-xs text-gray-600">{activity.description}</p>
+                        <p className="text-sm font-medium text-gray-900">{activity.user_name}</p>
+                        <p className="text-sm text-gray-600">{activity.description}</p>
                         <p className="text-xs text-gray-400 mt-1">{getTimeAgo(activity.created_at)}</p>
                       </div>
                     </div>
                   ))}
                   {activities.length === 0 && (
-                    <p className="text-gray-500 text-center py-6 text-xs">No recent activities</p>
+                    <p className="text-gray-500 text-center py-8 text-sm">No recent activities</p>
                   )}
                 </div>
               )}
@@ -397,30 +383,30 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
           </Card>
         </div>
 
-        {/* Team Chat with Avatars - 20% width */}
-        <div className="col-span-1">
+        {/* Team Chat with Notifications - 40% width */}
+        <div className="col-span-4">
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-900 text-sm">
-                <Users className="w-4 h-4 text-blue-600" />
-                Team Chat
+              <CardTitle className="flex items-center gap-2 text-gray-900 text-base">
+                <Users className="w-5 h-5 text-blue-600" />
+                Team Chat & Job Discussions
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col h-80">
+            <CardContent className="flex flex-col h-96">
               {/* Chat Messages with Avatars */}
-              <div className="flex-1 overflow-y-auto space-y-2 mb-4">
-                {chatMessages.slice(0, 4).map((msg) => (
-                  <div key={msg.id} className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              <div className="flex-1 overflow-y-auto space-y-3 mb-4">
+                {chatMessages.map((msg) => (
+                  <div key={msg.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                        onClick={() => onViewChange?.("calendar")}>
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                       {msg.avatar}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-medium text-gray-700 truncate">{msg.user}</span>
+                        <span className="text-sm font-medium text-gray-700">{msg.user}</span>
                         <span className="text-xs text-gray-500">{msg.time}</span>
                       </div>
-                      <p className="text-xs text-gray-900 truncate">{msg.message}</p>
+                      <p className="text-sm text-gray-900 truncate">{msg.message}</p>
                     </div>
                   </div>
                 ))}
@@ -429,22 +415,19 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
               {/* Chat Input */}
               <div className="flex gap-2">
                 <Input
-                  placeholder="Quick message..."
+                  placeholder="Type your message..."
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  className="flex-1 text-xs"
+                  className="flex-1"
                 />
-                <Button onClick={handleSendMessage} size="sm" className="bg-blue-600 hover:bg-blue-700">
-                  <Send className="w-3 h-3" />
+                <Button onClick={handleSendMessage} className="bg-blue-600 hover:bg-blue-700">
+                  <Send className="w-4 h-4" />
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Spacer for remaining width */}
-        <div className="col-span-3"></div>
       </div>
 
       {/* Job Details Modal */}
