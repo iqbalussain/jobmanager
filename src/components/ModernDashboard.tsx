@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ interface JobStats {
 
 const jobStatusColors: Record<JobStatus, string> = {
   pending: 'bg-yellow-500',
-  working: 'bg-blue-500',
+  'in-progress': 'bg-blue-500',
   designing: 'bg-purple-500',
   completed: 'bg-green-500',
   finished: 'bg-emerald-500',
@@ -59,7 +58,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     
     return [
       { status: 'pending', count: stats.pending || 0, label: 'Pending', color: 'bg-yellow-500' },
-      { status: 'working', count: stats.working || 0, label: 'Working', color: 'bg-blue-500' },
+      { status: 'in-progress', count: stats['in-progress'] || 0, label: 'In Progress', color: 'bg-blue-500' },
       { status: 'designing', count: stats.designing || 0, label: 'Designing', color: 'bg-purple-500' },
       { status: 'completed', count: stats.completed || 0, label: 'Completed', color: 'bg-green-500' },
       { status: 'finished', count: stats.finished || 0, label: 'Finished', color: 'bg-emerald-500' },
@@ -403,7 +402,7 @@ function getStatusVariant(status: JobStatus): "default" | "secondary" | "destruc
     case 'finished':
     case 'invoiced':
       return 'default';
-    case 'working':
+    case 'in-progress':
     case 'designing':
       return 'secondary';
     case 'cancelled':
