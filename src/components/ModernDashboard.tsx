@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { JobDetails } from "@/components/JobDetails";
 import { JobStatusModal } from "@/components/JobStatusModal";
 import { DashboardNotifications } from "@/components/dashboard/DashboardNotifications";
-import { TeamChatPreview } from "@/components/dashboard/TeamChatPreview";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
 import { DailyTrendsChart } from "@/components/dashboard/DailyTrendsChart";
 import { QuickSearch } from "@/components/dashboard/QuickSearch";
 import { ActivitiesSection } from "@/components/dashboard/ActivitiesSection";
+import { ShortcutGadgets } from "@/components/dashboard/ShortcutGadgets";
 import { useChartData } from "@/hooks/useChartData";
 import { Plus } from "lucide-react";
 
@@ -63,19 +63,13 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
     }
   };
 
-  const handleGoToChat = () => {
-    if (onViewChange) {
-      onViewChange("calendar");
-    }
-  };
-
   const notifications = [
     {id: '1', type: 'job_created', message: 'New job created', time: '2 hours ago', read: false},
     {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
   ];
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div className="space-y-8 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -107,15 +101,10 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         </div>
       </div>
 
-      {/* Bottom Row - Chat (40%) + Quick Search (30%) + Activities (30%) */}
+      {/* Bottom Row - Quick Search (40%) + Recent Activities (40%) + Shortcuts (20%) */}
       <div className="grid grid-cols-10 gap-6 h-[400px]">
-        {/* Team Chat Preview - 40% width */}
+        {/* Quick Search - 40% width */}
         <div className="col-span-4">
-          <TeamChatPreview onGoToChat={handleGoToChat} />
-        </div>
-
-        {/* Quick Search - 30% width */}
-        <div className="col-span-3">
           <QuickSearch 
             searchQuery={searchQuery}
             filteredJobs={filteredJobs}
@@ -124,9 +113,14 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
           />
         </div>
 
-        {/* Recent Activities - 30% width */}
-        <div className="col-span-3">
+        {/* Recent Activities - 40% width */}
+        <div className="col-span-4">
           <ActivitiesSection />
+        </div>
+
+        {/* Shortcut Gadgets - 20% width */}
+        <div className="col-span-2">
+          <ShortcutGadgets onViewChange={onViewChange} />
         </div>
       </div>
 

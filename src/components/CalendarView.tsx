@@ -38,7 +38,6 @@ export function CalendarView({ jobs }: CalendarViewProps) {
   const [selectedChatUser, setSelectedChatUser] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState("");
   const [searchUsers, setSearchUsers] = useState("");
-  const [searchJobs, setSearchJobs] = useState("");
   const [onlineUsers] = useState<string[]>(['user1', 'user2', 'user3']);
   const [chatMessages, setChatMessages] = useState<Array<{
     id: string, 
@@ -62,13 +61,6 @@ export function CalendarView({ jobs }: CalendarViewProps) {
 
   // Get dates that have jobs
   const datesWithJobs = jobs.map(job => new Date(job.dueDate));
-
-  // Filter jobs based on search
-  const filteredJobs = jobs.filter(job =>
-    job.title.toLowerCase().includes(searchJobs.toLowerCase()) ||
-    job.customer.toLowerCase().includes(searchJobs.toLowerCase()) ||
-    job.jobOrderNumber.toLowerCase().includes(searchJobs.toLowerCase())
-  );
 
   const getInitials = (name: string | null) => {
     if (!name) return 'U';
@@ -153,97 +145,55 @@ export function CalendarView({ jobs }: CalendarViewProps) {
   return (
     <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Calendar & Messenger</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Calendar & Job Messenger</h1>
         <p className="text-gray-600">View job schedules and communicate with your team</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Calendar & Jobs Section */}
-        <div className="space-y-6">
-          {/* Calendar */}
-          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-blue-600" />
-                Job Calendar
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                modifiers={{
-                  hasJobs: datesWithJobs
-                }}
-                modifiersStyles={{
-                  hasJobs: { backgroundColor: '#dbeafe', fontWeight: 'bold' }
-                }}
-                className="rounded-md border"
-              />
-              
-              {/* Show jobs for selected date */}
-              <div className="mt-4">
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Jobs for {format(selectedDate, "MMMM d, yyyy")}
-                </h3>
-                {jobsForDate.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No jobs scheduled for this date</p>
-                ) : (
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {jobsForDate.map((job) => (
-                      <div key={job.id} className="p-2 bg-gray-50 rounded text-sm">
-                        <div className="font-medium truncate">{job.title}</div>
-                        <div className="text-gray-600 text-xs">{job.customer}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Scrollable Job List */}
-          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5 text-blue-600" />
-                  All Jobs ({jobs.length})
-                </span>
-              </CardTitle>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search jobs..."
-                  value={searchJobs}
-                  onChange={(e) => setSearchJobs(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-64">
-                <div className="space-y-2">
-                  {filteredJobs.map((job) => (
-                    <div key={job.id} className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-sm truncate">{job.title}</span>
-                        <Badge variant={job.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
-                          {job.status}
-                        </Badge>
-                      </div>
-                      <div className="text-xs text-gray-600 truncate">{job.customer}</div>
-                      <div className="text-xs text-gray-500">Due: {job.dueDate}</div>
+        {/* Calendar Section */}
+        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarIcon className="w-5 h-5 text-blue-600" />
+              Job Calendar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              modifiers={{
+                hasJobs: datesWithJobs
+              }}
+              modifiersStyles={{
+                hasJobs: { backgroundColor: '#dbeafe', fontWeight: 'bold' }
+              }}
+              className="rounded-md border"
+            />
+            
+            {/* Show jobs for selected date */}
+            <div className="mt-4">
+              <h3 className="font-semibold text-gray-900 mb-2">
+                Jobs for {format(selectedDate, "MMMM d, yyyy")}
+              </h3>
+              {jobsForDate.length === 0 ? (
+                <p className="text-gray-500 text-sm">No jobs scheduled for this date</p>
+              ) : (
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {jobsForDate.map((job) => (
+                    <div key={job.id} className="p-2 bg-gray-50 rounded text-sm">
+                      <div className="font-medium truncate">{job.title}</div>
+                      <div className="text-gray-600 text-xs">{job.customer}</div>
                     </div>
                   ))}
                 </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Enhanced WhatsApp-style Chat */}
+        {/* Enhanced Job Messenger */}
         <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
           <CardHeader className="border-b">
             <CardTitle className="flex items-center gap-2">
@@ -289,7 +239,7 @@ export function CalendarView({ jobs }: CalendarViewProps) {
               ) : (
                 <>
                   <MessageSquare className="w-5 h-5 text-blue-600" />
-                  WhatsApp-style Messenger
+                  Job Messenger
                   <div className="flex gap-2 ml-auto">
                     <Button variant="ghost" size="sm" className="p-2">
                       <Plus className="w-4 h-4" />
