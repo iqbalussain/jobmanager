@@ -22,16 +22,16 @@ export function ActivitiesSection({ stickyNote, setStickyNote }: ActivitiesSecti
   };
 
   return (
-    <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-gray-900">
+    <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm h-full flex flex-col">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-gray-900 text-base">
           <MessageSquare className="w-5 h-5 text-purple-600" />
           Recent Activities
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0 flex-1 flex flex-col">
         {activitiesLoading ? (
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="flex items-start gap-3 animate-pulse">
                 <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
@@ -43,8 +43,8 @@ export function ActivitiesSection({ stickyNote, setStickyNote }: ActivitiesSecti
             ))}
           </div>
         ) : (
-          <div className="space-y-3 max-h-72 overflow-y-auto">
-            {activities.slice(0, 6).map((activity) => (
+          <div className="space-y-3 flex-1 overflow-y-auto">
+            {activities.slice(0, 8).map((activity) => (
               <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                   <MessageSquare className="w-4 h-4 text-blue-500" />
@@ -57,7 +57,10 @@ export function ActivitiesSection({ stickyNote, setStickyNote }: ActivitiesSecti
               </div>
             ))}
             {activities.length === 0 && (
-              <p className="text-gray-500 text-center py-8">No recent activities</p>
+              <div className="text-center py-8 flex-1 flex flex-col justify-center">
+                <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm">No recent activities</p>
+              </div>
             )}
           </div>
         )}

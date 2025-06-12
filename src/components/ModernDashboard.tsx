@@ -4,7 +4,6 @@ import { Job } from "@/pages/Index";
 import { Button } from "@/components/ui/button";
 import { JobDetails } from "@/components/JobDetails";
 import { JobStatusModal } from "@/components/JobStatusModal";
-import { JobChat } from "@/components/JobChat";
 import { DashboardNotifications } from "@/components/dashboard/DashboardNotifications";
 import { TeamChatPreview } from "@/components/dashboard/TeamChatPreview";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
@@ -26,7 +25,7 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<{
-    status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active';
+    status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled';
     title: string;
   } | null>(null);
   const [stickyNote, setStickyNote] = useState("");
@@ -54,7 +53,7 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
     setIsJobDetailsOpen(true);
   };
 
-  const handleStatusClick = (status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active', title: string) => {
+  const handleStatusClick = (status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', title: string) => {
     setSelectedStatus({ status, title });
     setStatusModalOpen(true);
   };
@@ -66,15 +65,8 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
   };
 
   const notifications = [
-    {id: '1', type: 'job_created', message: 'New job "Website Design" created by John Doe', time: '2 hours ago', read: false},
-    {id: '2', type: 'status_change', message: 'Job "Logo Design" status changed to Working', time: '3 hours ago', read: false},
-    {id: '3', type: 'chat', message: 'New message in "Project Alpha" chat', time: '1 hour ago', read: true},
-  ];
-
-  const chatMessages = [
-    {id: '1', user: 'John Doe', message: 'Hey, can we discuss the logo design for Project Alpha?', time: '10:30 AM', avatar: 'JD'},
-    {id: '2', user: 'Sarah Smith', message: 'The client wants to modify the color scheme', time: '11:15 AM', avatar: 'SS'},
-    {id: '3', user: 'Mike Johnson', message: 'Working on the website layout now', time: '12:00 PM', avatar: 'MJ'},
+    {id: '1', type: 'job_created', message: 'New job created', time: '2 hours ago', read: false},
+    {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
   ];
 
   return (
@@ -103,10 +95,10 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
       </div>
 
-      {/* Bottom Row - Quick Search (30%) + Recent Activities (30%) + Team Chat (40%) */}
-      <div className="grid grid-cols-10 gap-6">
+      {/* Bottom Row - All components with same height */}
+      <div className="grid grid-cols-10 gap-6 h-[500px]">
         {/* Quick Search - 30% width */}
-        <div className="col-span-3">
+        <div className="col-span-3 h-full">
           <QuickSearch 
             searchQuery={searchQuery}
             filteredJobs={filteredJobs}
@@ -115,17 +107,16 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         </div>
 
         {/* Recent Activities - 30% width */}
-        <div className="col-span-3">
+        <div className="col-span-3 h-full">
           <ActivitiesSection 
             stickyNote={stickyNote}
             setStickyNote={setStickyNote}
           />
         </div>
 
-        {/* Team Chat with Notifications - 40% width */}
-        <div className="col-span-4">
+        {/* Team Chat with Real Users - 40% width */}
+        <div className="col-span-4 h-full">
           <TeamChatPreview 
-            messages={chatMessages}
             onViewCalendar={() => onViewChange?.("calendar")}
           />
         </div>
