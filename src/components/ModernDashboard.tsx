@@ -89,8 +89,8 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         </div>
       </div>
 
-      {/* Top Row - Daily Trends (70%) + Job Status (30%) */}
-      <div className="grid grid-cols-10 gap-6">
+      {/* Top Row - Daily Trends (50%) + Job Status (50%) */}
+      <div className="grid grid-cols-2 gap-6">
         <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
         <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
       </div>
