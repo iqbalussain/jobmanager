@@ -6,7 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { JobDetails } from "@/components/JobDetails";
+import { JobStatusModal } from "@/components/JobStatusModal";
+import { JobChat } from "@/components/JobChat";
 import { useActivities } from "@/hooks/useActivities";
+import { useChartData } from "@/hooks/useChartData";
 import { 
   Briefcase, 
   Clock, 
@@ -19,8 +22,8 @@ import {
   Plus,
   Users,
   Building,
-  X,
-  BanIcon
+  BanIcon,
+  MessageSquare
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ResponsiveContainer as ResponsiveContainer2 } from "recharts";
 import { format, subDays } from "date-fns";
@@ -34,14 +37,15 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
-  const [stickyNotes, setStickyNotes] = useState([
-    { id: 1, content: "Follow up with client about design approval", color: "bg-yellow-200" },
-    { id: 2, content: "Team meeting at 3 PM", color: "bg-blue-200" },
-    { id: 3, content: "Update project timeline", color: "bg-pink-200" }
-  ]);
-  const [newNote, setNewNote] = useState("");
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<{
+    status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active';
+    title: string;
+  } | null>(null);
+  const [chatJob, setChatJob] = useState<Job | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const { activities, isLoading: activitiesLoading } = useActivities();
+  const { dailyJobData, isLoading: chartLoading } = useChartData();
 
   const stats = {
     total: jobs.length,
@@ -52,34 +56,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     invoiced: jobs.filter(job => job.status === "invoiced").length,
     cancelled: jobs.filter(job => job.status === "cancelled").length
   };
-
-  // Generate daily data for the last 7 days with created and completed jobs
-  const generateDailyChartData = () => {
-    const data = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = subDays(new Date(), i);
-      const dayCreated = jobs.filter(job => {
-        const jobDate = new Date(job.createdAt);
-        return jobDate.toDateString() === date.toDateString();
-      });
-      const dayCompleted = jobs.filter(job => {
-        // For completed, we'll use a simulated completion date
-        const jobDate = new Date(job.createdAt);
-        const completionDate = new Date(jobDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000);
-        return completionDate.toDateString() === date.toDateString() && 
-               ['completed', 'invoiced'].includes(job.status);
-      });
-      
-      data.push({
-        day: format(date, 'MMM dd'),
-        created: dayCreated.length,
-        completed: dayCompleted.length
-      });
-    }
-    return data;
-  };
-
-  const chartData = generateDailyChartData();
 
   // Get salesman job distribution for performance circular slider
   const salesmanData = jobs.reduce((acc, job) => {
@@ -114,11 +90,9 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     setIsJobDetailsOpen(true);
   };
 
-  const handleStatusClick = (status: string) => {
-    setSelectedStatus(status);
-    if (onViewChange) {
-      onViewChange("jobs");
-    }
+  const handleStatusClick = (status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active', title: string) => {
+    setSelectedStatus({ status, title });
+    setStatusModalOpen(true);
   };
 
   const handleCreateJobClick = () => {
@@ -127,12 +101,9 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     }
   };
 
-  const getActivityIcon = (action: string) => {
-    switch (action) {
-      case 'created': return <Plus className="w-4 h-4 text-blue-500" />;
-      case 'status_updated': return <Activity className="w-4 h-4 text-green-500" />;
-      default: return <FileText className="w-4 h-4 text-gray-500" />;
-    }
+  const handleChatClick = (job: Job) => {
+    setChatJob(job);
+    setIsChatOpen(true);
   };
 
   const getTimeAgo = (dateString: string) => {
@@ -143,22 +114,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     return `${Math.floor(diffInHours / 24)}d ago`;
-  };
-
-  const addStickyNote = () => {
-    if (newNote.trim()) {
-      const colors = ["bg-yellow-200", "bg-blue-200", "bg-pink-200", "bg-green-200", "bg-purple-200"];
-      setStickyNotes([...stickyNotes, {
-        id: Date.now(),
-        content: newNote,
-        color: colors[Math.floor(Math.random() * colors.length)]
-      }]);
-      setNewNote("");
-    }
-  };
-
-  const removeStickyNote = (id: number) => {
-    setStickyNotes(stickyNotes.filter(note => note.id !== id));
   };
 
   // Circular Progress Component
@@ -227,92 +182,68 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Job Status Overview</h3>
           <div className="grid grid-cols-2 gap-3">
             <Card 
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-blue-500/50"
-              onClick={() => handleStatusClick('total')}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-blue-500/50 aspect-square"
+              onClick={() => handleStatusClick('total', 'All')}
             >
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 text-xs font-medium">Total Jobs</p>
-                    <p className="text-xl font-bold">{stats.total}</p>
-                  </div>
-                  <Briefcase className="w-5 h-5 text-blue-200" />
-                </div>
+              <CardContent className="p-3 flex flex-col items-center justify-center h-full text-center">
+                <Briefcase className="w-6 h-6 text-blue-200 mb-2" />
+                <p className="text-blue-100 text-xs font-medium mb-1">Total Jobs</p>
+                <p className="text-xl font-bold">{stats.total}</p>
               </CardContent>
             </Card>
 
             <Card 
-              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-orange-500/50"
-              onClick={() => handleStatusClick('active')}
+              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-orange-500/50 aspect-square"
+              onClick={() => handleStatusClick('active', 'Active')}
             >
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-orange-100 text-xs font-medium">Active</p>
-                    <p className="text-xl font-bold">{stats.working + stats.designing}</p>
-                  </div>
-                  <Activity className="w-5 h-5 text-orange-200" />
-                </div>
+              <CardContent className="p-3 flex flex-col items-center justify-center h-full text-center">
+                <Activity className="w-6 h-6 text-orange-200 mb-2" />
+                <p className="text-orange-100 text-xs font-medium mb-1">Active</p>
+                <p className="text-xl font-bold">{stats.working + stats.designing}</p>
               </CardContent>
             </Card>
 
             <Card 
-              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-purple-500/50"
-              onClick={() => handleStatusClick('pending')}
+              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-purple-500/50 aspect-square"
+              onClick={() => handleStatusClick('pending', 'Pending')}
             >
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100 text-xs font-medium">Pending</p>
-                    <p className="text-xl font-bold">{stats.pending}</p>
-                  </div>
-                  <Clock className="w-5 h-5 text-purple-200" />
-                </div>
+              <CardContent className="p-3 flex flex-col items-center justify-center h-full text-center">
+                <Clock className="w-6 h-6 text-purple-200 mb-2" />
+                <p className="text-purple-100 text-xs font-medium mb-1">Pending</p>
+                <p className="text-xl font-bold">{stats.pending}</p>
               </CardContent>
             </Card>
 
             <Card 
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-green-500/50"
-              onClick={() => handleStatusClick('completed')}
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-green-500/50 aspect-square"
+              onClick={() => handleStatusClick('completed', 'Completed')}
             >
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100 text-xs font-medium">Completed</p>
-                    <p className="text-xl font-bold">{stats.completed}</p>
-                  </div>
-                  <CheckCircle className="w-5 h-5 text-green-200" />
-                </div>
+              <CardContent className="p-3 flex flex-col items-center justify-center h-full text-center">
+                <CheckCircle className="w-6 h-6 text-green-200 mb-2" />
+                <p className="text-green-100 text-xs font-medium mb-1">Completed</p>
+                <p className="text-xl font-bold">{stats.completed}</p>
               </CardContent>
             </Card>
 
             <Card 
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-emerald-500/50"
-              onClick={() => handleStatusClick('invoiced')}
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-emerald-500/50 aspect-square"
+              onClick={() => handleStatusClick('invoiced', 'Invoiced')}
             >
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-emerald-100 text-xs font-medium">Invoiced</p>
-                    <p className="text-xl font-bold">{stats.invoiced}</p>
-                  </div>
-                  <FileText className="w-5 h-5 text-emerald-200" />
-                </div>
+              <CardContent className="p-3 flex flex-col items-center justify-center h-full text-center">
+                <FileText className="w-6 h-6 text-emerald-200 mb-2" />
+                <p className="text-emerald-100 text-xs font-medium mb-1">Invoiced</p>
+                <p className="text-xl font-bold">{stats.invoiced}</p>
               </CardContent>
             </Card>
 
             <Card 
-              className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-red-500/50"
-              onClick={() => handleStatusClick('cancelled')}
+              className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-red-500/50 aspect-square"
+              onClick={() => handleStatusClick('cancelled', 'Cancelled')}
             >
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-red-100 text-xs font-medium">Cancelled</p>
-                    <p className="text-xl font-bold">{stats.cancelled}</p>
-                  </div>
-                  <BanIcon className="w-5 h-5 text-red-200" />
-                </div>
+              <CardContent className="p-3 flex flex-col items-center justify-center h-full text-center">
+                <BanIcon className="w-6 h-6 text-red-200 mb-2" />
+                <p className="text-red-100 text-xs font-medium mb-1">Cancelled</p>
+                <p className="text-xl font-bold">{stats.cancelled}</p>
               </CardContent>
             </Card>
           </div>
@@ -402,14 +333,24 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
                           </Badge>
                         </div>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleViewDetails(job)}
-                        className="ml-2 p-1"
-                      >
-                        <Eye className="w-3 h-3" />
-                      </Button>
+                      <div className="flex gap-1 ml-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleChatClick(job)}
+                          className="p-1"
+                        >
+                          <MessageSquare className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleViewDetails(job)}
+                          className="p-1"
+                        >
+                          <Eye className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                   {filteredJobs.length === 0 && (
@@ -427,143 +368,95 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         </div>
       </div>
 
-      {/* Bottom Row - Daily Job Trends (50%) + Recent Activities & Sticky Notes (50%) */}
+      {/* Bottom Row - Daily Job Trends (50%) + Recent Activities (50%) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Job Trends Chart - 50% width */}
         <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
               <Activity className="w-5 h-5 text-yellow-400" />
-              Daily Job Trends
+              Daily Job Creation Trends
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#8B5CF6" />
-                <XAxis dataKey="day" stroke="#E5E7EB" />
-                <YAxis stroke="#E5E7EB" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#581C87', 
-                    border: '1px solid #8B5CF6',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
-                    color: '#F9FAFB'
-                  }} 
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="created" 
-                  stroke="#FEF08A" 
-                  strokeWidth={4}
-                  dot={{ fill: '#FEF08A', strokeWidth: 3, r: 6 }}
-                  name="Created Jobs"
-                  style={{
-                    filter: 'drop-shadow(0 0 8px #FEF08A)',
-                  }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="completed" 
-                  stroke="#FDE047" 
-                  strokeWidth={4}
-                  dot={{ fill: '#FDE047', strokeWidth: 3, r: 6 }}
-                  name="Completed Jobs"
-                  style={{
-                    filter: 'drop-shadow(0 0 8px #FDE047)',
-                  }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {chartLoading ? (
+              <div className="h-[300px] flex items-center justify-center">
+                <div className="text-white">Loading chart data...</div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={dailyJobData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#8B5CF6" />
+                  <XAxis dataKey="day" stroke="#E5E7EB" />
+                  <YAxis stroke="#E5E7EB" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#581C87', 
+                      border: '1px solid #8B5CF6',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                      color: '#F9FAFB'
+                    }} 
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="jobs" 
+                    stroke="#FEF08A" 
+                    strokeWidth={4}
+                    dot={{ fill: '#FEF08A', strokeWidth: 3, r: 6 }}
+                    name="Created Jobs"
+                    style={{
+                      filter: 'drop-shadow(0 0 8px #FEF08A)',
+                    }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
-        {/* Right Column - Recent Activities + Sticky Notes Side by Side */}
-        <div className="grid grid-cols-2 gap-3 h-full">
-          {/* Recent Activities - Portrait Layout */}
-          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-gray-900 text-sm">
-                <Activity className="w-4 h-4 text-purple-600" />
-                Recent Activities
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {activitiesLoading ? (
-                <div className="space-y-2">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="flex items-start gap-2 animate-pulse">
-                      <div className="w-5 h-5 bg-gray-200 rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="h-2 bg-gray-200 rounded w-3/4 mb-1"></div>
-                        <div className="h-2 bg-gray-200 rounded w-1/2"></div>
-                      </div>
+        {/* Recent Activities - 50% width */}
+        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-gray-900">
+              <MessageSquare className="w-5 h-5 text-purple-600" />
+              Recent Activities
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {activitiesLoading ? (
+              <div className="space-y-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-start gap-3 animate-pulse">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                    <div className="flex-1">
+                      <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-2 bg-gray-200 rounded w-1/2"></div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-72 overflow-y-auto">
-                  {activities.slice(0, 6).map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg">
-                      <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
-                        {getActivityIcon(activity.action)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-900 truncate">{activity.user_name}</p>
-                        <p className="text-xs text-gray-600 truncate">{activity.description}</p>
-                        <p className="text-xs text-gray-400">{getTimeAgo(activity.created_at)}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {activities.length === 0 && (
-                    <p className="text-gray-500 text-center py-6 text-xs">No recent activities</p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Sticky Notes - Portrait Layout */}
-          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-gray-900 text-sm">
-                <FileText className="w-4 h-4 text-yellow-600" />
-                Sticky Notes
-              </CardTitle>
-              <div className="flex gap-2 mt-2">
-                <Input
-                  placeholder="Add a note..."
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  className="text-xs"
-                  onKeyPress={(e) => e.key === 'Enter' && addStickyNote()}
-                />
-                <Button size="sm" onClick={addStickyNote} className="px-2">
-                  <Plus className="w-3 h-3" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {stickyNotes.map((note) => (
-                  <div key={note.id} className={`p-2 rounded-lg ${note.color} relative group`}>
-                    <p className="text-xs text-gray-800 pr-5">{note.content}</p>
-                    <button
-                      onClick={() => removeStickyNote(note.id)}
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-3 h-3 text-gray-600" />
-                    </button>
                   </div>
                 ))}
-                {stickyNotes.length === 0 && (
-                  <p className="text-gray-500 text-center py-6 text-xs">No notes yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-72 overflow-y-auto">
+                {activities.slice(0, 6).map((activity) => (
+                  <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <MessageSquare className="w-4 h-4 text-blue-500" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">{activity.user_name}</p>
+                      <p className="text-sm text-gray-600">{activity.description}</p>
+                      <p className="text-xs text-gray-400 mt-1">{getTimeAgo(activity.created_at)}</p>
+                    </div>
+                  </div>
+                ))}
+                {activities.length === 0 && (
+                  <p className="text-gray-500 text-center py-8">No recent activities</p>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Job Details Modal */}
@@ -572,6 +465,24 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         onClose={() => setIsJobDetailsOpen(false)}
         job={selectedJob}
       />
+
+      {/* Job Status Modal */}
+      <JobStatusModal
+        isOpen={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        jobs={jobs}
+        status={selectedStatus?.status || 'total'}
+        title={selectedStatus?.title || 'All'}
+      />
+
+      {/* Job Chat Modal */}
+      {chatJob && (
+        <JobChat
+          job={chatJob}
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+        />
+      )}
     </div>
   );
 }
