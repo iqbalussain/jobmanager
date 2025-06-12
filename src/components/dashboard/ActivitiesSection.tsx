@@ -1,7 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { MessageSquare, Activity } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { useActivities } from "@/hooks/useActivities";
 
 interface ActivitiesSectionProps {
@@ -11,14 +10,6 @@ interface ActivitiesSectionProps {
 
 export function ActivitiesSection({ stickyNote, setStickyNote }: ActivitiesSectionProps) {
   const { activities, isLoading: activitiesLoading } = useActivities();
-
-  const getActivityIcon = (action: string) => {
-    switch (action) {
-      case 'created': return <Activity className="w-4 h-4 text-blue-500" />;
-      case 'status_updated': return <Activity className="w-4 h-4 text-green-500" />;
-      default: return <Activity className="w-4 h-4 text-gray-500" />;
-    }
-  };
 
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -56,7 +47,7 @@ export function ActivitiesSection({ stickyNote, setStickyNote }: ActivitiesSecti
             {activities.slice(0, 6).map((activity) => (
               <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  {getActivityIcon(activity.action)}
+                  <MessageSquare className="w-4 h-4 text-blue-500" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">{activity.user_name}</p>
