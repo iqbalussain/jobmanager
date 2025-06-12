@@ -42,6 +42,33 @@ export function Dashboard({ jobs }: DashboardProps) {
     invoiced: jobs.filter(job => job.status === "invoiced").length
   };
 
+  // Chart data for line chart
+  const chartData = [
+    { month: 'Jan', jobs: 12 },
+    { month: 'Feb', jobs: 19 },
+    { month: 'Mar', jobs: 15 },
+    { month: 'Apr', jobs: 22 },
+    { month: 'May', jobs: 28 },
+    { month: 'Jun', jobs: 24 }
+  ];
+
+  // Gauge data for pie chart
+  const gaugeData = [
+    { name: 'Pending', value: stats.pending, color: '#3B82F6' },
+    { name: 'Working', value: stats.working, color: '#F59E0B' },
+    { name: 'Designing', value: stats.designing, color: '#8B5CF6' },
+    { name: 'Completed', value: stats.completed, color: '#10B981' },
+    { name: 'Invoiced', value: stats.invoiced, color: '#059669' }
+  ];
+
+  // Recent activities data
+  const recentActivities = [
+    { user: 'John Doe', action: 'Updated job status', time: '2 hours ago', avatar: 'JD' },
+    { user: 'Jane Smith', action: 'Created new job order', time: '4 hours ago', avatar: 'JS' },
+    { user: 'Mike Johnson', action: 'Completed design phase', time: '6 hours ago', avatar: 'MJ' },
+    { user: 'Sarah Wilson', action: 'Added job comments', time: '8 hours ago', avatar: 'SW' }
+  ];
+
   const filteredJobs = jobs.filter(job => 
     job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     job.jobOrderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
