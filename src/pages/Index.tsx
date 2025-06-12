@@ -69,7 +69,7 @@ const Index = () => {
 
     switch (currentView) {
       case "dashboard":
-        return <ModernDashboard jobs={transformedJobs} />;
+        return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />;
       case "jobs":
         return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
       case "create":
@@ -83,7 +83,7 @@ const Index = () => {
       case "admin-management":
         return <AdminManagement />;
       default:
-        return <ModernDashboard jobs={transformedJobs} />;
+        return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />;
     }
   };
 

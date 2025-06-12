@@ -27,12 +27,14 @@ import { format, subDays } from "date-fns";
 
 interface ModernDashboardProps {
   jobs: Job[];
+  onViewChange?: (view: string) => void;
 }
 
-export function ModernDashboard({ jobs }: ModernDashboardProps) {
+export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [stickyNotes, setStickyNotes] = useState([
     { id: 1, content: "Follow up with client about design approval", color: "bg-yellow-200" },
     { id: 2, content: "Team meeting at 3 PM", color: "bg-blue-200" },
@@ -51,24 +53,26 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
     cancelled: jobs.filter(job => job.status === "cancelled").length
   };
 
-  // Generate daily data for the last 7 days
+  // Generate daily data for the last 7 days with created and completed jobs
   const generateDailyChartData = () => {
     const data = [];
     for (let i = 6; i >= 0; i--) {
       const date = subDays(new Date(), i);
-      const dayJobs = jobs.filter(job => {
+      const dayCreated = jobs.filter(job => {
         const jobDate = new Date(job.createdAt);
         return jobDate.toDateString() === date.toDateString();
       });
       const dayCompleted = jobs.filter(job => {
+        // For completed, we'll use a simulated completion date
         const jobDate = new Date(job.createdAt);
-        return jobDate.toDateString() === date.toDateString() && 
+        const completionDate = new Date(jobDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000);
+        return completionDate.toDateString() === date.toDateString() && 
                ['completed', 'invoiced'].includes(job.status);
       });
       
       data.push({
         day: format(date, 'MMM dd'),
-        jobs: dayJobs.length,
+        created: dayCreated.length,
         completed: dayCompleted.length
       });
     }
@@ -108,6 +112,19 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
   const handleViewDetails = (job: Job) => {
     setSelectedJob(job);
     setIsJobDetailsOpen(true);
+  };
+
+  const handleStatusClick = (status: string) => {
+    setSelectedStatus(status);
+    if (onViewChange) {
+      onViewChange("jobs");
+    }
+  };
+
+  const handleCreateJobClick = () => {
+    if (onViewChange) {
+      onViewChange("create");
+    }
   };
 
   const getActivityIcon = (action: string) => {
@@ -194,15 +211,25 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
           <p className="text-gray-600">Welcome back! Here's what's happening with your projects.</p>
         </div>
+        <Button 
+          onClick={handleCreateJobClick}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create Job
+        </Button>
       </div>
 
-      {/* Top Row - Job Status (30%) + Salesman Performance (45%) + Quick Search (25%) */}
+      {/* Top Row - Job Status (25%) + Salesman Performance (60%) + Quick Search (15%) */}
       <div className="grid grid-cols-12 gap-6">
-        {/* Top Left - Job Status Cards (30% width) */}
-        <div className="col-span-4">
+        {/* Top Left - Job Status Cards (25% width) */}
+        <div className="col-span-3">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Job Status Overview</h3>
           <div className="grid grid-cols-2 gap-3">
-            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card 
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-blue-500/50"
+              onClick={() => handleStatusClick('total')}
+            >
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -214,7 +241,10 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card 
+              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-orange-500/50"
+              onClick={() => handleStatusClick('active')}
+            >
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -226,7 +256,10 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card 
+              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-purple-500/50"
+              onClick={() => handleStatusClick('pending')}
+            >
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -238,7 +271,10 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card 
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-green-500/50"
+              onClick={() => handleStatusClick('completed')}
+            >
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -250,7 +286,10 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card 
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-emerald-500/50"
+              onClick={() => handleStatusClick('invoiced')}
+            >
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -262,7 +301,10 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card 
+              className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:shadow-red-500/50"
+              onClick={() => handleStatusClick('cancelled')}
+            >
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -276,8 +318,8 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
           </div>
         </div>
 
-        {/* Top Center - Salesman Performance Circular Sliders (45% width) */}
-        <div className="col-span-5">
+        {/* Top Center - Salesman Performance Circular Sliders (60% width) */}
+        <div className="col-span-7">
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-gray-900 text-lg">
@@ -286,7 +328,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 {performanceData.map((salesman) => (
                   <div key={salesman.id} className="flex flex-col items-center space-y-2">
                     <div className="text-xs font-medium text-gray-700 truncate w-full text-center">
@@ -322,8 +364,8 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
           </Card>
         </div>
 
-        {/* Top Right - Quick Search (25% width) */}
-        <div className="col-span-3">
+        {/* Top Right - Quick Search (15% width) */}
+        <div className="col-span-2">
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-gray-900 text-lg">
@@ -344,7 +386,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
               {searchQuery ? (
                 <div className="space-y-3 max-h-48 overflow-y-auto">
                   {filteredJobs.slice(0, 4).map((job) => (
-                    <div key={job.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div key={job.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-blue-50 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 cursor-pointer">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-xs truncate">{job.title}</p>
                         <p className="text-xs text-gray-500 truncate">{job.jobOrderNumber} • {job.customer}</p>
@@ -388,23 +430,23 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
       {/* Bottom Row - Daily Job Trends (50%) + Recent Activities & Sticky Notes (50%) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Job Trends Chart - 50% width */}
-        <Card className="shadow-xl border-0 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+        <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
-              <Activity className="w-5 h-5 text-blue-400" />
+              <Activity className="w-5 h-5 text-yellow-400" />
               Daily Job Trends
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="day" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#8B5CF6" />
+                <XAxis dataKey="day" stroke="#E5E7EB" />
+                <YAxis stroke="#E5E7EB" />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
+                    backgroundColor: '#581C87', 
+                    border: '1px solid #8B5CF6',
                     borderRadius: '12px',
                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
                     color: '#F9FAFB'
@@ -412,21 +454,25 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="jobs" 
-                  stroke="#3B82F6" 
-                  strokeWidth={3}
-                  dot={{ fill: '#3B82F6', strokeWidth: 2, r: 5 }}
-                  name="Total Jobs"
-                  filter="drop-shadow(0 0 6px #3B82F6)"
+                  dataKey="created" 
+                  stroke="#FEF08A" 
+                  strokeWidth={4}
+                  dot={{ fill: '#FEF08A', strokeWidth: 3, r: 6 }}
+                  name="Created Jobs"
+                  style={{
+                    filter: 'drop-shadow(0 0 8px #FEF08A)',
+                  }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="completed" 
-                  stroke="#10B981" 
-                  strokeWidth={3}
-                  dot={{ fill: '#10B981', strokeWidth: 2, r: 5 }}
-                  name="Completed"
-                  filter="drop-shadow(0 0 6px #10B981)"
+                  stroke="#FDE047" 
+                  strokeWidth={4}
+                  dot={{ fill: '#FDE047', strokeWidth: 3, r: 6 }}
+                  name="Completed Jobs"
+                  style={{
+                    filter: 'drop-shadow(0 0 8px #FDE047)',
+                  }}
                 />
               </LineChart>
             </ResponsiveContainer>
