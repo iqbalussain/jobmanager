@@ -64,6 +64,12 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
     }
   };
 
+  const handleGoToChat = () => {
+    if (onViewChange) {
+      onViewChange("calendar");
+    }
+  };
+
   const notifications = [
     {id: '1', type: 'job_created', message: 'New job created', time: '2 hours ago', read: false},
     {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
@@ -89,37 +95,44 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         </div>
       </div>
 
-      {/* Top Row - Daily Trends (50%) + Job Status (50%) */}
-      <div className="grid grid-cols-2 gap-6">
+      {/* Top Row - Daily Trends (50%) */}
+      <div className="w-1/2">
         <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
-        <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
       </div>
 
-      {/* Bottom Row - All components with same height */}
+      {/* Bottom Row - Side by side components */}
       <div className="grid grid-cols-10 gap-6 h-[500px]">
-        {/* Quick Search - 30% width */}
-        <div className="col-span-3 h-full">
+        {/* Quick Search - 20% width */}
+        <div className="col-span-2 h-full">
           <QuickSearch 
             searchQuery={searchQuery}
             filteredJobs={filteredJobs}
             onViewDetails={handleViewDetails}
+            onSearchChange={setSearchQuery}
           />
         </div>
 
-        {/* Recent Activities - 30% width */}
-        <div className="col-span-3 h-full">
+        {/* Job Status Overview - 60% width, centered */}
+        <div className="col-span-6 h-full flex justify-center">
+          <div className="w-full max-w-4xl">
+            <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
+          </div>
+        </div>
+
+        {/* Recent Activities - 20% width */}
+        <div className="col-span-2 h-full">
           <ActivitiesSection 
             stickyNote={stickyNote}
             setStickyNote={setStickyNote}
           />
         </div>
+      </div>
 
-        {/* Team Chat with Real Users - 40% width */}
-        <div className="col-span-4 h-full">
-          <TeamChatPreview 
-            onViewCalendar={() => onViewChange?.("calendar")}
-          />
-        </div>
+      {/* Team Chat Preview - Full width at bottom */}
+      <div className="w-full">
+        <TeamChatPreview 
+          onGoToChat={handleGoToChat}
+        />
       </div>
 
       {/* Job Details Modal */}
@@ -127,6 +140,7 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
         job={selectedJob}
+        onStatusUpdate={onStatusUpdate}
       />
 
       {/* Job Status Modal */}
@@ -136,6 +150,7 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         jobs={jobs}
         status={selectedStatus?.status || 'total'}
         title={selectedStatus?.title || 'All'}
+        onStatusUpdate={onStatusUpdate}
       />
     </div>
   );

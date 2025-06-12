@@ -1,7 +1,10 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare } from "lucide-react";
-import { useActivities } from "@/hooks/useActivities";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Clock, Activity, Save, Trash2 } from "lucide-react";
 
 interface ActivitiesSectionProps {
   stickyNote: string;
@@ -9,61 +12,81 @@ interface ActivitiesSectionProps {
 }
 
 export function ActivitiesSection({ stickyNote, setStickyNote }: ActivitiesSectionProps) {
-  const { activities, isLoading: activitiesLoading } = useActivities();
+  const [isEditing, setIsEditing] = useState(false);
 
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    return `${Math.floor(diffInHours / 24)}d ago`;
+  const recentActivities = [
+    { id: 1, action: 'Job created', details: 'Print Business Cards', time: '2 mins ago', type: 'create' },
+    { id: 2, action: 'Status updated', details: 'Logo Design to Working', time: '5 mins ago', type: 'update' },
+    { id: 3, action: 'Job completed', details: 'Banner Print Project', time: '1 hour ago', type: 'complete' },
+    { id: 4, action: 'New assignment', details: 'Wedding Invitation', time: '2 hours ago', type: 'assign' },
+  ];
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'create': return '✨';
+      case 'update': return '🔄';
+      case 'complete': return '✅';
+      case 'assign': return '👤';
+      default: return '📝';
+    }
   };
 
   return (
-    <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm h-full flex flex-col">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-gray-900 text-base">
-          <MessageSquare className="w-5 h-5 text-purple-600" />
+    <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl overflow-hidden">
+      <CardHeader className="pb-3 bg-gradient-to-r from-green-500 to-teal-600 text-white">
+        <CardTitle className="flex items-center gap-2 text-white text-sm">
+          <Activity className="w-4 h-4" />
           Recent Activities
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 flex-1 flex flex-col">
-        {activitiesLoading ? (
-          <div className="space-y-3 flex-1">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex items-start gap-3 animate-pulse">
-                <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                <div className="flex-1">
-                  <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-2 bg-gray-200 rounded w-1/2"></div>
+      <CardContent className="pt-4 flex-1 flex flex-col overflow-hidden">
+        {/* Sticky Notes Section */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-xs font-semibold text-gray-700">Quick Notes</h4>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setIsEditing(!isEditing)}
+              className="h-6 px-2 text-xs"
+            >
+              {isEditing ? <Save className="w-3 h-3" /> : '✏️'}
+            </Button>
+          </div>
+          {isEditing ? (
+            <Textarea
+              value={stickyNote}
+              onChange={(e) => setStickyNote(e.target.value)}
+              placeholder="Add your notes..."
+              className="min-h-[60px] text-xs border-2 border-yellow-200 bg-yellow-50 rounded-lg"
+            />
+          ) : (
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-3 min-h-[60px]">
+              <p className="text-xs text-gray-700">
+                {stickyNote || "Click edit to add notes..."}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Activities List */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div className="space-y-2">
+            {recentActivities.map((activity) => (
+              <div key={activity.id} className="flex items-start gap-3 p-2 bg-white rounded-lg border border-gray-100 hover:shadow-sm transition-all duration-200">
+                <div className="text-sm mt-0.5">{getActivityIcon(activity.type)}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-gray-900 truncate">{activity.action}</p>
+                  <p className="text-xs text-gray-600 truncate">{activity.details}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Clock className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-500">{activity.time}</span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        ) : (
-          <div className="space-y-3 flex-1 overflow-y-auto">
-            {activities.slice(0, 8).map((activity) => (
-              <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <MessageSquare className="w-4 h-4 text-blue-500" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{activity.user_name}</p>
-                  <p className="text-sm text-gray-600">{activity.description}</p>
-                  <p className="text-xs text-gray-400 mt-1">{getTimeAgo(activity.created_at)}</p>
-                </div>
-              </div>
-            ))}
-            {activities.length === 0 && (
-              <div className="text-center py-8 flex-1 flex flex-col justify-center">
-                <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No recent activities</p>
-              </div>
-            )}
-          </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );
