@@ -27,15 +27,16 @@ import {
   Bell,
   Send
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ResponsiveContainer as ResponsiveContainer2 } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, subDays } from "date-fns";
 
 interface ModernDashboardProps {
   jobs: Job[];
   onViewChange?: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management") => void;
+  onStatusUpdate?: (jobId: string, status: string) => void;
 }
 
-export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
+export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -48,9 +49,10 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState<Array<{id: string, user: string, message: string, time: string}>>([
-    {id: '1', user: 'John Doe', message: 'Hey, can we discuss the logo design for Project Alpha?', time: '10:30 AM'},
-    {id: '2', user: 'Sarah Smith', message: 'The client wants to modify the color scheme', time: '11:15 AM'},
+  const [chatMessages, setChatMessages] = useState<Array<{id: string, user: string, message: string, time: string, avatar?: string}>>([
+    {id: '1', user: 'John Doe', message: 'Hey, can we discuss the logo design for Project Alpha?', time: '10:30 AM', avatar: 'JD'},
+    {id: '2', user: 'Sarah Smith', message: 'The client wants to modify the color scheme', time: '11:15 AM', avatar: 'SS'},
+    {id: '3', user: 'Mike Johnson', message: 'Working on the website layout now', time: '12:00 PM', avatar: 'MJ'},
   ]);
   const [notifications, setNotifications] = useState([
     {id: '1', type: 'job_created', message: 'New job "Website Design" created by John Doe', time: '2 hours ago', read: false},
@@ -70,28 +72,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     invoiced: jobs.filter(job => job.status === "invoiced").length,
     cancelled: jobs.filter(job => job.status === "cancelled").length
   };
-
-  // Get salesman job distribution for performance circular slider
-  const salesmanData = jobs.reduce((acc, job) => {
-    const salesman = job.salesman || 'Unassigned';
-    acc[salesman] = (acc[salesman] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Create performance data for circular sliders - show all salesmen
-  const performanceData = Object.entries(salesmanData).map(([name, count], index) => {
-    const completionRate = Math.round((Math.random() * 40) + 60); // Simulated completion rate 60-100%
-    const efficiency = Math.round((Math.random() * 30) + 70); // Simulated efficiency 70-100%
-    
-    return {
-      id: index,
-      name,
-      jobCount: count,
-      completionRate,
-      efficiency,
-      color: `hsl(${index * 72}, 70%, 60%)` // Different colors for each salesman
-    };
-  });
 
   const filteredJobs = jobs.filter(job => 
     job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -126,7 +106,8 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         id: Date.now().toString(),
         user: 'You',
         message: chatMessage.trim(),
-        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        avatar: 'Y'
       };
       setChatMessages([...chatMessages, newMessage]);
       setChatMessage("");
@@ -143,48 +124,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     return `${Math.floor(diffInHours / 24)}d ago`;
-  };
-
-  // Circular Progress Component
-  const CircularProgress = ({ percentage, size = 60, strokeWidth = 4, color }: { 
-    percentage: number; 
-    size?: number; 
-    strokeWidth?: number; 
-    color: string;
-  }) => {
-    const radius = (size - strokeWidth) / 2;
-    const circumference = radius * 2 * Math.PI;
-    const offset = circumference - (percentage / 100) * circumference;
-
-    return (
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="transform -rotate-90">
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="#e5e7eb"
-            strokeWidth={strokeWidth}
-            fill="transparent"
-          />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={color}
-            strokeWidth={strokeWidth}
-            fill="transparent"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            strokeLinecap="round"
-            className="transition-all duration-300"
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xs font-bold" style={{ color }}>{percentage}%</span>
-        </div>
-      </div>
-    );
   };
 
   return (
@@ -237,113 +176,119 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         </div>
       </div>
 
-      {/* Top Row - Job Status (20%) + Salesman Performance (60%) + Quick Search (20%) */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* Top Left - Job Status Cards (20% width) - REDUCED SIZE */}
-        <div className="col-span-2">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Job Status</h3>
-          <div className="grid grid-cols-1 gap-2">
+      {/* Top Row - Reduced Job Status Cards */}
+      <div className="grid grid-cols-12 gap-4">
+        {/* Job Status Cards - Reduced size */}
+        <div className="col-span-12">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Job Status Overview</h3>
+          <div className="grid grid-cols-5 gap-3">
             <Card 
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-blue-500/50"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-blue-500/50 aspect-square"
               onClick={() => handleStatusClick('total', 'All')}
             >
-              <CardContent className="p-2 flex items-center justify-center text-center">
-                <div>
-                  <Briefcase className="w-4 h-4 text-blue-200 mb-1 mx-auto" />
-                  <p className="text-blue-100 text-xs font-medium mb-1">Total</p>
-                  <p className="text-lg font-bold">{stats.total}</p>
-                </div>
+              <CardContent className="p-3 flex flex-col items-center justify-center text-center h-full">
+                <Briefcase className="w-5 h-5 text-blue-200 mb-2" />
+                <p className="text-blue-100 text-xs font-medium mb-1">Total</p>
+                <p className="text-xl font-bold">{stats.total}</p>
               </CardContent>
             </Card>
 
             <Card 
-              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-orange-500/50"
+              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-orange-500/50 aspect-square"
               onClick={() => handleStatusClick('active', 'Active')}
             >
-              <CardContent className="p-2 flex items-center justify-center text-center">
-                <div>
-                  <Activity className="w-4 h-4 text-orange-200 mb-1 mx-auto" />
-                  <p className="text-orange-100 text-xs font-medium mb-1">Active</p>
-                  <p className="text-lg font-bold">{stats.working + stats.designing}</p>
-                </div>
+              <CardContent className="p-3 flex flex-col items-center justify-center text-center h-full">
+                <Activity className="w-5 h-5 text-orange-200 mb-2" />
+                <p className="text-orange-100 text-xs font-medium mb-1">Active</p>
+                <p className="text-xl font-bold">{stats.working + stats.designing}</p>
               </CardContent>
             </Card>
 
             <Card 
-              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-purple-500/50"
+              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-purple-500/50 aspect-square"
               onClick={() => handleStatusClick('pending', 'Pending')}
             >
-              <CardContent className="p-2 flex items-center justify-center text-center">
-                <div>
-                  <Clock className="w-4 h-4 text-purple-200 mb-1 mx-auto" />
-                  <p className="text-purple-100 text-xs font-medium mb-1">Pending</p>
-                  <p className="text-lg font-bold">{stats.pending}</p>
-                </div>
+              <CardContent className="p-3 flex flex-col items-center justify-center text-center h-full">
+                <Clock className="w-5 h-5 text-purple-200 mb-2" />
+                <p className="text-purple-100 text-xs font-medium mb-1">Pending</p>
+                <p className="text-xl font-bold">{stats.pending}</p>
               </CardContent>
             </Card>
 
             <Card 
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-green-500/50"
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-green-500/50 aspect-square"
               onClick={() => handleStatusClick('completed', 'Completed')}
             >
-              <CardContent className="p-2 flex items-center justify-center text-center">
-                <div>
-                  <CheckCircle className="w-4 h-4 text-green-200 mb-1 mx-auto" />
-                  <p className="text-green-100 text-xs font-medium mb-1">Done</p>
-                  <p className="text-lg font-bold">{stats.completed}</p>
-                </div>
+              <CardContent className="p-3 flex flex-col items-center justify-center text-center h-full">
+                <CheckCircle className="w-5 h-5 text-green-200 mb-2" />
+                <p className="text-green-100 text-xs font-medium mb-1">Done</p>
+                <p className="text-xl font-bold">{stats.completed}</p>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:shadow-emerald-500/50 aspect-square"
+              onClick={() => handleStatusClick('invoiced', 'Invoiced')}
+            >
+              <CardContent className="p-3 flex flex-col items-center justify-center text-center h-full">
+                <FileText className="w-5 h-5 text-emerald-200 mb-2" />
+                <p className="text-emerald-100 text-xs font-medium mb-1">Invoiced</p>
+                <p className="text-xl font-bold">{stats.invoiced}</p>
               </CardContent>
             </Card>
           </div>
         </div>
+      </div>
 
-        {/* Top Center - Salesman Performance Circular Sliders (60% width) */}
-        <div className="col-span-8">
-          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-gray-900 text-lg">
-                <Users className="w-5 h-5 text-blue-600" />
-                Salesman Performance
+      {/* Middle Row - Daily Job Trends Chart (60% width) */}
+      <div className="grid grid-cols-5 gap-6">
+        <div className="col-span-3">
+          <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Activity className="w-5 h-5 text-yellow-400" />
+                Daily Job Creation Trends
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-4 gap-3">
-                {performanceData.map((salesman) => (
-                  <div key={salesman.id} className="flex flex-col items-center space-y-2">
-                    <div className="text-xs font-medium text-gray-700 truncate w-full text-center">
-                      {salesman.name}
-                    </div>
-                    <div className="flex space-x-2">
-                      <div className="flex flex-col items-center">
-                        <CircularProgress 
-                          percentage={salesman.completionRate} 
-                          size={45} 
-                          strokeWidth={3}
-                          color={salesman.color}
-                        />
-                        <span className="text-xs text-gray-500 mt-1">Complete</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <CircularProgress 
-                          percentage={salesman.efficiency} 
-                          size={45} 
-                          strokeWidth={3}
-                          color="#10B981"
-                        />
-                        <span className="text-xs text-gray-500 mt-1">Efficiency</span>
-                      </div>
-                    </div>
-                    <div className="text-xs text-center">
-                      <span className="font-semibold">{salesman.jobCount}</span> jobs
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <CardContent>
+              {chartLoading ? (
+                <div className="h-[300px] flex items-center justify-center">
+                  <div className="text-white">Loading chart data...</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={dailyJobData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#8B5CF6" />
+                    <XAxis dataKey="day" stroke="#E5E7EB" />
+                    <YAxis stroke="#E5E7EB" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#581C87', 
+                        border: '1px solid #8B5CF6',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                        color: '#F9FAFB'
+                      }} 
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="jobs" 
+                      stroke="#FEF08A" 
+                      strokeWidth={4}
+                      dot={{ fill: '#FEF08A', strokeWidth: 3, r: 6 }}
+                      name="Created Jobs"
+                      style={{
+                        filter: 'drop-shadow(0 0 8px #FEF08A)',
+                      }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Top Right - Quick Search (20% width) */}
+        {/* Quick Search - 40% width */}
         <div className="col-span-2">
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
             <CardHeader className="pb-4">
@@ -405,56 +350,9 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         </div>
       </div>
 
-      {/* Middle Row - Daily Job Trends Chart (100% width) */}
-      <div className="grid grid-cols-1 gap-6">
-        <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-white">
-              <Activity className="w-5 h-5 text-yellow-400" />
-              Daily Job Creation Trends
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {chartLoading ? (
-              <div className="h-[300px] flex items-center justify-center">
-                <div className="text-white">Loading chart data...</div>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={dailyJobData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#8B5CF6" />
-                  <XAxis dataKey="day" stroke="#E5E7EB" />
-                  <YAxis stroke="#E5E7EB" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#581C87', 
-                      border: '1px solid #8B5CF6',
-                      borderRadius: '12px',
-                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
-                      color: '#F9FAFB'
-                    }} 
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="jobs" 
-                    stroke="#FEF08A" 
-                    strokeWidth={4}
-                    dot={{ fill: '#FEF08A', strokeWidth: 3, r: 6 }}
-                    name="Created Jobs"
-                    style={{
-                      filter: 'drop-shadow(0 0 8px #FEF08A)',
-                    }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Bottom Row - Recent Activities (25%) + Chat Box (75%) */}
-      <div className="grid grid-cols-4 gap-6">
-        {/* Recent Activities - 25% width */}
+      {/* Bottom Row - Recent Activities (20%) + Team Chat (20%) with avatars */}
+      <div className="grid grid-cols-5 gap-6">
+        {/* Recent Activities - 20% width */}
         <div className="col-span-1">
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
             <CardHeader>
@@ -499,36 +397,30 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           </Card>
         </div>
 
-        {/* Chat Box - 75% width */}
-        <div className="col-span-3">
+        {/* Team Chat with Avatars - 20% width */}
+        <div className="col-span-1">
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm h-full">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-900">
-                <MessageSquare className="w-5 h-5 text-blue-600" />
-                Team Chat & Job Discussions
+              <CardTitle className="flex items-center gap-2 text-gray-900 text-sm">
+                <Users className="w-4 h-4 text-blue-600" />
+                Team Chat
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col h-80">
-              {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto space-y-3 mb-4 p-3 bg-gray-50 rounded-lg">
-                {chatMessages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.user === 'You' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
-                      msg.user === 'You' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-white border shadow-sm'
-                    }`}>
+              {/* Chat Messages with Avatars */}
+              <div className="flex-1 overflow-y-auto space-y-2 mb-4">
+                {chatMessages.slice(0, 4).map((msg) => (
+                  <div key={msg.id} className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                       onClick={() => onViewChange?.("calendar")}>
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      {msg.avatar}
+                    </div>
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs font-medium ${msg.user === 'You' ? 'text-blue-100' : 'text-gray-700'}`}>
-                          {msg.user}
-                        </span>
-                        <span className={`text-xs ${msg.user === 'You' ? 'text-blue-200' : 'text-gray-500'}`}>
-                          {msg.time}
-                        </span>
+                        <span className="text-xs font-medium text-gray-700 truncate">{msg.user}</span>
+                        <span className="text-xs text-gray-500">{msg.time}</span>
                       </div>
-                      <p className={`text-sm ${msg.user === 'You' ? 'text-white' : 'text-gray-900'}`}>
-                        {msg.message}
-                      </p>
+                      <p className="text-xs text-gray-900 truncate">{msg.message}</p>
                     </div>
                   </div>
                 ))}
@@ -537,19 +429,22 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
               {/* Chat Input */}
               <div className="flex gap-2">
                 <Input
-                  placeholder="Type your message about jobs or general discussion..."
+                  placeholder="Quick message..."
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  className="flex-1"
+                  className="flex-1 text-xs"
                 />
-                <Button onClick={handleSendMessage} className="bg-blue-600 hover:bg-blue-700">
-                  <Send className="w-4 h-4" />
+                <Button onClick={handleSendMessage} size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Send className="w-3 h-3" />
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Spacer for remaining width */}
+        <div className="col-span-3"></div>
       </div>
 
       {/* Job Details Modal */}

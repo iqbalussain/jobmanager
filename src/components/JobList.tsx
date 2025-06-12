@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { JobDetails } from "@/components/JobDetails";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Calendar,
   User,
@@ -31,6 +32,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   // Filter jobs based on requirements
   const currentDate = new Date();
@@ -63,8 +65,44 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
     setIsEditMode(true);
   };
 
-  const handleStatusChange = (jobId: string, newStatus: JobStatus) => {
-    onStatusUpdate(jobId, newStatus);
+  const handleStatusChange = async (jobId: string, newStatus: JobStatus) => {
+    try {
+      console.log('Updating job status:', jobId, newStatus);
+      
+      // Update in Supabase
+      const { error } = await supabase
+        .from('job_orders')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', jobId);
+
+      if (error) {
+        console.error('Supabase error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update job status. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Call the parent callback to update local state
+      onStatusUpdate(jobId, newStatus);
+      
+      toast({
+        title: "Success",
+        description: "Job status updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to update job status. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -181,7 +219,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
                         </Badge>
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="bg-white border shadow-xl">
+                    <SelectContent className="bg-white border shadow-xl z-50">
                       <SelectItem value="pending">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -267,7 +305,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
 
                 {job.status === 'pending' && (
                   <Button
-                    onClick={() => onStatusUpdate(job.id, 'working')}
+                    onClick={() => handleStatusChange(job.id, 'working')}
                     className="w-full mt-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-xs"
                     size="sm"
                   >
