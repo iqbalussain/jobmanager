@@ -28,7 +28,6 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
     status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled';
     title: string;
   } | null>(null);
-  const [stickyNote, setStickyNote] = useState("");
 
   const { dailyJobData, isLoading: chartLoading } = useChartData();
 
@@ -95,15 +94,28 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         </div>
       </div>
 
-      {/* Top Row - Daily Trends (50%) */}
-      <div className="w-1/2">
-        <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
+      {/* Top Row - Daily Trends (60%) + Job Status Overview (40%) */}
+      <div className="grid grid-cols-10 gap-6 h-[400px]">
+        {/* Daily Trends Chart - 60% width */}
+        <div className="col-span-6">
+          <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
+        </div>
+        
+        {/* Job Status Overview - 40% width */}
+        <div className="col-span-4">
+          <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
+        </div>
       </div>
 
-      {/* Bottom Row - Side by side components */}
-      <div className="grid grid-cols-10 gap-6 h-[500px]">
-        {/* Quick Search - 20% width */}
-        <div className="col-span-2 h-full">
+      {/* Bottom Row - Chat (40%) + Quick Search (30%) + Activities (30%) */}
+      <div className="grid grid-cols-10 gap-6 h-[400px]">
+        {/* Team Chat Preview - 40% width */}
+        <div className="col-span-4">
+          <TeamChatPreview onGoToChat={handleGoToChat} />
+        </div>
+
+        {/* Quick Search - 30% width */}
+        <div className="col-span-3">
           <QuickSearch 
             searchQuery={searchQuery}
             filteredJobs={filteredJobs}
@@ -112,27 +124,10 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
           />
         </div>
 
-        {/* Job Status Overview - 60% width, centered */}
-        <div className="col-span-6 h-full flex justify-center">
-          <div className="w-full max-w-4xl">
-            <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
-          </div>
+        {/* Recent Activities - 30% width */}
+        <div className="col-span-3">
+          <ActivitiesSection />
         </div>
-
-        {/* Recent Activities - 20% width */}
-        <div className="col-span-2 h-full">
-          <ActivitiesSection 
-            stickyNote={stickyNote}
-            setStickyNote={setStickyNote}
-          />
-        </div>
-      </div>
-
-      {/* Team Chat Preview - Full width at bottom */}
-      <div className="w-full">
-        <TeamChatPreview 
-          onGoToChat={handleGoToChat}
-        />
       </div>
 
       {/* Job Details Modal */}
