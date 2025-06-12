@@ -42,31 +42,6 @@ export function Dashboard({ jobs }: DashboardProps) {
     invoiced: jobs.filter(job => job.status === "invoiced").length
   };
 
-  // Sample data for line chart (you can replace with real data)
-  const chartData = [
-    { month: 'Jan', jobs: 65, completed: 45 },
-    { month: 'Feb', jobs: 78, completed: 52 },
-    { month: 'Mar', jobs: 85, completed: 61 },
-    { month: 'Apr', jobs: 72, completed: 58 },
-    { month: 'May', jobs: 95, completed: 75 },
-    { month: 'Jun', jobs: 88, completed: 68 }
-  ];
-
-  // Sample data for gauge/pie chart
-  const gaugeData = [
-    { name: 'Completed', value: stats.completed + stats.invoiced, color: '#10B981' },
-    { name: 'Working', value: stats.working + stats.designing, color: '#F59E0B' },
-    { name: 'Pending', value: stats.pending, color: '#3B82F6' }
-  ];
-
-  // Recent activities (sample data)
-  const recentActivities = [
-    { user: 'John Doe', action: 'Completed job #2024-001', time: '2 hours ago', avatar: 'JD' },
-    { user: 'Jane Smith', action: 'Started working on #2024-002', time: '4 hours ago', avatar: 'JS' },
-    { user: 'Mike Johnson', action: 'Created new job #2024-003', time: '6 hours ago', avatar: 'MJ' },
-    { user: 'Sarah Wilson', action: 'Invoiced job #2024-004', time: '1 day ago', avatar: 'SW' }
-  ];
-
   const filteredJobs = jobs.filter(job => 
     job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     job.jobOrderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,7 +123,7 @@ export function Dashboard({ jobs }: DashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg">
+        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg w-64 h-32"> {/* Adjust w-64 (width) and h-32 (height) as needed */}
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -204,14 +179,6 @@ export function Dashboard({ jobs }: DashboardProps) {
                   strokeWidth={3}
                   dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
                   name="Total Jobs"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="completed" 
-                  stroke="#10B981" 
-                  strokeWidth={3}
-                  dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                  name="Completed"
                 />
               </LineChart>
             </ResponsiveContainer>
