@@ -83,6 +83,7 @@ export function Dashboard({ jobs }: DashboardProps) {
           searchQuery={searchQuery}
           filteredJobs={filteredJobs}
           onViewDetails={handleViewDetails}
+          onSearchChange={setSearchQuery}
         />
 
         <ActivitiesSection 

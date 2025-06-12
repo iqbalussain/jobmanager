@@ -140,7 +140,6 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
         job={selectedJob}
-        onStatusUpdate={onStatusUpdate}
       />
 
       {/* Job Status Modal */}
@@ -150,7 +149,6 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         jobs={jobs}
         status={selectedStatus?.status || 'total'}
         title={selectedStatus?.title || 'All'}
-        onStatusUpdate={onStatusUpdate}
       />
     </div>
   );
