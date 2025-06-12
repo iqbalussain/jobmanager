@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { JobDetails } from "@/components/JobDetails";
+import { JobStatusModal } from "@/components/JobStatusModal";
+import { useChartData } from "@/hooks/useChartData";
 import { 
   Briefcase, 
   Clock, 
@@ -32,6 +34,13 @@ export function Dashboard({ jobs }: DashboardProps) {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [stickyNote, setStickyNote] = useState("");
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<{
+    status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active';
+    title: string;
+  } | null>(null);
+
+  const { dailyJobData, isLoading: chartLoading } = useChartData();
 
   const stats = {
     total: jobs.length,
@@ -41,16 +50,6 @@ export function Dashboard({ jobs }: DashboardProps) {
     completed: jobs.filter(job => job.status === "completed").length,
     invoiced: jobs.filter(job => job.status === "invoiced").length
   };
-
-  // Chart data for line chart
-  const chartData = [
-    { month: 'Jan', jobs: 12 },
-    { month: 'Feb', jobs: 19 },
-    { month: 'Mar', jobs: 15 },
-    { month: 'Apr', jobs: 22 },
-    { month: 'May', jobs: 28 },
-    { month: 'Jun', jobs: 24 }
-  ];
 
   // Gauge data for pie chart
   const gaugeData = [
@@ -80,6 +79,11 @@ export function Dashboard({ jobs }: DashboardProps) {
     setIsJobDetailsOpen(true);
   };
 
+  const handleStatusClick = (status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active', title: string) => {
+    setSelectedStatus({ status, title });
+    setStatusModalOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -102,7 +106,10 @@ export function Dashboard({ jobs }: DashboardProps) {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <Card className="bg-gradient-to-r from-slate-500 to-slate-600 text-white border-0 shadow-lg">
+        <Card 
+          className="bg-gradient-to-r from-slate-500 to-slate-600 text-white border-0 shadow-lg cursor-pointer hover:shadow-xl transition-all"
+          onClick={() => handleStatusClick('total', 'All')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -114,7 +121,10 @@ export function Dashboard({ jobs }: DashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
+        <Card 
+          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg cursor-pointer hover:shadow-xl transition-all"
+          onClick={() => handleStatusClick('pending', 'Pending')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -126,7 +136,10 @@ export function Dashboard({ jobs }: DashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg">
+        <Card 
+          className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg cursor-pointer hover:shadow-xl transition-all"
+          onClick={() => handleStatusClick('working', 'Working')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -138,7 +151,10 @@ export function Dashboard({ jobs }: DashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg">
+        <Card 
+          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg cursor-pointer hover:shadow-xl transition-all"
+          onClick={() => handleStatusClick('designing', 'Designing')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -150,7 +166,10 @@ export function Dashboard({ jobs }: DashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg w-64 h-32"> {/* Adjust w-64 (width) and h-32 (height) as needed */}
+        <Card 
+          className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg cursor-pointer hover:shadow-xl transition-all"
+          onClick={() => handleStatusClick('completed', 'Completed')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -162,7 +181,10 @@ export function Dashboard({ jobs }: DashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg">
+        <Card 
+          className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg cursor-pointer hover:shadow-xl transition-all"
+          onClick={() => handleStatusClick('invoiced', 'Invoiced')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -182,33 +204,39 @@ export function Dashboard({ jobs }: DashboardProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-gray-900">
               <TrendingUp className="w-5 h-5 text-blue-600" />
-              Job Trends
+              Daily Job Creation Trends
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" stroke="#666" />
-                <YAxis stroke="#666" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }} 
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="jobs" 
-                  stroke="#3B82F6" 
-                  strokeWidth={3}
-                  dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                  name="Total Jobs"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {chartLoading ? (
+              <div className="h-[300px] flex items-center justify-center">
+                <div className="text-gray-500">Loading chart data...</div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={dailyJobData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="day" stroke="#666" />
+                  <YAxis stroke="#666" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }} 
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="jobs" 
+                    stroke="#3B82F6" 
+                    strokeWidth={3}
+                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                    name="Jobs Created"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -349,6 +377,15 @@ export function Dashboard({ jobs }: DashboardProps) {
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
         job={selectedJob}
+      />
+
+      {/* Job Status Modal */}
+      <JobStatusModal
+        isOpen={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        jobs={jobs}
+        status={selectedStatus?.status || 'total'}
+        title={selectedStatus?.title || 'All'}
       />
     </div>
   );
