@@ -86,10 +86,7 @@ export function Dashboard({ jobs }: DashboardProps) {
           onSearchChange={setSearchQuery}
         />
 
-        <ActivitiesSection 
-          stickyNote=""
-          setStickyNote={() => {}}
-        />
+        <ActivitiesSection />
       </div>
 
       <JobDetails
