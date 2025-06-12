@@ -27,7 +27,7 @@ import { format, subDays } from "date-fns";
 
 interface ModernDashboardProps {
   jobs: Job[];
-  onViewChange?: (view: string) => void;
+  onViewChange?: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management") => void;
 }
 
 export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
