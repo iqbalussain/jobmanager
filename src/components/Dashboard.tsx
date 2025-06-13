@@ -20,7 +20,7 @@ export function Dashboard({ jobs }: DashboardProps) {
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<{
-    status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active';
+    status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active';
     title: string;
   } | null>(null);
 
@@ -29,15 +29,16 @@ export function Dashboard({ jobs }: DashboardProps) {
   const stats = {
     total: jobs.length,
     pending: jobs.filter(job => job.status === "pending").length,
-    inProgress: jobs.filter(job => job.status === "in-progress").length,
+    working: jobs.filter(job => job.status === "working").length,
     designing: jobs.filter(job => job.status === "designing").length,
     completed: jobs.filter(job => job.status === "completed").length,
     invoiced: jobs.filter(job => job.status === "invoiced").length
   };
 
+  // Gauge data for pie chart
   const gaugeData = [
     { name: 'Pending', value: stats.pending, color: '#3B82F6' },
-    { name: 'In Progress', value: stats.inProgress, color: '#F59E0B' },
+    { name: 'Working', value: stats.working, color: '#F59E0B' },
     { name: 'Designing', value: stats.designing, color: '#8B5CF6' },
     { name: 'Completed', value: stats.completed, color: '#10B981' },
     { name: 'Invoiced', value: stats.invoiced, color: '#059669' }
@@ -54,7 +55,7 @@ export function Dashboard({ jobs }: DashboardProps) {
     setIsJobDetailsOpen(true);
   };
 
-  const handleStatusClick = (status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active', title: string) => {
+  const handleStatusClick = (status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active', title: string) => {
     setSelectedStatus({ status, title });
     setStatusModalOpen(true);
   };
@@ -82,10 +83,12 @@ export function Dashboard({ jobs }: DashboardProps) {
           searchQuery={searchQuery}
           filteredJobs={filteredJobs}
           onViewDetails={handleViewDetails}
-          onSearchChange={setSearchQuery}
         />
 
-        <ActivitiesSection />
+        <ActivitiesSection 
+          stickyNote=""
+          setStickyNote={() => {}}
+        />
       </div>
 
       <JobDetails

@@ -52,4 +52,5 @@ export function useJobOrders() {
   };
 }
 
+// Re-export types for backward compatibility
 export type { Customer, Designer, Salesman, JobTitle, JobOrder } from '@/types/jobOrder';

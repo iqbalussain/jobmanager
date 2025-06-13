@@ -1,4 +1,5 @@
 
+import * as React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,7 +12,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function App() {
+const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -25,6 +26,7 @@ function App() {
                   <Index />
                 </ProtectedRoute>
               } />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
@@ -32,6 +34,6 @@ function App() {
       </AuthProvider>
     </QueryClientProvider>
   );
-}
+};
 
 export default App;

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ModernDashboard } from "@/components/ModernDashboard";
@@ -10,7 +11,7 @@ import { AdminManagement } from "@/components/AdminManagement";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
 
-export type JobStatus = "pending" | "in-progress" | "completed" | "cancelled" | "designing" | "finished" | "invoiced";
+export type JobStatus = "pending" | "working" | "completed" | "cancelled" | "designing" | "finished" | "invoiced";
 
 export interface Job {
   id: string;
@@ -21,7 +22,7 @@ export interface Job {
   designer?: string;
   salesman?: string;
   priority: 'low' | 'medium' | 'high';
-  status: 'pending' | 'in-progress' | 'completed' | 'cancelled' | 'designing' | 'finished' | 'invoiced';
+  status: 'pending' | 'working' | 'completed' | 'cancelled' | 'designing' | 'finished' | 'invoiced';
   dueDate: string;
   estimatedHours: number;
   createdAt: string;
