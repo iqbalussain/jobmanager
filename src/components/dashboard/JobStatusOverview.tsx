@@ -1,13 +1,14 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { 
-  Briefcase, 
-  Clock, 
-  CheckCircle, 
-  Activity,
-  Palette,
-  DollarSign,
-  XCircle
+  Briefcase,
+  Clock,
+  Play,
+  Pencil,
+  CheckCircle,
+  FileText,
+  XCircle,
+  Users,
 } from "lucide-react";
 
 interface JobStats {
@@ -26,97 +27,99 @@ interface JobStatusOverviewProps {
 }
 
 export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewProps) {
+  const cards = [
+    {
+      key: "total",
+      label: "Total Jobs",
+      icon: <Briefcase className="w-8 h-8 text-white/80 mb-2" />,
+      value: stats.total,
+      from: "from-white/10",
+      to: "to-white/20",
+    },
+    {
+      key: "pending",
+      label: "Pending",
+      icon: <Clock className="w-8 h-8 text-yellow-300 mb-2" />,
+      value: stats.pending,
+      from: "from-yellow-500/20",
+      to: "to-yellow-500/30",
+    },
+    {
+      key: "inProgress",
+      label: "In Progress",
+      icon: <Play className="w-8 h-8 text-blue-300 mb-2" />,
+      value: stats.inProgress,
+      from: "from-blue-500/20",
+      to: "to-blue-500/30",
+    },
+    {
+      key: "designing",
+      label: "Designing",
+      icon: <Pencil className="w-8 h-8 text-pink-300 mb-2" />,
+      value: stats.designing,
+      from: "from-pink-500/20",
+      to: "to-pink-500/30",
+    },
+    {
+      key: "completed",
+      label: "Completed",
+      icon: <CheckCircle className="w-8 h-8 text-green-300 mb-2" />,
+      value: stats.completed,
+      from: "from-green-500/20",
+      to: "to-green-500/30",
+    },
+    {
+      key: "invoiced",
+      label: "Invoiced",
+      icon: <FileText className="w-8 h-8 text-purple-300 mb-2" />,
+      value: stats.invoiced,
+      from: "from-purple-500/20",
+      to: "to-purple-500/30",
+    },
+    {
+      key: "cancelled",
+      label: "Cancelled",
+      icon: <XCircle className="w-8 h-8 text-red-300 mb-2" />,
+      value: stats.cancelled,
+      from: "from-red-500/20",
+      to: "to-red-500/30",
+    },
+    {
+      key: "teamMembers",
+      label: "Team Members",
+      icon: <Users className="w-8 h-8 text-cyan-300 mb-2" />,
+      value: stats.teamMembers,
+      from: "from-cyan-500/20",
+      to: "to-cyan-500/30",
+    },
+  ];
+
   return (
-    <div className="bg-white rounded-2xl shadow-xl border-0 p-6 h-full">
-      <div className="grid grid-cols-3 gap-4 h-full">
-        <Card 
-          className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 rounded-xl"
-          onClick={() => onStatusClick('total', 'All')}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6 p-4">
+      {cards.map(({ key, label, icon, value, from, to }) => (
+        <Card
+          key={key}
+          onClick={() => onStatusClick(key, label)}
+          className={`
+            bg-gradient-to-br ${from} ${to}
+            backdrop-blur-md bg-white/20
+            border border-white/30
+            rounded-xl
+            shadow-lg
+            cursor-pointer
+            transform transition-transform duration-300 ease-in-out
+            hover:scale-105 hover:shadow-2xl
+            h-40 w-full
+            flex items-center justify-center
+          `}
         >
-          <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
-            <Briefcase className="w-6 h-6 text-blue-200 mb-2" />
-            <p className="text-blue-100 text-xs font-medium mb-1">Total</p>
-            <p className="text-xl font-bold">{stats.total}</p>
+          <CardContent className="flex flex-col items-center justify-center text-white text-center">
+            {icon}
+            <p className="text-sm font-semibold mb-1 drop-shadow-md">{label}</p>
+            <p className="text-3xl font-bold drop-shadow-lg">{value}</p>
           </CardContent>
         </Card>
-
-        <Card 
-          className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 rounded-xl"
-          onClick={() => onStatusClick('active', 'Active')}
-        >
-          <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
-            <Activity className="w-6 h-6 text-orange-200 mb-2" />
-            <p className="text-orange-100 text-xs font-medium mb-1">Active</p>
-            <p className="text-xl font-bold">{stats.inProgress + stats.designing}</p>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 rounded-xl"
-          onClick={() => onStatusClick('pending', 'Pending')}
-        >
-          <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
-            <Clock className="w-6 h-6 text-purple-200 mb-2" />
-            <p className="text-purple-100 text-xs font-medium mb-1">Pending</p>
-            <p className="text-xl font-bold">{stats.pending}</p>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 rounded-xl"
-          onClick={() => onStatusClick('in-progress', 'In Progress')}
-        >
-          <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
-            <Activity className="w-6 h-6 text-yellow-200 mb-2" />
-            <p className="text-yellow-100 text-xs font-medium mb-1">In Progress</p>
-            <p className="text-xl font-bold">{stats.inProgress}</p>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 rounded-xl"
-          onClick={() => onStatusClick('designing', 'Designing')}
-        >
-          <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
-            <Palette className="w-6 h-6 text-indigo-200 mb-2" />
-            <p className="text-indigo-100 text-xs font-medium mb-1">Designing</p>
-            <p className="text-xl font-bold">{stats.designing}</p>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 rounded-xl"
-          onClick={() => onStatusClick('completed', 'Completed')}
-        >
-          <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
-            <CheckCircle className="w-6 h-6 text-green-200 mb-2" />
-            <p className="text-green-100 text-xs font-medium mb-1">Completed</p>
-            <p className="text-xl font-bold">{stats.completed}</p>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 rounded-xl"
-          onClick={() => onStatusClick('invoiced', 'Invoiced')}
-        >
-          <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
-            <DollarSign className="w-6 h-6 text-emerald-200 mb-2" />
-            <p className="text-emerald-100 text-xs font-medium mb-1">Invoiced</p>
-            <p className="text-xl font-bold">{stats.invoiced}</p>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 rounded-xl"
-          onClick={() => onStatusClick('cancelled', 'Cancelled')}
-        >
-          <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
-            <XCircle className="w-6 h-6 text-red-200 mb-2" />
-            <p className="text-red-100 text-xs font-medium mb-1">Cancelled</p>
-            <p className="text-xl font-bold">{stats.cancelled}</p>
-          </CardContent>
-        </Card>
-      </div>
+      ))}
     </div>
   );
 }
