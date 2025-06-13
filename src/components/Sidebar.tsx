@@ -7,7 +7,10 @@ import {
   Settings,
   User,
   Shield,
-  UsersRound
+  UsersRound,
+  Menu,
+  Home,
+  FileText
 } from "lucide-react";
 import {
   Sidebar as SidebarBase,
@@ -18,38 +21,103 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarHeader
+  SidebarHeader,
+  SidebarTrigger
 } from "@/components/ui/sidebar";
 import { UserProfile } from "@/components/UserProfile";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SidebarProps {
   currentView: string;
   onViewChange: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management") => void;
 }
 
+interface UserProfile {
+  full_name: string;
+  role: string;
+}
+
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const [showProfile, setShowProfile] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, role')
+        .eq('id', user.id)
+        .single();
+
+      if (data) {
+        setUserProfile(data);
+      } else {
+        // Fallback to user metadata if profile doesn't exist
+        setUserProfile({
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          role: 'employee'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      // Fallback to user metadata
+      setUserProfile({
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        role: 'employee'
+      });
+    }
+  };
 
   const menuItems = [
     {
-      title: "Dashboard",
-      icon: LayoutDashboard,
-      onClick: () => onViewChange("dashboard"),
+      title: "Home",
+      icon: Home,
+      onClick: () => {
+        onViewChange("dashboard");
+        setIsMobileMenuOpen(false);
+      },
       isActive: currentView === "dashboard"
     },
     {
-      title: "Job Orders",
-      icon: Briefcase,
-      onClick: () => onViewChange("jobs"),
+      title: "All Files",
+      icon: FileText,
+      onClick: () => {
+        onViewChange("jobs");
+        setIsMobileMenuOpen(false);
+      },
       isActive: currentView === "jobs"
     },
     {
-      title: "Create Job",
-      icon: Plus,
-      onClick: () => onViewChange("create"),
-      isActive: currentView === "create"
+      title: "Settings",
+      icon: Settings,
+      onClick: () => {
+        onViewChange("settings");
+        setIsMobileMenuOpen(false);
+      },
+      isActive: currentView === "settings"
+    },
+    {
+      title: "Calendar",
+      icon: Calendar,
+      onClick: () => {
+        onViewChange("calendar");
+        setIsMobileMenuOpen(false);
+      },
+      isActive: currentView === "calendar"
     }
   ];
 
@@ -57,131 +125,152 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     {
       title: "Job Management",
       icon: Shield,
-      onClick: () => onViewChange("admin"),
+      onClick: () => {
+        onViewChange("admin");
+        setIsMobileMenuOpen(false);
+      },
       isActive: currentView === "admin"
     },
     {
       title: "User Management",
       icon: UsersRound,
-      onClick: () => onViewChange("admin-management"),
+      onClick: () => {
+        onViewChange("admin-management");
+        setIsMobileMenuOpen(false);
+      },
       isActive: currentView === "admin-management"
     }
   ];
 
-  const secondaryMenuItems = [
-    {
-      title: "Calendar",
-      icon: Calendar,
-      onClick: () => onViewChange("calendar"),
-      isActive: currentView === "calendar"
-    },
-    {
-      title: "Settings",
-      icon: Settings,
-      onClick: () => onViewChange("settings"),
-      isActive: currentView === "settings"
-    }
-  ];
-
-  return (
-    <SidebarBase className="border-r border-blue-100 bg-white/80 backdrop-blur-sm">
-      <SidebarHeader className="border-b border-blue-100 p-6">
+  const SidebarContentComponent = () => (
+    <>
+      <SidebarHeader className="border-b border-purple-100 p-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
+            <span className="text-white font-bold text-sm">
+              {userProfile?.full_name?.charAt(0) || 'U'}
+            </span>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-gray-900">JobFlow</h1>
-            <p className="text-sm text-gray-600">Work Order Management</p>
+            <h1 className="text-sm font-bold text-gray-900">
+              {userProfile?.full_name || 'User'}
+            </h1>
+            <p className="text-xs text-gray-600 capitalize">
+              {userProfile?.role || 'Employee'}
+            </p>
           </div>
         </div>
       </SidebarHeader>
       
-      <SidebarContent>
+      <SidebarContent className="px-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-600 font-medium px-3">
-            Main Menu
-          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    onClick={item.onClick}
-                    isActive={item.isActive}
-                    className={`hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ${
-                      item.isActive ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-600' : ''
-                    }`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+              <div className="grid grid-cols-2 gap-2">
+                {menuItems.map((item) => (
+                  <div key={item.title} className="flex flex-col items-center">
+                    <SidebarMenuButton 
+                      onClick={item.onClick}
+                      isActive={item.isActive}
+                      className={`w-full h-16 flex flex-col items-center justify-center gap-1 rounded-lg ${
+                        item.isActive 
+                          ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800' 
+                          : 'hover:bg-gray-50 text-gray-600'
+                      }`}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span className="text-xs font-medium">{item.title}</span>
+                    </SidebarMenuButton>
+                  </div>
+                ))}
+              </div>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-600 font-medium px-3">
+          <SidebarGroupLabel className="text-gray-600 font-medium px-3 mb-2 text-xs">
             Administration
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {adminMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    onClick={item.onClick}
-                    isActive={item.isActive}
-                    className={`hover:bg-red-50 hover:text-red-700 transition-all duration-200 ${
-                      item.isActive ? 'bg-red-100 text-red-700 border-r-2 border-red-600' : ''
-                    }`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {secondaryMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    onClick={item.onClick}
-                    isActive={item.isActive}
-                    className={`hover:bg-gray-100 transition-colors ${
-                      item.isActive ? 'bg-gray-100 text-gray-900' : ''
-                    }`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              <SidebarMenuItem>
-                <Button 
-                  onClick={() => setShowProfile(!showProfile)}
-                  variant="ghost"
-                  className="w-full justify-start p-2 h-auto hover:bg-gray-100"
-                >
-                  <User className="w-5 h-5 mr-2" />
-                  <span>Profile</span>
-                </Button>
-                {showProfile && (
-                  <div className="mt-2 px-2">
-                    <UserProfile />
+            <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+              <div className="grid grid-cols-2 gap-2">
+                {adminMenuItems.map((item) => (
+                  <div key={item.title} className="flex flex-col items-center">
+                    <SidebarMenuButton 
+                      onClick={item.onClick}
+                      isActive={item.isActive}
+                      className={`w-full h-16 flex flex-col items-center justify-center gap-1 rounded-lg ${
+                        item.isActive 
+                          ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700' 
+                          : 'hover:bg-red-50 hover:text-red-600 text-gray-600'
+                      }`}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span className="text-xs font-medium text-center leading-tight">{item.title}</span>
+                    </SidebarMenuButton>
                   </div>
-                )}
-              </SidebarMenuItem>
-            </SidebarMenu>
+                ))}
+              </div>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* User Profile Card */}
+        <div className="mt-6 p-4 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl text-white">
+          <div className="flex items-center mb-3">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">{userProfile?.full_name || 'User'}</p>
+              <p className="text-xs text-purple-200 capitalize">{userProfile?.role || 'Employee'}</p>
+            </div>
+          </div>
+          <Button 
+            onClick={() => setShowProfile(!showProfile)}
+            variant="secondary"
+            size="sm"
+            className="w-full bg-white/20 hover:bg-white/30 text-white border-0 text-xs"
+          >
+            View Profile
+          </Button>
+          {showProfile && (
+            <div className="mt-3">
+              <UserProfile />
+            </div>
+          )}
+        </div>
       </SidebarContent>
-    </SidebarBase>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <SidebarBase className="hidden md:flex border-r border-purple-100 bg-white/95 backdrop-blur-sm w-64">
+        <SidebarContentComponent />
+      </SidebarBase>
+
+      {/* Mobile Menu */}
+      <div className="md:hidden">
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="fixed top-4 left-4 z-50 bg-white/90 backdrop-blur-sm border-purple-200 hover:bg-purple-50"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-64">
+            <div className="h-full bg-white/95 backdrop-blur-sm">
+              <SidebarContentComponent />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
   );
 }
