@@ -30,8 +30,8 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
   const cards = [
     {
       key: "total",
-      label: "Total"
-      icon: <Briefcase className="w-8 h-8 text-white/80 mb-2" />,
+      label: "Total",
+      icon: <Clock className="w-8 h-8 text-yellow-300 mb-2" />,
       value: stats.total,
       from: "from-white/10",
       to: "to-white/20",
