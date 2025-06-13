@@ -30,8 +30,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
   const cards = [
     {
       key: "total",
-      label: "Total Jobs",
-      icon: <Briefcase className="w-8 h-8 text-white/80 mb-2" />,
+      icon: <Briefcase className="w-8 h-8 text-white/80 mb-2" "Total Jobs" />,
       value: stats.total,
       from: "from-white/10",
       to: "to-white/20",
@@ -95,7 +94,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 p-4">
       {cards.map(({ key, label, icon, value, from, to }) => (
         <Card
           key={key}
@@ -109,7 +108,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
             cursor-pointer
             transform transition-transform duration-300 ease-in-out
             hover:scale-105 hover:shadow-2xl
-            h-20 w-full
+            h-40 w-full
             flex items-center justify-center
           `}
         >
