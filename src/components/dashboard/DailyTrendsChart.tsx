@@ -19,11 +19,11 @@ export function DailyTrendsChart({ dailyJobData, isLoading }: DailyTrendsChartPr
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className flex items-center justify-center">
+          <div className="flex items-center justify-center">
             <div className="text-white">Loading chart data...</div>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height=100%">
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={dailyJobData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#8B5CF6" />
               <XAxis dataKey="day" stroke="#E5E7EB" />
