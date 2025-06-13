@@ -13,7 +13,7 @@ import {
 interface JobStats {
   total: number;
   pending: number;
-  working: number;
+  inProgress: number;
   designing: number;
   completed: number;
   invoiced: number;
@@ -22,7 +22,7 @@ interface JobStats {
 
 interface JobStatusOverviewProps {
   stats: JobStats;
-  onStatusClick: (status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', title: string) => void;
+  onStatusClick: (status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', title: string) => void;
 }
 
 export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewProps) {
@@ -47,7 +47,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
           <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
             <Activity className="w-6 h-6 text-orange-200 mb-2" />
             <p className="text-orange-100 text-xs font-medium mb-1">Active</p>
-            <p className="text-xl font-bold">{stats.working + stats.designing}</p>
+            <p className="text-xl font-bold">{stats.inProgress + stats.designing}</p>
           </CardContent>
         </Card>
 
@@ -64,12 +64,12 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
 
         <Card 
           className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 rounded-xl"
-          onClick={() => onStatusClick('working', 'Working')}
+          onClick={() => onStatusClick('in-progress', 'In Progress')}
         >
           <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
             <Activity className="w-6 h-6 text-yellow-200 mb-2" />
-            <p className="text-yellow-100 text-xs font-medium mb-1">Working</p>
-            <p className="text-xl font-bold">{stats.working}</p>
+            <p className="text-yellow-100 text-xs font-medium mb-1">In Progress</p>
+            <p className="text-xl font-bold">{stats.inProgress}</p>
           </CardContent>
         </Card>
 

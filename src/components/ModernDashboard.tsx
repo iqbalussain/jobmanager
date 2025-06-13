@@ -25,7 +25,7 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<{
-    status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled';
+    status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled';
     title: string;
   } | null>(null);
 
@@ -34,7 +34,7 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
   const stats = {
     total: jobs.length,
     pending: jobs.filter(job => job.status === "pending").length,
-    working: jobs.filter(job => job.status === "working").length,
+    inProgress: jobs.filter(job => job.status === "in-progress").length,
     designing: jobs.filter(job => job.status === "designing").length,
     completed: jobs.filter(job => job.status === "completed").length,
     invoiced: jobs.filter(job => job.status === "invoiced").length,
@@ -52,7 +52,7 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
     setIsJobDetailsOpen(true);
   };
 
-  const handleStatusClick = (status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', title: string) => {
+  const handleStatusClick = (status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', title: string) => {
     setSelectedStatus({ status, title });
     setStatusModalOpen(true);
   };

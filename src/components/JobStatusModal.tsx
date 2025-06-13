@@ -19,7 +19,7 @@ export function JobStatusModal({ isOpen, onClose, jobs, status, title }: JobStat
       case 'total':
         return jobs;
       case 'active':
-        return jobs.filter(job => job.status === 'working' || job.status === 'designing');
+        return jobs.filter(job => job.status === 'in-progress' || job.status === 'designing');
       default:
         return jobs.filter(job => job.status === status);
     }
@@ -31,7 +31,7 @@ export function JobStatusModal({ isOpen, onClose, jobs, status, title }: JobStat
     switch (status) {
       case 'pending':
         return 'bg-blue-100 text-blue-800';
-      case 'working':
+      case 'in-progress':
         return 'bg-orange-100 text-orange-800';
       case 'designing':
         return 'bg-purple-100 text-purple-800';
@@ -78,7 +78,7 @@ export function JobStatusModal({ isOpen, onClose, jobs, status, title }: JobStat
                     <TableCell>{job.assignee || 'Unassigned'}</TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(job.status)}>
-                        {job.status}
+                        {job.status === 'in-progress' ? 'In Progress' : job.status}
                       </Badge>
                     </TableCell>
                     <TableCell>{job.dueDate}</TableCell>
