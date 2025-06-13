@@ -30,7 +30,7 @@ export function InvoiceNumberSection({
         <p className="text-xs text-blue-700">
           {canEditInvoice 
             ? "This will appear at the top of the exported PDF and be saved to the job order." 
-            : "Only authorized users (Admin) can edit invoice numbers."
+            : "Only authorized users (Admin, Manager, Job Order Manager) can edit invoice numbers."
           }
         </p>
       </div>

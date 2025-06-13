@@ -1,429 +1,355 @@
 
-import { useState } from "react";
-import { Job } from "@/pages/Index";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { format, isSameDay } from "date-fns";
+import { Progress } from "@/components/ui/progress";
 import { 
-  MessageSquare, 
-  Send, 
-  Users,
+  Clock, 
+  MapPin, 
+  MessageCircle, 
+  TrendingUp, 
+  Users, 
+  CheckCircle,
+  AlertCircle,
   Calendar as CalendarIcon,
-  ArrowLeft,
-  Search,
-  Plus,
-  Settings,
-  Image,
-  Paperclip,
-  Phone,
-  Video,
-  MoreVertical,
-  Check,
-  CheckCheck
+  BarChart3
 } from "lucide-react";
-import { useUsers } from "@/hooks/useUsers";
+import { useState } from "react";
+import { Job } from "@/pages/Index";
+import { JobChat } from "@/components/JobChat";
 
 interface CalendarViewProps {
   jobs: Job[];
 }
 
 export function CalendarView({ jobs }: CalendarViewProps) {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [showChat, setShowChat] = useState(false);
-  const [selectedChatUser, setSelectedChatUser] = useState<string | null>(null);
-  const [chatMessage, setChatMessage] = useState("");
-  const [searchUsers, setSearchUsers] = useState("");
-  const [searchJobs, setSearchJobs] = useState("");
-  const [onlineUsers] = useState<string[]>(['user1', 'user2', 'user3']);
-  const [chatMessages, setChatMessages] = useState<Array<{
-    id: string, 
-    user: string, 
-    message: string, 
-    time: string, 
-    avatar: string,
-    userId: string,
-    status: 'sent' | 'delivered' | 'seen',
-    type: 'text' | 'image' | 'file'
-  }>>([]);
-  const [isTyping, setIsTyping] = useState(false);
-
-  const { users, isLoading: usersLoading } = useUsers();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedJobForChat, setSelectedJobForChat] = useState<Job | null>(null);
 
   // Get jobs for the selected date
-  const jobsForDate = jobs.filter(job => {
-    const jobDate = new Date(job.dueDate);
-    return isSameDay(jobDate, selectedDate);
-  });
-
-  // Get dates that have jobs
-  const datesWithJobs = jobs.map(job => new Date(job.dueDate));
-
-  // Filter jobs based on search
-  const filteredJobs = jobs.filter(job =>
-    job.title.toLowerCase().includes(searchJobs.toLowerCase()) ||
-    job.customer.toLowerCase().includes(searchJobs.toLowerCase()) ||
-    job.jobOrderNumber.toLowerCase().includes(searchJobs.toLowerCase())
-  );
-
-  const getInitials = (name: string | null) => {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const getJobsForDate = (date: Date) => {
+    if (!date) return [];
+    const dateString = date.toISOString().split('T')[0];
+    return jobs.filter(job => {
+      const jobDate = job.dueDate.includes('T') 
+        ? job.dueDate.split('T')[0] 
+        : job.dueDate;
+      return jobDate === dateString;
+    });
   };
 
-  const isUserOnline = (userId: string) => onlineUsers.includes(userId);
+  const selectedDateJobs = selectedDate ? getJobsForDate(selectedDate) : [];
 
-  const filteredUsers = users.filter(user => 
-    user.full_name?.toLowerCase().includes(searchUsers.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchUsers.toLowerCase())
-  );
+  // Analytics calculations
+  const totalJobs = jobs.length;
+  const completedJobs = jobs.filter(job => job.status === 'completed' || job.status === 'finished').length;
+  const inProgressJobs = jobs.filter(job => job.status === 'in-progress' || job.status === 'designing').length;
+  const overdueJobs = jobs.filter(job => {
+    const dueDate = new Date(job.dueDate);
+    const today = new Date();
+    return dueDate < today && job.status !== 'completed' && job.status !== 'finished';
+  }).length;
 
-  const handleUserClick = (userId: string) => {
-    setSelectedChatUser(userId);
-    setShowChat(true);
-    // Load messages for this user
-    setChatMessages([
-      {
-        id: '1',
-        user: users.find(u => u.id === userId)?.full_name || 'User',
-        message: 'Hey! Ready for today\'s meetings?',
-        time: '10:30 AM',
-        avatar: getInitials(users.find(u => u.id === userId)?.full_name),
-        userId: userId,
-        status: 'seen',
-        type: 'text'
-      }
-    ]);
+  const completionRate = totalJobs > 0 ? Math.round((completedJobs / totalJobs) * 100) : 0;
+
+  // Upcoming deadlines (next 7 days)
+  const getUpcomingDeadlines = () => {
+    const today = new Date();
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+    return jobs.filter(job => {
+      const dueDate = new Date(job.dueDate);
+      return dueDate >= today && dueDate <= nextWeek && job.status !== 'completed' && job.status !== 'finished';
+    }).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
   };
 
-  const handleSendMessage = () => {
-    if (chatMessage.trim() && selectedChatUser) {
-      const newMessage = {
-        id: Date.now().toString(),
-        user: 'You',
-        message: chatMessage.trim(),
-        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-        avatar: 'Y',
-        userId: 'you',
-        status: 'sent' as const,
-        type: 'text' as const
-      };
-      
-      setChatMessages([...chatMessages, newMessage]);
-      setChatMessage("");
-      
-      // Simulate message status updates
-      setTimeout(() => {
-        setChatMessages(prev => prev.map(msg => 
-          msg.id === newMessage.id ? {...msg, status: 'delivered'} : msg
-        ));
-      }, 1000);
-      
-      setTimeout(() => {
-        setChatMessages(prev => prev.map(msg => 
-          msg.id === newMessage.id ? {...msg, status: 'seen'} : msg
-        ));
-      }, 2000);
+  const upcomingDeadlines = getUpcomingDeadlines();
+
+  // Priority distribution
+  const getPriorityStats = () => {
+    const highPriority = jobs.filter(job => job.priority === 'high').length;
+    const mediumPriority = jobs.filter(job => job.priority === 'medium').length;
+    const lowPriority = jobs.filter(job => job.priority === 'low').length;
+    
+    return { high: highPriority, medium: mediumPriority, low: lowPriority };
+  };
+
+  const priorityStats = getPriorityStats();
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const getCurrentChatMessages = () => {
-    if (!selectedChatUser) return [];
-    return chatMessages.filter(msg => msg.userId === selectedChatUser || msg.userId === 'you');
-  };
-
-  const getCurrentChatUser = () => {
-    if (!selectedChatUser) return null;
-    return users.find(u => u.id === selectedChatUser);
-  };
-
-  const getStatusIcon = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'sent': return <Check className="w-3 h-3 text-gray-400" />;
-      case 'delivered': return <CheckCheck className="w-3 h-3 text-gray-400" />;
-      case 'seen': return <CheckCheck className="w-3 h-3 text-blue-500" />;
-      default: return null;
+      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'finished': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'in-progress': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'designing': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'pending': return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  // Create date modifiers to highlight dates with jobs
+  const getDateModifiers = () => {
+    const datesWithJobs = jobs.map(job => {
+      const jobDate = job.dueDate.includes('T') 
+        ? job.dueDate.split('T')[0] 
+        : job.dueDate;
+      return new Date(jobDate);
+    });
+    
+    return {
+      hasJobs: datesWithJobs
+    };
   };
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Calendar & Messenger</h1>
-        <p className="text-gray-600">View job schedules and communicate with your team</p>
+        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <CalendarIcon className="w-8 h-8 text-blue-600" />
+          Project Dashboard
+        </h1>
+        <p className="text-gray-600 mt-2">View schedules, analytics, and manage deadlines</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Calendar & Jobs Section */}
-        <div className="space-y-6">
-          {/* Calendar */}
-          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-blue-600" />
-                Job Calendar
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                modifiers={{
-                  hasJobs: datesWithJobs
-                }}
-                modifiersStyles={{
-                  hasJobs: { backgroundColor: '#dbeafe', fontWeight: 'bold' }
-                }}
-                className="rounded-md border"
-              />
-              
-              {/* Show jobs for selected date */}
-              <div className="mt-4">
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Jobs for {format(selectedDate, "MMMM d, yyyy")}
-                </h3>
-                {jobsForDate.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No jobs scheduled for this date</p>
-                ) : (
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {jobsForDate.map((job) => (
-                      <div key={job.id} className="p-2 bg-gray-50 rounded text-sm">
-                        <div className="font-medium truncate">{job.title}</div>
-                        <div className="text-gray-600 text-xs">{job.customer}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+      {/* Analytics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Jobs</p>
+                <p className="text-2xl font-bold text-gray-900">{totalJobs}</p>
               </div>
-            </CardContent>
-          </Card>
+              <BarChart3 className="w-8 h-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Scrollable Job List */}
-          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5 text-blue-600" />
-                  All Jobs ({jobs.length})
-                </span>
-              </CardTitle>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search jobs..."
-                  value={searchJobs}
-                  onChange={(e) => setSearchJobs(e.target.value)}
-                  className="pl-10"
-                />
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-2xl font-bold text-green-600">{completedJobs}</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-64">
-                <div className="space-y-2">
-                  {filteredJobs.map((job) => (
-                    <div key={job.id} className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-sm truncate">{job.title}</span>
-                        <Badge variant={job.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
-                          {job.status}
-                        </Badge>
-                      </div>
-                      <div className="text-xs text-gray-600 truncate">{job.customer}</div>
-                      <div className="text-xs text-gray-500">Due: {job.dueDate}</div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Enhanced WhatsApp-style Chat */}
-        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-          <CardHeader className="border-b">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">In Progress</p>
+                <p className="text-2xl font-bold text-blue-600">{inProgressJobs}</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Overdue</p>
+                <p className="text-2xl font-bold text-red-600">{overdueJobs}</p>
+              </div>
+              <AlertCircle className="w-8 h-8 text-red-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Calendar */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {showChat && selectedChatUser ? (
-                <>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setShowChat(false)}
-                    className="p-1"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback className="text-xs bg-blue-500 text-white">
-                      {getInitials(getCurrentChatUser()?.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{getCurrentChatUser()?.full_name}</span>
-                      {isUserOnline(selectedChatUser) && (
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      )}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {isUserOnline(selectedChatUser) ? 'Online' : 'Last seen recently'}
-                      {isTyping && <span className="ml-2 text-blue-500">typing...</span>}
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="p-2">
-                      <Phone className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="p-2">
-                      <Video className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="p-2">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <MessageSquare className="w-5 h-5 text-blue-600" />
-                  WhatsApp-style Messenger
-                  <div className="flex gap-2 ml-auto">
-                    <Button variant="ghost" size="sm" className="p-2">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="p-2">
-                      <Settings className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </>
-              )}
+              <CalendarIcon className="w-5 h-5" />
+              Schedule
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-96 p-0">
-            {!showChat ? (
-              // User List with enhanced features
-              <div className="h-full flex flex-col">
-                {/* Search */}
-                <div className="p-4 border-b">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      placeholder="Search conversations..."
-                      value={searchUsers}
-                      onChange={(e) => setSearchUsers(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
+          <CardContent>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="rounded-md border"
+              modifiers={getDateModifiers()}
+              modifiersStyles={{
+                hasJobs: { 
+                  backgroundColor: '#dbeafe', 
+                  color: '#1e40af',
+                  fontWeight: 'bold'
+                }
+              }}
+            />
+            <div className="mt-4 text-sm text-gray-600 space-y-1">
+              <p>• Dates with jobs are highlighted in blue</p>
+              <p>• Click a date to see scheduled jobs</p>
+            </div>
+          </CardContent>
+        </Card>
 
-                {/* Online Status */}
-                <div className="p-4 border-b bg-gray-50">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-gray-600">{onlineUsers.length} contacts online</span>
-                  </div>
-                </div>
-
-                {/* Users List */}
-                <ScrollArea className="flex-1">
-                  <div className="space-y-1">
-                    {usersLoading ? (
-                      <div className="text-center py-4 text-gray-500">Loading conversations...</div>
-                    ) : (
-                      filteredUsers.map((user) => (
-                        <div 
-                          key={user.id}
-                          className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100"
-                          onClick={() => handleUserClick(user.id)}
-                        >
-                          <div className="relative">
-                            <Avatar className="w-12 h-12">
-                              <AvatarFallback className="text-sm bg-blue-500 text-white">
-                                {getInitials(user.full_name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            {isUserOnline(user.id) && (
-                              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium text-gray-900 truncate">{user.full_name || user.email.split('@')[0]}</span>
-                              <span className="text-xs text-gray-500">2:30 PM</span>
-                            </div>
-                            <p className="text-sm text-gray-600 truncate">Click to start conversation...</p>
-                          </div>
-                          {Math.random() > 0.5 && (
-                            <Badge variant="default" className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center p-0">
-                              {Math.floor(Math.random() * 5) + 1}
-                            </Badge>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </ScrollArea>
+        {/* Selected Date Jobs & Progress */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Jobs for {selectedDate?.toLocaleDateString() || 'Selected Date'}</span>
+              <Badge variant="outline" className="ml-2">
+                {selectedDateJobs.length} jobs
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {selectedDateJobs.length === 0 ? (
+              <div className="text-center py-8">
+                <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No jobs scheduled for this date</p>
+                <p className="text-sm text-gray-400 mt-1">Select a highlighted date to see scheduled jobs</p>
               </div>
             ) : (
-              // Enhanced Chat Messages
-              <div className="flex flex-col h-full">
-                <ScrollArea className="flex-1 p-4 bg-gray-50">
-                  <div className="space-y-3">
-                    {getCurrentChatMessages().map((msg) => (
-                      <div key={msg.id} className={`flex ${msg.userId === 'you' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-xs lg:max-w-md relative ${
-                          msg.userId === 'you' 
-                            ? 'bg-blue-500 text-white rounded-l-2xl rounded-tr-2xl rounded-br-md' 
-                            : 'bg-white border shadow-sm rounded-r-2xl rounded-tl-2xl rounded-bl-md'
-                        } px-4 py-2`}>
-                          <p className={`text-sm ${msg.userId === 'you' ? 'text-white' : 'text-gray-900'}`}>
-                            {msg.message}
-                          </p>
-                          <div className={`flex items-center gap-1 text-xs mt-1 ${
-                            msg.userId === 'you' ? 'text-blue-200 justify-end' : 'text-gray-500'
-                          }`}>
-                            <span>{msg.time}</span>
-                            {msg.userId === 'you' && getStatusIcon(msg.status)}
-                          </div>
+              <div className="space-y-3">
+                {selectedDateJobs.map((job) => (
+                  <div key={job.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-gray-900">{job.title}</h3>
+                      <div className="flex gap-2">
+                        <Badge className={getPriorityColor(job.priority)}>
+                          {job.priority}
+                        </Badge>
+                        <Badge className={getStatusColor(job.status)}>
+                          {job.status.replace('-', ' ')}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          <span>{job.customer}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          <span>{job.estimatedHours}h</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="w-4 h-4" />
+                          <span>{job.assignee || 'Unassigned'}</span>
                         </div>
                       </div>
-                    ))}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSelectedJobForChat(job)}
+                        className="ml-2"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-1" />
+                        Chat
+                      </Button>
+                    </div>
                   </div>
-                </ScrollArea>
-                
-                {/* Enhanced Chat Input */}
-                <div className="p-4 border-t bg-white">
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" className="p-2">
-                      <Paperclip className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="p-2">
-                      <Image className="w-4 h-4" />
-                    </Button>
-                    <Input
-                      placeholder="Type a message..."
-                      value={chatMessage}
-                      onChange={(e) => setChatMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                      className="flex-1 rounded-full border-gray-300"
-                    />
-                    <Button 
-                      onClick={handleSendMessage} 
-                      disabled={!chatMessage.trim()}
-                      className="bg-blue-500 hover:bg-blue-600 rounded-full w-10 h-10 p-0"
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+                ))}
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Performance & Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Completion Progress */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              Project Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium">Overall Completion</span>
+                <span className="text-sm text-gray-600">{completionRate}%</span>
+              </div>
+              <Progress value={completionRate} className="h-2" />
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 pt-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600">{completedJobs}</p>
+                <p className="text-xs text-gray-600">Completed</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600">{inProgressJobs}</p>
+                <p className="text-xs text-gray-600">In Progress</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-red-600">{overdueJobs}</p>
+                <p className="text-xs text-gray-600">Overdue</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Upcoming Deadlines */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Upcoming Deadlines
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {upcomingDeadlines.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No upcoming deadlines</p>
+            ) : (
+              <div className="space-y-3">
+                {upcomingDeadlines.slice(0, 5).map((job) => {
+                  const daysUntilDue = Math.ceil((new Date(job.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <div key={job.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">{job.title}</p>
+                        <p className="text-xs text-gray-600">{job.customer}</p>
+                      </div>
+                      <div className="text-right">
+                        <Badge 
+                          variant="outline" 
+                          className={daysUntilDue <= 1 ? 'border-red-300 text-red-700' : 'border-yellow-300 text-yellow-700'}
+                        >
+                          {daysUntilDue === 0 ? 'Today' : daysUntilDue === 1 ? 'Tomorrow' : `${daysUntilDue} days`}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {selectedJobForChat && (
+        <JobChat
+          job={selectedJobForChat}
+          isOpen={!!selectedJobForChat}
+          onClose={() => setSelectedJobForChat(null)}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
-import { ModernDashboard } from "@/components/ModernDashboard";
+import { Dashboard } from "@/components/Dashboard";
 import { JobForm } from "@/components/JobForm";
 import { JobList } from "@/components/JobList";
 import { CalendarView } from "@/components/CalendarView";
@@ -11,7 +10,7 @@ import { AdminManagement } from "@/components/AdminManagement";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
 
-export type JobStatus = "pending" | "working" | "completed" | "cancelled" | "designing" | "finished" | "invoiced";
+export type JobStatus = "pending" | "in-progress" | "completed" | "cancelled" | "designing" | "finished" | "invoiced";
 
 export interface Job {
   id: string;
@@ -22,7 +21,7 @@ export interface Job {
   designer?: string;
   salesman?: string;
   priority: 'low' | 'medium' | 'high';
-  status: 'pending' | 'working' | 'completed' | 'cancelled' | 'designing' | 'finished' | 'invoiced';
+  status: 'pending' | 'in-progress' | 'completed' | 'cancelled' | 'designing' | 'finished' | 'invoiced';
   dueDate: string;
   estimatedHours: number;
   createdAt: string;
@@ -69,7 +68,7 @@ const Index = () => {
 
     switch (currentView) {
       case "dashboard":
-        return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />;
+        return <Dashboard jobs={transformedJobs} />;
       case "jobs":
         return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
       case "create":
@@ -83,7 +82,7 @@ const Index = () => {
       case "admin-management":
         return <AdminManagement />;
       default:
-        return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />;
+        return <Dashboard jobs={transformedJobs} />;
     }
   };
 
@@ -91,7 +90,7 @@ const Index = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50">
         <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-        <main className="flex-1">
+        <main className="flex-1 p-6">
           {renderContent()}
         </main>
       </div>
