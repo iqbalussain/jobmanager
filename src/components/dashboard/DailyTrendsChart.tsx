@@ -10,7 +10,7 @@ interface DailyTrendsChartProps {
 
 export function DailyTrendsChart({ dailyJobData, isLoading }: DailyTrendsChartProps) {
   return (
-    <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white h-full">
+    <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <Activity className="w-5 h-5 text-yellow-400" />
