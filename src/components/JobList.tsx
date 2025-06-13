@@ -26,14 +26,14 @@ interface JobListProps {
 
 export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "working" | "designing" | "completed" | "invoiced" | "cancelled">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "in-progress" | "designing" | "completed" | "invoiced" | "cancelled">("all");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "working": return "bg-blue-100 text-blue-800 border-blue-300";
+      case "in-progress": return "bg-blue-100 text-blue-800 border-blue-300";
       case "designing": return "bg-purple-100 text-purple-800 border-purple-300";
       case "completed": return "bg-green-100 text-green-800 border-green-300";
       case "invoiced": return "bg-emerald-100 text-emerald-800 border-emerald-300";
@@ -44,7 +44,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
 
   const getStatusOptions = () => [
     { value: "pending", label: "Pending" },
-    { value: "working", label: "Working" },
+    { value: "in-progress", label: "In Progress" },
     { value: "designing", label: "Designing" },
     { value: "completed", label: "Completed" },
     { value: "invoiced", label: "Invoiced" },
@@ -76,7 +76,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   const stats = {
     total: jobs.length,
     pending: jobs.filter(job => job.status === "pending").length,
-    working: jobs.filter(job => job.status === "working").length,
+    inProgress: jobs.filter(job => job.status === "in-progress").length,
     designing: jobs.filter(job => job.status === "designing").length,
     completed: jobs.filter(job => job.status === "completed").length,
     invoiced: jobs.filter(job => job.status === "invoiced").length,
@@ -99,7 +99,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
           <Card key={key} className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-gray-900">{value}</div>
-              <div className="text-sm text-gray-600 capitalize">{key}</div>
+              <div className="text-sm text-gray-600 capitalize">{key === 'inProgress' ? 'In Progress' : key}</div>
             </CardContent>
           </Card>
         ))}

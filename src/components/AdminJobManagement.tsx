@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Job, JobStatus } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -165,7 +166,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "working": return "bg-orange-100 text-orange-800 border-orange-200";
+      case "in-progress": return "bg-orange-100 text-orange-800 border-orange-200";
       case "designing": return "bg-purple-100 text-purple-800 border-purple-200";
       case "finished": return "bg-green-100 text-green-800 border-green-200";
       case "completed": return "bg-green-100 text-green-800 border-green-200";
@@ -270,7 +271,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="working">Working</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
                   <SelectItem value="designing">Designing</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="invoiced">Invoiced</SelectItem>
@@ -303,7 +304,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                   <TableCell>{job.salesman}</TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(job.status)}>
-                      {job.status === 'working' ? 'Working' : job.status.replace('-', ' ')}
+                      {job.status === 'in-progress' ? 'In Progress' : job.status.replace('-', ' ')}
                     </Badge>
                   </TableCell>
                   <TableCell>
