@@ -25,6 +25,14 @@ export function JobListHeader({
     { value: "cancelled", label: "Cancelled" }
   ];
 
+  // Wrapper function to validate and handle status filter changes
+  const handleStatusFilterChange = (value: string) => {
+    const validStatuses = ["all", "pending", "in-progress", "designing", "completed", "invoiced", "cancelled"];
+    if (validStatuses.includes(value)) {
+      onStatusFilterChange(value);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -46,7 +54,7 @@ export function JobListHeader({
         </div>
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-gray-500" />
-          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
             <SelectTrigger className="w-40 bg-white/90">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
