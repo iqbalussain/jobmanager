@@ -35,7 +35,6 @@ export function Dashboard({ jobs }: DashboardProps) {
     invoiced: jobs.filter(job => job.status === "invoiced").length
   };
 
-  // Gauge data for pie chart
   const gaugeData = [
     { name: 'Pending', value: stats.pending, color: '#3B82F6' },
     { name: 'In Progress', value: stats.inProgress, color: '#F59E0B' },

@@ -19,7 +19,7 @@ interface ModernDashboardProps {
   onStatusUpdate?: (jobId: string, status: string) => void;
 }
 
-export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDashboardProps) {
+export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -70,7 +70,6 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
 
   return (
     <div className="space-y-8 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
@@ -88,22 +87,17 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
         </div>
       </div>
 
-      {/* Top Row - Daily Trends (60%) + Job Status Overview (40%) */}
       <div className="grid grid-cols-10 gap-6 h-[400px]">
-        {/* Daily Trends Chart - 60% width */}
         <div className="col-span-6">
           <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
         </div>
         
-        {/* Job Status Overview - 40% width */}
         <div className="col-span-4">
           <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
         </div>
       </div>
 
-      {/* Bottom Row - Quick Search (40%) + Recent Activities (40%) + Shortcuts (20%) */}
       <div className="grid grid-cols-10 gap-6 h-[400px]">
-        {/* Quick Search - 40% width */}
         <div className="col-span-4">
           <QuickSearch 
             searchQuery={searchQuery}
@@ -113,25 +107,21 @@ export function ModernDashboard({ jobs, onViewChange, onStatusUpdate }: ModernDa
           />
         </div>
 
-        {/* Recent Activities - 40% width */}
         <div className="col-span-4">
           <ActivitiesSection />
         </div>
 
-        {/* Shortcut Gadgets - 20% width */}
         <div className="col-span-2">
           <ShortcutGadgets onViewChange={onViewChange} />
         </div>
       </div>
 
-      {/* Job Details Modal */}
       <JobDetails
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
         job={selectedJob}
       />
 
-      {/* Job Status Modal */}
       <JobStatusModal
         isOpen={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}
