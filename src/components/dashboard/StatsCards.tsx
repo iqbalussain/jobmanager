@@ -13,12 +13,12 @@ interface StatsCardsProps {
   stats: {
     total: number;
     pending: number;
-    working: number;
+    inProgress: number;
     designing: number;
     completed: number;
     invoiced: number;
   };
-  onStatusClick: (status: 'pending' | 'working' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active', title: string) => void;
+  onStatusClick: (status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active', title: string) => void;
 }
 
 export function StatsCards({ stats, onStatusClick }: StatsCardsProps) {
@@ -48,12 +48,12 @@ export function StatsCards({ stats, onStatusClick }: StatsCardsProps) {
 
       <Card 
         className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg cursor-pointer hover:shadow-xl transition-all aspect-square"
-        onClick={() => onStatusClick('working', 'Working')}
+        onClick={() => onStatusClick('in-progress', 'In Progress')}
       >
         <CardContent className="p-6 flex flex-col items-center justify-center h-full text-center">
           <Activity className="w-8 h-8 text-orange-200 mb-3" />
-          <p className="text-orange-100 text-sm font-medium mb-1">Working</p>
-          <p className="text-3xl font-bold">{stats.working}</p>
+          <p className="text-orange-100 text-sm font-medium mb-1">In Progress</p>
+          <p className="text-3xl font-bold">{stats.inProgress}</p>
         </CardContent>
       </Card>
 
