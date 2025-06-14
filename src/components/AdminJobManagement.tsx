@@ -16,6 +16,10 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AdminJobManagementFilters } from "@/components/admin-management/AdminJobManagementFilters";
+import { AdminJobManagementTable } from "@/components/admin-management/AdminJobManagementTable";
+import { AdminJobManagementRoleGate } from "@/components/admin-management/AdminJobManagementRoleGate";
+import { useAdminJobManagementRoles } from "@/hooks/useAdminJobManagementRoles";
 
 interface AdminJobManagementProps {
   jobs: Job[];
@@ -35,45 +39,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
   const { toast } = useToast();
 
   // --- Role Access Logic ---
-  const [userRoles, setUserRoles] = useState<string[]>([]);
-  const [rolesLoading, setRolesLoading] = useState(true);
-  const [rolesError, setRolesError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      if (!user) {
-        setUserRoles([]);
-        setRolesLoading(false);
-        return;
-      }
-      setRolesLoading(true);
-      setRolesError(null);
-      try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id);
-
-        if (error) {
-          setUserRoles([]);
-          setRolesError("Failed to load roles: " + error.message);
-        } else if (!data) {
-          setUserRoles([]);
-        } else {
-          const roles = data.map((row: { role: string }) => row.role);
-          setUserRoles(roles);
-          console.log("[DEBUG] Fetched user roles:", roles, "for user:", user.id);
-        }
-      } catch (err: any) {
-        setRolesError("Error loading roles: " + (err?.message || err));
-        setUserRoles([]);
-      } finally {
-        setRolesLoading(false);
-      }
-    };
-
-    fetchRoles();
-  }, [user]);
+  const { userRoles, rolesLoading, rolesError } = useAdminJobManagementRoles();
 
   const isAdminOrJobOrderManager =
     userRoles.includes('admin') ||
@@ -211,7 +177,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
     return matchesSalesman && matchesStatus && matchesCustomer && matchesBranch;
   });
 
-  // Get unique values for filter dropdowns
+  // Get unique data for filter dropdowns
   const uniqueSalesmen = [...new Set(jobsWithInvoices.map(job => job.salesman))].filter(Boolean).sort();
   const uniqueCustomers = [...new Set(jobsWithInvoices.map(job => job.customer))].filter(Boolean).sort();
   const uniqueBranches = [...new Set(jobsWithInvoices.map(job => job.branch))].filter(Boolean).sort();
@@ -235,242 +201,150 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Job Management</h1>
-          <p className="text-gray-600">Manage all job orders with admin privileges</p>
-        </div>
-        <div className="flex gap-2">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Job
-          </Button>
-          <Button variant="outline">
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
-          </Button>
-        </div>
-      </div>
-
-      {/* Jobs Filter and Table */}
-      <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-gray-900">
-            <Filter className="w-5 h-5 text-blue-600" />
-            Job Orders Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Filters */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="salesmanFilter">Filter by Salesman</Label>
-              <Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select salesman" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Salesmen</SelectItem>
-                  {uniqueSalesmen.map((salesman) => (
-                    <SelectItem key={salesman} value={salesman}>
-                      {salesman}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="customerFilter">Filter by Customer</Label>
-              <Select value={customerFilter} onValueChange={setCustomerFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Customers</SelectItem>
-                  {uniqueCustomers.map((customer) => (
-                    <SelectItem key={customer} value={customer}>
-                      {customer}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="branchFilter">Filter by Branch</Label>
-              <Select value={branchFilter} onValueChange={setBranchFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select branch" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Branches</SelectItem>
-                  {uniqueBranches.map((branch) => (
-                    <SelectItem key={branch} value={branch}>
-                      {branch}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="statusFilter">Filter by Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="designing">Designing</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="invoiced">Invoiced</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+    <AdminJobManagementRoleGate
+      loading={rolesLoading}
+      error={rolesError}
+      isAllowed={isAdminOrJobOrderManager}
+      userId={user?.id}
+      userRoles={userRoles}
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Job Management</h1>
+            <p className="text-gray-600">Manage all job orders with admin privileges</p>
           </div>
+          <div className="flex gap-2">
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Job
+            </Button>
+            <Button variant="outline">
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </Button>
+          </div>
+        </div>
 
-          {/* Jobs Table */}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Job Order #</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Branch</TableHead>
-                <TableHead>Salesman</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Invoice #</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredJobs.map((job) => (
-                <TableRow key={job.id}>
-                  <TableCell className="font-mono">{job.jobOrderNumber}</TableCell>
-                  <TableCell className="font-medium">{job.title}</TableCell>
-                  <TableCell>{job.customer}</TableCell>
-                  <TableCell>{job.branch || "N/A"}</TableCell>
-                  <TableCell>{job.salesman}</TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(job.status)}>
-                      {job.status === 'in-progress' ? 'In Progress' : job.status.replace('-', ' ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-gray-600">
-                      {job.invoiceNumber || "Not assigned"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleEditJob(job)}
-                    >
-                      Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+        {/* Filters Section */}
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-gray-900">
+              <Filter className="w-5 h-5 text-blue-600" />
+              Job Orders Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AdminJobManagementFilters
+              salesmanFilter={salesmanFilter}
+              setSalesmanFilter={setSalesmanFilter}
+              customerFilter={customerFilter}
+              setCustomerFilter={setCustomerFilter}
+              branchFilter={branchFilter}
+              setBranchFilter={setBranchFilter}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              uniqueSalesmen={uniqueSalesmen}
+              uniqueCustomers={uniqueCustomers}
+              uniqueBranches={uniqueBranches}
+            />
 
-      {/* Job Details Modal */}
-      <JobDetails
-        isOpen={isJobDetailsOpen}
-        onClose={() => {
-          setIsJobDetailsOpen(false);
-          // Refresh data when closing modal to get latest invoice numbers
-          const fetchJobs = async () => {
-            try {
-              const { data, error } = await supabase
-                .from('job_orders')
-                .select(`
-                  *,
-                  customer:customers(id, name),
-                  job_title:job_titles(id, job_title_id)
-                `)
-                .order('created_at', { ascending: false });
-              
-              if (error) throw error;
-              
-              const transformedJobs = await Promise.all(data.map(async (jobOrder) => {
-                let designer = null;
-                let salesman = null;
+            {/* Jobs Table */}
+            <AdminJobManagementTable jobs={filteredJobs} onEdit={handleEditJob} />
+          </CardContent>
+        </Card>
+
+        {/* Job Details Modal */}
+        <JobDetails
+          isOpen={isJobDetailsOpen}
+          onClose={() => {
+            setIsJobDetailsOpen(false);
+            // Refresh data when closing modal to get latest invoice numbers
+            const fetchJobs = async () => {
+              try {
+                const { data, error } = await supabase
+                  .from('job_orders')
+                  .select(`
+                    *,
+                    customer:customers(id, name),
+                    job_title:job_titles(id, job_title_id)
+                  `)
+                  .order('created_at', { ascending: false });
                 
-                if (jobOrder.designer_id) {
-                  const { data: designerData } = await supabase
-                    .from('profiles')
-                    .select('id, full_name, phone')
-                    .eq('id', jobOrder.designer_id)
-                    .single();
+                if (error) throw error;
+                
+                const transformedJobs = await Promise.all(data.map(async (jobOrder) => {
+                  let designer = null;
+                  let salesman = null;
                   
-                  if (designerData) {
-                    designer = {
-                      id: designerData.id,
-                      name: designerData.full_name || 'Unknown Designer',
-                      phone: designerData.phone
-                    };
+                  if (jobOrder.designer_id) {
+                    const { data: designerData } = await supabase
+                      .from('profiles')
+                      .select('id, full_name, phone')
+                      .eq('id', jobOrder.designer_id)
+                      .single();
+                    
+                    if (designerData) {
+                      designer = {
+                        id: designerData.id,
+                        name: designerData.full_name || 'Unknown Designer',
+                        phone: designerData.phone
+                      };
+                    }
                   }
-                }
-                
-                if (jobOrder.salesman_id) {
-                  const { data: salesmanData } = await supabase
-                    .from('profiles')
-                    .select('id, full_name, email, phone')
-                    .eq('id', jobOrder.salesman_id)
-                    .single();
                   
-                  if (salesmanData) {
-                    salesman = {
-                      id: salesmanData.id,
-                      name: salesmanData.full_name || 'Unknown Salesman',
-                      email: salesmanData.email,
-                      phone: salesmanData.phone
-                    };
+                  if (jobOrder.salesman_id) {
+                    const { data: salesmanData } = await supabase
+                      .from('profiles')
+                      .select('id, full_name, email, phone')
+                      .eq('id', jobOrder.salesman_id)
+                      .single();
+                    
+                    if (salesmanData) {
+                      salesman = {
+                        id: salesmanData.id,
+                        name: salesmanData.full_name || 'Unknown Salesman',
+                        email: salesmanData.email,
+                        phone: salesmanData.phone
+                      };
+                    }
                   }
-                }
+                  
+                  // Create the title from available data
+                  const title = jobOrder.job_title?.job_title_id || 
+                               jobOrder.job_order_details || 
+                               `Job Order ${jobOrder.job_order_number}`;
+                  
+                  return {
+                    id: jobOrder.id,
+                    jobOrderNumber: jobOrder.job_order_number,
+                    title: title,
+                    customer: jobOrder.customer?.name || "Unknown Customer",
+                    assignee: jobOrder.assignee || "Unassigned",
+                    priority: jobOrder.priority as "low" | "medium" | "high",
+                    status: jobOrder.status as JobStatus,
+                    dueDate: jobOrder.due_date || new Date().toISOString().split('T')[0],
+                    createdAt: jobOrder.created_at.split('T')[0],
+                    estimatedHours: jobOrder.estimated_hours || 0,
+                    branch: jobOrder.branch || "",
+                    designer: designer?.name || "Unassigned",
+                    salesman: salesman?.name || "Unassigned",
+                    jobOrderDetails: jobOrder.job_order_details || "",
+                    invoiceNumber: jobOrder.invoice_number || ""
+                  };
+                }));
                 
-                // Create the title from available data
-                const title = jobOrder.job_title?.job_title_id || 
-                             jobOrder.job_order_details || 
-                             `Job Order ${jobOrder.job_order_number}`;
-                
-                return {
-                  id: jobOrder.id,
-                  jobOrderNumber: jobOrder.job_order_number,
-                  title: title,
-                  customer: jobOrder.customer?.name || "Unknown Customer",
-                  assignee: jobOrder.assignee || "Unassigned",
-                  priority: jobOrder.priority as "low" | "medium" | "high",
-                  status: jobOrder.status as JobStatus,
-                  dueDate: jobOrder.due_date || new Date().toISOString().split('T')[0],
-                  createdAt: jobOrder.created_at.split('T')[0],
-                  estimatedHours: jobOrder.estimated_hours || 0,
-                  branch: jobOrder.branch || "",
-                  designer: designer?.name || "Unassigned",
-                  salesman: salesman?.name || "Unassigned",
-                  jobOrderDetails: jobOrder.job_order_details || "",
-                  invoiceNumber: jobOrder.invoice_number || ""
-                };
-              }));
-              
-              setJobsWithInvoices(transformedJobs);
-            } catch (error) {
-              console.error('Error refreshing jobs:', error);
-            }
-          };
-          fetchJobs();
-        }}
-        job={selectedJob}
-        isEditMode={isEditMode}
-      />
-    </div>
+                setJobsWithInvoices(transformedJobs);
+              } catch (error) {
+                console.error('Error refreshing jobs:', error);
+              }
+            };
+            fetchJobs();
+          }}
+          job={selectedJob}
+          isEditMode={isEditMode}
+        />
+      </div>
+    </AdminJobManagementRoleGate>
   );
 }
