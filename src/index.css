@@ -301,4 +301,4 @@
   @apply bg-white/20 backdrop-blur-lg;
 }
 
-// for all svg icons using lucide, force to inherit text color with className="text-foreground" or text-[color] in usage
+/* for all svg icons using lucide, force to inherit text color with className="text-foreground" or text-[color] in usage */
