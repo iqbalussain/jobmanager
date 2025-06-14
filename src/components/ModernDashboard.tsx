@@ -69,6 +69,8 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   ];
 
   return (
+    <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 min-h-screen p-6">
+
     <div className="space-y-8 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       <div className="flex items-center justify-between">
         <div>
@@ -129,6 +131,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         status={selectedStatus?.status || 'total'}
         title={selectedStatus?.title || 'All'}
       />
+    </div>
     </div>
   );
 }
