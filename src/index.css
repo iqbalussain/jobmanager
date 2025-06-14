@@ -4,48 +4,48 @@
 @tailwind utilities;
 
 /** 
- * Lovable Royal Elegance Theme — Luxurious Purple and Gold 
+ * Lovable Nature Fresh Theme — Clean Emerald Green and Sky Blue 
  */
 @layer base {
   :root {
-    --background: 240 45% 8%; /* Deep royal purple background */
-    --foreground: 45 100% 95%; /* Bright golden white for text visibility */
-    --card: 240 30% 12%; /* Slightly lighter glass card */
-    --card-foreground: 45 100% 96%; /* Very bright golden white for card text */
-    --primary: 292 69% 42%; /* Royal Purple (#9c27b0) */
-    --primary-foreground: 45 80% 98%; /* Golden white for primary text */
-    --secondary: 45 100% 51%; /* Gold (#ffc107) */
-    --secondary-foreground: 240 80% 15%; /* Dark purple for secondary text */
-    --muted: 240 12% 35%; /* Lighter muted background */
-    --muted-foreground: 45 20% 85%; /* Golden muted text */
-    --accent: 270 100% 70%; /* Bright accent purple */
-    --accent-foreground: 45 84% 98%; /* Golden accent text */
+    --background: 200 45% 8%; /* Deep nature background */
+    --foreground: 120 100% 95%; /* Bright white with green tint for text visibility */
+    --card: 200 30% 12%; /* Slightly lighter glass card */
+    --card-foreground: 120 100% 96%; /* Very bright white for card text */
+    --primary: 122 39% 49%; /* Emerald Green (#4caf50) */
+    --primary-foreground: 120 80% 98%; /* White for primary text */
+    --secondary: 207 90% 54%; /* Sky Blue (#2196f3) */
+    --secondary-foreground: 200 80% 15%; /* Dark blue for secondary text */
+    --muted: 200 12% 35%; /* Lighter muted background */
+    --muted-foreground: 120 20% 85%; /* Green-tinted muted text */
+    --accent: 180 100% 70%; /* Bright accent cyan */
+    --accent-foreground: 120 84% 98%; /* White accent text */
     --destructive: 1 91% 65%;
-    --destructive-foreground: 45 40% 98%;
-    --border: 240 50% 25%; /* Purple-tinted borders */
-    --input: 240 32% 34%;
-    --ring: 292 69% 42%; /* Use royal purple for focus ring */
+    --destructive-foreground: 120 40% 98%;
+    --border: 200 50% 25%; /* Blue-tinted borders */
+    --input: 200 32% 34%;
+    --ring: 122 39% 49%; /* Use emerald green for focus ring */
     --radius: 1.25rem;
   }
 
   .dark {
-    --background: 240 80% 6%;
-    --foreground: 45 100% 95%; /* Golden white */
-    --card: 240 40% 14%;
-    --card-foreground: 45 100% 96%; /* Golden white for card text */
-    --primary: 292 69% 42%; /* Royal Purple */
-    --primary-foreground: 45 80% 98%; /* Golden primary text */
-    --secondary: 45 100% 51%; /* Gold */
-    --secondary-foreground: 240 80% 15%; /* Dark purple secondary text */
-    --muted: 240 10% 40%;
-    --muted-foreground: 45 20% 80%; /* Golden muted text */
-    --accent: 270 100% 70%; /* Bright accent purple */
-    --accent-foreground: 45 40% 98%;
+    --background: 200 80% 6%;
+    --foreground: 120 100% 95%; /* White with green tint */
+    --card: 200 40% 14%;
+    --card-foreground: 120 100% 96%; /* White for card text */
+    --primary: 122 39% 49%; /* Emerald Green */
+    --primary-foreground: 120 80% 98%; /* White primary text */
+    --secondary: 207 90% 54%; /* Sky Blue */
+    --secondary-foreground: 200 80% 15%; /* Dark blue secondary text */
+    --muted: 200 10% 40%;
+    --muted-foreground: 120 20% 80%; /* Green-tinted muted text */
+    --accent: 180 100% 70%; /* Bright accent cyan */
+    --accent-foreground: 120 40% 98%;
     --destructive: 1 87% 49%;
-    --destructive-foreground: 45 40% 98%;
-    --border: 240 12% 25%;
-    --input: 240 32% 38%;
-    --ring: 292 69% 42%;
+    --destructive-foreground: 120 40% 98%;
+    --border: 200 12% 25%;
+    --input: 200 32% 38%;
+    --ring: 122 39% 49%;
     --radius: 1.25rem;
   }
 }
@@ -57,7 +57,7 @@
   html, body {
     @apply transition-colors duration-300;
     min-height: 100vh;
-    background: linear-gradient(135deg, #9c27b0 0%, #663399 40%, #ffc107 80%, #1a0d2e 100%) !important;
+    background: linear-gradient(135deg, #4caf50 0%, #2196f3 40%, #81c784 80%, #0d1f2e 100%) !important;
     color: hsl(var(--foreground));
   }
   
@@ -65,7 +65,7 @@
   h1, h2, h3, h4, h5, h6 {
     color: hsl(var(--foreground));
     text-shadow: 
-      0 0 10px rgba(255, 193, 7, 0.3),
+      0 0 10px rgba(76, 175, 80, 0.3),
       0.5px 0 0 rgba(0, 0, 0, 0.8),
       -0.5px 0 0 rgba(0, 0, 0, 0.8),
       0 0.5px 0 rgba(0, 0, 0, 0.8),
@@ -75,7 +75,7 @@
   p, span, div {
     color: hsl(var(--foreground));
     text-shadow: 
-      0 0 8px rgba(255, 193, 7, 0.2),
+      0 0 8px rgba(76, 175, 80, 0.2),
       0.5px 0 0 rgba(0, 0, 0, 0.6),
       -0.5px 0 0 rgba(0, 0, 0, 0.6),
       0 0.5px 0 rgba(0, 0, 0, 0.6),
@@ -85,7 +85,7 @@
   /* Minimal dark outline for buttons */
   button {
     text-shadow: 
-      0 0 8px rgba(255, 193, 7, 0.4),
+      0 0 8px rgba(76, 175, 80, 0.4),
       0.5px 0 0 rgba(0, 0, 0, 0.8),
       -0.5px 0 0 rgba(0, 0, 0, 0.8),
       0 0.5px 0 rgba(0, 0, 0, 0.8),
@@ -95,7 +95,7 @@
   /* Minimal dark outline for labels */
   label {
     text-shadow: 
-      0 0 8px rgba(255, 193, 7, 0.3),
+      0 0 8px rgba(76, 175, 80, 0.3),
       0.5px 0 0 rgba(0, 0, 0, 0.7),
       -0.5px 0 0 rgba(0, 0, 0, 0.7),
       0 0.5px 0 rgba(0, 0, 0, 0.7),
@@ -103,32 +103,32 @@
   }
 }
 
-/* Enhanced royal glass utility style for transparent, blurred, rounded sections */
+/* Enhanced nature glass utility style for transparent, blurred, rounded sections */
 @layer utilities {
   .glass-neon {
-    @apply bg-white/15 backdrop-blur-lg rounded-2xl shadow-[0_8px_32px_0_rgba(156,39,176,0.3)] border border-[#ffffff25] border-solid;
+    @apply bg-white/15 backdrop-blur-lg rounded-2xl shadow-[0_8px_32px_0_rgba(76,175,80,0.3)] border border-[#ffffff25] border-solid;
     /* Add subtle inner glow for better text contrast */
     box-shadow: 
-      0 8px 32px 0 rgba(156, 39, 176, 0.3),
-      inset 0 1px 0 rgba(255, 193, 7, 0.1);
+      0 8px 32px 0 rgba(76, 175, 80, 0.3),
+      inset 0 1px 0 rgba(76, 175, 80, 0.1);
   }
   
   /* Enhanced text visibility utility */
   .text-neon-bright {
     color: #ffffff;
     text-shadow: 
-      0 0 12px rgba(255, 193, 7, 0.5),
+      0 0 12px rgba(76, 175, 80, 0.5),
       0.5px 0 0 rgba(0, 0, 0, 0.8),
       -0.5px 0 0 rgba(0, 0, 0, 0.8),
       0 0.5px 0 rgba(0, 0, 0, 0.8),
       0 -0.5px 0 rgba(0, 0, 0, 0.8);
   }
   
-  /* Royal elegance text effects with minimal dark outline */
+  /* Nature fresh text effects with minimal dark outline */
   .text-neon-red {
-    color: #9c27b0;
+    color: #4caf50;
     text-shadow: 
-      0 0 15px rgba(156, 39, 176, 0.7),
+      0 0 15px rgba(76, 175, 80, 0.7),
       0.5px 0 0 rgba(0, 0, 0, 0.7),
       -0.5px 0 0 rgba(0, 0, 0, 0.7),
       0 0.5px 0 rgba(0, 0, 0, 0.7),
@@ -136,9 +136,9 @@
   }
   
   .text-neon-blue {
-    color: #ffc107;
+    color: #2196f3;
     text-shadow: 
-      0 0 15px rgba(255, 193, 7, 0.7),
+      0 0 15px rgba(33, 150, 243, 0.7),
       0.5px 0 0 rgba(0, 0, 0, 0.7),
       -0.5px 0 0 rgba(0, 0, 0, 0.7),
       0 0.5px 0 rgba(0, 0, 0, 0.7),
@@ -146,10 +146,10 @@
   }
 }
 
-/* Add extra shadow and borders to enhance royal effect */
+/* Add extra shadow and borders to enhance nature effect */
 @layer utilities {
   .neon-border {
     border: 2px solid;
-    border-image: linear-gradient(120deg, #9c27b0 0%, #ffc107 80%) 1;
+    border-image: linear-gradient(120deg, #4caf50 0%, #2196f3 80%) 1;
   }
 }
