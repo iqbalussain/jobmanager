@@ -102,7 +102,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     style={{
       display: "grid",
       gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-      maxWidth: "800px", // or whatever width you want to limit to
+      maxWidth: "200px", // or whatever width you want to limit to
     }}
   >
       {cards.map(({ key, label, icon, value, from, to }) => (
