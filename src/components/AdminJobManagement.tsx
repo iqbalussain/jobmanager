@@ -194,6 +194,101 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
     }
   };
 
+  // --- New: Handle status change from table dropdown
+  const handleStatusChange = async (job: Job, newStatus: JobStatus) => {
+    if (job.status === newStatus) return;
+    try {
+      await supabase
+        .from("job_orders")
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq("id", job.id);
+      toast({
+        title: "Status updated",
+        description: `Status updated to ${newStatus}`,
+      });
+      // Refresh jobs list to reflect status change
+      const { data, error } = await supabase
+        .from('job_orders')
+        .select(`
+          *,
+          customer:customers(id, name),
+          job_title:job_titles(id, job_title_id)
+        `)
+        .order('created_at', { ascending: false });
+      if (!error && data) {
+        const transformedJobs = await Promise.all(data.map(async (jobOrder) => {
+          let designer = null;
+          let salesman = null;
+          if (jobOrder.designer_id) {
+            const { data: designerData } = await supabase
+              .from('profiles')
+              .select('id, full_name, phone')
+              .eq('id', jobOrder.designer_id)
+              .single();
+            if (designerData) {
+              designer = {
+                id: designerData.id,
+                name: designerData.full_name || 'Unknown Designer',
+                phone: designerData.phone
+              };
+            }
+          }
+          if (jobOrder.salesman_id) {
+            const { data: salesmanData } = await supabase
+              .from('profiles')
+              .select('id, full_name, email, phone')
+              .eq('id', jobOrder.salesman_id)
+              .single();
+            if (salesmanData) {
+              salesman = {
+                id: salesmanData.id,
+                name: salesmanData.full_name || 'Unknown Salesman',
+                email: salesmanData.email,
+                phone: salesmanData.phone
+              };
+            }
+          }
+          const title = jobOrder.job_title?.job_title_id || 
+                       jobOrder.job_order_details || 
+                       `Job Order ${jobOrder.job_order_number}`;
+          return {
+            id: jobOrder.id,
+            jobOrderNumber: jobOrder.job_order_number,
+            title: title,
+            customer: jobOrder.customer?.name || "Unknown Customer",
+            assignee: jobOrder.assignee || "Unassigned",
+            priority: jobOrder.priority as "low" | "medium" | "high",
+            status: jobOrder.status as JobStatus,
+            dueDate: jobOrder.due_date || new Date().toISOString().split('T')[0],
+            createdAt: jobOrder.created_at.split('T')[0],
+            estimatedHours: jobOrder.estimated_hours || 0,
+            branch: jobOrder.branch || "",
+            designer: designer?.name || "Unassigned",
+            salesman: salesman?.name || "Unassigned",
+            jobOrderDetails: jobOrder.job_order_details || "",
+            invoiceNumber: jobOrder.invoice_number || ""
+          };
+        }));
+        setJobsWithInvoices(transformedJobs);
+      }
+    } catch (err) {
+      toast({
+        title: "Error updating status",
+        description: "Could not update job status.",
+        variant: "destructive"
+      });
+      console.error('Status update failed', err);
+    }
+  };
+
+  // --- New: Separate view function for Eye icon
+  const handleViewJob = (job: Job) => {
+    setSelectedJob(job);
+    setIsJobDetailsOpen(true);
+    setIsEditMode(false);
+  };
+
+  // Existing: Edit function for Pencil icon
   const handleEditJob = (job: Job) => {
     setSelectedJob(job);
     setIsJobDetailsOpen(true);
@@ -249,8 +344,13 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
               uniqueBranches={uniqueBranches}
             />
 
-            {/* Jobs Table */}
-            <AdminJobManagementTable jobs={filteredJobs} onEdit={handleEditJob} />
+            {/* --- Pass new event handlers to Table --- */}
+            <AdminJobManagementTable
+              jobs={filteredJobs}
+              onEdit={handleEditJob}
+              onView={handleViewJob}
+              onStatusChange={handleStatusChange}
+            />
           </CardContent>
         </Card>
 
@@ -259,7 +359,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
           isOpen={isJobDetailsOpen}
           onClose={() => {
             setIsJobDetailsOpen(false);
-            // Refresh data when closing modal to get latest invoice numbers
+            // Refresh jobs if modal closed after edit
             const fetchJobs = async () => {
               try {
                 const { data, error } = await supabase
@@ -270,20 +370,16 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                     job_title:job_titles(id, job_title_id)
                   `)
                   .order('created_at', { ascending: false });
-                
                 if (error) throw error;
-                
                 const transformedJobs = await Promise.all(data.map(async (jobOrder) => {
                   let designer = null;
                   let salesman = null;
-                  
                   if (jobOrder.designer_id) {
                     const { data: designerData } = await supabase
                       .from('profiles')
                       .select('id, full_name, phone')
                       .eq('id', jobOrder.designer_id)
                       .single();
-                    
                     if (designerData) {
                       designer = {
                         id: designerData.id,
@@ -292,14 +388,12 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                       };
                     }
                   }
-                  
                   if (jobOrder.salesman_id) {
                     const { data: salesmanData } = await supabase
                       .from('profiles')
                       .select('id, full_name, email, phone')
                       .eq('id', jobOrder.salesman_id)
                       .single();
-                    
                     if (salesmanData) {
                       salesman = {
                         id: salesmanData.id,
@@ -309,12 +403,9 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                       };
                     }
                   }
-                  
-                  // Create the title from available data
-                  const title = jobOrder.job_title?.job_title_id || 
-                               jobOrder.job_order_details || 
-                               `Job Order ${jobOrder.job_order_number}`;
-                  
+                  const title = jobOrder.job_title?.job_title_id ||
+                    jobOrder.job_order_details ||
+                    `Job Order ${jobOrder.job_order_number}`;
                   return {
                     id: jobOrder.id,
                     jobOrderNumber: jobOrder.job_order_number,
@@ -333,7 +424,6 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                     invoiceNumber: jobOrder.invoice_number || ""
                   };
                 }));
-                
                 setJobsWithInvoices(transformedJobs);
               } catch (error) {
                 console.error('Error refreshing jobs:', error);
