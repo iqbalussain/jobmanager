@@ -6,10 +6,11 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     <div
       className={cn(
         "rounded-md border bg-card text-card-foreground shadow-sm",
+        "text-foreground dark:text-foreground", // always force text inherit, fallback
         className
       )}
-      {...props}
       ref={ref}
+      {...props}
     />
   )
 )

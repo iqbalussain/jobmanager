@@ -16,7 +16,7 @@ export function DashboardHeader({ searchQuery, setSearchQuery }: DashboardHeader
       </div>
       <div className="flex items-center gap-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 text-foreground" />
           <Input
             placeholder="Search jobs..."
             value={searchQuery}
@@ -28,4 +28,3 @@ export function DashboardHeader({ searchQuery, setSearchQuery }: DashboardHeader
     </div>
   );
 }
-

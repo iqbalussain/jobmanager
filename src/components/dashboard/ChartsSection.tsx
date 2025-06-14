@@ -1,7 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { useEffect, useState } from "react";
 
 interface ChartsSectionProps {
   dailyJobData: Array<{ day: string; jobs: number }>;
@@ -10,18 +10,33 @@ interface ChartsSectionProps {
 }
 
 export function ChartsSection({ dailyJobData, gaugeData, chartLoading }: ChartsSectionProps) {
-  const isDark = document.body.classList.contains("dark");
-  // Define chart colors from CSS variables
-  const getCssVar = (name: string) => getComputedStyle(document.body).getPropertyValue(name) || undefined;
-  const cardBg = isDark ? "hsl(var(--card))" : "#fff";
-  const axisColor = isDark ? "#F0F0F0" : "#22223B";
-  const lineColor = isDark ? "#fff" : "#3B82F6";
-  const tooltipBg = isDark ? "#22223B" : "#fff";
-  const tooltipText = isDark ? "#F0F0F0" : "#2D2D2D";
+  const [chartTheme, setChartTheme] = useState({
+    cardBg: "#fff",
+    axisColor: "#22223B",
+    lineColor: "#3B82F6",
+    tooltipBg: "#fff",
+    tooltipText: "#2D2D2D"
+  });
+
+  useEffect(() => {
+    const computed = getComputedStyle(document.body);
+    const isDark = document.body.classList.contains("dark");
+    // Support palette colors
+    let lineColor = isDark ? computed.getPropertyValue("--primary") || "#00FF85" : "#3B82F6";
+    lineColor = lineColor.trim() ? `hsl(${lineColor.trim()})` : (isDark ? "#00FF85" : "#3B82F6");
+
+    setChartTheme({
+      cardBg: isDark ? `hsl(${computed.getPropertyValue("--card").trim()})` : "#fff",
+      axisColor: isDark ? "#F0F0F0" : "#22223B",
+      lineColor,
+      tooltipBg: isDark ? "#22223B" : "#fff",
+      tooltipText: isDark ? "#F0F0F0" : "#2D2D2D"
+    });
+  }, [typeof window !== "undefined" && document.body.className]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Line Chart - Daily Created Jobs */}
+      {/* Line Chart */}
       <Card className="lg:col-span-2 shadow-lg border-0 bg-card text-card-foreground backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -36,24 +51,27 @@ export function ChartsSection({ dailyJobData, gaugeData, chartLoading }: ChartsS
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={dailyJobData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={axisColor} />
-                <XAxis dataKey="day" stroke={axisColor} />
-                <YAxis stroke={axisColor} />
+              <LineChart
+                data={dailyJobData}
+                style={{ background: chartTheme.cardBg, borderRadius: "12px" }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.axisColor} />
+                <XAxis dataKey="day" stroke={chartTheme.axisColor} />
+                <YAxis stroke={chartTheme.axisColor} />
                 <Tooltip 
                   contentStyle={{
-                    backgroundColor: tooltipBg, 
+                    backgroundColor: chartTheme.tooltipBg, 
                     border: '1px solid var(--border)',
                     borderRadius: '8px',
-                    color: tooltipText
+                    color: chartTheme.tooltipText
                   }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="jobs" 
-                  stroke={lineColor}
+                  stroke={chartTheme.lineColor}
                   strokeWidth={3}
-                  dot={{ fill: lineColor, strokeWidth: 2, r: 4 }}
+                  dot={{ fill: chartTheme.lineColor, strokeWidth: 2, r: 4 }}
                   name="Jobs Created"
                 />
               </LineChart>
@@ -61,8 +79,7 @@ export function ChartsSection({ dailyJobData, gaugeData, chartLoading }: ChartsS
           )}
         </CardContent>
       </Card>
-
-      {/* Gauge Chart */}
+      {/* Pie Chart */}
       <Card className="shadow-lg border-0 bg-card text-card-foreground backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -88,7 +105,10 @@ export function ChartsSection({ dailyJobData, gaugeData, chartLoading }: ChartsS
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{background: tooltipBg, color: tooltipText}} />
+              <Tooltip contentStyle={{
+                background: chartTheme.tooltipBg,
+                color: chartTheme.tooltipText
+              }} />
             </PieChart>
           </ResponsiveContainer>
           <div className="mt-4 space-y-2">
@@ -110,4 +130,3 @@ export function ChartsSection({ dailyJobData, gaugeData, chartLoading }: ChartsS
     </div>
   );
 }
-

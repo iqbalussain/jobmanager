@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useEffect, useState } from "react";
 
 interface DailyTrendsChartProps {
   dailyJobData: Array<{ day: string; jobs: number }>;
@@ -9,12 +10,30 @@ interface DailyTrendsChartProps {
 }
 
 export function DailyTrendsChart({ dailyJobData, isLoading }: DailyTrendsChartProps) {
-  const isDark = document.body.classList.contains("dark");
-  const axisColor = isDark ? "#F0F0F0" : "#22223B";
-  const chartBg = isDark ? "hsl(var(--card))" : "#fff";
-  const lineColor = isDark ? "#FF0099" : "#8B5CF6";
-  const tooltipBg = isDark ? "#111827" : "#fff";
-  const tooltipText = isDark ? "#F0F0F0" : "#2D2D2D";
+  const [chartTheme, setChartTheme] = useState({
+    axisColor: "#22223B",
+    chartBg: "#fff",
+    lineColor: "#8B5CF6",
+    tooltipBg: "#fff",
+    tooltipText: "#2D2D2D"
+  });
+
+  useEffect(() => {
+    // Extract computed theme vars
+    const computed = getComputedStyle(document.body);
+    const isDark = document.body.classList.contains("dark");
+    // Use palette neon or jewel for theme colors when active
+    let lineColor = isDark ? computed.getPropertyValue("--primary") || "#00FF85" : "#8B5CF6";
+    lineColor = lineColor.trim() ? `hsl(${lineColor.trim()})` : (isDark ? "#00FF85" : "#8B5CF6");
+
+    setChartTheme({
+      axisColor: isDark ? "#F0F0F0" : "#22223B",
+      chartBg: isDark ? computed.getPropertyValue("--card") || "#0D0D0D" : "#fff",
+      lineColor,
+      tooltipBg: isDark ? "#111827" : "#fff",
+      tooltipText: isDark ? "#F0F0F0" : "#2D2D2D",
+    });
+  }, [typeof window !== "undefined" && document.body.className]);
 
   return (
     <Card className="shadow-xl border-0 bg-card text-card-foreground">
@@ -31,24 +50,27 @@ export function DailyTrendsChart({ dailyJobData, isLoading }: DailyTrendsChartPr
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={dailyJobData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={axisColor} />
-              <XAxis dataKey="day" stroke={axisColor} />
-              <YAxis stroke={axisColor} />
+            <LineChart
+              data={dailyJobData}
+              style={{ background: chartTheme.chartBg, borderRadius: "12px" }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.axisColor} />
+              <XAxis dataKey="day" stroke={chartTheme.axisColor} />
+              <YAxis stroke={chartTheme.axisColor} />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: tooltipBg, 
+                  backgroundColor: chartTheme.tooltipBg, 
                   border: '1px solid var(--border)',
                   borderRadius: '12px',
-                  color: tooltipText
+                  color: chartTheme.tooltipText
                 }} 
               />
               <Line 
                 type="monotone" 
                 dataKey="jobs" 
-                stroke={lineColor} 
+                stroke={chartTheme.lineColor}
                 strokeWidth={4}
-                dot={{ fill: lineColor, strokeWidth: 3, r: 6 }}
+                dot={{ fill: chartTheme.lineColor, strokeWidth: 3, r: 6 }}
                 name="Created Jobs"
               />
             </LineChart>
@@ -58,4 +80,3 @@ export function DailyTrendsChart({ dailyJobData, isLoading }: DailyTrendsChartPr
     </Card>
   );
 }
-
