@@ -78,7 +78,62 @@
     @apply border-border;
   }
   html, body {
-    @apply bg-background text-foreground transition-colors duration-300;
+    @apply transition-colors duration-300;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
+
+/* Define shadcn/ui custom background and text color utilities usable with @apply */
+@layer utilities {
+  .bg-background {
+    background-color: hsl(var(--background)) !important;
+  }
+  .bg-card {
+    background-color: hsl(var(--card)) !important;
+  }
+  .bg-popover {
+    background-color: hsl(var(--popover)) !important;
+  }
+  .bg-primary {
+    background-color: hsl(var(--primary)) !important;
+  }
+  .bg-secondary {
+    background-color: hsl(var(--secondary)) !important;
+  }
+  .bg-muted {
+    background-color: hsl(var(--muted)) !important;
+  }
+  .bg-accent {
+    background-color: hsl(var(--accent)) !important;
+  }
+  .bg-destructive {
+    background-color: hsl(var(--destructive)) !important;
+  }
+
+  .text-foreground {
+    color: hsl(var(--foreground)) !important;
+  }
+  .text-primary-foreground {
+    color: hsl(var(--primary-foreground)) !important;
+  }
+  .text-secondary-foreground {
+    color: hsl(var(--secondary-foreground)) !important;
+  }
+  .text-muted-foreground {
+    color: hsl(var(--muted-foreground)) !important;
+  }
+  .text-accent-foreground {
+    color: hsl(var(--accent-foreground)) !important;
+  }
+  .text-destructive-foreground {
+    color: hsl(var(--destructive-foreground)) !important;
+  }
+  .text-card-foreground {
+    color: hsl(var(--card-foreground)) !important;
+  }
+  .text-popover-foreground {
+    color: hsl(var(--popover-foreground)) !important;
   }
 }
 
