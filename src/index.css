@@ -4,138 +4,74 @@
 @tailwind utilities;
 
 /** 
- * shadcn-driven theme + variable system using Tailwind's color tokens
- * Now supports both light and dark with clear design tokens.
+ * Lovable Neon Theme — Mysterious Neon Red and Blue 
  */
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 252 83% 53%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 244 14% 90%;
-    --secondary-foreground: 252 83% 53%;
-
-    --muted: 222 10% 96%;
-    --muted-foreground: 222.2 12% 43%;
-
-    --accent: 292 80% 89%;
+    --background: 228 83% 8%; /* Deep dark blue background */
+    --foreground: 222.2 84% 99%;
+    --card: 228 40% 12%; /* Slightly lighter glass card */
+    --card-foreground: 222 84% 99%;
+    --primary: 337 100% 54%; /* Neon Red (#ff007a) */
+    --primary-foreground: 220 80% 96%;
+    --secondary: 246 90% 45%; /* Neon Blue (#342ca7) */
+    --secondary-foreground: 220 80% 96%;
+    --muted: 226 12% 30%;
+    --muted-foreground: 226 12% 80%;
+    --accent: 256 100% 65%;
     --accent-foreground: 222 84% 15%;
-
     --destructive: 1 91% 65%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 226 25% 88%;
-    --input: 232 32% 93%;
-    --ring: 256 72% 66%;
-
-    --radius: 1rem;
+    --border: 228 50% 20%;
+    --input: 232 32% 34%;
+    --ring: 337 100% 54%; /* Use neon red for focus ring */
+    --radius: 1.25rem;
   }
 
   .dark {
-    --background: 232 12% 13%;
-    --foreground: 210 40% 98%;
-
-    --card: 237 18% 22%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 232 12% 13%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 256 72% 66%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-  
-    --secondary: 224 27% 22%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 237 18% 22%;
+    --background: 230 80% 6%;
+    --foreground: 220 50% 96%;
+    --card: 230 40% 14%;
+    --card-foreground: 222 84% 99%;
+    --primary: 337 100% 54%; /* Neon Red */
+    --primary-foreground: 220 80% 96%;
+    --secondary: 246 90% 45%; /* Neon Blue */
+    --secondary-foreground: 220 80% 96%;
+    --muted: 230 10% 40%;
     --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 256 72% 40%;
+    --accent: 256 100% 55%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 1 87% 49%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 232 12% 19%;
-    --input: 232 32% 24%;
-    --ring: 256 72% 54%;
-    --radius: 1rem;
+    --border: 232 12% 25%;
+    --input: 232 32% 38%;
+    --ring: 337 100% 54%;
+    --radius: 1.25rem;
   }
 }
-
 @layer base {
   * {
     @apply border-border;
   }
   html, body {
     @apply transition-colors duration-300;
-    background-color: hsl(var(--background));
+    min-height: 100vh;
+    background: linear-gradient(135deg, #ff007a 0%, #342ca7 60%, #020040 100%) !important;
     color: hsl(var(--foreground));
   }
 }
 
-/* Define shadcn/ui custom background and text color utilities usable with @apply */
+/* Neon glass utility style for transparent, blurred, rounded sections */
 @layer utilities {
-  .bg-background {
-    background-color: hsl(var(--background)) !important;
-  }
-  .bg-card {
-    background-color: hsl(var(--card)) !important;
-  }
-  .bg-popover {
-    background-color: hsl(var(--popover)) !important;
-  }
-  .bg-primary {
-    background-color: hsl(var(--primary)) !important;
-  }
-  .bg-secondary {
-    background-color: hsl(var(--secondary)) !important;
-  }
-  .bg-muted {
-    background-color: hsl(var(--muted)) !important;
-  }
-  .bg-accent {
-    background-color: hsl(var(--accent)) !important;
-  }
-  .bg-destructive {
-    background-color: hsl(var(--destructive)) !important;
-  }
-
-  .text-foreground {
-    color: hsl(var(--foreground)) !important;
-  }
-  .text-primary-foreground {
-    color: hsl(var(--primary-foreground)) !important;
-  }
-  .text-secondary-foreground {
-    color: hsl(var(--secondary-foreground)) !important;
-  }
-  .text-muted-foreground {
-    color: hsl(var(--muted-foreground)) !important;
-  }
-  .text-accent-foreground {
-    color: hsl(var(--accent-foreground)) !important;
-  }
-  .text-destructive-foreground {
-    color: hsl(var(--destructive-foreground)) !important;
-  }
-  .text-card-foreground {
-    color: hsl(var(--card-foreground)) !important;
-  }
-  .text-popover-foreground {
-    color: hsl(var(--popover-foreground)) !important;
+  .glass-neon {
+    @apply bg-white/10 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_0_rgba(50,60,220,0.15)] border border-[#ffffff18] border-solid;
   }
 }
 
-/* shadcn: Remove glass, border, old color system. All cards/menus/icons/buttons should use bg-card, bg-secondary, bg-accent, text-primary, etc. */
-
+/* Add extra shadow and borders to enhance effect */
+@layer utilities {
+  .neon-border {
+    border: 2px solid;
+    border-image: linear-gradient(120deg, #ff007a 0%, #342ca7 80%) 1;
+  }
+}

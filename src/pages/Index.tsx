@@ -60,37 +60,44 @@ const Index = () => {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading job orders...</div>
+        <div className="flex items-center justify-center h-64 glass-neon">
+          <div className="text-lg text-primary">Loading job orders...</div>
         </div>
       );
     }
 
-    switch (currentView) {
-      case "dashboard":
-        return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />;
-      case "jobs":
-        return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
-      case "create":
-        return <JobForm onCancel={() => setCurrentView("dashboard")} />;
-      case "calendar":
-        return <CalendarView jobs={transformedJobs} />;
-      case "settings":
-        return <SettingsView />;
-      case "admin":
-        return <AdminJobManagement jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
-      case "admin-management":
-        return <AdminManagement />;
-      default:
-        return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />;
-    }
+    return (
+      <div className="glass-neon p-6 md:p-10 mt-4 md:mt-8 mx-auto max-w-7xl w-full min-h-[80vh]">
+        {/* All main content rendered here, so all views show with glass and neon border/shadow */}
+        {(() => {
+          switch (currentView) {
+            case "dashboard":
+              return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />;
+            case "jobs":
+              return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
+            case "create":
+              return <JobForm onCancel={() => setCurrentView("dashboard")} />;
+            case "calendar":
+              return <CalendarView jobs={transformedJobs} />;
+            case "settings":
+              return <SettingsView />;
+            case "admin":
+              return <AdminJobManagement jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
+            case "admin-management":
+              return <AdminManagement />;
+            default:
+              return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />;
+          }
+        })()}
+      </div>
+    );
   };
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="min-h-screen flex w-full bg-transparent">
         <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-        <main className="flex-1">
+        <main className="flex-1 flex flex-col justify-center items-center bg-transparent">
           {renderContent()}
         </main>
       </div>
