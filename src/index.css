@@ -61,19 +61,49 @@
     color: hsl(var(--foreground));
   }
   
-  /* Enhanced text visibility */
+  /* Enhanced text visibility with dark borders */
   h1, h2, h3, h4, h5, h6 {
     color: hsl(var(--foreground));
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    text-shadow: 
+      0 0 10px rgba(255, 255, 255, 0.3),
+      -1px -1px 0 rgba(0, 0, 0, 0.8),
+      1px -1px 0 rgba(0, 0, 0, 0.8),
+      -1px 1px 0 rgba(0, 0, 0, 0.8),
+      1px 1px 0 rgba(0, 0, 0, 0.8);
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.7);
   }
   
   p, span, div {
     color: hsl(var(--foreground));
+    text-shadow: 
+      0 0 8px rgba(255, 255, 255, 0.2),
+      -0.5px -0.5px 0 rgba(0, 0, 0, 0.6),
+      0.5px -0.5px 0 rgba(0, 0, 0, 0.6),
+      -0.5px 0.5px 0 rgba(0, 0, 0, 0.6),
+      0.5px 0.5px 0 rgba(0, 0, 0, 0.6);
+    -webkit-text-stroke: 0.3px rgba(0, 0, 0, 0.5);
   }
   
-  /* Bright text for buttons and interactive elements */
+  /* Bright text for buttons and interactive elements with stronger borders */
   button {
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    text-shadow: 
+      0 0 8px rgba(255, 255, 255, 0.4),
+      -1px -1px 0 rgba(0, 0, 0, 0.9),
+      1px -1px 0 rgba(0, 0, 0, 0.9),
+      -1px 1px 0 rgba(0, 0, 0, 0.9),
+      1px 1px 0 rgba(0, 0, 0, 0.9);
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.8);
+  }
+  
+  /* Labels need stronger definition */
+  label {
+    text-shadow: 
+      0 0 8px rgba(255, 255, 255, 0.3),
+      -0.5px -0.5px 0 rgba(0, 0, 0, 0.8),
+      0.5px -0.5px 0 rgba(0, 0, 0, 0.8),
+      -0.5px 0.5px 0 rgba(0, 0, 0, 0.8),
+      0.5px 0.5px 0 rgba(0, 0, 0, 0.8);
+    -webkit-text-stroke: 0.4px rgba(0, 0, 0, 0.7);
   }
 }
 
@@ -90,18 +120,36 @@
   /* Enhanced text visibility utility */
   .text-neon-bright {
     color: #ffffff;
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+    text-shadow: 
+      0 0 12px rgba(255, 255, 255, 0.5),
+      -1px -1px 0 rgba(0, 0, 0, 0.9),
+      1px -1px 0 rgba(0, 0, 0, 0.9),
+      -1px 1px 0 rgba(0, 0, 0, 0.9),
+      1px 1px 0 rgba(0, 0, 0, 0.9);
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.8);
   }
   
-  /* Neon text effects */
+  /* Neon text effects with borders */
   .text-neon-red {
     color: #ff007a;
-    text-shadow: 0 0 15px rgba(255, 0, 122, 0.7);
+    text-shadow: 
+      0 0 15px rgba(255, 0, 122, 0.7),
+      -1px -1px 0 rgba(0, 0, 0, 0.8),
+      1px -1px 0 rgba(0, 0, 0, 0.8),
+      -1px 1px 0 rgba(0, 0, 0, 0.8),
+      1px 1px 0 rgba(0, 0, 0, 0.8);
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.7);
   }
   
   .text-neon-blue {
     color: #5865f2;
-    text-shadow: 0 0 15px rgba(88, 101, 242, 0.7);
+    text-shadow: 
+      0 0 15px rgba(88, 101, 242, 0.7),
+      -1px -1px 0 rgba(0, 0, 0, 0.8),
+      1px -1px 0 rgba(0, 0, 0, 0.8),
+      -1px 1px 0 rgba(0, 0, 0, 0.8),
+      1px 1px 0 rgba(0, 0, 0, 0.8);
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.7);
   }
 }
 
