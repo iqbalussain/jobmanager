@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +17,22 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "in-progress" | "designing" | "completed" | "invoiced" | "cancelled">("all");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
+
+  // wrap setStatusFilter in type guard
+  const handleStatusFilterChange = (value: string) => {
+    const validStatuses = [
+      "all",
+      "pending",
+      "in-progress",
+      "designing",
+      "completed",
+      "invoiced",
+      "cancelled",
+    ];
+    if (validStatuses.includes(value)) {
+      setStatusFilter(value as typeof statusFilter); // safe cast
+    }
+  };
 
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = 
@@ -57,7 +72,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
         searchQuery={searchQuery}
         statusFilter={statusFilter}
         onSearchChange={setSearchQuery}
-        onStatusFilterChange={setStatusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
       />
 
       <JobStatsCards stats={stats} />

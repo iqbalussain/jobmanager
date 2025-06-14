@@ -1,6 +1,6 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { 
+import {
   Briefcase,
   Clock,
   Play,
@@ -8,7 +8,6 @@ import {
   CheckCircle,
   FileText,
   XCircle,
-  Users,
 } from "lucide-react";
 
 interface JobStats {
@@ -19,105 +18,98 @@ interface JobStats {
   completed: number;
   invoiced: number;
   cancelled: number;
+  // teamMembers REMOVED
 }
+
+type StatusKey =
+  | "total"
+  | "pending"
+  | "inProgress"
+  | "designing"
+  | "completed"
+  | "invoiced"
+  | "cancelled";
+
+const STATUS_NAME_MAP: Record<StatusKey, string> = {
+  total: "Total",
+  pending: "Pending",
+  inProgress: "In Progress",
+  designing: "Designing",
+  completed: "Completed",
+  invoiced: "Invoiced",
+  cancelled: "Cancelled",
+};
+
+const STATUS_COLOR_MAP: Record<StatusKey, string> = {
+  total: "bg-gray-900 text-white",
+  pending: "bg-blue-600 text-white",
+  inProgress: "bg-orange-500 text-white",
+  designing: "bg-purple-600 text-white",
+  completed: "bg-green-600 text-white",
+  invoiced: "bg-emerald-700 text-white",
+  cancelled: "bg-red-600 text-white",
+};
+
+const ICON_MAP: Record<StatusKey, JSX.Element> = {
+  total: <Briefcase className="w-5 h-5 inline-block mr-2 -mt-1" />,
+  pending: <Clock className="w-5 h-5 inline-block mr-2 -mt-1" />,
+  inProgress: <Play className="w-5 h-5 inline-block mr-2 -mt-1" />,
+  designing: <Pencil className="w-5 h-5 inline-block mr-2 -mt-1" />,
+  completed: <CheckCircle className="w-5 h-5 inline-block mr-2 -mt-1" />,
+  invoiced: <FileText className="w-5 h-5 inline-block mr-2 -mt-1" />,
+  cancelled: <XCircle className="w-5 h-5 inline-block mr-2 -mt-1" />,
+};
 
 interface JobStatusOverviewProps {
   stats: JobStats;
-  onStatusClick: (status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', title: string) => void;
+  onStatusClick: (
+    status: StatusKey,
+    title: string
+  ) => void;
 }
 
-export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewProps) {
-  const cards = [
-    {
-      key: "total",
-      label: "Total",
-      icon: <Briefcase className="w-6 h-6 text-magenta-500 mb-2" />,
-      value: stats.total,
-      from: "from-magenta/100",
-      to: "to-magenta/200",
-    },
-    {
-      key: "pending",
-      label: "Pending",
-      icon: <Clock className="w-6 h-6 text-yellow-300 mb-2" />,
-      value: stats.pending,
-      from: "from-yellow-500/200",
-      to: "to-yellow-500/300",
-    },
-    {
-      key: "inProgress",
-      label: "In Progress",
-      icon: <Play className="w-6 h-6 text-blue-300 mb-2" />,
-      value: stats.inProgress,
-      from: "from-blue-500/20",
-      to: "to-blue-500/30",
-    },
-    {
-      key: "designing",
-      label: "Designing",
-      icon: <Pencil className="w-6 h-6 text-pink-300 mb-2" />,
-      value: stats.designing,
-      from: "from-pink-500/20",
-      to: "to-pink-500/30",
-    },
-    {
-      key: "completed",
-      label: "Completed",
-      icon: <CheckCircle className="w-6 h-6 text-green-300 mb-2" />,
-      value: stats.completed,
-      from: "from-green-500/20",
-      to: "to-green-500/30",
-    },
-    {
-      key: "invoiced",
-      label: "Invoiced",
-      icon: <FileText className="w-6 h-6 text-purple-300 mb-2" />,
-      value: stats.invoiced,
-      from: "from-purple-500/20",
-      to: "to-purple-500/30",
-    },
-    {
-      key: "cancelled",
-      label: "Cancelled",
-      icon: <XCircle className="w-6 h-6 text-red-300 mb-2" />,
-      value: stats.cancelled,
-      from: "from-red-500/20",
-      to: "to-red-500/30",
-    },
-    {
-      key: "teamMembers",
-      label: "Team Members",
-      icon: <Users className="w-6 h-6 text-cyan-300 mb-2" />,
-      value:
-        stats.teamMembers,
-      from: "from-cyan-500/20",
-      to: "to-cyan-500/30",
-    },
-  ];
+// Responsive text (clamp font!) and smooth animation utility
+const cardBase =
+  "flex flex-col items-center justify-center w-full h-28 md:h-32 rounded-xl shadow-lg cursor-pointer " +
+  "transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-2xl select-none " +
+  "focus:outline-none focus:ring-4 focus:ring-blue-300 animate-[fade-in_0.3s_ease-in]";
 
-    return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 p-4">
-      {cards.map(({ key, label, icon, value, from, to }) => (
+export function JobStatusOverview({
+  stats,
+  onStatusClick,
+}: JobStatusOverviewProps) {
+  const statusKeys: StatusKey[] = [
+    "total",
+    "pending",
+    "inProgress",
+    "designing",
+    "completed",
+    "invoiced",
+    "cancelled",
+  ];
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 p-2">
+      {statusKeys.map((key) => (
         <Card
           key={key}
-          onClick={() => onStatusClick(key, label)}
-          className={`
-            bg-gradient-to-br ${from} ${to}
-            backdrop-blur-md bg-blue/20
-            border border-white/30
-            rounded-xl
-            shadow-lg
-            cursor-pointer
-            transform transition-transform duration-300 ease-in-out
-            hover:scale-105 hover:shadow-2xl
-            h-30 w-full
-            flex items-center justify-center
-          `}
+          role="button"
+          tabIndex={0}
+          aria-label={`Show ${STATUS_NAME_MAP[key]} jobs`}
+          onClick={() => onStatusClick(key, STATUS_NAME_MAP[key])}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onStatusClick(key, STATUS_NAME_MAP[key]); }}
+          className={cardBase + " " + STATUS_COLOR_MAP[key]}
         >
-          <CardContent className="flex flex-col items-center justify-center text-white text-center">
-            {icon}
-            <p className="text-sm font-semibold mb-1 drop-shadow-md">{label}</p>
-            <p className="text-3xl font-bold drop-shadow-lg">{value}</p>
+          <CardContent className="flex flex-col items-center justify-center text-center gap-2 p-4 w-full h-full">
+            <span className="flex items-center justify-center text-base font-medium md:text-lg">
+              {ICON_MAP[key]}
+              <span className="inline-block">{STATUS_NAME_MAP[key]}</span>
+            </span>
+            <span
+              className="font-bold text-3xl md:text-4xl lg:text-5xl leading-tight"
+              style={{ lineHeight: "1" }}
+            >
+              {stats[key]}
+            </span>
           </CardContent>
         </Card>
       ))}
