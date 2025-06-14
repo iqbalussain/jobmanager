@@ -19,12 +19,12 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
   const [salesmen, setSalesmen] = useState<Array<{id: string, name: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [userRole, setUserRole] = useState<string>('');
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
 
   // Check if user is authorized to edit invoice numbers
-  const canEditInvoice = userRole === 'admin' || userRole === 'job_order_manager';
+  const canEditInvoice = userRoles.includes('admin') || userRoles.includes('job_order_manager');
 
   useEffect(() => {
     if (job) {
@@ -46,7 +46,7 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
 
   useEffect(() => {
     if (user) {
-      fetchUserRole();
+      fetchUserRoles();
     }
   }, [user]);
 
@@ -56,26 +56,20 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
     }
   }, [isEditMode, job]);
 
-  const fetchUserRole = async () => {
+  const fetchUserRoles = async () => {
     if (!user) return;
-    
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_roles')
         .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching user role:', error);
-        return;
-      }
-      
+        .eq('user_id', user.id);
       if (data) {
-        setUserRole(data.role);
+        setUserRoles(data.map((row: { role: string }) => row.role));
+      } else {
+        setUserRoles([]);
       }
     } catch (error) {
-      console.error('Error fetching user role:', error);
+      console.error('Error fetching user roles:', error);
     }
   };
 

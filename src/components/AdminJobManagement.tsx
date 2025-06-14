@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Job, JobStatus } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,21 +35,27 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Check if user is admin
+  // Store roles for the user (handle admin and job_order_manager)
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   useEffect(() => {
-    const checkAdminRole = async () => {
+    const checkRoles = async () => {
       if (user) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'admin')
-          .single();
-        setIsAdmin(!!data);
+          .eq('user_id', user.id);
+
+        if (data) {
+          setUserRoles(data.map((row: { role: string }) => row.role));
+        } else {
+          setUserRoles([]);
+        }
       }
     };
-    checkAdminRole();
+    checkRoles();
   }, [user]);
+
+  const isAdminOrJobOrderManager = userRoles.includes('admin') || userRoles.includes('job_order_manager');
 
   // Fetch fresh job data with invoice numbers
   useEffect(() => {
@@ -139,7 +144,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
     fetchJobsWithInvoices();
   }, [jobs]);
 
-  if (!isAdmin) {
+  if (!isAdminOrJobOrderManager) {
     return (
       <div className="space-y-6">
         <div>
