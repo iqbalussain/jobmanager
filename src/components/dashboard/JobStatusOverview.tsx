@@ -31,7 +31,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     {
       key: "total",
       label: "Total",
-      icon: <Clock className="w-8 h-8 text-yellow-300 mb-2" />,
+      icon: <Briefcase className="w-8 h-8 text-white/80 mb-2" />,
       value: stats.total,
       from: "from-white/10",
       to: "to-white/20",
@@ -88,14 +88,26 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
       key: "teamMembers",
       label: "Team Members",
       icon: <Users className="w-8 h-8 text-cyan-300 mb-2" />,
-      value: stats.teamMembers,
+      value:
+        stats.teamMembers,
       from: "from-cyan-500/20",
       to: "to-cyan-500/30",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 p-4">
+    <div className="w-full flex justify-end">
+  <div
+    className={`
+      grid gap-4 p-2
+      grid-cols-1 sm:grid-cols-2 md:grid-cols-3
+      lg:grid-cols-${Math.min(data.length, 6)}
+      max-w-full
+    `}
+    style={{
+      maxWidth: "100%",
+    }}
+  >
       {cards.map(({ key, label, icon, value, from, to }) => (
         <Card
           key={key}
@@ -120,6 +132,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
           </CardContent>
         </Card>
       ))}
+    </div>
     </div>
   );
 }
