@@ -98,7 +98,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
   return (
     <div className="w-full flex justify-end">
   <div
-       className="grid gap-4 p-2"
+       className="grid gap-2 p-4"
     style={{
       display: "grid",
       gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
