@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ModernDashboard } from "@/components/ModernDashboard";
@@ -60,15 +61,15 @@ const Index = () => {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex items-center justify-center h-64 glass-neon mx-2 sm:mx-6 my-8">
-          <div className="text-lg text-primary">Loading job orders...</div>
+        <div className="flex items-center justify-center h-64 glass-gaming-strong gaming-pulse mx-2 sm:mx-6 my-8">
+          <div className="text-lg text-gaming-primary">Loading job orders...</div>
         </div>
       );
     }
 
     return (
       <div className="
-        glass-neon
+        glass-gaming-strong
         w-full
         max-w-7xl
         mx-auto
@@ -81,6 +82,7 @@ const Index = () => {
         min-h-[80vh]
         transition-all
         backdrop-blur-md
+        gaming-pulse
       ">
         {/* All main content rendered here as glassy cards */}
         {(() => {
