@@ -10,41 +10,50 @@ interface ChartsSectionProps {
 }
 
 export function ChartsSection({ dailyJobData, gaugeData, chartLoading }: ChartsSectionProps) {
+  const isDark = document.body.classList.contains("dark");
+  // Define chart colors from CSS variables
+  const getCssVar = (name: string) => getComputedStyle(document.body).getPropertyValue(name) || undefined;
+  const cardBg = isDark ? "hsl(var(--card))" : "#fff";
+  const axisColor = isDark ? "#F0F0F0" : "#22223B";
+  const lineColor = isDark ? "#fff" : "#3B82F6";
+  const tooltipBg = isDark ? "#22223B" : "#fff";
+  const tooltipText = isDark ? "#F0F0F0" : "#2D2D2D";
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Line Chart - Daily Created Jobs */}
-      <Card className="lg:col-span-2 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+      <Card className="lg:col-span-2 shadow-lg border-0 bg-card text-card-foreground backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-gray-900">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
             Daily Job Creation Trends
           </CardTitle>
         </CardHeader>
         <CardContent>
           {chartLoading ? (
             <div className="h-[300px] flex items-center justify-center">
-              <div className="text-gray-500">Loading chart data...</div>
+              <div className="text-muted-foreground">Loading chart data...</div>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={dailyJobData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="day" stroke="#666" />
-                <YAxis stroke="#666" />
+                <CartesianGrid strokeDasharray="3 3" stroke={axisColor} />
+                <XAxis dataKey="day" stroke={axisColor} />
+                <YAxis stroke={axisColor} />
                 <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e5e7eb',
+                  contentStyle={{
+                    backgroundColor: tooltipBg, 
+                    border: '1px solid var(--border)',
                     borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }} 
+                    color: tooltipText
+                  }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="jobs" 
-                  stroke="#3B82F6" 
+                  stroke={lineColor}
                   strokeWidth={3}
-                  dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                  dot={{ fill: lineColor, strokeWidth: 2, r: 4 }}
                   name="Jobs Created"
                 />
               </LineChart>
@@ -54,10 +63,10 @@ export function ChartsSection({ dailyJobData, gaugeData, chartLoading }: ChartsS
       </Card>
 
       {/* Gauge Chart */}
-      <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+      <Card className="shadow-lg border-0 bg-card text-card-foreground backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-gray-900">
-            <Activity className="w-5 h-5 text-green-600" />
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary" />
             Job Distribution
           </CardTitle>
         </CardHeader>
@@ -72,12 +81,14 @@ export function ChartsSection({ dailyJobData, gaugeData, chartLoading }: ChartsS
                 outerRadius={80}
                 paddingAngle={5}
                 dataKey="value"
+                startAngle={90}
+                endAngle={450}
               >
                 {gaugeData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={{background: tooltipBg, color: tooltipText}} />
             </PieChart>
           </ResponsiveContainer>
           <div className="mt-4 space-y-2">
@@ -99,3 +110,4 @@ export function ChartsSection({ dailyJobData, gaugeData, chartLoading }: ChartsS
     </div>
   );
 }
+

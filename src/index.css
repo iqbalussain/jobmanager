@@ -51,6 +51,13 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --table-header-bg: var(--muted);
+    --table-row-bg: var(--background);
+    --table-border: var(--border);
+    --sidebar-bg: var(--sidebar-background);
+    --sidebar-text: var(--sidebar-foreground);
+    --icon-color: var(--foreground);
   }
 
   .dark {
@@ -118,6 +125,7 @@
     --destructive: var(--neon-accent-pink);
     --card: var(--neon-bg);
     --card-foreground: var(--neon-text);
+    --icon-color: #FFFFFF;
   }
 
   /* Jewel Palette (applies when .palette-jewel is present on body) */
@@ -132,6 +140,7 @@
     --destructive: var(--jewel-accent-green);
     --card: var(--jewel-bg);
     --card-foreground: var(--jewel-text);
+    --icon-color: #F0F0F0;
   }
 }
 
@@ -291,3 +300,5 @@
 .rgb-gaming-glass {
   @apply bg-white/20 backdrop-blur-lg;
 }
+
+// for all svg icons using lucide, force to inherit text color with className="text-foreground" or text-[color] in usage

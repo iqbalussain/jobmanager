@@ -9,44 +9,47 @@ interface DailyTrendsChartProps {
 }
 
 export function DailyTrendsChart({ dailyJobData, isLoading }: DailyTrendsChartProps) {
+  const isDark = document.body.classList.contains("dark");
+  const axisColor = isDark ? "#F0F0F0" : "#22223B";
+  const chartBg = isDark ? "hsl(var(--card))" : "#fff";
+  const lineColor = isDark ? "#FF0099" : "#8B5CF6";
+  const tooltipBg = isDark ? "#111827" : "#fff";
+  const tooltipText = isDark ? "#F0F0F0" : "#2D2D2D";
+
   return (
-    <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white">
+    <Card className="shadow-xl border-0 bg-card text-card-foreground">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white">
-          <Activity className="w-5 h-5 text-yellow-400" />
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="w-5 h-5 text-primary" />
           Daily Job Creation Trends
         </CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className="flex items-center justify-center">
-            <div className="text-white">Loading chart data...</div>
+            <div className="text-muted-foreground">Loading chart data...</div>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={220}>
             <LineChart data={dailyJobData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#8B5CF6" />
-              <XAxis dataKey="day" stroke="#E5E7EB" />
-              <YAxis stroke="#E5E7EB" />
+              <CartesianGrid strokeDasharray="3 3" stroke={axisColor} />
+              <XAxis dataKey="day" stroke={axisColor} />
+              <YAxis stroke={axisColor} />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: '#581C87', 
-                  border: '1px solid #8B5CF6',
+                  backgroundColor: tooltipBg, 
+                  border: '1px solid var(--border)',
                   borderRadius: '12px',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
-                  color: '#F9FAFB'
+                  color: tooltipText
                 }} 
               />
               <Line 
                 type="monotone" 
                 dataKey="jobs" 
-                stroke="#FEF08A" 
+                stroke={lineColor} 
                 strokeWidth={4}
-                dot={{ fill: '#FEF08A', strokeWidth: 3, r: 6 }}
+                dot={{ fill: lineColor, strokeWidth: 3, r: 6 }}
                 name="Created Jobs"
-                style={{
-                  filter: 'drop-shadow(0 0 8px #FEF08A)',
-                }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -55,3 +58,4 @@ export function DailyTrendsChart({ dailyJobData, isLoading }: DailyTrendsChartPr
     </Card>
   );
 }
+
