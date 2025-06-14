@@ -1,10 +1,14 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { 
-  ArrowUp, 
-  ArrowDown, 
-  ArrowLeft, 
-  ArrowRight 
+  Briefcase,
+  Clock,
+  Play,
+  Pencil,
+  CheckCircle,
+  FileText,
+  XCircle,
+  Users,
 } from "lucide-react";
 
 interface JobStats {
@@ -19,132 +23,104 @@ interface JobStats {
 
 interface JobStatusOverviewProps {
   stats: JobStats;
-  onStatusClick: (
-    status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled',
-    title: string
-  ) => void;
+  onStatusClick: (status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', title: string) => void;
 }
 
 export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewProps) {
-  // Status cards with distinct colorful icons (using allowed icons only)
-  const statusKeys = [
-    "total",
-    "pending",
-    "inProgress",
-    "designing",
-    "completed",
-    "invoiced",
-    "cancelled",
-  ] as const;
-
-  const iconProps = [
-    { Icon: ArrowRight, color: "#7e3ff2", bg: "bg-violet-100" },
-    { Icon: ArrowDown, color: "#ef4444", bg: "bg-red-100" },
-    { Icon: ArrowLeft, color: "#3b82f6", bg: "bg-blue-100" },
-    { Icon: ArrowUp, color: "#f59e42", bg: "bg-orange-100" },
-    { Icon: ArrowUp, color: "#22c55e", bg: "bg-green-100" },
-    { Icon: ArrowRight, color: "#a21caf", bg: "bg-purple-100" },
-    { Icon: ArrowDown, color: "#7f1d1d", bg: "bg-pink-100" },
-  ];
-
   const cards = [
     {
       key: "total",
       label: "Total",
+      icon: <Briefcase className="w-6 h-6 text-magenta-500 mb-2" />,
       value: stats.total,
-      from: "from-[#f9e6ff]",
-      to: "to-[#e0e7ff]",
-      iconIdx: 0,
+      from: "from-magenta/10",
+      to: "to-magenta/20",
     },
     {
       key: "pending",
       label: "Pending",
+      icon: <Clock className="w-6 h-6 text-yellow-300 mb-2" />,
       value: stats.pending,
-      from: "from-[#ffefe3]",
-      to: "to-[#ffe3e8]",
-      iconIdx: 1,
+      from: "from-yellow-500/20",
+      to: "to-yellow-500/30",
     },
     {
       key: "inProgress",
       label: "In Progress",
+      icon: <Play className="w-6 h-6 text-blue-300 mb-2" />,
       value: stats.inProgress,
-      from: "from-[#e3fcff]",
-      to: "to-[#d0e6ff]",
-      iconIdx: 2,
+      from: "from-blue-500/20",
+      to: "to-blue-500/30",
     },
     {
       key: "designing",
       label: "Designing",
+      icon: <Pencil className="w-6 h-6 text-pink-300 mb-2" />,
       value: stats.designing,
-      from: "from-[#fff9e3]",
-      to: "to-[#ffeccf]",
-      iconIdx: 3,
+      from: "from-pink-500/20",
+      to: "to-pink-500/30",
     },
     {
       key: "completed",
       label: "Completed",
+      icon: <CheckCircle className="w-6 h-6 text-green-300 mb-2" />,
       value: stats.completed,
-      from: "from-[#e3ffe9]",
-      to: "to-[#cffaea]",
-      iconIdx: 4,
+      from: "from-green-500/20",
+      to: "to-green-500/30",
     },
     {
       key: "invoiced",
       label: "Invoiced",
+      icon: <FileText className="w-6 h-6 text-purple-300 mb-2" />,
       value: stats.invoiced,
-      from: "from-[#fce3ff]",
-      to: "to-[#eed4ff]",
-      iconIdx: 5,
+      from: "from-purple-500/20",
+      to: "to-purple-500/30",
     },
     {
       key: "cancelled",
       label: "Cancelled",
+      icon: <XCircle className="w-6 h-6 text-red-300 mb-2" />,
       value: stats.cancelled,
-      from: "from-[#ffe3e3]",
-      to: "to-[#ffdede]",
-      iconIdx: 6,
-    }
+      from: "from-red-500/20",
+      to: "to-red-500/30",
+    },
+    {
+      key: "teamMembers",
+      label: "Team Members",
+      icon: <Users className="w-6 h-6 text-cyan-300 mb-2" />,
+      value:
+        stats.teamMembers,
+      from: "from-cyan-500/20",
+      to: "to-cyan-500/30",
+    },
   ];
 
-  const statusMap: Record<typeof statusKeys[number], 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'cancelled' | 'total'> = {
-    total: 'total',
-    pending: 'pending',
-    inProgress: 'in-progress',
-    designing: 'designing',
-    completed: 'completed',
-    invoiced: 'invoiced',
-    cancelled: 'cancelled',
-  };
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 p-4">
-      {cards.map((item, idx) => {
-        const { Icon, color, bg } = iconProps[item.iconIdx];
-        return (
-          <Card
-            key={item.key}
-            onClick={() => onStatusClick(statusMap[item.key as typeof statusKeys[number]], item.label)}
-            className={`
-              bg-gradient-to-br ${item.from} ${item.to}
-              border border-white/60
-              rounded-xl
-              shadow-lg
-              cursor-pointer
-              transform transition-transform duration-200
-              hover:scale-105 hover:shadow-2xl
-              h-30 w-full flex items-center justify-center
-            `}
-          >
-            <CardContent className="flex flex-col items-center justify-center text-gray-800 text-center">
-              <span className={`mb-2 p-2 rounded-full shadow ${bg}`}>
-                <Icon size={26} color={color} />
-              </span>
-              <p className="text-sm font-semibold mb-1">{item.label}</p>
-              <p className="text-3xl font-bold">{item.value}</p>
-            </CardContent>
-          </Card>
-        );
-      })}
+    return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 p-4">
+      {cards.map(({ key, label, icon, value, from, to }) => (
+        <Card
+          key={key}
+          onClick={() => onStatusClick(key, label)}
+          className={`
+            bg-gradient-to-br ${from} ${to}
+            backdrop-blur-md bg-blue/20
+            border border-white/30
+            rounded-xl
+            shadow-lg
+            cursor-pointer
+            transform transition-transform duration-300 ease-in-out
+            hover:scale-105 hover:shadow-2xl
+            h-30 w-full
+            flex items-center justify-center
+          `}
+        >
+          <CardContent className="flex flex-col items-center justify-center text-white text-center">
+            {icon}
+            <p className="text-sm font-semibold mb-1 drop-shadow-md">{label}</p>
+            <p className="text-3xl font-bold drop-shadow-lg">{value}</p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

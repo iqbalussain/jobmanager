@@ -15,20 +15,18 @@ interface JobListProps {
 
 export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "pending" | "in-progress" | "designing" | "completed" | "invoiced" | "cancelled"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "in-progress" | "designing" | "completed" | "invoiced" | "cancelled">("all");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch =
+  const filteredJobs = jobs.filter(job => {
+    const matchesSearch = 
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.jobOrderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.customer.toLowerCase().includes(searchQuery.toLowerCase());
-
+    
     const matchesStatus = statusFilter === "all" || job.status === statusFilter;
-
+    
     return matchesSearch && matchesStatus;
   });
 
@@ -45,36 +43,21 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
 
   const stats = {
     total: jobs.length,
-    pending: jobs.filter((job) => job.status === "pending").length,
-    inProgress: jobs.filter((job) => job.status === "in-progress").length,
-    designing: jobs.filter((job) => job.status === "designing").length,
-    completed: jobs.filter((job) => job.status === "completed").length,
-    invoiced: jobs.filter((job) => job.status === "invoiced").length,
-    cancelled: jobs.filter((job) => job.status === "cancelled").length,
-  };
-
-  // Type-correct filter change handler for status select
-  const handleStatusFilterChange = (value: string) => {
-    if (
-      value === "all" ||
-      value === "pending" ||
-      value === "in-progress" ||
-      value === "designing" ||
-      value === "completed" ||
-      value === "invoiced" ||
-      value === "cancelled"
-    ) {
-      setStatusFilter(value as typeof statusFilter);
-    }
+    pending: jobs.filter(job => job.status === "pending").length,
+    inProgress: jobs.filter(job => job.status === "in-progress").length,
+    designing: jobs.filter(job => job.status === "designing").length,
+    completed: jobs.filter(job => job.status === "completed").length,
+    invoiced: jobs.filter(job => job.status === "invoiced").length,
+    cancelled: jobs.filter(job => job.status === "cancelled").length
   };
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-yellow-100 to-blue-50 min-h-screen">
+    <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       <JobListHeader
         searchQuery={searchQuery}
         statusFilter={statusFilter}
         onSearchChange={setSearchQuery}
-        onStatusFilterChange={handleStatusFilterChange}
+        onStatusFilterChange={setStatusFilter}
       />
 
       <JobStatsCards stats={stats} />
