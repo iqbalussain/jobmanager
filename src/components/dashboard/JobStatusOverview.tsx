@@ -31,7 +31,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     {
       key: "total",
       label: "Total",
-      icon: <Briefcase className="w-8 h-8 text-magenta-500 mb-2" />,
+      icon: <Briefcase className="w-6 h-6 text-magenta-500 mb-2" />,
       value: stats.total,
       from: "from-magenta/10",
       to: "to-magenta/20",
@@ -39,7 +39,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     {
       key: "pending",
       label: "Pending",
-      icon: <Clock className="w-8 h-8 text-yellow-300 mb-2" />,
+      icon: <Clock className="w-6 h-6 text-yellow-300 mb-2" />,
       value: stats.pending,
       from: "from-yellow-500/20",
       to: "to-yellow-500/30",
@@ -47,7 +47,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     {
       key: "inProgress",
       label: "In Progress",
-      icon: <Play className="w-8 h-8 text-blue-300 mb-2" />,
+      icon: <Play className="w-6 h-6 text-blue-300 mb-2" />,
       value: stats.inProgress,
       from: "from-blue-500/20",
       to: "to-blue-500/30",
@@ -55,7 +55,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     {
       key: "designing",
       label: "Designing",
-      icon: <Pencil className="w-8 h-8 text-pink-300 mb-2" />,
+      icon: <Pencil className="w-6 h-6 text-pink-300 mb-2" />,
       value: stats.designing,
       from: "from-pink-500/20",
       to: "to-pink-500/30",
@@ -63,7 +63,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     {
       key: "completed",
       label: "Completed",
-      icon: <CheckCircle className="w-8 h-8 text-green-300 mb-2" />,
+      icon: <CheckCircle className="w-6 h-6 text-green-300 mb-2" />,
       value: stats.completed,
       from: "from-green-500/20",
       to: "to-green-500/30",
@@ -71,7 +71,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     {
       key: "invoiced",
       label: "Invoiced",
-      icon: <FileText className="w-8 h-8 text-purple-300 mb-2" />,
+      icon: <FileText className="w-6 h-6 text-purple-300 mb-2" />,
       value: stats.invoiced,
       from: "from-purple-500/20",
       to: "to-purple-500/30",
@@ -79,7 +79,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     {
       key: "cancelled",
       label: "Cancelled",
-      icon: <XCircle className="w-8 h-8 text-red-300 mb-2" />,
+      icon: <XCircle className="w-6 h-6 text-red-300 mb-2" />,
       value: stats.cancelled,
       from: "from-red-500/20",
       to: "to-red-500/30",
@@ -87,7 +87,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     {
       key: "teamMembers",
       label: "Team Members",
-      icon: <Users className="w-8 h-8 text-cyan-300 mb-2" />,
+      icon: <Users className="w-6 h-6 text-cyan-300 mb-2" />,
       value:
         stats.teamMembers,
       from: "from-cyan-500/20",
@@ -96,7 +96,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
   ];
 
     return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-1 p-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 p-2">
       {cards.map(({ key, label, icon, value, from, to }) => (
         <Card
           key={key}
@@ -110,7 +110,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
             cursor-pointer
             transform transition-transform duration-300 ease-in-out
             hover:scale-105 hover:shadow-2xl
-            h-25 w-full
+            h-20 w-full
             flex items-center justify-center
           `}
         >
