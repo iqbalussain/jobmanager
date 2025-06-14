@@ -68,7 +68,7 @@ interface JobStatusOverviewProps {
 
 // Responsive text (clamp font!) and smooth animation utility
 const cardBase =
-  "flex flex-col items-center justify-center w-full h-28 md:h-32 rounded-xl shadow-lg cursor-pointer " +
+  "flex flex-col items-center justify-center w-full h-27 md:h-31 rounded-xl shadow-lg cursor-pointer " +
   "transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-2xl select-none " +
   "focus:outline-none focus:ring-4 focus:ring-blue-300 animate-[fade-in_0.3s_ease-in]";
 
