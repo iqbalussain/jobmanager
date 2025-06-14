@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,10 +20,51 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
+// Helpers for theme
+const PALETTES = [
+  {
+    key: "neon",
+    name: "Neon Highlights",
+    colors: [
+      { bg: "#00FF85" }, // lime green
+      { bg: "#1E90FF" }, // electric blue
+      { bg: "#FF0099" }, // hot pink
+    ]
+  },
+  {
+    key: "jewel",
+    name: "Deep Jewel Tones",
+    colors: [
+      { bg: "#004D61" }, // teal
+      { bg: "#B39CD0" }, // lavender
+      { bg: "#3E5641" }, // green
+    ]
+  }
+];
+
+// Util: update theme on <body>
+function updateTheme({ dark, palette }: { dark: boolean, palette: string }) {
+  if (dark) {
+    document.body.classList.add("dark");
+    document.body.classList.remove("palette-neon", "palette-jewel");
+    if (palette === "neon") {
+      document.body.classList.add("palette-neon");
+    } else {
+      document.body.classList.add("palette-jewel");
+    }
+  } else {
+    document.body.classList.remove("dark", "palette-neon", "palette-jewel");
+  }
+  // persist
+  localStorage.setItem("themeDark", dark ? "1" : "0");
+  localStorage.setItem("themePalette", palette);
+}
+
 export function SettingsView() {
   const [notifications, setNotifications] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("themeDark") === "1");
+  const [colorPalette, setColorPalette] = useState(() => localStorage.getItem("themePalette") || "neon");
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
@@ -35,6 +75,11 @@ export function SettingsView() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Update theme instantly when toggled
+  useEffect(() => {
+    updateTheme({ dark: darkMode, palette: colorPalette });
+  }, [darkMode, colorPalette]);
 
   useEffect(() => {
     if (user) {
@@ -143,8 +188,8 @@ export function SettingsView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-2">Manage your application preferences</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">Manage your application preferences</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -259,27 +304,40 @@ export function SettingsView() {
               Appearance
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Dark Mode</Label>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Switch to dark theme
                 </p>
               </div>
               <Switch
                 checked={darkMode}
-                onCheckedChange={setDarkMode}
+                onCheckedChange={val => setDarkMode(val)}
               />
             </div>
             <Separator />
-            <div className="space-y-2">
-              <Label>Theme Color</Label>
-              <div className="flex gap-2">
-                <div className="w-8 h-8 rounded-full bg-blue-600 cursor-pointer border-2 border-blue-600"></div>
-                <div className="w-8 h-8 rounded-full bg-green-600 cursor-pointer border-2 border-transparent hover:border-green-600"></div>
-                <div className="w-8 h-8 rounded-full bg-purple-600 cursor-pointer border-2 border-transparent hover:border-purple-600"></div>
-                <div className="w-8 h-8 rounded-full bg-red-600 cursor-pointer border-2 border-transparent hover:border-red-600"></div>
+            <div>
+              <Label>Theme Color Palette</Label>
+              <div className="flex gap-2 mt-2">
+                {PALETTES.map(pal => (
+                  <button
+                    key={pal.key}
+                    onClick={() => setColorPalette(pal.key)}
+                    className={`flex flex-col items-center transition focus:outline-none border-2 rounded-xl px-2 py-1
+                      ${colorPalette === pal.key ? "border-primary" : "border-transparent"}
+                      bg-transparent hover:border-gray-300 dark:hover:border-gray-500`}
+                    type="button"
+                  >
+                    <div className="flex gap-1 mb-1">
+                      {pal.colors.map((c, i) =>
+                        <span key={i} className="w-6 h-6 rounded-full border-2 border-white" style={{ background: c.bg }}></span>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-700 dark:text-gray-200">{pal.name}</span>
+                  </button>
+                ))}
               </div>
             </div>
           </CardContent>
