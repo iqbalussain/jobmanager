@@ -9,20 +9,20 @@
 @layer base {
   :root {
     --background: 228 83% 8%; /* Deep dark blue background */
-    --foreground: 222.2 84% 99%;
+    --foreground: 210 100% 95%; /* Brighter white for better text visibility */
     --card: 228 40% 12%; /* Slightly lighter glass card */
-    --card-foreground: 222 84% 99%;
+    --card-foreground: 210 100% 96%; /* Very bright white for card text */
     --primary: 337 100% 54%; /* Neon Red (#ff007a) */
-    --primary-foreground: 220 80% 96%;
-    --secondary: 246 90% 45%; /* Neon Blue (#342ca7) */
-    --secondary-foreground: 220 80% 96%;
-    --muted: 226 12% 30%;
-    --muted-foreground: 226 12% 80%;
-    --accent: 256 100% 65%;
-    --accent-foreground: 222 84% 15%;
+    --primary-foreground: 220 80% 98%; /* Even brighter for primary text */
+    --secondary: 246 90% 55%; /* Slightly brighter neon blue */
+    --secondary-foreground: 220 80% 98%; /* Brighter for secondary text */
+    --muted: 226 12% 35%; /* Lighter muted background */
+    --muted-foreground: 226 12% 85%; /* Much brighter muted text */
+    --accent: 256 100% 70%; /* Brighter accent */
+    --accent-foreground: 222 84% 98%; /* Very bright accent text */
     --destructive: 1 91% 65%;
     --destructive-foreground: 210 40% 98%;
-    --border: 228 50% 20%;
+    --border: 228 50% 25%; /* Slightly lighter borders */
     --input: 232 32% 34%;
     --ring: 337 100% 54%; /* Use neon red for focus ring */
     --radius: 1.25rem;
@@ -30,16 +30,16 @@
 
   .dark {
     --background: 230 80% 6%;
-    --foreground: 220 50% 96%;
+    --foreground: 210 100% 95%; /* Brighter white */
     --card: 230 40% 14%;
-    --card-foreground: 222 84% 99%;
+    --card-foreground: 210 100% 96%; /* Very bright white for card text */
     --primary: 337 100% 54%; /* Neon Red */
-    --primary-foreground: 220 80% 96%;
-    --secondary: 246 90% 45%; /* Neon Blue */
-    --secondary-foreground: 220 80% 96%;
+    --primary-foreground: 220 80% 98%; /* Brighter primary text */
+    --secondary: 246 90% 55%; /* Brighter neon blue */
+    --secondary-foreground: 220 80% 98%; /* Brighter secondary text */
     --muted: 230 10% 40%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 256 100% 55%;
+    --muted-foreground: 215 20.2% 80%; /* Much brighter muted text */
+    --accent: 256 100% 70%; /* Brighter accent */
     --accent-foreground: 210 40% 98%;
     --destructive: 1 87% 49%;
     --destructive-foreground: 210 40% 98%;
@@ -49,6 +49,7 @@
     --radius: 1.25rem;
   }
 }
+
 @layer base {
   * {
     @apply border-border;
@@ -59,12 +60,48 @@
     background: linear-gradient(135deg, #ff007a 0%, #342ca7 60%, #020040 100%) !important;
     color: hsl(var(--foreground));
   }
+  
+  /* Enhanced text visibility */
+  h1, h2, h3, h4, h5, h6 {
+    color: hsl(var(--foreground));
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+  
+  p, span, div {
+    color: hsl(var(--foreground));
+  }
+  
+  /* Bright text for buttons and interactive elements */
+  button {
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  }
 }
 
-/* Neon glass utility style for transparent, blurred, rounded sections */
+/* Enhanced neon glass utility style for transparent, blurred, rounded sections */
 @layer utilities {
   .glass-neon {
-    @apply bg-white/10 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_0_rgba(50,60,220,0.15)] border border-[#ffffff18] border-solid;
+    @apply bg-white/15 backdrop-blur-lg rounded-2xl shadow-[0_8px_32px_0_rgba(50,60,220,0.2)] border border-[#ffffff25] border-solid;
+    /* Add subtle inner glow for better text contrast */
+    box-shadow: 
+      0 8px 32px 0 rgba(50, 60, 220, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Enhanced text visibility utility */
+  .text-neon-bright {
+    color: #ffffff;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+  }
+  
+  /* Neon text effects */
+  .text-neon-red {
+    color: #ff007a;
+    text-shadow: 0 0 15px rgba(255, 0, 122, 0.7);
+  }
+  
+  .text-neon-blue {
+    color: #5865f2;
+    text-shadow: 0 0 15px rgba(88, 101, 242, 0.7);
   }
 }
 
@@ -72,6 +109,6 @@
 @layer utilities {
   .neon-border {
     border: 2px solid;
-    border-image: linear-gradient(120deg, #ff007a 0%, #342ca7 80%) 1;
+    border-image: linear-gradient(120deg, #ff007a 0%, #5865f2 80%) 1;
   }
 }
