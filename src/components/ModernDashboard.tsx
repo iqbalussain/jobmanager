@@ -115,7 +115,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           <ShortcutGadgets onViewChange={onViewChange} />
         </div>
       </div>
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 min-h-screen p-6">
       <JobDetails
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
