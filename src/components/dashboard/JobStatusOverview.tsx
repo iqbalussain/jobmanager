@@ -13,18 +13,17 @@ import {
 interface JobStats {
   total: number;
   pending: number;
-  inProgress: number;
+  "in-progress": number;
   designing: number;
   completed: number;
   invoiced: number;
   cancelled: number;
-  // teamMembers REMOVED
 }
 
 type StatusKey =
   | "total"
   | "pending"
-  | "inProgress"
+  | "in-progress"
   | "designing"
   | "completed"
   | "invoiced"
@@ -33,7 +32,7 @@ type StatusKey =
 const STATUS_NAME_MAP: Record<StatusKey, string> = {
   total: "Total",
   pending: "Pending",
-  inProgress: "In Progress",
+  "in-progress": "In Progress",
   designing: "Designing",
   completed: "Completed",
   invoiced: "Invoiced",
@@ -43,7 +42,7 @@ const STATUS_NAME_MAP: Record<StatusKey, string> = {
 const STATUS_COLOR_MAP: Record<StatusKey, string> = {
   total: "bg-gray-900 text-white",
   pending: "bg-blue-600 text-white",
-  inProgress: "bg-orange-500 text-white",
+  "in-progress": "bg-orange-500 text-white",
   designing: "bg-purple-600 text-white",
   completed: "bg-green-600 text-white",
   invoiced: "bg-emerald-700 text-white",
@@ -53,7 +52,7 @@ const STATUS_COLOR_MAP: Record<StatusKey, string> = {
 const ICON_MAP: Record<StatusKey, JSX.Element> = {
   total: <Briefcase className="w-5 h-5 inline-block mr-2 -mt-1" />,
   pending: <Clock className="w-5 h-5 inline-block mr-2 -mt-1" />,
-  inProgress: <Play className="w-5 h-5 inline-block mr-2 -mt-1" />,
+  "in-progress": <Play className="w-5 h-5 inline-block mr-2 -mt-1" />,
   designing: <Pencil className="w-5 h-5 inline-block mr-2 -mt-1" />,
   completed: <CheckCircle className="w-5 h-5 inline-block mr-2 -mt-1" />,
   invoiced: <FileText className="w-5 h-5 inline-block mr-2 -mt-1" />,
@@ -81,7 +80,7 @@ export function JobStatusOverview({
   const statusKeys: StatusKey[] = [
     "total",
     "pending",
-    "inProgress",
+    "in-progress",
     "designing",
     "completed",
     "invoiced",
