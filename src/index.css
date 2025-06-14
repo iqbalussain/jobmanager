@@ -109,3 +109,52 @@
 .glass-card {
   @apply rounded-2xl bg-white/40 backdrop-blur-xl shadow-lg border border-white/40 hover:shadow-2xl transition-all duration-300;
 }
+
+/* Neon Blue Radium Border Animation for Job Cards */
+@keyframes neon-border-glow {
+  0% {
+    box-shadow: 0 0 8px 0 #3b82f6, 0 0 0 0 #60a5fa;
+    border-image: linear-gradient(90deg, #2563eb 0%, #60a5fa 13%, #2563eb 25%, #60a5fa 37%, #2563eb 50%, #60a5fa 63%, #2563eb 75%, #2563eb 87%, #2563eb 100%) 1;
+  }
+  100% {
+    box-shadow: 0 0 22px 6px #3b82f6, 0 0 4px 2px #60a5fa;
+    border-image: linear-gradient(270deg, #60a5fa 0%, #2563eb 30%, #60a5fa 50%, #2563eb 70%, #2563eb 100%) 1;
+  }
+}
+@keyframes neon-bar-move {
+  0% { background-position: 200% 0;}
+  100% { background-position: 0 0;}
+}
+.neon-radium-card .neon-border {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 1.25rem; /* ~Card lg */
+  z-index: 10;
+  border: 2px solid transparent;
+  background: linear-gradient(120deg, #60a5fa 0%, #1e40af 50%, #3b82f6 100%) 0 0/200% 220%;
+  filter: drop-shadow(0 0 16px #60a5fa55);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.neon-radium-card:hover .neon-border, 
+.neon-radium-card:focus-within .neon-border {
+  opacity: 1;
+  animation: neon-bar-move 2s linear infinite, neon-border-glow 1.2s alternate infinite;
+  background: linear-gradient(120deg, #60a5fa 0%, #1e40af 50%, #3b82f6 100%) 0 0/200% 220%;
+}
+
+/* Optional: Slight blue shadow on card hover for extra effect */
+.neon-radium-card:hover,
+.neon-radium-card:focus-within {
+  box-shadow: 0 6px 30px 0 #60a5fa33, 0 0 2px 1px #1e40af55;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+/* General Job List Theme Tweaks */
+body {
+  background: linear-gradient(135deg, #e0ecfb 0%, #f8fafc 70%, #dbeafe 100%) no-repeat fixed !important;
+}
+.dark body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 70%, #334155 100%) no-repeat fixed !important;
+}

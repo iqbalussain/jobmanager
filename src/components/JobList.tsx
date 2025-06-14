@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +19,6 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
-  // wrap setStatusFilter in type guard
   const handleStatusFilterChange = (value: string) => {
     const validStatuses = [
       "all",
@@ -30,7 +30,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
       "cancelled",
     ];
     if (validStatuses.includes(value)) {
-      setStatusFilter(value as typeof statusFilter); // safe cast
+      setStatusFilter(value as typeof statusFilter);
     }
   };
 
@@ -67,7 +67,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   };
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div className="space-y-8 p-0 md:p-6 bg-gradient-to-tr from-blue-50 from-10% via-white via-80% to-blue-200 min-h-screen transition-all duration-300">
       <JobListHeader
         searchQuery={searchQuery}
         statusFilter={statusFilter}
@@ -77,9 +77,9 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
 
       <JobStatsCards stats={stats} />
 
-      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <Card className="bg-white/95 dark:bg-slate-950/80 border-0 shadow-2xl backdrop-blur-2xl ring-1 ring-blue-100/50">
+        <CardContent className="p-0 md:p-6">
+          <div className="flex flex-col gap-7">
             {filteredJobs.map((job) => (
               <JobCard
                 key={job.id}
@@ -102,3 +102,4 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
     </div>
   );
 }
+
