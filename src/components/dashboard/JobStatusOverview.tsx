@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Briefcase,
@@ -66,9 +67,8 @@ interface JobStatusOverviewProps {
   ) => void;
 }
 
-// Responsive text (clamp font!) and smooth animation utility
 const cardBase =
-  "flex flex-col items-center justify-center w-full h-27 md:h-31 rounded-xl shadow-lg cursor-pointer " +
+  "flex flex-col items-center justify-center w-full h-24 sm:h-28 md:h-31 rounded-xl shadow-lg cursor-pointer " +
   "transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-2xl select-none " +
   "focus:outline-none focus:ring-4 focus:ring-blue-300 animate-[fade-in_0.3s_ease-in]";
 
@@ -98,12 +98,12 @@ export function JobStatusOverview({
           className={cardBase + " " + STATUS_COLOR_MAP[key]}
         >
           <CardContent className="flex flex-col items-center justify-center text-center gap-2 p-3 w-full h-full">
-            <span className="flex items-center justify-center text-base font-medium md:text-lg">
+            <span className="flex items-center justify-center text-xs sm:text-sm md:text-base font-medium">
               {ICON_MAP[key]}
               <span className="inline-block">{STATUS_NAME_MAP[key]}</span>
             </span>
             <span
-              className="font-bold text-3xl md:text-4xl lg:text-5xl leading-tight"
+              className="font-bold text-xl sm:text-2xl md:text-4xl lg:text-5xl leading-tight"
               style={{ lineHeight: "1" }}
             >
               {stats[key]}

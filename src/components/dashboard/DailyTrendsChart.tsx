@@ -12,7 +12,7 @@ export function DailyTrendsChart({ dailyJobData, isLoading }: DailyTrendsChartPr
   return (
     <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white">
+        <CardTitle className="flex items-center gap-2 text-white text-base sm:text-lg md:text-2xl">
           <Activity className="w-5 h-5 text-yellow-400" />
           Daily Job Creation Trends
         </CardTitle>
