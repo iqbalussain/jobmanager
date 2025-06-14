@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Briefcase,
@@ -74,7 +73,7 @@ const cardBase =
   "focus:outline-none focus:ring-4 focus:ring-blue-300 animate-[fade-in_0.3s_ease-in]";
 
 export function JobStatusOverview({
-  stats,1
+  stats,
   onStatusClick,
 }: JobStatusOverviewProps) {
   const statusKeys: StatusKey[] = [
