@@ -41,7 +41,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     cancelled: jobs.filter(job => job.status === "cancelled").length
   };
 
-  const filteredJobs = jobs.filter(job =>
+  const filteredJobs = jobs.filter(job => 
     job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     job.jobOrderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
     job.customer.toLowerCase().includes(searchQuery.toLowerCase())
@@ -68,24 +68,18 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
   ];
 
-  // --- Start Glassmorphism/Dark Mode Wrapper ---
   return (
-    <div className="p-6 min-h-screen bg-gradient-to-br from-[#030712] to-[#232946] dark:from-[#02101f] dark:to-[#1d2238] flex flex-col gap-8 transition-colors duration-300">
-      <div className="w-full rounded-2xl shadow-2xl border border-white/10 bg-white/20 dark:bg-black/30 backdrop-blur-md mb-3 px-8 py-6 flex items-center justify-between"
-        style={{
-          background:
-            "linear-gradient(120deg, rgba(30,32,41,0.65) 0%, rgba(51,62,80,0.75) 100%)",
-          boxShadow: "0 8px 32px 0 rgba(12,17,35,0.23)"
-        }}>
+    
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-slate-100 mb-2 drop-shadow-xl">Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-300">Welcome back! Here's what's happening with your projects.</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600">Welcome back! Here's what's happening with your projects.</p>
         </div>
         <div className="flex items-center gap-4">
           <DashboardNotifications notifications={notifications} />
-          <Button
+          <Button 
             onClick={handleCreateJobClick}
-            className="bg-blue-700/80 hover:bg-blue-900/80 text-white px-6 py-2 rounded-xl shadow-xl hover:scale-[1.03] transition-all duration-300 backdrop-blur"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Job
@@ -95,43 +89,32 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
 
       <div className="grid grid-cols-10 gap-6 h-[400px]">
         <div className="col-span-6">
-          <div className="h-full rounded-2xl shadow-xl border border-white/10 bg-white/20 dark:bg-black/30 backdrop-blur-lg p-4 transition-all duration-300">
-            <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
-          </div>
+          <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
         </div>
-
+        
         <div className="col-span-4">
-          <div className="h-full rounded-2xl shadow-xl border border-white/10 bg-white/20 dark:bg-black/30 backdrop-blur-lg p-4 transition-all duration-300">
-            <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
-          </div>
+          <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
         </div>
       </div>
 
       <div className="grid grid-cols-10 gap-6 h-[400px]">
         <div className="col-span-4">
-          <div className="h-full rounded-2xl shadow-xl border border-white/10 bg-white/20 dark:bg-black/30 backdrop-blur-lg p-4">
-            <QuickSearch
-              searchQuery={searchQuery}
-              filteredJobs={filteredJobs}
-              onViewDetails={handleViewDetails}
-              onSearchChange={setSearchQuery}
-            />
-          </div>
+          <QuickSearch 
+            searchQuery={searchQuery}
+            filteredJobs={filteredJobs}
+            onViewDetails={handleViewDetails}
+            onSearchChange={setSearchQuery}
+          />
         </div>
 
         <div className="col-span-4">
-          <div className="h-full rounded-2xl shadow-xl border border-white/10 bg-white/20 dark:bg-black/30 backdrop-blur-lg p-4">
-            <ActivitiesSection />
-          </div>
+          <ActivitiesSection />
         </div>
 
         <div className="col-span-2">
-          <div className="h-full rounded-2xl shadow-xl border border-white/10 bg-white/20 dark:bg-black/30 backdrop-blur-lg p-4">
-            <ShortcutGadgets onViewChange={onViewChange} />
-          </div>
+          <ShortcutGadgets onViewChange={onViewChange} />
         </div>
       </div>
-
       <JobDetails
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
@@ -148,4 +131,3 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     </div>
   );
 }
-

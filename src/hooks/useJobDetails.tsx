@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Job } from "@/pages/Index";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,12 +20,12 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
   const [salesmen, setSalesmen] = useState<Array<{id: string, name: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [userRole, setUserRole] = useState<string>('');
   const { toast } = useToast();
   const { user } = useAuth();
 
   // Check if user is authorized to edit invoice numbers
-  const canEditInvoice = userRoles.includes('admin') || userRoles.includes('job_order_manager');
+  const canEditInvoice = userRole === 'admin' || userRole === 'manager' || userRole === 'job_order_manager';
 
   useEffect(() => {
     if (job) {
@@ -46,7 +47,7 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
 
   useEffect(() => {
     if (user) {
-      fetchUserRoles();
+      fetchUserRole();
     }
   }, [user]);
 
@@ -56,21 +57,26 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
     }
   }, [isEditMode, job]);
 
-  const fetchUserRoles = async () => {
+  const fetchUserRole = async () => {
     if (!user) return;
+    
     try {
-      // Fetch all roles for the user (handles multi-role accounts)
       const { data, error } = await supabase
-        .from('user_roles')
+        .from('profiles')
         .select('role')
-        .eq('user_id', user.id);
-      if (!error && data) {
-        setUserRoles(data.map(r => r.role));
-      } else {
-        setUserRoles([]); // fallback
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return;
+      }
+      
+      if (data) {
+        setUserRole(data.role);
       }
     } catch (error) {
-      setUserRoles([]);
+      console.error('Error fetching user role:', error);
     }
   };
 
