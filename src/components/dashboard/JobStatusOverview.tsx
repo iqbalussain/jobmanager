@@ -99,11 +99,11 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     <div className="w-full flex justify-end">
   <div
        className="grid gap-2 p-4"
-    style={{
+    style={
       display: "grid",
-      max-w-full
-      maxWidth: "150px", // or whatever width you want to limit to
-    }}
+      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 3fr))",
+      maxWidth: "200px", // or whatever width you want to limit to
+    }
   >
       {cards.map(({ key, label, icon, value, from, to }) => (
         <Card
@@ -118,8 +118,8 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
             cursor-pointer
             transform transition-transform duration-300 ease-in-out
             hover:scale-105 hover:shadow-2xl
-            h-20 w-full
-            flex items-center justify-center
+            h-30 w-full
+            flex items-center justify-end
           `}
         >
           <CardContent className="flex flex-col items-center justify-center text-white text-center">
