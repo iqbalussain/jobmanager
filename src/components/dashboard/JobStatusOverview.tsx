@@ -110,7 +110,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
             cursor-pointer
             transform transition-transform duration-300 ease-in-out
             hover:scale-105 hover:shadow-2xl
-            h-20 w-full
+            h-30 w-full
             flex items-center justify-center
           `}
         >
