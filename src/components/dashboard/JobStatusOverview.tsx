@@ -74,7 +74,7 @@ const cardBase =
   "focus:outline-none focus:ring-4 focus:ring-blue-300 animate-[fade-in_0.3s_ease-in]";
 
 export function JobStatusOverview({
-  stats,
+  stats,1
   onStatusClick,
 }: JobStatusOverviewProps) {
   const statusKeys: StatusKey[] = [
@@ -87,7 +87,7 @@ export function JobStatusOverview({
     "cancelled",
   ];
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 p-2">
+    <div className="grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 p-2">
       {statusKeys.map((key) => (
         <Card
           key={key}
