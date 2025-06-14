@@ -4,49 +4,49 @@
 @tailwind utilities;
 
 /** 
- * Lovable Nature Fresh Theme — Clean Emerald Green and Sky Blue 
+ * Gaming Dark Theme — Deep Black with Blue Gradient Glass 
  */
 @layer base {
   :root {
-    --background: 200 45% 8%; /* Deep nature background */
-    --foreground: 120 100% 95%; /* Bright white with green tint for text visibility */
-    --card: 200 30% 12%; /* Slightly lighter glass card */
-    --card-foreground: 120 100% 96%; /* Very bright white for card text */
-    --primary: 122 39% 49%; /* Emerald Green (#4caf50) */
-    --primary-foreground: 120 80% 98%; /* White for primary text */
-    --secondary: 207 90% 54%; /* Sky Blue (#2196f3) */
-    --secondary-foreground: 200 80% 15%; /* Dark blue for secondary text */
-    --muted: 200 12% 35%; /* Lighter muted background */
-    --muted-foreground: 120 20% 85%; /* Green-tinted muted text */
-    --accent: 180 100% 70%; /* Bright accent cyan */
-    --accent-foreground: 120 84% 98%; /* White accent text */
-    --destructive: 1 91% 65%;
-    --destructive-foreground: 120 40% 98%;
-    --border: 200 50% 25%; /* Blue-tinted borders */
-    --input: 200 32% 34%;
-    --ring: 122 39% 49%; /* Use emerald green for focus ring */
-    --radius: 1.25rem;
+    --background: 220 25% 3%; /* Deep black background */
+    --foreground: 0 0% 100%; /* Pure white text */
+    --card: 220 30% 8%; /* Dark glass card */
+    --card-foreground: 0 0% 100%; /* Pure white for card text */
+    --primary: 217 91% 60%; /* Bright blue (#3b82f6) */
+    --primary-foreground: 0 0% 100%; /* Pure white for primary text */
+    --secondary: 263 85% 70%; /* Electric purple (#a855f7) */
+    --secondary-foreground: 0 0% 100%; /* Pure white for secondary text */
+    --muted: 220 15% 15%; /* Dark muted background */
+    --muted-foreground: 0 0% 85%; /* Light muted text */
+    --accent: 142 76% 36%; /* Neon green (#10b981) */
+    --accent-foreground: 0 0% 100%; /* Pure white accent text */
+    --destructive: 0 84% 60%; /* Red for destructive actions */
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 30% 18%; /* Dark blue borders */
+    --input: 220 25% 12%;
+    --ring: 217 91% 60%; /* Blue focus ring */
+    --radius: 1rem;
   }
 
   .dark {
-    --background: 200 80% 6%;
-    --foreground: 120 100% 95%; /* White with green tint */
-    --card: 200 40% 14%;
-    --card-foreground: 120 100% 96%; /* White for card text */
-    --primary: 122 39% 49%; /* Emerald Green */
-    --primary-foreground: 120 80% 98%; /* White primary text */
-    --secondary: 207 90% 54%; /* Sky Blue */
-    --secondary-foreground: 200 80% 15%; /* Dark blue secondary text */
-    --muted: 200 10% 40%;
-    --muted-foreground: 120 20% 80%; /* Green-tinted muted text */
-    --accent: 180 100% 70%; /* Bright accent cyan */
-    --accent-foreground: 120 40% 98%;
-    --destructive: 1 87% 49%;
-    --destructive-foreground: 120 40% 98%;
-    --border: 200 12% 25%;
-    --input: 200 32% 38%;
-    --ring: 122 39% 49%;
-    --radius: 1.25rem;
+    --background: 220 25% 2%;
+    --foreground: 0 0% 100%;
+    --card: 220 30% 6%;
+    --card-foreground: 0 0% 100%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 263 85% 70%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 15% 12%;
+    --muted-foreground: 0 0% 80%;
+    --accent: 142 76% 36%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 30% 15%;
+    --input: 220 25% 10%;
+    --ring: 217 91% 60%;
+    --radius: 1rem;
   }
 }
 
@@ -57,99 +57,160 @@
   html, body {
     @apply transition-colors duration-300;
     min-height: 100vh;
-    background: linear-gradient(135deg, #4caf50 0%, #2196f3 40%, #81c784 80%, #0d1f2e 100%) !important;
+    background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 50%, #000000 100%) !important;
     color: hsl(var(--foreground));
   }
   
-  /* Minimal dark outline for text visibility */
+  /* Pure white glowing text */
   h1, h2, h3, h4, h5, h6 {
-    color: hsl(var(--foreground));
+    color: #ffffff;
     text-shadow: 
-      0 0 10px rgba(76, 175, 80, 0.3),
-      0.5px 0 0 rgba(0, 0, 0, 0.8),
-      -0.5px 0 0 rgba(0, 0, 0, 0.8),
-      0 0.5px 0 rgba(0, 0, 0, 0.8),
-      0 -0.5px 0 rgba(0, 0, 0, 0.8);
+      0 0 20px rgba(59, 130, 246, 0.5),
+      0 0 40px rgba(59, 130, 246, 0.3),
+      0 0 60px rgba(59, 130, 246, 0.2);
+    font-weight: 700;
   }
   
   p, span, div {
-    color: hsl(var(--foreground));
-    text-shadow: 
-      0 0 8px rgba(76, 175, 80, 0.2),
-      0.5px 0 0 rgba(0, 0, 0, 0.6),
-      -0.5px 0 0 rgba(0, 0, 0, 0.6),
-      0 0.5px 0 rgba(0, 0, 0, 0.6),
-      0 -0.5px 0 rgba(0, 0, 0, 0.6);
-  }
-  
-  /* Minimal dark outline for buttons */
-  button {
-    text-shadow: 
-      0 0 8px rgba(76, 175, 80, 0.4),
-      0.5px 0 0 rgba(0, 0, 0, 0.8),
-      -0.5px 0 0 rgba(0, 0, 0, 0.8),
-      0 0.5px 0 rgba(0, 0, 0, 0.8),
-      0 -0.5px 0 rgba(0, 0, 0, 0.8);
-  }
-  
-  /* Minimal dark outline for labels */
-  label {
-    text-shadow: 
-      0 0 8px rgba(76, 175, 80, 0.3),
-      0.5px 0 0 rgba(0, 0, 0, 0.7),
-      -0.5px 0 0 rgba(0, 0, 0, 0.7),
-      0 0.5px 0 rgba(0, 0, 0, 0.7),
-      0 -0.5px 0 rgba(0, 0, 0, 0.7);
-  }
-}
-
-/* Enhanced nature glass utility style for transparent, blurred, rounded sections */
-@layer utilities {
-  .glass-neon {
-    @apply bg-white/15 backdrop-blur-lg rounded-2xl shadow-[0_8px_32px_0_rgba(76,175,80,0.3)] border border-[#ffffff25] border-solid;
-    /* Add subtle inner glow for better text contrast */
-    box-shadow: 
-      0 8px 32px 0 rgba(76, 175, 80, 0.3),
-      inset 0 1px 0 rgba(76, 175, 80, 0.1);
-  }
-  
-  /* Enhanced text visibility utility */
-  .text-neon-bright {
     color: #ffffff;
     text-shadow: 
-      0 0 12px rgba(76, 175, 80, 0.5),
-      0.5px 0 0 rgba(0, 0, 0, 0.8),
-      -0.5px 0 0 rgba(0, 0, 0, 0.8),
-      0 0.5px 0 rgba(0, 0, 0, 0.8),
-      0 -0.5px 0 rgba(0, 0, 0, 0.8);
+      0 0 10px rgba(59, 130, 246, 0.3),
+      0 0 20px rgba(59, 130, 246, 0.2);
   }
   
-  /* Nature fresh text effects with minimal dark outline */
-  .text-neon-red {
-    color: #4caf50;
+  /* Glowing buttons */
+  button {
+    color: #ffffff;
     text-shadow: 
-      0 0 15px rgba(76, 175, 80, 0.7),
-      0.5px 0 0 rgba(0, 0, 0, 0.7),
-      -0.5px 0 0 rgba(0, 0, 0, 0.7),
-      0 0.5px 0 rgba(0, 0, 0, 0.7),
-      0 -0.5px 0 rgba(0, 0, 0, 0.7);
+      0 0 15px rgba(59, 130, 246, 0.6),
+      0 0 30px rgba(59, 130, 246, 0.4);
+    font-weight: 600;
   }
   
-  .text-neon-blue {
-    color: #2196f3;
+  /* Glowing labels */
+  label {
+    color: #ffffff;
     text-shadow: 
-      0 0 15px rgba(33, 150, 243, 0.7),
-      0.5px 0 0 rgba(0, 0, 0, 0.7),
-      -0.5px 0 0 rgba(0, 0, 0, 0.7),
-      0 0.5px 0 rgba(0, 0, 0, 0.7),
-      0 -0.5px 0 rgba(0, 0, 0, 0.7);
+      0 0 10px rgba(59, 130, 246, 0.4),
+      0 0 20px rgba(59, 130, 246, 0.2);
+    font-weight: 500;
   }
 }
 
-/* Add extra shadow and borders to enhance nature effect */
+/* Gaming glass utility styles with blue gradients */
 @layer utilities {
-  .neon-border {
+  .glass-gaming {
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.1) 0%,
+      rgba(139, 92, 246, 0.05) 25%,
+      rgba(16, 185, 129, 0.05) 50%,
+      rgba(59, 130, 246, 0.1) 100%
+    );
+    backdrop-filter: blur(20px);
+    border-radius: 1rem;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 
+      0 8px 32px 0 rgba(59, 130, 246, 0.3),
+      inset 0 1px 0 rgba(59, 130, 246, 0.2),
+      0 0 0 1px rgba(59, 130, 246, 0.1);
+  }
+  
+  /* Enhanced gaming glass with stronger glow */
+  .glass-gaming-strong {
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.15) 0%,
+      rgba(139, 92, 246, 0.1) 25%,
+      rgba(16, 185, 129, 0.1) 50%,
+      rgba(59, 130, 246, 0.15) 100%
+    );
+    backdrop-filter: blur(25px);
+    border-radius: 1.25rem;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    box-shadow: 
+      0 12px 48px 0 rgba(59, 130, 246, 0.4),
+      inset 0 2px 0 rgba(59, 130, 246, 0.3),
+      0 0 0 1px rgba(59, 130, 246, 0.2),
+      0 0 100px rgba(59, 130, 246, 0.1);
+  }
+  
+  /* Pure white glowing text utility */
+  .text-gaming-glow {
+    color: #ffffff;
+    text-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.8),
+      0 0 40px rgba(59, 130, 246, 0.6),
+      0 0 60px rgba(59, 130, 246, 0.4),
+      0 0 80px rgba(59, 130, 246, 0.2);
+  }
+  
+  /* Gaming accent colors with glow */
+  .text-gaming-primary {
+    color: #3b82f6;
+    text-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.8),
+      0 0 40px rgba(59, 130, 246, 0.6);
+  }
+  
+  .text-gaming-secondary {
+    color: #a855f7;
+    text-shadow: 
+      0 0 20px rgba(168, 85, 247, 0.8),
+      0 0 40px rgba(168, 85, 247, 0.6);
+  }
+  
+  .text-gaming-accent {
+    color: #10b981;
+    text-shadow: 
+      0 0 20px rgba(16, 185, 129, 0.8),
+      0 0 40px rgba(16, 185, 129, 0.6);
+  }
+}
+
+/* Gaming borders with animated glow */
+@layer utilities {
+  .gaming-border {
     border: 2px solid;
-    border-image: linear-gradient(120deg, #4caf50 0%, #2196f3 80%) 1;
+    border-image: linear-gradient(
+      45deg, 
+      #3b82f6 0%, 
+      #a855f7 25%, 
+      #10b981 50%, 
+      #3b82f6 75%, 
+      #a855f7 100%
+    ) 1;
+    animation: borderGlow 3s ease-in-out infinite alternate;
+  }
+  
+  @keyframes borderGlow {
+    0% {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.7);
+    }
+    100% {
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+    }
+  }
+  
+  /* Pulsing glow animation */
+  .gaming-pulse {
+    animation: gamingPulse 2s ease-in-out infinite alternate;
+  }
+  
+  @keyframes gamingPulse {
+    0% {
+      box-shadow: 
+        0 0 20px rgba(59, 130, 246, 0.3),
+        0 0 40px rgba(59, 130, 246, 0.2);
+    }
+    100% {
+      box-shadow: 
+        0 0 30px rgba(59, 130, 246, 0.6),
+        0 0 60px rgba(59, 130, 246, 0.4),
+        0 0 90px rgba(59, 130, 246, 0.2);
+    }
   }
 }
