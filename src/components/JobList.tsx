@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,7 +68,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   };
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div className="space-y-6 p-6 min-h-screen animated-gradient-border bg-gradient-to-br from-slate-100 via-blue-50 to-purple-100">
       <JobListHeader
         searchQuery={searchQuery}
         statusFilter={statusFilter}
@@ -77,7 +78,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
 
       <JobStatsCards stats={stats} />
 
-      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+      <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredJobs.map((job) => (
