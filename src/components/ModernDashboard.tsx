@@ -71,6 +71,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
   ];
 
+  // --- FIX: Ensure this whole return is wrapped in a single parent div ---
   return (
     <div className="relative min-h-screen flex flex-col gap-8 bg-gradient-to-br from-slate-100/70 to-blue-100/60 p-8 glass-bg">
       <div className="flex items-center justify-between bg-white/40 backdrop-blur-xl rounded-2xl px-6 py-5 shadow-xl">
@@ -115,7 +116,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         <div className="col-span-4">
           <ActivitiesSection />
         </div>
-
         {/* Floating Quick Actions Bar */}
         <ShortcutGadgets onViewChange={onViewChange} floating />
       </div>
