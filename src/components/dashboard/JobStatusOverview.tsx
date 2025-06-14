@@ -27,7 +27,25 @@ interface JobStatusOverviewProps {
 }
 
 export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewProps) {
-  const cards = [
+  // Define valid keys only
+  const statusKeys = [
+    "total",
+    "pending",
+    "inProgress",
+    "designing",
+    "completed",
+    "invoiced",
+    "cancelled",
+  ] as const;
+
+  const cards: {
+    key: typeof statusKeys[number];
+    label: string;
+    icon: JSX.Element;
+    value: number;
+    from: string;
+    to: string;
+  }[] = [
     {
       key: "total",
       label: "Total",
@@ -84,23 +102,26 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
       from: "from-red-500/20",
       to: "to-red-500/30",
     },
-    {
-      key: "teamMembers",
-      label: "Team Members",
-      icon: <Users className="w-6 h-6 text-cyan-300 mb-2" />,
-      value:
-        stats.teamMembers,
-      from: "from-cyan-500/20",
-      to: "to-cyan-500/30",
-    },
+    // REMOVED Team Members card as stats.teamMembers doesn't exist
   ];
 
-    return (
+  // Mapping for dashboards status keys to handler status props
+  const statusMap: Record<typeof statusKeys[number], 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'cancelled' | 'total'> = {
+    total: 'total',
+    pending: 'pending',
+    inProgress: 'in-progress',
+    designing: 'designing',
+    completed: 'completed',
+    invoiced: 'invoiced',
+    cancelled: 'cancelled',
+  };
+
+  return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 p-4">
       {cards.map(({ key, label, icon, value, from, to }) => (
         <Card
           key={key}
-          onClick={() => onStatusClick(key, label)}
+          onClick={() => onStatusClick(statusMap[key], label)}
           className={`
             bg-gradient-to-br ${from} ${to}
             backdrop-blur-md bg-blue/20
@@ -124,3 +145,4 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     </div>
   );
 }
+

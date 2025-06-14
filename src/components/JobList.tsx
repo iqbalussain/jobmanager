@@ -51,13 +51,29 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
     cancelled: jobs.filter(job => job.status === "cancelled").length
   };
 
+  // Type-correct filter change handler for status select
+  const handleStatusFilterChange = (value: string) => {
+    // Only accept our specific statuses or "all"
+    if (
+      value === "all" ||
+      value === "pending" ||
+      value === "in-progress" ||
+      value === "designing" ||
+      value === "completed" ||
+      value === "invoiced" ||
+      value === "cancelled"
+    ) {
+      setStatusFilter(value as typeof statusFilter);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       <JobListHeader
         searchQuery={searchQuery}
         statusFilter={statusFilter}
         onSearchChange={setSearchQuery}
-        onStatusFilterChange={setStatusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
       />
 
       <JobStatsCards stats={stats} />
@@ -87,3 +103,4 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
     </div>
   );
 }
+
