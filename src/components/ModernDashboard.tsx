@@ -70,7 +70,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
 
   return (
     
-    <div className="space-y-8 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
