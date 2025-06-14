@@ -148,16 +148,14 @@
 
 /* --- Stunning RGB Gaming-Inspired Animated Border --- */
 .rgb-gaming-border {
-  /* container must be relative for pseudo elements */
   position: relative;
   z-index: 0;
   border-radius: 1.25rem; /* match card rounding */
   overflow: hidden;
-  /* Optional - control border thickness from here */
   --rgb-border-thickness: 4px;
 }
 
-/* The animated border uses ::before as an outer border */
+/* Only show animated border on hover (initial state: just a soft border with no animation) */
 .rgb-gaming-border::before {
   content: "";
   position: absolute;
@@ -165,25 +163,35 @@
   border-radius: inherit;
   z-index: 1;
   background: conic-gradient(
-    from 45deg,
-    #00f0ff,
-    #0fffc3,
-    #2aff00,
-    #ffe600,
-    #ff2853,
-    #9f00ff,
-    #00f0ff
+    from 90deg,
+    #ff7fad, /* pink */
+    #fff069, /* yellow */
+    #6be9ff, /* blue */
+    #91ff9e, /* green */
+    #ffb871, /* orange */
+    #ae7fff, /* purple */
+    #ff7fad    /* pink loops back */
   );
-  filter: blur(0.5px) brightness(1.07);
+  opacity: 0;
+  transition:
+    opacity 0.42s cubic-bezier(.68,-0.55,.27,1.55),
+    filter 0.35s,
+    box-shadow 0.35s;
   background-size: 200% 200%;
-  animation: rgb-gaming-border-spin 8s linear infinite;
-  /* Only show at the edges */
+  filter: blur(0.7px) brightness(1.07);
   pointer-events: none;
-  /* Make sure it doesn't cover content */
-  box-shadow: 0 0 32px 0 rgba(0,200,255,0.14), 0 0 12px 2px #20e3ff66, 0 0 0 0 #fff0;
+  box-shadow: 0 0 16px 0 rgba(191,56,213,0.11);
 }
 
-/* The ::after layer is the regular background to avoid bleeding from the border inside */
+/* On hover: fade in & animate border */
+.rgb-gaming-border:hover::before {
+  opacity: 1;
+  animation: rgb-gaming-border-spin 4s linear infinite;
+  filter: brightness(1.2) saturate(1.18) drop-shadow(0 0 9px #ffe6fb66);
+  box-shadow: 0 0 32px 2px #56beff38, 0 0 20px 8px #9f00ff1e;
+}
+
+/* Hide background bleed from border inside; keep glass + light backgrounds visible */
 .rgb-gaming-border::after {
   content: "";
   position: absolute;
@@ -191,39 +199,23 @@
   z-index: 2;
   border-radius: inherit;
   background: inherit;
-  box-shadow: 0 2px 18px 0 rgb(16 113 255 / 8%);
+  box-shadow: 0 2px 10px 0 rgb(16 113 255 / 4%);
 }
 
-/* Animate the conic-gradient: Nick’s illuminated perimeter */
 @keyframes rgb-gaming-border-spin {
   0% {
     background-position: 0% 50%;
-    filter: hue-rotate(0deg) brightness(1.05);
+    filter: hue-rotate(0deg) brightness(1.07);
   }
   100% {
     background-position: 100% 50%;
-    filter: hue-rotate(360deg) brightness(1.2);
+    filter: hue-rotate(360deg) brightness(1.13);
   }
 }
 
-/* Pulse intensity on hover */
-.rgb-gaming-border:hover::before {
-  filter: brightness(1.25) saturate(1.15) drop-shadow(0 0 9px #00f0ff88);
-  box-shadow: 0 0 40px 2px #20e3ff88, 0 0 20px 8px #9f00ff44;
-  animation-duration: 3.7s;
-}
-
-/* Use prefers-reduced-motion to tone down for accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .rgb-gaming-border::before,
-  .rgb-gaming-border:hover::before {
-    animation: none !important;
-  }
-}
-
-/* Dark mode variant for a sharper look */
-.dark .rgb-gaming-border::before {
-  filter: brightness(1.45) contrast(1.1) blur(1.5px);
+/* Remove dark backgrounds by making rgb-gaming-bg utility neutral */
+.rgb-gaming-bg {
+  background: transparent;
 }
 
 /* Make room for border so it doesn't overlap content */

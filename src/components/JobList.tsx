@@ -67,7 +67,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   };
 
   return (
-    <div className="rgb-gaming-border rgb-gaming-bg rounded-2xl p-6 min-h-screen">
+    <div className="rgb-gaming-border rounded-2xl p-6 min-h-screen bg-white/70">
       <div className="space-y-6">
         <JobListHeader
           searchQuery={searchQuery}
@@ -75,9 +75,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
           onSearchChange={setSearchQuery}
           onStatusFilterChange={handleStatusFilterChange}
         />
-
         <JobStatsCards stats={stats} />
-
         <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -92,9 +90,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
             </div>
           </CardContent>
         </Card>
-
         {filteredJobs.length === 0 && <EmptyJobState />}
-
         <JobDetails
           isOpen={isJobDetailsOpen}
           onClose={() => setIsJobDetailsOpen(false)}
