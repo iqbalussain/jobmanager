@@ -39,7 +39,7 @@ const STATUS_NAME_MAP: Record<StatusKey, string> = {
 };
 
 const STATUS_COLOR_MAP: Record<StatusKey, string> = {
-  total: "bg-gray-900 text-white",
+  total: "bg-yellow-700 text-white",
   pending: "bg-blue-600 text-white",
   "in-progress": "bg-orange-500 text-white",
   designing: "bg-purple-600 text-white",
@@ -97,7 +97,7 @@ export function JobStatusOverview({
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onStatusClick(key, STATUS_NAME_MAP[key]); }}
           className={cardBase + " " + STATUS_COLOR_MAP[key]}
         >
-          <CardContent className="flex flex-col items-center justify-center text-center gap-2 p-4 w-full h-full">
+          <CardContent className="flex flex-col items-center justify-center text-center gap-2 p-3 w-full h-full">
             <span className="flex items-center justify-center text-base font-medium md:text-lg">
               {ICON_MAP[key]}
               <span className="inline-block">{STATUS_NAME_MAP[key]}</span>
