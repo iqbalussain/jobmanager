@@ -96,7 +96,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
   ];
 
     return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 p-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 p-2">
       {cards.map(({ key, label, icon, value, from, to }) => (
         <Card
           key={key}
