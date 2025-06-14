@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { Button } from "@/components/ui/button";
@@ -71,19 +70,19 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
   ];
 
-  // --- FIX: Ensure this whole return is wrapped in a single parent div ---
+  // ---- Start shadcn layout
   return (
-    <div className="relative min-h-screen flex flex-col gap-8 bg-gradient-to-br from-slate-100/70 to-blue-100/60 p-8 glass-bg">
-      <div className="flex items-center justify-between bg-white/40 backdrop-blur-xl rounded-2xl px-6 py-5 shadow-xl">
+    <div className="relative min-h-screen flex flex-col gap-8 p-8 bg-background">
+      <div className="flex items-center justify-between bg-card rounded-2xl px-6 py-5 shadow-xl">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 drop-shadow-lg">Dashboard</h1>
-          <p className="text-gray-600">Welcome back! Here's what's happening with your projects.</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back! Here's what's happening with your projects.</p>
         </div>
         <div className="flex items-center gap-4">
           <DashboardNotifications notifications={notifications} />
           <Button 
             onClick={handleCreateJobClick}
-            className="bg-blue-600/80 hover:bg-blue-700/90 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-lg"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Job
@@ -93,12 +92,12 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
 
       <div className="grid grid-cols-10 gap-6">
         <div className="col-span-6">
-          <div className="h-[400px] glass-card">
+          <div className="h-[400px]">
             <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
           </div>
         </div>
         <div className="col-span-4">
-          <div className="h-[400px] glass-card">
+          <div className="h-[400px]">
             <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
           </div>
         </div>
@@ -116,7 +115,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         <div className="col-span-4">
           <ActivitiesSection />
         </div>
-        {/* Floating Quick Actions Bar */}
         <ShortcutGadgets onViewChange={onViewChange} floating />
       </div>
       <JobDetails

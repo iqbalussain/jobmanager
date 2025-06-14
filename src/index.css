@@ -1,8 +1,12 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+/** 
+ * shadcn-driven theme + variable system using Tailwind's color tokens
+ * Now supports both light and dark with clear design tokens.
+ */
 
 @layer base {
   :root {
@@ -15,80 +19,57 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 252 83% 53%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 244 14% 90%;
+    --secondary-foreground: 252 83% 53%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 222 10% 96%;
+    --muted-foreground: 222.2 12% 43%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 292 80% 89%;
+    --accent-foreground: 222 84% 15%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 1 91% 65%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 226 25% 88%;
+    --input: 232 32% 93%;
+    --ring: 256 72% 66%;
 
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --radius: 1rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 232 12% 13%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 237 18% 22%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 232 12% 13%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 256 72% 66%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
+  
+    --secondary: 224 27% 22%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 237 18% 22%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 256 72% 40%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 1 87% 49%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 232 12% 19%;
+    --input: 232 32% 24%;
+    --ring: 256 72% 54%;
+    --radius: 1rem;
   }
 }
 
@@ -96,155 +77,10 @@
   * {
     @apply border-border;
   }
-
-  body {
-    @apply bg-background text-foreground;
+  html, body {
+    @apply bg-background text-foreground transition-colors duration-300;
   }
 }
 
-/* --- Glassmorphism Classes --- */
-.glass-bg {
-  @apply bg-white/30 backdrop-blur-3xl shadow-xl;
-}
-.glass-card {
-  @apply rounded-2xl bg-white/40 backdrop-blur-xl shadow-lg border border-white/40 hover:shadow-2xl transition-all duration-300;
-}
+/* shadcn: Remove glass, border, old color system. All cards/menus/icons/buttons should use bg-card, bg-secondary, bg-accent, text-primary, etc. */
 
-/* --- Animated Gradient Border Utility --- */
-.animated-gradient-border {
-  position: relative;
-  z-index: 1;
-}
-
-.animated-gradient-border::before {
-  content: '';
-  position: absolute;
-  inset: -2px; /* slightly outside the border */
-  z-index: -2;
-  border-radius: inherit;
-  padding: 0;
-  background: linear-gradient(270deg,
-    #25a9fa, #a855f7, #ec4899, #22d3ee, #38bdf8, #facc15, #25a9fa
-  );
-  background-size: 1400% 1400%;
-  animation: animatedBorderGradient 8s linear infinite;
-}
-
-.animated-gradient-border::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: inherit;
-  box-shadow: 0 4px 28px 0 rgb(16 113 255 / 10%);
-}
-
-@keyframes animatedBorderGradient {
-  0% { background-position: 0% 55%; }
-  50% { background-position: 100% 46%; }
-  100% { background-position: 0% 55%; }
-}
-
-/* --- Stunning RGB Gaming-Inspired Animated Border --- */
-.rgb-gaming-border {
-  position: relative;
-  z-index: 0;
-  border-radius: 1.25rem; /* match card rounding */
-  overflow: hidden;
-  --rgb-border-thickness: 4px;
-}
-
-/* Only show animated border on hover (initial state: just a soft border with no animation) */
-.rgb-gaming-border::before {
-  content: "";
-  position: absolute;
-  inset: calc(-1 * var(--rgb-border-thickness));
-  border-radius: inherit;
-  z-index: 1;
-  background: conic-gradient(
-    from 90deg,
-    #ff7fad, /* pink */
-    #fff069, /* yellow */
-    #6be9ff, /* blue */
-    #91ff9e, /* green */
-    #ffb871, /* orange */
-    #ae7fff, /* purple */
-    #ff7fad    /* pink loops back */
-  );
-  opacity: 0;
-  transition:
-    opacity 0.42s cubic-bezier(.68,-0.55,.27,1.55),
-    filter 0.35s,
-    box-shadow 0.35s;
-  background-size: 200% 200%;
-  filter: blur(0.7px) brightness(1.07);
-  pointer-events: none;
-  box-shadow: 0 0 16px 0 rgba(191,56,213,0.11);
-}
-
-/* On hover: fade in & animate border */
-.rgb-gaming-border:hover::before {
-  opacity: 1;
-  animation: rgb-gaming-border-spin 4s linear infinite;
-  filter: brightness(1.2) saturate(1.18) drop-shadow(0 0 9px #ffe6fb66);
-  box-shadow: 0 0 32px 2px #56beff38, 0 0 20px 8px #9f00ff1e;
-}
-
-/* Hide background bleed from border inside; keep glass + light backgrounds visible */
-.rgb-gaming-border::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-  background: inherit;
-  box-shadow: 0 2px 10px 0 rgb(16 113 255 / 4%);
-}
-
-@keyframes rgb-gaming-border-spin {
-  0% {
-    background-position: 0% 50%;
-    filter: hue-rotate(0deg) brightness(1.07);
-  }
-  100% {
-    background-position: 100% 50%;
-    filter: hue-rotate(360deg) brightness(1.13);
-  }
-}
-
-/* Remove dark backgrounds by making rgb-gaming-bg utility neutral */
-.rgb-gaming-bg {
-  background: transparent;
-}
-
-/* Make room for border so it doesn't overlap content */
-.rgb-gaming-border > * {
-  position: relative;
-  z-index: 3;
-}
-
-/* Variant: Slimmer border for subtle effect (used as rgb-gaming-border-slim) */
-.rgb-gaming-border-slim {
-  --rgb-border-thickness: 2px;
-}
-
-/* Variant: Extra bright neon (used as rgb-gaming-border-neon) */
-.rgb-gaming-border-neon::before {
-  filter: brightness(1.37) saturate(1.7) blur(1px) drop-shadow(0 0 12px #fff);
-  box-shadow: 0 0 28px 1px #fff8, 0 0 20px 4px #00f0ffbb;
-  animation-duration: 5s;
-}
-
-/* For square panels, reduce border-radius if needed (optional) */
-/* .rgb-gaming-border-square { border-radius: 0.5rem; } */
-
-/* Utility for easy container styling */
-.rgb-gaming-bg {
-  background: linear-gradient(135deg, #181246 0%, #1f2637 40%, #152e4d 100%);
-}
-
-/* Glassy effect for panels inside the border, optional */
-.rgb-gaming-glass {
-  @apply bg-white/20 backdrop-blur-lg;
-}

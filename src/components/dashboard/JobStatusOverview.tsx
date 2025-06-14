@@ -39,13 +39,13 @@ const STATUS_NAME_MAP: Record<StatusKey, string> = {
 };
 
 const STATUS_COLOR_MAP: Record<StatusKey, string> = {
-  total: "bg-yellow-700 text-white",
-  pending: "bg-blue-600 text-white",
-  "in-progress": "bg-orange-500 text-white",
-  designing: "bg-purple-600 text-white",
+  total: "bg-primary text-primary-foreground",
+  pending: "bg-secondary text-secondary-foreground",
+  "in-progress": "bg-accent text-accent-foreground",
+  designing: "bg-muted text-foreground",
   completed: "bg-green-600 text-white",
-  invoiced: "bg-emerald-700 text-white",
-  cancelled: "bg-red-600 text-white",
+  invoiced: "bg-purple-500 text-white",
+  cancelled: "bg-destructive text-destructive-foreground",
 };
 
 const ICON_MAP: Record<StatusKey, JSX.Element> = {
@@ -69,7 +69,7 @@ interface JobStatusOverviewProps {
 const cardBase =
   "flex flex-col items-center justify-center w-full h-24 sm:h-28 md:h-31 rounded-xl shadow-lg cursor-pointer " +
   "transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-2xl select-none " +
-  "focus:outline-none focus:ring-4 focus:ring-blue-300 animate-[fade-in_0.3s_ease-in]";
+  "focus:outline-none focus:ring-4 focus:ring-ring animate-[fade-in_0.3s_ease-in]";
 
 export function JobStatusOverview({
   stats,

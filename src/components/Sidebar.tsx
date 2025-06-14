@@ -1,4 +1,3 @@
-
 import { 
   LayoutDashboard, 
   Briefcase, 
@@ -144,18 +143,18 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
   const SidebarContentComponent = () => (
     <>
-      <SidebarHeader className="border-b border-purple-100 p-4">
+      <SidebarHeader className="border-b border-border p-4 bg-card bg-opacity-90">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-sm">
+          <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">
               {userProfile?.full_name?.charAt(0) || 'U'}
             </span>
           </div>
           <div>
-            <h1 className="text-sm font-bold text-gray-900">
+            <h1 className="text-sm font-bold text-foreground">
               {userProfile?.full_name || 'User'}
             </h1>
-            <p className="text-xs text-gray-600 capitalize">
+            <p className="text-xs text-muted-foreground capitalize">
               {userProfile?.role || 'Employee'}
             </p>
           </div>
@@ -164,74 +163,67 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       
       <SidebarContent className="px-3">
         <SidebarGroup>
+          <SidebarGroupLabel className="text-muted-foreground px-3 mb-2 text-xs">
+            Main Navigation
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-              <div className="grid grid-cols-2 gap-2">
-                {menuItems.map((item) => (
-                  <div key={item.title} className="flex flex-col items-center">
-                    <SidebarMenuButton 
-                      onClick={item.onClick}
-                      isActive={item.isActive}
-                      className={`w-full h-16 flex flex-col items-center justify-center gap-1 rounded-lg ${
-                        item.isActive 
-                          ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800' 
-                          : 'hover:bg-gray-50 text-gray-600'
-                      }`}
-                    >
-                      <item.icon className="w-4 h-4" />
-                      <span className="text-xs font-medium">{item.title}</span>
-                    </SidebarMenuButton>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <SidebarMenu>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    onClick={item.onClick}
+                    isActive={item.isActive}
+                    className={`w-full flex gap-2 items-center px-3 py-2 rounded-lg
+                      ${item.isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary text-foreground'}`}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span className="text-xs font-medium">{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-600 font-medium px-3 mb-2 text-xs">
+          <SidebarGroupLabel className="text-muted-foreground px-3 mb-2 text-xs">
             Administration
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-              <div className="grid grid-cols-2 gap-2">
-                {adminMenuItems.map((item) => (
-                  <div key={item.title} className="flex flex-col items-center">
-                    <SidebarMenuButton 
-                      onClick={item.onClick}
-                      isActive={item.isActive}
-                      className={`w-full h-16 flex flex-col items-center justify-center gap-1 rounded-lg ${
-                        item.isActive 
-                          ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700' 
-                          : 'hover:bg-red-50 hover:text-red-600 text-gray-600'
-                      }`}
-                    >
-                      <item.icon className="w-4 h-4" />
-                      <span className="text-xs font-medium text-center leading-tight">{item.title}</span>
-                    </SidebarMenuButton>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <SidebarMenu>
+              {adminMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    onClick={item.onClick}
+                    isActive={item.isActive}
+                    className={`w-full flex gap-2 items-center px-3 py-2 rounded-lg
+                      ${item.isActive ? 'bg-destructive text-destructive-foreground' : 'hover:bg-accent text-foreground'}`}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span className="text-xs font-medium">{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* User Profile Card */}
-        <div className="mt-6 p-4 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl text-white">
+        <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-primary via-muted to-card text-primary-foreground">
           <div className="flex items-center mb-3">
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
-              <User className="w-5 h-5 text-white" />
+              <User className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
               <p className="font-semibold text-sm">{userProfile?.full_name || 'User'}</p>
-              <p className="text-xs text-purple-200 capitalize">{userProfile?.role || 'Employee'}</p>
+              <p className="text-xs text-muted-foreground capitalize">{userProfile?.role || 'Employee'}</p>
             </div>
           </div>
           <Button 
             onClick={() => setShowProfile(!showProfile)}
             variant="secondary"
             size="sm"
-            className="w-full bg-white/20 hover:bg-white/30 text-white border-0 text-xs"
+            className="w-full bg-secondary hover:bg-accent text-primary border-0 text-xs"
           >
             View Profile
           </Button>
@@ -248,7 +240,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <SidebarBase className="hidden md:flex border-r border-purple-100 bg-white/95 backdrop-blur-sm w-64">
+      <SidebarBase className="hidden md:flex border-r border-border bg-card w-64">
         <SidebarContentComponent />
       </SidebarBase>
 
@@ -259,13 +251,13 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
             <Button
               variant="outline"
               size="icon"
-              className="fixed top-4 left-4 z-50 bg-white/90 backdrop-blur-sm border-purple-200 hover:bg-purple-50"
+              className="fixed top-4 left-4 z-50 bg-card border-border"
             >
               <Menu className="h-4 w-4" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-64">
-            <div className="h-full bg-white/95 backdrop-blur-sm">
+          <SheetContent side="left" className="p-0 w-64 bg-card">
+            <div className="h-full bg-card">
               <SidebarContentComponent />
             </div>
           </SheetContent>
