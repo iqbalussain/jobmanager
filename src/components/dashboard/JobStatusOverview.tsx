@@ -95,16 +95,14 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     },
   ];
 
-  <div className="w-full flex justify-end">
+  return (
+    <div className="w-full flex justify-end">
   <div
-    className={`
-      grid gap-4 p-2
-      grid-cols-1 sm:grid-cols-2 md:grid-cols-3
-      lg:grid-cols-${Math.min(data.length, 3)}
-      max-w-full
-    `}
+       className="grid gap-2 p-4"
     style={{
-      maxWidth: "100%",
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 3fr))",
+      maxWidth: "200px", // or whatever width you want to limit to
     }}
   >
       {cards.map(({ key, label, icon, value, from, to }) => (
@@ -132,6 +130,6 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
         </Card>
       ))}
     </div>
-    </div>
-  );
+    
+  ); 
 }
