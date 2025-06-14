@@ -90,7 +90,7 @@ const Index = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50">
         <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-        <main className="flex-1">
+        <main className="flex-1 px-2 py-6 md:pl-64">
           {renderContent()}
         </main>
       </div>
