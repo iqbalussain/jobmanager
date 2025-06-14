@@ -34,7 +34,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   const stats = {
     total: jobs.length,
     pending: jobs.filter(job => job.status === "pending").length,
-    inProgress: jobs.filter(job => job.status === "in-progress").length,
+    "in-progress": jobs.filter(job => job.status === "in-progress").length,
     designing: jobs.filter(job => job.status === "designing").length,
     completed: jobs.filter(job => job.status === "completed").length,
     invoiced: jobs.filter(job => job.status === "invoiced").length,
