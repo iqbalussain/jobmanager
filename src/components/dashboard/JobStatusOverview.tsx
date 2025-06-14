@@ -115,7 +115,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
           `}
         >
           <CardContent className="flex flex-col items-center justify-center text-white text-center">
-            {icon}{label}
+            {icon,label}
             <p className="text-sm font-semibold mb-1 drop-shadow-md">{label}</p>
             <p className="text-3xl font-bold drop-shadow-lg">{value}</p>
           </CardContent>
