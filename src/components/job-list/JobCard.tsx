@@ -42,12 +42,12 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   ];
 
   return (
-    <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
+    <div className="relative neon-border-card group rounded-2xl transition-transform duration-300 hover:scale-105">
+      <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg h-[320px] min-h-[300px] flex flex-col justify-between">
+        <CardHeader className="pb-3">
+          <div>
             <CardTitle className="text-lg font-bold text-gray-900 mb-2">{job.title}</CardTitle>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Briefcase className="w-4 h-4" />
                 <span className="font-medium">{job.jobOrderNumber}</span>
@@ -66,7 +66,7 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
               </div>
             </div>
           </div>
-          <div className="ml-4">
+          <div className="mt-2">
             <Select 
               value={job.status} 
               onValueChange={(value) => onStatusChange(job.id, value)}
@@ -85,29 +85,30 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
               </SelectContent>
             </Select>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onViewDetails(job)}
-            className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-          >
-            <Eye className="w-4 h-4 mr-2" />
-            View Details
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-          >
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Chat
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent className="pt-0 mt-auto">
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onViewDetails(job)}
+              className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              View Details
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Chat
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
+

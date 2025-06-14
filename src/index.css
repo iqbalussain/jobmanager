@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -108,4 +109,69 @@
 }
 .glass-card {
   @apply rounded-2xl bg-white/40 backdrop-blur-xl shadow-lg border border-white/40 hover:shadow-2xl transition-all duration-300;
+}
+
+/* --- Neon Border Animation for JobCard --- */
+.neon-border-card {
+  position: relative;
+  z-index: 0;
+}
+
+.neon-border-card::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 1.1rem;
+  background: conic-gradient(
+    from 90deg, 
+    #48baff, #1976d2, #50ffc9, #1976d2, #48baff 80%
+  );
+  filter: blur(2px) brightness(1.2);
+  opacity: 0.42;
+  transition: opacity 0.2s;
+}
+
+.neon-border-card:hover::before,
+.neon-border-card:focus-visible::before,
+.neon-border-card.group:hover::before {
+  opacity: 1;
+  animation: neon-run-rotate 2s linear infinite;
+}
+
+/* Inner mask to preserve border line */
+.neon-border-card::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 1rem;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(19,136,236,0.08);
+  pointer-events: none;
+}
+
+/* Only show the effect for large screens and up */
+@media (max-width: 767px) {
+  .neon-border-card::before,
+  .neon-border-card::after {
+    display: none;
+  }
+}
+
+@keyframes neon-run-rotate {
+  0% {
+    background-position: 0% 50%;
+    transform: rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    background-position: 100% 50%;
+    transform: rotate(360deg);
+    opacity: 1;
+  }
 }
