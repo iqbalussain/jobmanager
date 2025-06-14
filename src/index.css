@@ -245,7 +245,7 @@
 }
 
 /* For square panels, reduce border-radius if needed (optional) */
-// .rgb-gaming-border-square { border-radius: 0.5rem; }
+/* .rgb-gaming-border-square { border-radius: 0.5rem; } */
 
 /* Utility for easy container styling */
 .rgb-gaming-bg {
