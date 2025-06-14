@@ -95,16 +95,8 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     },
   ];
 
-  return (
-    <div className="w-full flex justify-end">
-  <div
-       className="grid gap-2 p-4"
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 3fr))",
-      maxWidth: "200px", // or whatever width you want to limit to
-    }}
-  >
+    return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 p-4">
       {cards.map(({ key, label, icon, value, from, to }) => (
         <Card
           key={key}
@@ -118,8 +110,8 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
             cursor-pointer
             transform transition-transform duration-300 ease-in-out
             hover:scale-105 hover:shadow-2xl
-            h-30 w-full
-            flex items-center justify-end
+            h-40 w-full
+            flex items-center justify-center
           `}
         >
           <CardContent className="flex flex-col items-center justify-center text-white text-center">
@@ -130,6 +122,5 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
         </Card>
       ))}
     </div>
-    
-  ); 
+  );
 }
