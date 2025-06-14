@@ -31,10 +31,10 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
     {
       key: "total",
       label: "Total",
-      icon: <Briefcase className="w-8 h-8 text-white/80 mb-2" />,
+      icon: <Briefcase className="w-8 h-8 text-magenta-500 mb-2" />,
       value: stats.total,
-      from: "from-white/10",
-      to: "to-white/20",
+      from: "from-magenta/10",
+      to: "to-magenta/20",
     },
     {
       key: "pending",
@@ -101,7 +101,7 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
        className="grid gap-2 p-4"
     style={{
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 3fr))",
       maxWidth: "200px", // or whatever width you want to limit to
     }}
   >
@@ -118,8 +118,8 @@ export function JobStatusOverview({ stats, onStatusClick }: JobStatusOverviewPro
             cursor-pointer
             transform transition-transform duration-300 ease-in-out
             hover:scale-105 hover:shadow-2xl
-            h-40 w-full
-            flex items-center justify-center
+            h-30 w-full
+            flex items-center justify-end
           `}
         >
           <CardContent className="flex flex-col items-center justify-center text-white text-center">
