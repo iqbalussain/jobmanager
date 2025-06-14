@@ -145,3 +145,114 @@
   50% { background-position: 100% 46%; }
   100% { background-position: 0% 55%; }
 }
+
+/* --- Stunning RGB Gaming-Inspired Animated Border --- */
+.rgb-gaming-border {
+  /* container must be relative for pseudo elements */
+  position: relative;
+  z-index: 0;
+  border-radius: 1.25rem; /* match card rounding */
+  overflow: hidden;
+  /* Optional - control border thickness from here */
+  --rgb-border-thickness: 4px;
+}
+
+/* The animated border uses ::before as an outer border */
+.rgb-gaming-border::before {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--rgb-border-thickness));
+  border-radius: inherit;
+  z-index: 1;
+  background: conic-gradient(
+    from 45deg,
+    #00f0ff,
+    #0fffc3,
+    #2aff00,
+    #ffe600,
+    #ff2853,
+    #9f00ff,
+    #00f0ff
+  );
+  filter: blur(0.5px) brightness(1.07);
+  background-size: 200% 200%;
+  animation: rgb-gaming-border-spin 8s linear infinite;
+  /* Only show at the edges */
+  pointer-events: none;
+  /* Make sure it doesn't cover content */
+  box-shadow: 0 0 32px 0 rgba(0,200,255,0.14), 0 0 12px 2px #20e3ff66, 0 0 0 0 #fff0;
+}
+
+/* The ::after layer is the regular background to avoid bleeding from the border inside */
+.rgb-gaming-border::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: inherit;
+  box-shadow: 0 2px 18px 0 rgb(16 113 255 / 8%);
+}
+
+/* Animate the conic-gradient: Nick’s illuminated perimeter */
+@keyframes rgb-gaming-border-spin {
+  0% {
+    background-position: 0% 50%;
+    filter: hue-rotate(0deg) brightness(1.05);
+  }
+  100% {
+    background-position: 100% 50%;
+    filter: hue-rotate(360deg) brightness(1.2);
+  }
+}
+
+/* Pulse intensity on hover */
+.rgb-gaming-border:hover::before {
+  filter: brightness(1.25) saturate(1.15) drop-shadow(0 0 9px #00f0ff88);
+  box-shadow: 0 0 40px 2px #20e3ff88, 0 0 20px 8px #9f00ff44;
+  animation-duration: 3.7s;
+}
+
+/* Use prefers-reduced-motion to tone down for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .rgb-gaming-border::before,
+  .rgb-gaming-border:hover::before {
+    animation: none !important;
+  }
+}
+
+/* Dark mode variant for a sharper look */
+.dark .rgb-gaming-border::before {
+  filter: brightness(1.45) contrast(1.1) blur(1.5px);
+}
+
+/* Make room for border so it doesn't overlap content */
+.rgb-gaming-border > * {
+  position: relative;
+  z-index: 3;
+}
+
+/* Variant: Slimmer border for subtle effect (used as rgb-gaming-border-slim) */
+.rgb-gaming-border-slim {
+  --rgb-border-thickness: 2px;
+}
+
+/* Variant: Extra bright neon (used as rgb-gaming-border-neon) */
+.rgb-gaming-border-neon::before {
+  filter: brightness(1.37) saturate(1.7) blur(1px) drop-shadow(0 0 12px #fff);
+  box-shadow: 0 0 28px 1px #fff8, 0 0 20px 4px #00f0ffbb;
+  animation-duration: 5s;
+}
+
+/* For square panels, reduce border-radius if needed (optional) */
+// .rgb-gaming-border-square { border-radius: 0.5rem; }
+
+/* Utility for easy container styling */
+.rgb-gaming-bg {
+  background: linear-gradient(135deg, #181246 0%, #1f2637 40%, #152e4d 100%);
+}
+
+/* Glassy effect for panels inside the border, optional */
+.rgb-gaming-glass {
+  @apply bg-white/20 backdrop-blur-lg;
+}

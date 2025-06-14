@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,38 +67,40 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   };
 
   return (
-    <div className="space-y-6 p-6 min-h-screen animated-gradient-border bg-gradient-to-br from-slate-100 via-blue-50 to-purple-100">
-      <JobListHeader
-        searchQuery={searchQuery}
-        statusFilter={statusFilter}
-        onSearchChange={setSearchQuery}
-        onStatusFilterChange={handleStatusFilterChange}
-      />
+    <div className="rgb-gaming-border rgb-gaming-bg rounded-2xl p-6 min-h-screen">
+      <div className="space-y-6">
+        <JobListHeader
+          searchQuery={searchQuery}
+          statusFilter={statusFilter}
+          onSearchChange={setSearchQuery}
+          onStatusFilterChange={handleStatusFilterChange}
+        />
 
-      <JobStatsCards stats={stats} />
+        <JobStatsCards stats={stats} />
 
-      <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                onViewDetails={handleViewDetails}
-                onStatusChange={handleStatusChange}
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+        <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredJobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  onViewDetails={handleViewDetails}
+                  onStatusChange={handleStatusChange}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-      {filteredJobs.length === 0 && <EmptyJobState />}
+        {filteredJobs.length === 0 && <EmptyJobState />}
 
-      <JobDetails
-        isOpen={isJobDetailsOpen}
-        onClose={() => setIsJobDetailsOpen(false)}
-        job={selectedJob}
-      />
+        <JobDetails
+          isOpen={isJobDetailsOpen}
+          onClose={() => setIsJobDetailsOpen(false)}
+          job={selectedJob}
+        />
+      </div>
     </div>
   );
 }

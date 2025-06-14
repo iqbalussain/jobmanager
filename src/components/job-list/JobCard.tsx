@@ -41,74 +41,76 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   ];
 
   return (
-    <div className="animated-gradient-border rounded-2xl overflow-hidden transition-transform duration-300 hover:scale-105">
-      <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg w-full min-h-[238px] relative">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <CardTitle className="text-lg font-bold text-gray-900 mb-2">{job.title}</CardTitle>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Briefcase className="w-4 h-4" />
-                  <span className="font-medium">{job.jobOrderNumber}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Building className="w-4 h-4" />
-                  <span>{job.customer}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <User className="w-4 h-4" />
-                  <span>{job.salesman}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="w-4 h-4" />
-                  <span>{new Date(job.dueDate).toLocaleDateString()}</span>
+    <div className="rgb-gaming-border mb-1 rounded-2xl transition-transform duration-300 hover:scale-105">
+      <div className="rounded-2xl relative bg-white/90 backdrop-blur-sm border-0 shadow-lg w-full min-h-[238px]">
+        <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg w-full min-h-[238px] relative">
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <CardTitle className="text-lg font-bold text-gray-900 mb-2">{job.title}</CardTitle>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Briefcase className="w-4 h-4" />
+                    <span className="font-medium">{job.jobOrderNumber}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Building className="w-4 h-4" />
+                    <span>{job.customer}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <User className="w-4 h-4" />
+                    <span>{job.salesman}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Calendar className="w-4 h-4" />
+                    <span>{new Date(job.dueDate).toLocaleDateString()}</span>
+                  </div>
                 </div>
               </div>
+              <div className="ml-4">
+                <Select 
+                  value={job.status} 
+                  onValueChange={(value) => onStatusChange(job.id, value)}
+                >
+                  <SelectTrigger className={`w-32 border-2 ${getStatusColor(job.status)}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getStatusOptions().map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <Badge variant="outline" className={getStatusColor(option.value)}>
+                          {option.label}
+                        </Badge>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="ml-4">
-              <Select 
-                value={job.status} 
-                onValueChange={(value) => onStatusChange(job.id, value)}
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onViewDetails(job)}
+                className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
               >
-                <SelectTrigger className={`w-32 border-2 ${getStatusColor(job.status)}`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {getStatusOptions().map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <Badge variant="outline" className={getStatusColor(option.value)}>
-                        {option.label}
-                      </Badge>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Eye className="w-4 h-4 mr-2" />
+                View Details
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Chat
+              </Button>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onViewDetails(job)}
-              className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              View Details
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Chat
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
