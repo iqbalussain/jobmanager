@@ -101,3 +101,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* --- Glassmorphism Classes --- */
+.glass-bg {
+  @apply bg-white/30 backdrop-blur-3xl shadow-xl;
+}
+.glass-card {
+  @apply rounded-2xl bg-white/40 backdrop-blur-xl shadow-lg border border-white/40 hover:shadow-2xl transition-all duration-300;
+}

@@ -52,7 +52,10 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     setIsJobDetailsOpen(true);
   };
 
-  const handleStatusClick = (status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', title: string) => {
+  const handleStatusClick = (
+    status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', 
+    title: string
+  ) => {
     setSelectedStatus({ status, title });
     setStatusModalOpen(true);
   };
@@ -69,17 +72,17 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   ];
 
   return (
-    
-      <div className="flex items-center justify-between">
+    <div className="relative min-h-screen flex flex-col gap-8 bg-gradient-to-br from-slate-100/70 to-blue-100/60 p-8 glass-bg">
+      <div className="flex items-center justify-between bg-white/40 backdrop-blur-xl rounded-2xl px-6 py-5 shadow-xl">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 drop-shadow-lg">Dashboard</h1>
           <p className="text-gray-600">Welcome back! Here's what's happening with your projects.</p>
         </div>
         <div className="flex items-center gap-4">
           <DashboardNotifications notifications={notifications} />
           <Button 
             onClick={handleCreateJobClick}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+            className="bg-blue-600/80 hover:bg-blue-700/90 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-lg"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Job
@@ -87,17 +90,20 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-10 gap-6 h-[400px]">
+      <div className="grid grid-cols-10 gap-6">
         <div className="col-span-6">
-          <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
+          <div className="h-[400px] glass-card">
+            <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
+          </div>
         </div>
-        
         <div className="col-span-4">
-          <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
+          <div className="h-[400px] glass-card">
+            <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-10 gap-6 h-[400px]">
+      <div className="grid grid-cols-10 gap-6 relative">
         <div className="col-span-4">
           <QuickSearch 
             searchQuery={searchQuery}
@@ -106,21 +112,18 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
             onSearchChange={setSearchQuery}
           />
         </div>
-
         <div className="col-span-4">
           <ActivitiesSection />
         </div>
 
-        <div className="col-span-2">
-          <ShortcutGadgets onViewChange={onViewChange} />
-        </div>
+        {/* Floating Quick Actions Bar */}
+        <ShortcutGadgets onViewChange={onViewChange} floating />
       </div>
       <JobDetails
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
         job={selectedJob}
       />
-
       <JobStatusModal
         isOpen={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}

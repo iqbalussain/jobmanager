@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Job } from "@/pages/Index";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +24,7 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
   const { user } = useAuth();
 
   // Check if user is authorized to edit invoice numbers
-  const canEditInvoice = userRole === 'admin' || userRole === 'manager' || userRole === 'job_order_manager';
+  const canEditInvoice = userRole === 'admin' || userRole === 'job_order_manager';
 
   useEffect(() => {
     if (job) {
