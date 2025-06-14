@@ -81,7 +81,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     }
   };
 
-  const menuItems = [
+  const mainNavItems = [
     {
       title: "Home",
       icon: Home,
@@ -89,7 +89,9 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         onViewChange("dashboard");
         setIsMobileMenuOpen(false);
       },
-      isActive: currentView === "dashboard"
+      isActive: currentView === "dashboard",
+      bg: "bg-primary",
+      fg: "text-primary-foreground"
     },
     {
       title: "All Files",
@@ -98,7 +100,9 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         onViewChange("jobs");
         setIsMobileMenuOpen(false);
       },
-      isActive: currentView === "jobs"
+      isActive: currentView === "jobs",
+      bg: "bg-accent",
+      fg: "text-accent-foreground"
     },
     {
       title: "Settings",
@@ -107,7 +111,9 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         onViewChange("settings");
         setIsMobileMenuOpen(false);
       },
-      isActive: currentView === "settings"
+      isActive: currentView === "settings",
+      bg: "bg-muted",
+      fg: "text-foreground"
     },
     {
       title: "Calendar",
@@ -116,7 +122,9 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         onViewChange("calendar");
         setIsMobileMenuOpen(false);
       },
-      isActive: currentView === "calendar"
+      isActive: currentView === "calendar",
+      bg: "bg-secondary",
+      fg: "text-secondary-foreground"
     }
   ];
 
@@ -163,25 +171,34 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       
       <SidebarContent className="px-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground px-3 mb-2 text-xs">
+          <SidebarGroupLabel className="text-muted-foreground px-3 mb-3 mt-2 text-xs">
             Main Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
+            {/* Icon Card Menu Style */}
+            <div className="grid grid-cols-2 gap-2">
+              {mainNavItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.title}
+                    aria-label={item.title}
                     onClick={item.onClick}
-                    isActive={item.isActive}
-                    className={`w-full flex gap-2 items-center px-3 py-2 rounded-lg
-                      ${item.isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary text-foreground'}`}
+                    className={`
+                      flex flex-col items-center justify-center gap-2 py-4 rounded-xl shadow 
+                      transition-all duration-150 active:scale-95
+                      ${item.bg} ${item.fg}
+                      ${item.isActive ? "ring-2 ring-offset-2 ring-primary" : "hover:opacity-90"}
+                      focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
+                      h-28
+                    `}
                   >
-                    <item.icon className="w-4 h-4" />
-                    <span className="text-xs font-medium">{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+                    <Icon className="w-7 h-7" />
+                    <span className="text-xs font-semibold tracking-wide">{item.title}</span>
+                  </button>
+                );
+              })}
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
 
