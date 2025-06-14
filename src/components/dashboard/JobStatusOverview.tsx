@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Briefcase,
@@ -86,7 +85,18 @@ export function JobStatusOverview({
     "cancelled",
   ];
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 p-2">
+    <div className="
+      grid
+      grid-cols-2
+      sm:grid-cols-3
+      md:grid-cols-4
+      lg:grid-cols-3
+      gap-2
+      p-1
+      sm:gap-2
+      md:gap-3
+      lg:gap-4
+    ">
       {statusKeys.map((key) => (
         <Card
           key={key}
@@ -95,16 +105,40 @@ export function JobStatusOverview({
           aria-label={`Show ${STATUS_NAME_MAP[key]} jobs`}
           onClick={() => onStatusClick(key, STATUS_NAME_MAP[key])}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onStatusClick(key, STATUS_NAME_MAP[key]); }}
-          className={cardBase + " " + STATUS_COLOR_MAP[key]}
+          className={
+            cardBase +
+            " " +
+            STATUS_COLOR_MAP[key] +
+            " min-h-[80px] sm:min-h-[96px] md:min-h-[104px] lg:min-h-[124px] p-1 sm:p-2"
+          }
+          style={{ maxWidth: "100%", width: "100%" }}
         >
-          <CardContent className="flex flex-col items-center justify-center text-center gap-2 p-3 w-full h-full">
-            <span className="flex items-center justify-center text-xs sm:text-sm md:text-base font-medium">
+          <CardContent className="
+            flex flex-col items-center justify-center text-center gap-1 sm:gap-2
+            w-full h-full p-2 sm:p-3 md:p-4
+          ">
+            <span className="
+              flex items-center justify-center
+              text-[11px] sm:text-xs md:text-base font-medium
+              leading-tight
+            ">
               {ICON_MAP[key]}
-              <span className="inline-block">{STATUS_NAME_MAP[key]}</span>
+              <span className="inline-block truncate max-w-[80px] sm:max-w-[120px] md:max-w-full">
+                {STATUS_NAME_MAP[key]}
+              </span>
             </span>
             <span
-              className="font-bold text-xl sm:text-2xl md:text-4xl lg:text-5xl leading-tight"
-              style={{ lineHeight: "1" }}
+              className="
+                font-bold
+                text-lg
+                sm:text-xl
+                md:text-2xl
+                lg:text-4xl
+                leading-tight
+                truncate
+                max-w-[60px] sm:max-w-[90px] md:max-w-full
+              "
+              style={{ lineHeight: "1.13" }}
             >
               {stats[key]}
             </span>
