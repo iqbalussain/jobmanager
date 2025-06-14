@@ -51,17 +51,9 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
-
-    --table-header-bg: var(--muted);
-    --table-row-bg: var(--background);
-    --table-border: var(--border);
-    --sidebar-bg: var(--sidebar-background);
-    --sidebar-text: var(--sidebar-foreground);
-    --icon-color: var(--foreground);
   }
 
   .dark {
-    /* Base dark */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -97,50 +89,6 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-
-    /* Neon Highlights palette (selected with .palette-neon) */
-    --neon-bg: 0 0% 5%;           /* #0D0D0D */
-    --neon-text: 0 0% 100%;       /* #FFFFFF */
-    --neon-accent-green: 151 100% 50%; /* #00FF85 */
-    --neon-accent-blue: 210 100% 60%;  /* #1E90FF */
-    --neon-accent-pink: 320 100% 50%;  /* #FF0099 */
-
-    /* Deep Jewel Tones palette (selected with .palette-jewel) */
-    --jewel-bg: 210 7% 10%;         /* #1A1A1A */
-    --jewel-text: 0 0% 94%;         /* #F0F0F0 */
-    --jewel-accent-teal: 192 100% 19%;   /* #004D61 */
-    --jewel-accent-lavender: 265 32% 73%;/* #B39CD0 */
-    --jewel-accent-green: 105 18% 29%;   /* #3E5641 */
-  }
-
-  /* Neon Palette (applies when .palette-neon is present on body) */
-  body.dark.palette-neon {
-    --background: var(--neon-bg);
-    --foreground: var(--neon-text);
-    --primary: var(--neon-accent-blue);
-    --primary-foreground: var(--neon-text);
-    --accent: var(--neon-accent-green);
-    --accent-foreground: var(--neon-text);
-    --muted: var(--neon-bg);
-    --destructive: var(--neon-accent-pink);
-    --card: var(--neon-bg);
-    --card-foreground: var(--neon-text);
-    --icon-color: #FFFFFF;
-  }
-
-  /* Jewel Palette (applies when .palette-jewel is present on body) */
-  body.dark.palette-jewel {
-    --background: var(--jewel-bg);
-    --foreground: var(--jewel-text);
-    --primary: var(--jewel-accent-teal);
-    --primary-foreground: var(--jewel-text);
-    --accent: var(--jewel-accent-lavender);
-    --accent-foreground: var(--jewel-text);
-    --muted: var(--jewel-bg);
-    --destructive: var(--jewel-accent-green);
-    --card: var(--jewel-bg);
-    --card-foreground: var(--jewel-text);
-    --icon-color: #F0F0F0;
   }
 }
 
@@ -300,5 +248,3 @@
 .rgb-gaming-glass {
   @apply bg-white/20 backdrop-blur-lg;
 }
-
-/* for all svg icons using lucide, force to inherit text color with className="text-foreground" or text-[color] in usage */
