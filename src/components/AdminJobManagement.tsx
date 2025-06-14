@@ -30,32 +30,54 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [jobsWithInvoices, setJobsWithInvoices] = useState<Job[]>(jobs);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Store roles for the user (handle admin and job_order_manager)
+  // --- Role Access Logic ---
   const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
+  const [rolesError, setRolesError] = useState<string | null>(null);
+
   useEffect(() => {
-    const checkRoles = async () => {
-      if (user) {
+    const fetchRoles = async () => {
+      if (!user) {
+        setUserRoles([]);
+        setRolesLoading(false);
+        return;
+      }
+      setRolesLoading(true);
+      setRolesError(null);
+      try {
         const { data, error } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id);
 
-        if (data) {
-          setUserRoles(data.map((row: { role: string }) => row.role));
-        } else {
+        if (error) {
           setUserRoles([]);
+          setRolesError("Failed to load roles: " + error.message);
+        } else if (!data) {
+          setUserRoles([]);
+        } else {
+          const roles = data.map((row: { role: string }) => row.role);
+          setUserRoles(roles);
+          console.log("[DEBUG] Fetched user roles:", roles, "for user:", user.id);
         }
+      } catch (err: any) {
+        setRolesError("Error loading roles: " + (err?.message || err));
+        setUserRoles([]);
+      } finally {
+        setRolesLoading(false);
       }
     };
-    checkRoles();
+
+    fetchRoles();
   }, [user]);
 
-  const isAdminOrJobOrderManager = userRoles.includes('admin') || userRoles.includes('job_order_manager');
+  const isAdminOrJobOrderManager =
+    userRoles.includes('admin') ||
+    userRoles.includes('job_order_manager');
 
   // Fetch fresh job data with invoice numbers
   useEffect(() => {
@@ -144,12 +166,38 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
     fetchJobsWithInvoices();
   }, [jobs]);
 
+  // Show loading until roles load
+  if (rolesLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <span className="text-lg text-muted-foreground">Checking permissions...</span>
+      </div>
+    );
+  }
+
+  // Show error if roles failed to load
+  if (rolesError) {
+    return (
+      <div className="text-red-600 bg-red-50 p-4 rounded">
+        <div className="font-semibold">Role Access Error</div>
+        <div>{rolesError}</div>
+        <div className="mt-2 text-xs">UserID: {user?.id || 'None'}</div>
+      </div>
+    );
+  }
+
+  // Show Access Denied if user doesn't have proper role
   if (!isAdminOrJobOrderManager) {
     return (
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Access Denied</h1>
           <p className="text-gray-600">You don't have permission to access the admin job management panel.</p>
+          <div className="mt-4 p-2 border bg-yellow-50 rounded text-xs">
+            <b>Debug info:</b><br/>
+            UserID: {user?.id || 'None'}<br/>
+            Roles: {userRoles.join(", ") || "None"}
+          </div>
         </div>
       </div>
     );

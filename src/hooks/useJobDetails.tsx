@@ -20,6 +20,7 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(true); // For debug UI
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -57,19 +58,32 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
   }, [isEditMode, job]);
 
   const fetchUserRoles = async () => {
-    if (!user) return;
+    setRolesLoading(true);
+    if (!user) {
+      setUserRoles([]);
+      setRolesLoading(false);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id);
-      if (data) {
+
+      if (error) {
+        setUserRoles([]);
+        console.error("Error fetching user roles:", error.message);
+      } else if (data) {
         setUserRoles(data.map((row: { role: string }) => row.role));
+        console.log("[DEBUG] useJobDetails roles:", data.map((row: { role: string }) => row.role), "for user:", user.id);
       } else {
         setUserRoles([]);
       }
-    } catch (error) {
-      console.error('Error fetching user roles:', error);
+    } catch (error: any) {
+      setUserRoles([]);
+      console.error("Error fetching user roles:", error?.message || error);
+    } finally {
+      setRolesLoading(false);
     }
   };
 
@@ -181,6 +195,8 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
     isExporting,
     canEditInvoice,
     handleSave,
-    handleExportPDF
+    handleExportPDF,
+    userRoles, // debugging
+    rolesLoading // debugging
   };
 }
