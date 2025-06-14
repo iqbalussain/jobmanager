@@ -42,36 +42,45 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   ];
 
   return (
-    <div className="relative neon-border-card group rounded-2xl transition-transform duration-300 hover:scale-105">
-      <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg h-[320px] min-h-[300px] flex flex-col justify-between">
-        <CardHeader className="pb-3">
-          <div>
-            <CardTitle className="text-lg font-bold text-gray-900 mb-2">{job.title}</CardTitle>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Briefcase className="w-4 h-4" />
-                <span className="font-medium">{job.jobOrderNumber}</span>
+    <Card
+      className="relative flex flex-row items-center min-h-[164px] bg-white/95 dark:bg-slate-950/80 border-0 shadow-xl px-0 py-0 transition-all duration-300 overflow-hidden group neon-radium-card"
+    >
+      {/* Radium animated border */}
+      <div className="pointer-events-none absolute inset-0 z-[2] neon-border" aria-hidden="true"></div>
+      {/* Content */}
+      <div className="flex w-full h-full">
+        <div className="w-[76px] hidden md:flex flex-col items-center justify-center bg-gradient-to-b from-blue-600/60 to-blue-800/80 text-white px-3 py-2 shadow-inner">
+          <Briefcase className="w-8 h-8 mb-1" />
+          <div className="font-bold text-lg tracking-wide">{job.jobOrderNumber}</div>
+        </div>
+        <div className="flex flex-1 flex-col md:flex-row gap-4 items-start md:items-center justify-between w-full p-6">
+          {/* Left: Details */}
+          <div className="flex flex-col gap-1 flex-1">
+            <CardTitle className="text-xl font-bold text-blue-900 dark:text-blue-200 flex items-center gap-2">
+              {job.title}
+            </CardTitle>
+            <div className="flex flex-wrap gap-4 mt-1 text-base text-gray-700 dark:text-gray-200">
+              <div className="flex items-center gap-1">
+                <Building className="w-4 h-4 opacity-80" />
+                <span className="truncate">{job.customer}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Building className="w-4 h-4" />
-                <span>{job.customer}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <User className="w-4 h-4" />
+              <div className="flex items-center gap-1">
+                <User className="w-4 h-4 opacity-80" />
                 <span>{job.salesman}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="w-4 h-4" />
+              <div className="flex items-center gap-1">
+                <Calendar className="w-4 h-4 opacity-80" />
                 <span>{new Date(job.dueDate).toLocaleDateString()}</span>
               </div>
             </div>
           </div>
-          <div className="mt-2">
+          {/* Right: Status & Actions */}
+          <div className="flex flex-col md:items-end gap-2 md:gap-4 min-w-[180px]">
             <Select 
               value={job.status} 
               onValueChange={(value) => onStatusChange(job.id, value)}
             >
-              <SelectTrigger className={`w-32 border-2 ${getStatusColor(job.status)}`}>
+              <SelectTrigger className={`w-36 border-2 ${getStatusColor(job.status)} text-base font-semibold`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -84,31 +93,29 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
                 ))}
               </SelectContent>
             </Select>
+            <div className="flex gap-2 mt-2">
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => onViewDetails(job)}
+                className="flex-1 bg-blue-600/90 hover:bg-blue-700 transition-colors text-white shadow-md"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                View
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="bg-white/90 hover:bg-blue-50 text-blue-700 border-blue-200 transition-colors"
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Chat
+              </Button>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="pt-0 mt-auto">
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onViewDetails(job)}
-              className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              View Details
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Chat
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </Card>
   );
 }
 
