@@ -80,10 +80,10 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
 
   // ---- Start shadcn layout
   return (
-    <div className="relative min-h-screen flex flex-col gap-8 p-8 bg-background">
-      <div className="flex items-center justify-between bg-card rounded-2xl px-6 py-5 shadow-xl">
+    <div className="relative min-h-screen flex flex-col gap-2 p-2 bg-background">
+      <div className="flex items-center justify-between bg-card rounded-2xl px-3 py-3 shadow-xl">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-1">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back! Here's what's happening with your projects.</p>
         </div>
         <div className="flex items-center gap-4">
