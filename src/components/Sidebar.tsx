@@ -175,7 +175,6 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
             Main Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            {/* Amazing Neon, glassy, gradient, shrinked, animated cards */}
             <div className="grid grid-cols-2 gap-2">
               {mainNavItems.map((item) => {
                 const Icon = item.icon;
@@ -188,23 +187,18 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
                       flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all active:scale-95
                       bg-gradient-to-tr from-blue-500 via-purple-600 to-green-400 
                       glass-gaming
-                      neon-animate
-                      ${item.isActive ? "ring-2 ring-offset-2 ring-primary scale-105" : "hover:scale-110"}
+                      ${item.isActive ? "neon-running-border scale-105" : "hover:scale-110"}
                       focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
                       h-14 w-full shadow-xl
-                      animate-glow
                       border-0
                     `}
                     style={{
                       minWidth: 0,
-                      boxShadow: item.isActive
-                        ? "0 0 18px 3px #3b82f6, 0 0 50px 10px #a855f7 inset"
-                        : "0 0 10px 2px #10b98144",
                       transition: "box-shadow 350ms cubic-bezier(.45,1.7,.83,.67), transform 200ms",
                     }}
                   >
-                    <Icon className="w-5 h-5 neon-icon drop-shadow-lg" />
-                    <span className="text-[11px] font-semibold tracking-wide text-white drop-shadow-[0_1px_8px_#00fff7aa] neon-text">
+                    <Icon className="w-5 h-5" />
+                    <span className="text-[11px] font-semibold tracking-wide text-white drop-shadow-[0_1px_8px_#00fff7aa]">
                       {item.title}
                     </span>
                   </button>
