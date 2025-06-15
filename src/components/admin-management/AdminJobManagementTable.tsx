@@ -22,41 +22,42 @@ const statusOptions: { value: JobStatus, label: string }[] = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
+// Map for light, mac-like UI palette
 const statusColorMap: Record<JobStatus, { trigger: string; item: string; text: string }> = {
   pending: {
-    trigger: "bg-gradient-to-r from-blue-900 via-blue-700 to-blue-800 border-blue-600 text-blue-300",
-    item: "bg-blue-900 hover:bg-blue-800",
-    text: "text-blue-100",
+    trigger: "bg-blue-100 border border-blue-300 text-blue-800",
+    item: "bg-blue-50 hover:bg-blue-100",
+    text: "text-blue-900 font-medium",
   },
   "in-progress": {
-    trigger: "bg-gradient-to-r from-orange-900 via-orange-800 to-yellow-800 border-orange-600 text-orange-200",
-    item: "bg-orange-900 hover:bg-orange-800",
-    text: "text-orange-100",
+    trigger: "bg-orange-100 border border-orange-300 text-orange-800",
+    item: "bg-orange-50 hover:bg-orange-100",
+    text: "text-orange-900 font-medium",
   },
   designing: {
-    trigger: "bg-gradient-to-r from-purple-900 via-purple-800 to-purple-700 border-purple-600 text-purple-200",
-    item: "bg-purple-900 hover:bg-purple-800",
-    text: "text-purple-100",
+    trigger: "bg-purple-100 border border-purple-300 text-purple-800",
+    item: "bg-purple-50 hover:bg-purple-100",
+    text: "text-purple-900 font-medium",
   },
   finished: {
-    trigger: "bg-gradient-to-r from-green-900 via-green-800 to-emerald-800 border-green-700 text-green-200",
-    item: "bg-green-900 hover:bg-green-800",
-    text: "text-green-100",
+    trigger: "bg-green-100 border border-green-300 text-green-800",
+    item: "bg-green-50 hover:bg-green-100",
+    text: "text-green-900 font-medium",
   },
   completed: {
-    trigger: "bg-gradient-to-r from-emerald-900 via-emerald-800 to-green-700 border-emerald-700 text-emerald-200",
-    item: "bg-emerald-900 hover:bg-emerald-800",
-    text: "text-emerald-100",
+    trigger: "bg-emerald-100 border border-emerald-300 text-emerald-800",
+    item: "bg-emerald-50 hover:bg-emerald-100",
+    text: "text-emerald-900 font-medium",
   },
   invoiced: {
-    trigger: "bg-gradient-to-r from-emerald-900 via-emerald-800 to-cyan-800 border-emerald-700 text-emerald-200",
-    item: "bg-emerald-900 hover:bg-emerald-800",
-    text: "text-emerald-100",
+    trigger: "bg-cyan-100 border border-cyan-300 text-cyan-800",
+    item: "bg-cyan-50 hover:bg-cyan-100",
+    text: "text-cyan-900 font-medium",
   },
   cancelled: {
-    trigger: "bg-gradient-to-r from-gray-900 via-gray-700 to-gray-800 border-gray-600 text-gray-200",
-    item: "bg-gray-900 hover:bg-gray-800",
-    text: "text-gray-100",
+    trigger: "bg-gray-100 border border-gray-300 text-gray-800",
+    item: "bg-gray-50 hover:bg-gray-100",
+    text: "text-gray-900 font-medium",
   },
 };
 
@@ -77,9 +78,7 @@ export function AdminJobManagementTable({ jobs, onEdit, onView, onStatusChange }
       </TableHeader>
       <TableBody>
         {jobs.map((job) => {
-          // fallback just in case
-          const color = statusColorMap[job.status as JobStatus] ??
-            statusColorMap["pending"];
+          const color = statusColorMap[job.status as JobStatus] ?? statusColorMap["pending"];
           return (
             <TableRow key={job.id}>
               <TableCell className="font-mono">{job.jobOrderNumber}</TableCell>
@@ -93,19 +92,24 @@ export function AdminJobManagementTable({ jobs, onEdit, onView, onStatusChange }
                   onValueChange={val => onStatusChange(job, val as JobStatus)}
                 >
                   <SelectTrigger
-                    className={`min-w-[8rem] ${color.trigger} border font-semibold shadow-md`}
+                    className={`min-w-[8rem] ${color.trigger} rounded-lg shadow-sm transition-all duration-150 border font-semibold h-9 px-4 flex items-center justify-between`}
+                    style={{
+                      boxShadow: '0 1px 4px 0 rgba(31,34,37,0.04)',
+                    }}
                   >
                     <SelectValue>
-                      <span className={color.text}>
+                      <span className={color.text} style={{ fontWeight: 600 }}>
                         {statusOptions.find(opt => opt.value === job.status)?.label || job.status}
                       </span>
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent
-                    className="z-50 rounded-xl p-1 mt-2 border border-border shadow-2xl"
+                    className="z-[999] rounded-xl p-1 mt-2 border border-border shadow-2xl"
                     style={{
-                      background: "linear-gradient(138deg, #1e293b 60%, #0f172a 100%)", // dark blue/gray gradient
-                      color: "#e0e7ef",
+                      background: "linear-gradient(150deg, #fff 60%, #f8fafc 100%)",
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+                      color: "#212733",
+                      minWidth: '8rem',
                     }}
                   >
                     {statusOptions.map(opt => {
@@ -116,14 +120,15 @@ export function AdminJobManagementTable({ jobs, onEdit, onView, onStatusChange }
                           key={opt.value}
                           className={`
                             ${optColor.item} ${optColor.text}
-                            font-medium px-3 py-2 rounded
-                            transition-colors duration-150
-                            data-[state=checked]:ring-2 data-[state=checked]:ring-primary
+                            rounded-md transition-colors duration-100 px-4 py-2 cursor-pointer
+                            font-semibold text-base
+                            data-[state=checked]:ring-2 data-[state=checked]:ring-indigo-400
                           `}
                           style={{
-                            backgroundImage: "none",
+                            letterSpacing: 0.01,
+                            WebkitFontSmoothing: 'antialiased',
                             fontWeight: 600,
-                            letterSpacing: 0.02,
+                            minHeight: '2.25rem',
                           }}
                         >
                           {opt.label}
