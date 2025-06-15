@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export async function fetchJobOrders() {
@@ -85,5 +84,25 @@ export async function updateJobOrderStatus(id: string, status: string) {
   }
   
   console.log('Job order status updated:', data);
+  return data;
+}
+
+export async function updateJobOrderApproval(id: string, adminId: string) {
+  // Set approval_status and related info
+  const { data, error } = await supabase
+    .from('job_orders')
+    .update({
+      approval_status: 'approved',
+      approved_by: adminId,
+      approved_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error approving job order:', error);
+    throw error;
+  }
   return data;
 }
