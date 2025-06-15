@@ -2,102 +2,94 @@
 @tailwind components;
 @tailwind utilities;
 
-/** 
- * Gaming Dark Theme — Deep Black with Blue Gradient Glass 
+/**
+ * Refined Silicon Exchange-Inspired Dark Theme
+ * Minimal-glow, matte card sections, blue/gold gradients for headlines, clarity everywhere!
  */
 @layer base {
   :root {
-    --background: 220 25% 3%; /* Deep black background */
-    --foreground: 0 0% 100%; /* Pure white text */
-    --card: 220 30% 8%; /* Dark glass card */
-    --card-foreground: 0 0% 100%; /* Pure white for card text */
-    --primary: 217 91% 60%; /* Bright blue (#3b82f6) */
-    --primary-foreground: 0 0% 100%; /* Pure white for primary text */
-    --secondary: 263 85% 70%; /* Electric purple (#a855f7) */
-    --secondary-foreground: 0 0% 100%; /* Pure white for secondary text */
-    --muted: 220 15% 15%; /* Dark muted background */
-    --muted-foreground: 0 0% 85%; /* Light muted text */
-    --accent: 142 76% 36%; /* Neon green (#10b981) */
-    --accent-foreground: 0 0% 100%; /* Pure white accent text */
-    --destructive: 0 84% 60%; /* Red for destructive actions */
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 30% 18%; /* Dark blue borders */
-    --input: 220 25% 12%;
-    --ring: 217 91% 60%; /* Blue focus ring */
-    --radius: 1rem;
-  }
-
-  .dark {
-    --background: 220 25% 2%;
-    --foreground: 0 0% 100%;
-    --card: 220 30% 6%;
-    --card-foreground: 0 0% 100%;
-    --primary: 217 91% 60%;
+    --background: 222 36% 5%;     /* Very dark blue-black */
+    --foreground: 0 0% 100%;      /* Pure white */
+    --card: 223 16% 10%;          /* Matte card, not full black */
+    --card-foreground: 0 0% 97%;
+    --primary: 210 93% 58%;       /* Blue (like the ref banner) */
     --primary-foreground: 0 0% 100%;
-    --secondary: 263 85% 70%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 220 15% 12%;
-    --muted-foreground: 0 0% 80%;
-    --accent: 142 76% 36%;
+    --secondary: 34 98% 72%;      /* Gold/peach accent */
+    --secondary-foreground: 0 0% 8%;
+    --muted: 222 22% 18%;         /* Subtle muted sections */
+    --muted-foreground: 211 20% 88%;
+    --accent: 210 93% 58%;      
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    --destructive: 1 83% 68%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 30% 15%;
-    --input: 220 25% 10%;
-    --ring: 217 91% 60%;
+    --border: 220 14% 16%;
+    --input: 222 17% 12%;
+    --ring: 210 93% 58%;
     --radius: 1rem;
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
-  }
   html, body {
-    @apply transition-colors duration-300;
-    min-height: 100vh;
-    background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 50%, #000000 100%) !important;
+    background: #10141c !important;
     color: hsl(var(--foreground));
+    min-height: 100vh;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   }
-  
-  /* Pure white glowing text */
-  h1, h2, h3, h4, h5, h6 {
-    color: #ffffff;
-    text-shadow: 
-      0 0 20px rgba(59, 130, 246, 0.5),
-      0 0 40px rgba(59, 130, 246, 0.3),
-      0 0 60px rgba(59, 130, 246, 0.2);
+
+  h1, h2 {
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    font-size: 2.7rem;
+    line-height: 1.15;
+    background: linear-gradient(90deg, #3b82f6 15%, #9ee7fa 45%, #facc15 70%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+    margin-bottom: 0.5em;
+  }
+  h1 .alt, h2 .alt {
+    background: linear-gradient(90deg, #eab308 25%, #f9fafb 80%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
     font-weight: 700;
   }
-  
-  p, span, div {
-    color: #ffffff;
-    text-shadow: 
-      0 0 10px rgba(59, 130, 246, 0.3),
-      0 0 20px rgba(59, 130, 246, 0.2);
+
+  h3, h4, h5, h6 {
+    color: #f3f4f6;
+    font-weight: 700;
+    text-shadow: none;
   }
-  
-  /* Glowing buttons */
+  p, span, div, label {
+    color: #dde3ea;
+    text-shadow: none;
+  }
   button {
-    color: #ffffff;
-    text-shadow: 
-      0 0 15px rgba(59, 130, 246, 0.6),
-      0 0 30px rgba(59, 130, 246, 0.4);
     font-weight: 600;
-  }
-  
-  /* Glowing labels */
-  label {
-    color: #ffffff;
-    text-shadow: 
-      0 0 10px rgba(59, 130, 246, 0.4),
-      0 0 20px rgba(59, 130, 246, 0.2);
-    font-weight: 500;
+    color: #fff;
+    box-shadow: none;
+    text-shadow: none;
   }
 }
 
-/* Gaming glass utility styles with blue gradients */
 @layer utilities {
+  .glass-matte {
+    background: rgba(18, 23, 34, 0.86);
+    border-radius: 1.2rem;
+    border: 1.5px solid rgba(80,120,190,0.18);
+    box-shadow: 0 6px 38px 0 rgba(59,130,246, 0.09);
+    backdrop-filter: blur(12px);
+  }
+  .text-gradient {
+    background: linear-gradient(90deg, #3b82f6 20%, #eab308 75%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  
   .glass-gaming {
     background: linear-gradient(
       135deg,

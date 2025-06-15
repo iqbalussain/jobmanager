@@ -23,13 +23,13 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   // Adjust badge to work on dark backgrounds
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending": return "bg-yellow-600/30 text-yellow-300 border-yellow-500";
-      case "in-progress": return "bg-blue-700/30 text-blue-300 border-blue-500";
-      case "designing": return "bg-purple-700/30 text-purple-300 border-purple-500";
-      case "completed": return "bg-emerald-700/30 text-emerald-300 border-emerald-500";
-      case "invoiced": return "bg-emerald-800/40 text-emerald-200 border-emerald-400";
-      case "cancelled": return "bg-red-800/30 text-red-300 border-red-500";
-      default: return "bg-muted text-white border-border";
+      case "pending": return "bg-yellow-600/10 text-yellow-300 border-yellow-600";
+      case "in-progress": return "bg-blue-600/10 text-blue-300 border-blue-600";
+      case "designing": return "bg-purple-700/10 text-purple-300 border-purple-600";
+      case "completed": return "bg-emerald-700/15 text-emerald-200 border-emerald-600";
+      case "invoiced": return "bg-emerald-800/20 text-emerald-100 border-emerald-600";
+      case "cancelled": return "bg-red-800/10 text-red-300 border-red-600";
+      default: return "bg-muted/40 text-muted-foreground border-border";
     }
   };
 
@@ -43,27 +43,27 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   ];
 
   return (
-    <div className="glass-gaming mb-1 rounded-2xl transition-transform duration-300 hover:scale-105 border border-border bg-background gaming-pulse">
-      <div className="rounded-2xl relative bg-background/80 backdrop-blur border-0 shadow-lg w-full min-h-[238px]">
-        <Card className="glass-gaming bg-background/85 backdrop-blur border-0 shadow-lg w-full min-h-[238px] relative">
+    <div className="glass-matte mb-1 rounded-2xl transition-transform duration-300 hover:scale-104 border border-border bg-card">
+      <div className="rounded-2xl relative bg-card/90 backdrop-blur border-0 shadow-lg w-full min-h-[238px]">
+        <Card className="glass-matte bg-card/90 border-0 shadow w-full min-h-[238px] relative">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <CardTitle className="text-lg font-bold text-gaming-glow mb-2">{job.title}</CardTitle>
+                <CardTitle className="text-lg font-bold text-gradient mb-2">{job.title}</CardTitle>
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm text-gaming-glow">
-                    <Briefcase className="w-4 h-4 text-gaming-primary" />
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Briefcase className="w-4 h-4 text-primary" />
                     <span className="font-medium">{job.jobOrderNumber}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gaming-glow">
-                    <Building className="w-4 h-4 text-gaming-secondary" />
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Building className="w-4 h-4 text-secondary" />
                     <span>{job.customer}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gaming-glow">
-                    <User className="w-4 h-4 text-gaming-accent" />
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <User className="w-4 h-4 text-accent" />
                     <span>{job.salesman}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gaming-glow">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4 text-white" />
                     <span>{new Date(job.dueDate).toLocaleDateString()}</span>
                   </div>
@@ -74,10 +74,10 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
                   value={job.status} 
                   onValueChange={(value) => onStatusChange(job.id, value)}
                 >
-                  <SelectTrigger className={`w-32 border-2 ${getStatusColor(job.status)} bg-background text-gaming-glow`}>
+                  <SelectTrigger className={`w-32 border-2 ${getStatusColor(job.status)} bg-background/80 text-foreground`}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-background/95">
+                  <SelectContent className="bg-card/95">
                     {getStatusOptions().map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         <Badge variant="outline" className={getStatusColor(option.value)}>
@@ -96,7 +96,7 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
                 size="sm"
                 variant="secondary"
                 onClick={() => onViewDetails(job)}
-                className="flex-1 bg-primary/70 hover:bg-primary/90 text-white border-none shadow animate-glow"
+                className="flex-1 bg-primary/90 hover:bg-primary text-white border-none shadow"
               >
                 <Eye className="w-4 h-4 mr-2 text-white" />
                 View Details
@@ -104,9 +104,9 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
               <Button
                 size="sm"
                 variant="secondary"
-                className="bg-accent/60 hover:bg-accent/80 text-white border-none shadow"
+                className="bg-secondary/95 hover:bg-secondary/80 text-black border-none shadow"
               >
-                <MessageSquare className="w-4 h-4 mr-2 text-white" />
+                <MessageSquare className="w-4 h-4 mr-2 text-black" />
                 Chat
               </Button>
             </div>

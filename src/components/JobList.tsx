@@ -68,7 +68,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   };
 
   return (
-    <div className="glass-gaming-strong gaming-pulse rounded-2xl p-6 min-h-screen bg-background">
+    <div className="glass-matte rounded-2xl p-8 min-h-screen bg-card">
       <div className="space-y-6">
         <JobListHeader
           searchQuery={searchQuery}
@@ -77,7 +77,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
           onStatusFilterChange={handleStatusFilterChange}
         />
         <JobStatsCards stats={stats} />
-        <Card className="glass-gaming bg-background/80 border border-border shadow-lg">
+        <Card className="glass-matte bg-card border border-border shadow-lg">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredJobs.map((job) => (
