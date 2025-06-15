@@ -19,10 +19,10 @@ export function JobStatsCards({ stats }: JobStatsCardsProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
       {Object.entries(stats).map(([key, value]) => (
-        <Card key={key} className="glass-gaming gaming-pulse hover:glass-gaming-strong transition-all duration-300">
+        <Card key={key} className="glass-gaming hover:glass-gaming-strong transition-all duration-300">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-gaming-glow">{value}</div>
-            <div className="text-sm text-gaming-glow capitalize">
+            <div className="text-2xl font-bold text-foreground">{value}</div>
+            <div className="text-sm text-muted-foreground capitalize">
               {key === 'inProgress' ? 'In Progress' : key}
             </div>
           </CardContent>
@@ -31,3 +31,4 @@ export function JobStatsCards({ stats }: JobStatsCardsProps) {
     </div>
   );
 }
+
