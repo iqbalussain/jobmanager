@@ -127,51 +127,88 @@
       0 0 100px rgba(59, 130, 246, 0.1);
   }
   
-  /* LED Strip Circle Effect */
-  .led-strip-circle {
+  /* Neon Trace Card Effect */
+  .neon-trace-card {
     position: relative;
-    overflow: visible;
+    overflow: hidden;
   }
   
-  .led-strip-circle::before {
+  .neon-trace-card::before {
     content: '';
     position: absolute;
-    top: -4px;
-    left: -4px;
-    right: -4px;
-    bottom: -4px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     border-radius: inherit;
     background: conic-gradient(
-      from var(--led-angle, 0deg),
-      #3b82f6,
-      #a855f7,
-      #10b981,
-      #eab308,
-      #3b82f6
+      from var(--trace-angle, 0deg),
+      transparent 0deg,
+      transparent 60deg,
+      #3b82f6 90deg,
+      #a855f7 150deg,
+      #10b981 210deg,
+      #3b82f6 270deg,
+      transparent 300deg,
+      transparent 360deg
     );
-    mask: radial-gradient(
-      ellipse at center,
-      transparent 67%,
-      black 70%,
-      black 100%
-    );
-    -webkit-mask: radial-gradient(
-      ellipse at center,
-      transparent 67%,
-      black 70%,
-      black 100%
-    );
-    animation: led-rotate 3s linear infinite;
+    mask: 
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: subtract;
+    -webkit-mask-composite: destination-out;
+    padding: 2px;
+    animation: neon-trace 4s linear infinite;
     z-index: -1;
-    opacity: 0.8;
   }
   
-  @keyframes led-rotate {
+  @keyframes neon-trace {
     0% {
-      --led-angle: 0deg;
+      --trace-angle: 0deg;
     }
     100% {
-      --led-angle: 360deg;
+      --trace-angle: 360deg;
+    }
+  }
+  
+  /* Circuit line effect for enhanced tracing */
+  .neon-trace-card::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+      45deg,
+      transparent 0%,
+      rgba(59, 130, 246, 0.3) 25%,
+      transparent 50%,
+      rgba(168, 85, 247, 0.3) 75%,
+      transparent 100%
+    );
+    background-size: 400% 400%;
+    animation: circuit-flow 3s ease-in-out infinite;
+    z-index: -1;
+    opacity: 0.7;
+  }
+  
+  @keyframes circuit-flow {
+    0%, 100% {
+      background-position: 0% 0%;
+    }
+    25% {
+      background-position: 100% 0%;
+    }
+    50% {
+      background-position: 100% 100%;
+    }
+    75% {
+      background-position: 0% 100%;
     }
   }
   
