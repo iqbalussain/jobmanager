@@ -73,8 +73,8 @@ export function DailyTrendsChart({
               <Line
                 type="monotone"
                 dataKey="jobs"
-                stroke={neonColor}
-                strokeWidth={2} // LASER SLIM LINE
+                stroke="none" // Remove the line, keep the neon dots
+                strokeWidth={2}
                 dot={{
                   fill: dotGlow,
                   stroke: neonColor,
@@ -94,11 +94,7 @@ export function DailyTrendsChart({
                 name="Created Jobs"
                 isAnimationActive={true}
                 animationDuration={1700}
-                style={{
-                  filter: "url(#neon-glow)",
-                  zIndex: 2
-                }}
-                // Apply SVG glow with className for extra fallback
+                // No line style since we're hiding the line
                 className="neon-laser-stroke"
               />
             </LineChart>
@@ -109,7 +105,6 @@ export function DailyTrendsChart({
         {`
           .neon-laser-stroke {
             filter: url(#neon-glow) drop-shadow(0 0 8px #21f6ff) drop-shadow(0 0 18px #0fffc3) !important;
-            /* fallback for browsers that ignore 'style' prop on SVG elements */
           }
         `}
       </style>
