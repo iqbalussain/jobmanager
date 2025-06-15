@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -66,9 +65,8 @@ export function LoginPage() {
         <div className="absolute bottom-20 right-10 w-2 h-2 bg-accent/30 rounded-full animate-bounce" style={{ animationDelay: '1.5s', animationDuration: '2.8s' }}></div>
       </div>
 
-      {/* Main Glass Card with Neon Trace Effect */}
+      {/* Main Glass Card with Corner Glow Animation */}
       <Card className="
-        neon-trace-card
         w-full 
         max-w-md 
         shadow-2xl 
@@ -80,6 +78,14 @@ export function LoginPage() {
         overflow-hidden
         animate-fade-in
       ">
+        {/* Corner Glow Animation */}
+        <div className="pointer-events-none absolute inset-0 z-20">
+          <span className="corner-glow top-0 left-0" />
+          <span className="corner-glow top-0 right-0 animation-delay-1" />
+          <span className="corner-glow bottom-0 right-0 animation-delay-2" />
+          <span className="corner-glow bottom-0 left-0 animation-delay-3" />
+        </div>
+
         {/* Floating water drops on card */}
         <div className="absolute top-4 right-4 opacity-30">
           <Droplets className="w-4 h-4 text-primary animate-pulse" />
