@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // Remove unused static icons
 import { Clock, Activity, ArrowDown, ArrowLeft, ArrowUp, ArrowRight } from "lucide-react";
@@ -45,7 +44,17 @@ export function ActivitiesSection() {
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4 flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-gray-100">
+        <div
+          className="
+            h-full overflow-y-auto 
+            scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-gray-100
+            bg-gradient-to-br from-blue-600/30 via-teal-400/20 to-cyan-200/10
+            glass-gaming
+            backdrop-blur-lg
+            rounded-xl
+            p-3
+            "
+        >
           <div className="space-y-3">
             {isLoading ? (
               <div className="text-center text-gray-500">Loading activities...</div>
