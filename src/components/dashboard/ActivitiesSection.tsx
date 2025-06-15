@@ -45,15 +45,20 @@ export function ActivitiesSection() {
       </CardHeader>
       <CardContent className="pt-4 flex-1 overflow-hidden">
         <div
-          className="
+          className={`
             h-full overflow-y-auto 
-            scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-gray-100
-            bg-gradient-to-br from-blue-600/30 via-teal-400/20 to-cyan-200/10
-            glass-gaming
-            backdrop-blur-lg
-            rounded-xl
-            p-3
-            "
+            scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-yellow-100
+            bg-gradient-to-br from-blue-500/60 via-fuchsia-400/40 via-45% to-yellow-200/30
+            glass-gaming-strong
+            border-2 border-white/20
+            shadow-xl
+            neon-trace-card
+            backdrop-blur-2xl
+            rounded-2xl
+            p-4
+            transition-all
+            duration-300
+          `}
         >
           <div className="space-y-3">
             {isLoading ? (
