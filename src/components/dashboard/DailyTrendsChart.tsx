@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -20,6 +21,10 @@ export function DailyTrendsChart({
   const neonColor = "#21f6ff";
   const neonShadow = "#0fffc3";
   const dotGlow = "#8ef9db";
+  // Neon Laser reference gradient colors
+  const neonPink = "#ff2ec6";
+  const neonBlue = "#2edbff";
+
   return <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white text-base sm:text-lg md:text-2xl">
@@ -28,12 +33,20 @@ export function DailyTrendsChart({
         </CardTitle>
       </CardHeader>
       <CardContent className="h-[320px] md:-bottom-100relative">
-        {/* Neon SVG filter */}
+        {/* Neon SVG filters & gradient */}
         <svg width="0" height="0">
-          <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor={neonShadow} />
-            <feDropShadow dx="0" dy="0" stdDeviation="7" floodColor={neonColor} />
-          </filter>
+          <defs>
+            {/* Neon Colored Glow */}
+            <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor={neonShadow} />
+              <feDropShadow dx="0" dy="0" stdDeviation="7" floodColor={neonColor} />
+            </filter>
+            {/* Neon Laser Gradient */}
+            <linearGradient id="neon-gradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor={neonPink} />
+              <stop offset="100%" stopColor={neonBlue} />
+            </linearGradient>
+          </defs>
         </svg>
         {isLoading ? <div className="flex items-center justify-center h-[300px]">
             <div className="text-white">Loading chart data...</div>
@@ -73,7 +86,7 @@ export function DailyTrendsChart({
               <Line
                 type="monotone"
                 dataKey="jobs"
-                stroke="none" // Remove the line, keep the neon dots
+                stroke="url(#neon-gradient)"
                 strokeWidth={2}
                 dot={{
                   fill: dotGlow,
@@ -84,7 +97,7 @@ export function DailyTrendsChart({
                 }}
                 activeDot={{
                   fill: "#fff",
-                  stroke: neonColor,
+                  stroke: neonPink,
                   strokeWidth: 7,
                   r: 12,
                   style: {
@@ -94,8 +107,10 @@ export function DailyTrendsChart({
                 name="Created Jobs"
                 isAnimationActive={true}
                 animationDuration={1700}
-                // No line style since we're hiding the line
                 className="neon-laser-stroke"
+                style={{
+                  filter: "url(#neon-glow)"
+                }}
               />
             </LineChart>
           </ResponsiveContainer>}
