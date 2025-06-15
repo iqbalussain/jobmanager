@@ -56,32 +56,57 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4">
-      {/* No Water Drop or Glow Effects */}
+      {/* Water Drop Background Effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-10 left-10 w-2 h-2 bg-white/20 rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '3s' }}></div>
+        <div className="absolute top-32 right-20 w-3 h-3 bg-primary/30 rounded-full animate-bounce" style={{ animationDelay: '1s', animationDuration: '4s' }}></div>
+        <div className="absolute bottom-40 left-1/4 w-2 h-2 bg-secondary/40 rounded-full animate-bounce" style={{ animationDelay: '2s', animationDuration: '2.5s' }}></div>
+        <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white/30 rounded-full animate-bounce" style={{ animationDelay: '0.5s', animationDuration: '3.5s' }}></div>
+        <div className="absolute bottom-20 right-10 w-2 h-2 bg-accent/30 rounded-full animate-bounce" style={{ animationDelay: '1.5s', animationDuration: '2.8s' }}></div>
+      </div>
+
+      {/* Main Glass Card with Corner Glow Animation */}
       <Card className="
         w-full 
         max-w-md 
         shadow-2xl 
-        border 
-        border-border
-        bg-card
+        border-2 
+        border-white/20
+        backdrop-blur-xl
+        bg-white/5
         relative
         overflow-hidden
         animate-fade-in
       ">
-        {/* Remove all corner glow span elements and floating visuals */}
+        {/* Corner Glow Animation */}
+        <div className="pointer-events-none absolute inset-0 z-20">
+          <span className="corner-glow top-0 left-0" />
+          <span className="corner-glow top-0 right-0 animation-delay-1" />
+          <span className="corner-glow bottom-0 right-0 animation-delay-2" />
+          <span className="corner-glow bottom-0 left-0 animation-delay-3" />
+        </div>
+
+        {/* Floating water drops on card */}
+        <div className="absolute top-4 right-4 opacity-30">
+          <Droplets className="w-4 h-4 text-primary animate-pulse" />
+        </div>
+        <div className="absolute bottom-4 left-4 opacity-20">
+          <div className="w-2 h-2 bg-secondary/50 rounded-full animate-ping"></div>
+        </div>
 
         <CardHeader className="text-center relative z-10">
           <div className="flex justify-center mb-4">
             <div className="
               w-16 h-16 
+              glass-neon
               border-2 border-primary/30
               rounded-2xl 
               flex items-center justify-center
               shadow-lg
-              backdrop-blur
-              bg-gradient-to-br from-primary/10 to-secondary/10
+              backdrop-blur-md
+              bg-gradient-to-br from-primary/20 to-secondary/20
             ">
-              <Briefcase className="w-8 h-8 text-primary" />
+              <Briefcase className="w-8 h-8 text-primary drop-shadow-lg" />
             </div>
           </div>
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent drop-shadow-lg">
@@ -96,9 +121,10 @@ export function LoginPage() {
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="
               grid w-full grid-cols-2 
+              glass-neon
               border border-white/20
-              bg-card
-              backdrop-blur
+              bg-white/10
+              backdrop-blur-md
               p-1
             ">
               <TabsTrigger 
@@ -140,13 +166,14 @@ export function LoginPage() {
                     placeholder="Enter your email"
                     required
                     className="
-                      border-border
-                      bg-card
+                      glass-neon
+                      border-white/30
+                      bg-white/10
                       text-white
                       placeholder:text-white/50
                       focus:border-primary/50
                       focus:ring-primary/30
-                      backdrop-blur
+                      backdrop-blur-md
                     "
                   />
                 </div>
@@ -160,19 +187,20 @@ export function LoginPage() {
                     placeholder="Enter your password"
                     required
                     className="
-                      border-border
-                      bg-card
+                      glass-neon
+                      border-white/30
+                      bg-white/10
                       text-white
                       placeholder:text-white/50
                       focus:border-primary/50
                       focus:ring-primary/30
-                      backdrop-blur
+                      backdrop-blur-md
                     "
                   />
                 </div>
 
                 {error && (
-                  <Alert variant="destructive" className="border-red-500/30 bg-red-500/10">
+                  <Alert variant="destructive" className="glass-neon border-red-500/30 bg-red-500/10">
                     <AlertDescription className="text-red-200">{error}</AlertDescription>
                   </Alert>
                 )}
@@ -181,12 +209,13 @@ export function LoginPage() {
                   type="submit"
                   className="
                     w-full 
+                    glass-neon
                     bg-gradient-to-r from-primary/80 to-primary/60
                     hover:from-primary hover:to-primary/80
                     border-primary/30
                     text-white
                     shadow-xl
-                    backdrop-blur
+                    backdrop-blur-md
                     transition-all
                     hover:scale-105
                     active:scale-95
@@ -210,13 +239,14 @@ export function LoginPage() {
                     placeholder="Enter your full name"
                     required
                     className="
-                      border-border
-                      bg-card
+                      glass-neon
+                      border-white/30
+                      bg-white/10
                       text-white
                       placeholder:text-white/50
                       focus:border-secondary/50
                       focus:ring-secondary/30
-                      backdrop-blur
+                      backdrop-blur-md
                     "
                   />
                 </div>
@@ -230,13 +260,14 @@ export function LoginPage() {
                     placeholder="Enter your email"
                     required
                     className="
-                      border-border
-                      bg-card
+                      glass-neon
+                      border-white/30
+                      bg-white/10
                       text-white
                       placeholder:text-white/50
                       focus:border-secondary/50
                       focus:ring-secondary/30
-                      backdrop-blur
+                      backdrop-blur-md
                     "
                   />
                 </div>
@@ -251,25 +282,26 @@ export function LoginPage() {
                     required
                     minLength={6}
                     className="
-                      border-border
-                      bg-card
+                      glass-neon
+                      border-white/30
+                      bg-white/10
                       text-white
                       placeholder:text-white/50
                       focus:border-secondary/50
                       focus:ring-secondary/30
-                      backdrop-blur
+                      backdrop-blur-md
                     "
                   />
                 </div>
 
                 {error && (
-                  <Alert variant="destructive" className="border-red-500/30 bg-red-500/10">
+                  <Alert variant="destructive" className="glass-neon border-red-500/30 bg-red-500/10">
                     <AlertDescription className="text-red-200">{error}</AlertDescription>
                   </Alert>
                 )}
 
                 {message && (
-                  <Alert className="border-green-500/30 bg-green-500/10">
+                  <Alert className="glass-neon border-green-500/30 bg-green-500/10">
                     <AlertDescription className="text-green-200">{message}</AlertDescription>
                   </Alert>
                 )}
@@ -278,12 +310,13 @@ export function LoginPage() {
                   type="submit"
                   className="
                     w-full 
+                    glass-neon
                     bg-gradient-to-r from-secondary/80 to-secondary/60
                     hover:from-secondary hover:to-secondary/80
                     border-secondary/30
                     text-white
                     shadow-xl
-                    backdrop-blur
+                    backdrop-blur-md
                     transition-all
                     hover:scale-105
                     active:scale-95

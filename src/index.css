@@ -76,37 +76,303 @@
 
 @layer utilities {
   .glass-matte {
-    background: hsl(var(--card) / 0.96);
-    /* Ensures a matte, dark card background */
+    background: rgba(18, 23, 34, 0.86);
     border-radius: 1.2rem;
     border: 1.5px solid rgba(80,120,190,0.18);
     box-shadow: 0 6px 38px 0 rgba(59,130,246, 0.09);
     backdrop-filter: blur(12px);
   }
+  .text-gradient {
+    background: linear-gradient(90deg, #3b82f6 20%, #eab308 75%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .glass-gaming {
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.1) 0%,
+      rgba(139, 92, 246, 0.05) 25%,
+      rgba(16, 185, 129, 0.05) 50%,
+      rgba(59, 130, 246, 0.1) 100%
+    );
+    backdrop-filter: blur(20px);
+    border-radius: 1rem;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 
+      0 8px 32px 0 rgba(59, 130, 246, 0.3),
+      inset 0 1px 0 rgba(59, 130, 246, 0.2),
+      0 0 0 1px rgba(59, 130, 246, 0.1);
+  }
+  
+  /* Enhanced gaming glass with stronger glow */
+  .glass-gaming-strong {
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.15) 0%,
+      rgba(139, 92, 246, 0.1) 25%,
+      rgba(16, 185, 129, 0.1) 50%,
+      rgba(59, 130, 246, 0.15) 100%
+    );
+    backdrop-filter: blur(25px);
+    border-radius: 1.25rem;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    box-shadow: 
+      0 12px 48px 0 rgba(59, 130, 246, 0.4),
+      inset 0 2px 0 rgba(59, 130, 246, 0.3),
+      0 0 0 1px rgba(59, 130, 246, 0.2),
+      0 0 100px rgba(59, 130, 246, 0.1);
+  }
+  
+  /* Neon Trace Card Effect */
+  .neon-trace-card {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .neon-trace-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    background: conic-gradient(
+      from var(--trace-angle, 0deg),
+      transparent 0deg,
+      transparent 60deg,
+      #3b82f6 90deg,
+      #a855f7 150deg,
+      #10b981 210deg,
+      #3b82f6 270deg,
+      transparent 300deg,
+      transparent 360deg
+    );
+    mask: 
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: subtract;
+    -webkit-mask-composite: destination-out;
+    padding: 2px;
+    animation: neon-trace 4s linear infinite;
+    z-index: -1;
+  }
+  
+  @keyframes neon-trace {
+    0% {
+      --trace-angle: 0deg;
+    }
+    100% {
+      --trace-angle: 360deg;
+    }
+  }
+  
+  /* Circuit line effect for enhanced tracing */
+  .neon-trace-card::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+      45deg,
+      transparent 0%,
+      rgba(59, 130, 246, 0.3) 25%,
+      transparent 50%,
+      rgba(168, 85, 247, 0.3) 75%,
+      transparent 100%
+    );
+    background-size: 400% 400%;
+    animation: circuit-flow 3s ease-in-out infinite;
+    z-index: -1;
+    opacity: 0.7;
+  }
+  
+  @keyframes circuit-flow {
+    0%, 100% {
+      background-position: 0% 0%;
+    }
+    25% {
+      background-position: 100% 0%;
+    }
+    50% {
+      background-position: 100% 100%;
+    }
+    75% {
+      background-position: 0% 100%;
+    }
+  }
+  
+  /* Pure white glowing text utility */
+  .text-gaming-glow {
+    color: #ffffff;
+    text-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.8),
+      0 0 40px rgba(59, 130, 246, 0.6),
+      0 0 60px rgba(59, 130, 246, 0.4),
+      0 0 80px rgba(59, 130, 246, 0.2);
+  }
+  
+  /* Gaming accent colors with glow */
+  .text-gaming-primary {
+    color: #3b82f6;
+    text-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.8),
+      0 0 40px rgba(59, 130, 246, 0.6);
+  }
+  
+  .text-gaming-secondary {
+    color: #a855f7;
+    text-shadow: 
+      0 0 20px rgba(168, 85, 247, 0.8),
+      0 0 40px rgba(168, 85, 247, 0.6);
+  }
+  
+  .text-gaming-accent {
+    color: #10b981;
+    text-shadow: 
+      0 0 20px rgba(16, 185, 129, 0.8),
+      0 0 40px rgba(16, 185, 129, 0.6);
+  }
+  
+  /* Neon Running Border Animation (only on active/clicked button) */
+  .neon-running-border {
+    position: relative;
+    border: 2.5px solid transparent;
+    z-index: 0;
+    animation: none;
+    box-shadow: 0 0 0 0 transparent;
+    /* Add the animated running border only in a pseudo-element */
+  }
+  .neon-running-border::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: -3px; left: -3px; right: -3px; bottom: -3px;
+    border-radius: 1rem;
+    border: 2.5px solid transparent;
+    pointer-events: none;
+    /* Compose a complex animated border */
+    background: conic-gradient(
+      from var(--neon-rotate, 0deg),
+      #3b82f6 0%, #a855f7 18%, #10b981 54%, #3b82f6 74%, #a855f7 100%
+    );
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    animation: neon-border-spin 2.1s linear infinite;
+    opacity: 0.90;
+  }
 
-  /* Remove or neutralize all glow/neon options from here down */
-  .text-gaming-glow,
-  .text-gaming-primary,
-  .text-gaming-secondary,
-  .text-gaming-accent,
-  .neon-trace-card,
-  .neon-trace-card::before,
-  .neon-trace-card::after,
-  .neon-running-border,
-  .neon-running-border::after,
-  .gaming-pulse,
-  .animate-glow,
-  .neon-text,
-  .neon-animate:hover,
-  .neon-icon,
+  @keyframes neon-border-spin {
+    to {
+      --neon-rotate: 360deg;
+    }
+    from {
+      --neon-rotate: 0deg;
+    }
+  }
+  
+  /* Pulsing glow animation */
+  .gaming-pulse {
+    animation: gamingPulse 2s ease-in-out infinite alternate;
+  }
+  
+  @keyframes gamingPulse {
+    0% {
+      box-shadow: 
+        0 0 20px rgba(59, 130, 246, 0.3),
+        0 0 40px rgba(59, 130, 246, 0.2);
+    }
+    100% {
+      box-shadow: 
+        0 0 30px rgba(59, 130, 246, 0.6),
+        0 0 60px rgba(59, 130, 246, 0.4),
+        0 0 90px rgba(59, 130, 246, 0.2);
+    }
+  }
+  
+  /* Neon glowing animation using keyframes */
+  @keyframes amazingNeonGlow {
+    0%, 100% {
+      box-shadow:
+        0 0 16px 6px #0fffc3,
+        0 0 30px 10px #3b82f6,
+        0 0 60px 30px #a855f755;
+      filter: brightness(1.18) saturate(1.4);
+    }
+    50% {
+      box-shadow:
+        0 0 32px 12px #3b82f6,
+        0 0 50px 30px #10b981cc,
+        0 0 100px 40px #a855f7;
+      filter: brightness(1.4) saturate(1.6);
+    }
+  }
+
+  .animate-glow {
+    animation: amazingNeonGlow 2.8s ease-in-out infinite alternate;
+  }
+
+  .neon-text {
+    text-shadow:
+      0 0 6px #0fffc388,
+      0 0 16px #3b82f6aa,
+      0 0 24px #a855f788;
+    letter-spacing: 0.02em;
+  }
+
+  .neon-animate:hover {
+    filter: brightness(1.3) saturate(1.6) drop-shadow(0 0 30px #0fffc3cc);
+  }
+
+  .neon-icon {
+    filter:
+      drop-shadow(0 0 8px #0fffc3aa)
+      drop-shadow(0 0 16px #3b82f6aa);
+  }
+
+  /* Corner glow for login card */
   .corner-glow {
-    /* Remove all glow effects and set to normal rendering */
-    text-shadow: none !important;
-    filter: none !important;
-    box-shadow: none !important;
-    background: none !important;
-    animation: none !important;
-    opacity: 0 !important;
-    display: none !important;
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    z-index: 40;
+    pointer-events: none;
+    border-radius: 50%;
+    box-shadow: 0 0 24px 10px #3b82f6, 0 0 36px 14px #eab30899;
+    opacity: 0;
+    animation: corner-glow-loop 3.2s linear infinite;
+    transition: opacity .16s;
+  }
+  /* Animate each with different delays for continuous looping */
+  .corner-glow.top-0.left-0 { top: -12px; left: -12px; animation-delay: 0s; }
+  .corner-glow.top-0.right-0 { top: -12px; right: -12px; animation-delay: 0.8s; }
+  .corner-glow.bottom-0.right-0 { bottom: -12px; right: -12px; animation-delay: 1.6s; }
+  .corner-glow.bottom-0.left-0 { bottom: -12px; left: -12px; animation-delay: 2.4s; }
+
+  /* Use extra classes because Tailwind doesn't support negative animation-delay utilities */
+  .animation-delay-1 { animation-delay: 0.8s !important; }
+  .animation-delay-2 { animation-delay: 1.6s !important; }
+  .animation-delay-3 { animation-delay: 2.4s !important; }
+
+  @keyframes corner-glow-loop {
+    0% { opacity: 1; }
+    12.5% { opacity: 1; }
+    25% { opacity: 0; }
+    100% { opacity: 0; }
   }
 }
