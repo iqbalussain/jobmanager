@@ -66,9 +66,9 @@ export function LoginPage() {
         <div className="absolute bottom-20 right-10 w-2 h-2 bg-accent/30 rounded-full animate-bounce" style={{ animationDelay: '1.5s', animationDuration: '2.8s' }}></div>
       </div>
 
-      {/* Main Glass Card with Neon Trace Effect */}
+      {/* Main Glass Card with LED Strip Circle Effect */}
       <Card className="
-        neon-trace-card
+        led-strip-circle
         w-full 
         max-w-md 
         shadow-2xl 
