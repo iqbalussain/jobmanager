@@ -40,10 +40,11 @@ const Index = () => {
     id: order.id,
     jobOrderNumber: order.job_order_number,
     title: order.title,
-    description: order.description || "",
+    // description: order.description || "", // REMOVE, jobOrder.description does not exist!
     customer: order.customer?.name || "Unknown Customer",
     assignee: order.assignee || "Unassigned",
-    priority: order.priority as "low" | "medium" | "high",
+    // Map JobOrder 'urgent' priority to 'high'
+    priority: order.priority === "urgent" ? "high" : (order.priority as "low" | "medium" | "high"),
     status: order.status as JobStatus,
     dueDate: order.due_date || new Date().toISOString().split('T')[0],
     createdAt: order.created_at.split('T')[0],
@@ -129,3 +130,4 @@ const Index = () => {
 };
 
 export default Index;
+
