@@ -70,26 +70,37 @@ export function DailyTrendsChart({
             strokeWidth: 2,
             opacity: 0.5
           }} />
-              <Line type="monotone" dataKey="jobs" stroke={neonColor} strokeWidth={5} dot={{
-            fill: dotGlow,
-            stroke: neonColor,
-            strokeWidth: 3.5,
-            r: 8,
-            filter: "url(#neon-glow)"
-          }} activeDot={{
-            fill: "#fff",
-            stroke: neonColor,
-            strokeWidth: 7,
-            r: 12,
-            style: {
-              filter: "url(#neon-glow)"
-            }
-          }} name="Created Jobs" isAnimationActive={true} animationDuration={1700} style={{
-            filter: "url(#neon-glow)",
-            zIndex: 2
-          }}
-          // Apply SVG glow with className for extra fallback
-          className="neon-laser-stroke" />
+              <Line
+                type="monotone"
+                dataKey="jobs"
+                stroke={neonColor}
+                strokeWidth={2} // LASER SLIM LINE
+                dot={{
+                  fill: dotGlow,
+                  stroke: neonColor,
+                  strokeWidth: 3.5,
+                  r: 8,
+                  filter: "url(#neon-glow)"
+                }}
+                activeDot={{
+                  fill: "#fff",
+                  stroke: neonColor,
+                  strokeWidth: 7,
+                  r: 12,
+                  style: {
+                    filter: "url(#neon-glow)"
+                  }
+                }}
+                name="Created Jobs"
+                isAnimationActive={true}
+                animationDuration={1700}
+                style={{
+                  filter: "url(#neon-glow)",
+                  zIndex: 2
+                }}
+                // Apply SVG glow with className for extra fallback
+                className="neon-laser-stroke"
+              />
             </LineChart>
           </ResponsiveContainer>}
       </CardContent>
