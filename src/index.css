@@ -86,7 +86,7 @@
   }
 }
 
-/* Neon Gaming Theme: DARK only! */
+/* --- ADDITIONS/OVERRIDES FOR DARK MODE GAMING/NEON --- */
 @layer utilities {
   .dark {
     --background: 222 36% 5%;
@@ -112,6 +112,54 @@
   .dark html, .dark body {
     background: #10141c !important;
     color: hsl(var(--foreground));
+  }
+
+  /* Ensure all main heading elements are brightly colored and highly visible */
+  .dark h1, .dark h2 {
+    color: #fff !important;
+    background: linear-gradient(90deg, #f472b6 12%, #a78bfa 53%, #60a5fa 89%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-fill-color: transparent;
+    text-shadow: 0 0 18px #e879f9, 0 0 28px #f472b688;
+  }
+  .dark h1 .alt, .dark h2 .alt {
+    background: linear-gradient(90deg, #fde68a 0%, #f472b6 80%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    text-shadow: 0 0 20px #fde68a99, 0 0 28px #fbbf249c;
+  }
+
+  .dark h3, .dark h4, .dark h5, .dark h6 {
+    color: #f1f5f9 !important;
+    text-shadow: 0 0 10px #818cf8cc, 0 0 16px #38bdf899;
+  }
+  .dark p, .dark span, .dark div, .dark label {
+    color: #f3f8ff !important;
+    text-shadow: 0 0 10px #818cf855, 0 0 4px #60a5fa55;
+  }
+  .dark button {
+    color: #f9fafb !important;
+    text-shadow: 0 0 8px #38bdf888;
+  }
+  .dark .text-gray-600, .dark .text-gray-700,
+  .dark .text-gray-800, .dark .text-gray-900 {
+    color: #c7d2fe !important;
+  }
+  .dark input, .dark textarea {
+    color: #fff !important;
+    background: #181c26 !important;
+  }
+  /* Adapt form labels and placeholder text */
+  .dark ::placeholder, .dark input::placeholder, .dark textarea::placeholder {
+    color: #a7a8b0 !important;
+    opacity: 1;
+  }
+  .dark label {
+    color: #f5f6fa !important;
   }
 
   .dark .glass-gaming {
