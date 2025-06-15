@@ -144,21 +144,25 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         job={
           selectedJobOrder
             ? {
-              id: selectedJobOrder.id,
-              jobOrderNumber: selectedJobOrder.job_order_number,
-              title: selectedJobOrder.title ?? "",
-              customer: selectedJobOrder.customer?.name ?? "Unknown Customer",
-              assignee: selectedJobOrder.assignee ?? "Unassigned",
-              priority: selectedJobOrder.priority,
-              status: selectedJobOrder.status,
-              dueDate: selectedJobOrder.due_date ?? "",
-              createdAt: selectedJobOrder.created_at,
-              estimatedHours: selectedJobOrder.estimated_hours ?? 0,
-              branch: selectedJobOrder.branch ?? "",
-              designer: selectedJobOrder.designer?.name ?? "Unassigned",
-              salesman: selectedJobOrder.salesman?.name ?? "Unassigned",
-              jobOrderDetails: selectedJobOrder.job_order_details ?? ""
-            }
+                id: selectedJobOrder.id,
+                jobOrderNumber: selectedJobOrder.job_order_number,
+                title: selectedJobOrder.title ?? "",
+                customer: selectedJobOrder.customer?.name ?? "Unknown Customer",
+                assignee: selectedJobOrder.assignee ?? "Unassigned",
+                // Map JobOrder 'urgent' priority to 'high'
+                priority:
+                  selectedJobOrder.priority === "urgent"
+                    ? "high"
+                    : (selectedJobOrder.priority as "low" | "medium" | "high"),
+                status: selectedJobOrder.status,
+                dueDate: selectedJobOrder.due_date ?? "",
+                createdAt: selectedJobOrder.created_at,
+                estimatedHours: selectedJobOrder.estimated_hours ?? 0,
+                branch: selectedJobOrder.branch ?? "",
+                designer: selectedJobOrder.designer?.name ?? "Unassigned",
+                salesman: selectedJobOrder.salesman?.name ?? "Unassigned",
+                jobOrderDetails: selectedJobOrder.job_order_details ?? ""
+              }
             : null
         }
       />
