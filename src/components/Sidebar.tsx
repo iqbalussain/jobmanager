@@ -234,7 +234,13 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         {/* User Profile Card */}
         <div
           className={`
-            mt-6 p-4 rounded-2xl
+            mt-6
+            w-full
+            aspect-square
+            max-w-[15rem]
+            mx-auto
+            p-0
+            rounded-2xl
             bg-gradient-to-br from-blue-500/80 via-fuchsia-400/60 via-45% to-yellow-200/70
             glass-gaming-strong
             border-2 border-white/10
@@ -243,31 +249,39 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
             shadow-xl
             transition-all duration-300
             relative
+            flex flex-col items-center justify-center
             text-white
           `}
+          style={{
+            boxSizing: "border-box",
+          }}
         >
-          <div className="flex items-center mb-3">
-            <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mr-3 border border-white/20 shadow-inner">
-              <User className="w-5 h-5 text-white" />
+          <div
+            className="w-full h-full flex flex-col items-center justify-center p-5"
+          >
+            <div className="flex items-center mb-3 w-full justify-center">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mr-0 shadow-inner border-4 border-white/30">
+                <User className="w-7 h-7 text-white" />
+              </div>
             </div>
-            <div>
-              <p className="font-semibold text-sm text-white drop-shadow-[0_1px_6px_#fff5]">{userProfile?.full_name || 'User'}</p>
+            <div className="flex flex-col items-center justify-center w-full">
+              <p className="font-bold text-base text-white drop-shadow-[0_1px_6px_#fff5]">{userProfile?.full_name || 'User'}</p>
               <p className="text-xs text-gray-200 capitalize">{userProfile?.role || 'Employee'}</p>
             </div>
+            <Button
+              onClick={() => setShowProfile(!showProfile)}
+              variant="secondary"
+              size="sm"
+              className="w-full mt-4 bg-white/10 hover:bg-white/20 text-white border-0 text-xs shadow-inner rounded-2xl"
+            >
+              View Profile
+            </Button>
+            {showProfile && (
+              <div className="mt-4 w-full">
+                <UserProfile />
+              </div>
+            )}
           </div>
-          <Button 
-            onClick={() => setShowProfile(!showProfile)}
-            variant="secondary"
-            size="sm"
-            className="w-full bg-white/10 hover:bg-white/20 text-white border-0 text-xs shadow-inner"
-          >
-            View Profile
-          </Button>
-          {showProfile && (
-            <div className="mt-3">
-              <UserProfile />
-            </div>
-          )}
           {/* Subtle animated glow border (optional) */}
           <span className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-transparent animate-glow"></span>
         </div>
