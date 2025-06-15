@@ -37,8 +37,8 @@ export function JobListHeader({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">Job Management</h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600">
+          <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gaming-glow mb-1 md:mb-2">Job Management</h1>
+          <p className="text-xs sm:text-sm md:text-base text-gaming-glow/80">
             Manage and track all your job orders
           </p>
         </div>
@@ -46,25 +46,27 @@ export function JobListHeader({
 
       <div className="flex flex-col md:flex-row gap-2 md:gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gaming-primary w-4 h-4" />
           <Input
             placeholder="Search jobs by title, order number, or customer..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 bg-white/90"
+            className="pl-10 bg-background text-foreground border-border placeholder:text-muted-foreground"
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-500" />
+          <Filter className="w-4 h-4 text-gaming-secondary" />
           <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className="w-32 sm:w-40 bg-white/90 text-xs sm:text-sm">
+            <SelectTrigger className="w-32 sm:w-40 bg-background text-foreground border-border text-xs sm:text-sm">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
+            <SelectContent className="bg-background/95">
+              <SelectItem value="all">
+                <span className="text-gaming-glow">All Status</span>
+              </SelectItem>
               {getStatusOptions().map((option) => (
                 <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+                  <span className="text-gaming-glow">{option.label}</span>
                 </SelectItem>
               ))}
             </SelectContent>
