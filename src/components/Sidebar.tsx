@@ -232,21 +232,34 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         </SidebarGroup>
 
         {/* User Profile Card */}
-        <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-primary via-muted to-card text-primary-foreground">
+        <div
+          className={`
+            mt-6 p-4 rounded-2xl
+            bg-gradient-to-br from-blue-500/80 via-fuchsia-400/60 via-45% to-yellow-200/70
+            glass-gaming-strong
+            border-2 border-white/10
+            neon-trace-card
+            backdrop-blur-2xl
+            shadow-xl
+            transition-all duration-300
+            relative
+            text-white
+          `}
+        >
           <div className="flex items-center mb-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
-              <User className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mr-3 border border-white/20 shadow-inner">
+              <User className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-semibold text-sm">{userProfile?.full_name || 'User'}</p>
-              <p className="text-xs text-muted-foreground capitalize">{userProfile?.role || 'Employee'}</p>
+              <p className="font-semibold text-sm text-white drop-shadow-[0_1px_6px_#fff5]">{userProfile?.full_name || 'User'}</p>
+              <p className="text-xs text-gray-200 capitalize">{userProfile?.role || 'Employee'}</p>
             </div>
           </div>
           <Button 
             onClick={() => setShowProfile(!showProfile)}
             variant="secondary"
             size="sm"
-            className="w-full bg-secondary hover:bg-accent text-primary border-0 text-xs"
+            className="w-full bg-white/10 hover:bg-white/20 text-white border-0 text-xs shadow-inner"
           >
             View Profile
           </Button>
@@ -255,6 +268,8 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
               <UserProfile />
             </div>
           )}
+          {/* Subtle animated glow border (optional) */}
+          <span className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-transparent animate-glow"></span>
         </div>
       </SidebarContent>
     </>
