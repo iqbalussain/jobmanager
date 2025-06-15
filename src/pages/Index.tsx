@@ -67,19 +67,24 @@ const Index = () => {
       );
     }
 
-    // --- REMOVED the wrapping glass gaming card here ---
     return (
       <div className="
+        glass-gaming-strong
         w-full
         max-w-7xl
         mx-auto
         my-2
         px-2 sm:px-4 md:px-8
         py-4 md:py-8
+        rounded-2xl
+        shadow-xl
+        border
         min-h-[80vh]
         transition-all
+        backdrop-blur-md
+        gaming-pulse
       ">
-        {/* All main content rendered without glassy card */}
+        {/* All main content rendered here as glassy cards */}
         {(() => {
           switch (currentView) {
             case "dashboard":
