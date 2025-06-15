@@ -46,5 +46,11 @@ export interface JobOrder {
   salesman: Salesman | null;
   job_title: JobTitle | null;
   title?: string;
-  description?: string;
+  // description?: string; // REMOVE this, as JobOrder does not use description, it's derived in jobOrderTransforms
+
+  // Approval workflow fields (added for admin approval system)
+  approval_status: 'pending_approval' | 'approved' | 'rejected';
+  approved_by: string | null;
+  approved_at: string | null;
+  approval_notes: string | null;
 }

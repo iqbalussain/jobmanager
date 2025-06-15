@@ -147,7 +147,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
               id: selectedJobOrder.id,
               jobOrderNumber: selectedJobOrder.job_order_number,
               title: selectedJobOrder.title ?? "",
-              description: selectedJobOrder.description ?? "",
               customer: selectedJobOrder.customer?.name ?? "Unknown Customer",
               assignee: selectedJobOrder.assignee ?? "Unassigned",
               priority: selectedJobOrder.priority,
