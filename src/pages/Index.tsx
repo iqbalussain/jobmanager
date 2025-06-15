@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ModernDashboard } from "@/components/ModernDashboard";
@@ -81,8 +82,7 @@ const Index = () => {
         min-h-[80vh]
         transition-all
         backdrop-blur-md
-        z-50
-        opacity-50
+        gaming-pulse
       ">
         {/* All main content rendered here as glassy cards */}
         {(() => {
