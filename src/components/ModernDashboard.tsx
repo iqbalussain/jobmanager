@@ -154,7 +154,18 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
                   selectedJobOrder.priority === "urgent"
                     ? "high"
                     : (selectedJobOrder.priority as "low" | "medium" | "high"),
-                status: selectedJobOrder.status,
+                // Map JobOrder status "working" to Job "in-progress"
+                status:
+                  selectedJobOrder.status === "working"
+                    ? "in-progress"
+                    : (selectedJobOrder.status as
+                        | "pending"
+                        | "in-progress"
+                        | "designing"
+                        | "completed"
+                        | "invoiced"
+                        | "cancelled"
+                        | "finished"),
                 dueDate: selectedJobOrder.due_date ?? "",
                 createdAt: selectedJobOrder.created_at,
                 estimatedHours: selectedJobOrder.estimated_hours ?? 0,
