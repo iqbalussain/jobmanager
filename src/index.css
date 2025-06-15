@@ -22,8 +22,6 @@
     --accent-foreground: 0 0% 100%;
     --destructive: 1 83% 68%;
     --destructive-foreground: 0 0% 100%;
-    --red: 0 94% 54%;                /* Vivid red for alerts */
-    --red-foreground: 0 0% 100%;     /* White for red contrast */
     --border: 220 14% 16%;
     --input: 222 17% 12%;
     --ring: 210 93% 58%;

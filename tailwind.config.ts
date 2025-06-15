@@ -48,10 +48,6 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        red: {
-          DEFAULT: 'hsl(var(--red))',
-          foreground: 'hsl(var(--red-foreground))',
-        },
       },
       borderRadius: {
         lg: 'var(--radius)',
