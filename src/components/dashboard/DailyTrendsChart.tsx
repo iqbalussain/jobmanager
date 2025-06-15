@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -9,6 +8,10 @@ interface DailyTrendsChartProps {
 }
 
 export function DailyTrendsChart({ dailyJobData, isLoading }: DailyTrendsChartProps) {
+  console.log("[DailyTrendsChart] dailyJobData:", dailyJobData, "isLoading:", isLoading);
+
+  const noData = !isLoading && (!dailyJobData || dailyJobData.length === 0);
+
   return (
     <Card className="shadow-xl border-0 bg-gradient-to-br from-violet-900 to-violet-800 text-white">
       <CardHeader>
@@ -17,13 +20,21 @@ export function DailyTrendsChart({ dailyJobData, isLoading }: DailyTrendsChartPr
           Daily Job Creation Trends
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="h-[320px] md:h-[100%]">
         {isLoading ? (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center h-[300px]">
             <div className="text-white">Loading chart data...</div>
           </div>
+        ) : noData ? (
+          <div className="flex items-center justify-center h-[300px]">
+            <div className="text-white opacity-80 text-center">
+              No job order data found for the past week.
+              <br />
+              <span className="text-xs opacity-70">Please check if job orders exist in your database.</span>
+            </div>
+          </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={300}>
             <LineChart data={dailyJobData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#8B5CF6" />
               <XAxis dataKey="day" stroke="#E5E7EB" />
