@@ -75,7 +75,7 @@ const Index = () => {
         max-w-7xl
         mx-auto
         my-2
-        px-2 sm:px-4 md:px-2
+        px-2 sm:px-4 md:px-8
         py-4 md:py-8
         rounded-2xl
         shadow-xl
@@ -119,7 +119,7 @@ const Index = () => {
           bg-transparent
           min-w-0
           px-1 xs:px-1 sm:px-1 md:px-1 lg:px-1
-          pt-2 pb-4 md:pt-6 md:pb-8
+          pt-2 pb-2 md:pt-4 md:pb-6
           overflow-x-hidden
         ">
           {renderContent()}
