@@ -49,13 +49,13 @@ const STATUS_COLOR_MAP: Record<StatusKey, string> = {
 };
 
 const ICON_MAP: Record<StatusKey, JSX.Element> = {
-  total: <Briefcase className="w-5 h-5 inline-block mr-2 -mt-1" />,
-  pending: <Clock className="w-5 h-5 inline-block mr-2 -mt-1" />,
-  "in-progress": <Play className="w-5 h-5 inline-block mr-2 -mt-1" />,
-  designing: <Pencil className="w-5 h-5 inline-block mr-2 -mt-1" />,
-  completed: <CheckCircle className="w-5 h-5 inline-block mr-2 -mt-1" />,
-  invoiced: <FileText className="w-5 h-5 inline-block mr-2 -mt-1" />,
-  cancelled: <XCircle className="w-5 h-5 inline-block mr-2 -mt-1" />,
+  total: <Briefcase className="w-4 h-4 inline-block mr-2 -mt-1" />,
+  pending: <Clock className="w-4 h-4 inline-block mr-2 -mt-1" />,
+  "in-progress": <Play className="w-4 h-4 inline-block mr-2 -mt-1" />,
+  designing: <Pencil className="w-4 h-4 inline-block mr-2 -mt-1" />,
+  completed: <CheckCircle className="w-4 h-4 inline-block mr-2 -mt-1" />,
+  invoiced: <FileText className="w-4 h-4 inline-block mr-2 -mt-1" />,
+  cancelled: <XCircle className="w-4 h-4 inline-block mr-2 -mt-1" />,
 };
 
 interface JobStatusOverviewProps {
