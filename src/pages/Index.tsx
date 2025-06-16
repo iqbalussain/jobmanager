@@ -62,7 +62,7 @@ const Index = () => {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex items-center justify-center h-64 glass-gaming-strong gaming-pulse mx-2 sm:mx-2 my-2">
+        <div className="flex items-center justify-center h-64 glass-gaming-strong gaming-pulse mx-2 sm:mx-6 my-8">
           <div className="text-lg text-gaming-primary">Loading job orders...</div>
         </div>
       );
@@ -75,8 +75,8 @@ const Index = () => {
         max-w-7xl
         mx-auto
         my-2
-        px-2 sm:px-4 md:px-8
-        py-4 md:py-6
+        px-2 sm:px-4 md:px-2
+        py-4 md:py-8
         rounded-2xl
         shadow-xl
         border
