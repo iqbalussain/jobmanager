@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { Button } from "@/components/ui/button";
@@ -75,13 +76,11 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
   ];
 
-  // This hook returns JobOrder[] not Job[], so we import it here for the PendingApprovals list
   const { jobOrders } = useJobOrders();
 
-  // ---- Start shadcn layout
   return (
-    <div className="relative min-h-screen flex flex-col gap-2 p-2 bg-background">
-      <div className="flex items-center justify-between bg-card rounded-2xl px-3 py-3 shadow-xl">
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
+      <div className="flex items-center justify-between bg-card px-6 py-4 shadow-lg border-b">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-1">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back! Here's what's happening with your projects.</p>
@@ -97,47 +96,51 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           </Button>
         </div>
       </div>
-      {/* ADMIN APPROVALS */}
-      <PendingApprovals
-        jobs={jobOrders}
-        onView={(jobOrder) => {
-          setSelectedJobOrder(jobOrder);
-          setShowApprovalJobModal(true);
-        }}
-      />
-      <div className="grid grid-cols-10 gap-6">
-        <div className="col-span-6">
-          <div className="h-[400px]">
-            <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
+      
+      <div className="flex-1 overflow-auto p-6 space-y-6">
+        <PendingApprovals
+          jobs={jobOrders}
+          onView={(jobOrder) => {
+            setSelectedJobOrder(jobOrder);
+            setShowApprovalJobModal(true);
+          }}
+        />
+        
+        <div className="grid grid-cols-10 gap-6">
+          <div className="col-span-6">
+            <div className="h-[400px]">
+              <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
+            </div>
+          </div>
+          <div className="col-span-4">
+            <div className="h-[400px]">
+              <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
+            </div>
           </div>
         </div>
-        <div className="col-span-4">
-          <div className="h-[400px]">
-            <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
+
+        <div className="grid grid-cols-10 gap-6 relative">
+          <div className="col-span-4">
+            <QuickSearch 
+              searchQuery={searchQuery}
+              filteredJobs={filteredJobs}
+              onViewDetails={handleViewDetails}
+              onSearchChange={setSearchQuery}
+            />
           </div>
+          <div className="col-span-4">
+            <ActivitiesSection />
+          </div>
+          <ShortcutGadgets onViewChange={onViewChange} floating />
         </div>
       </div>
 
-      <div className="grid grid-cols-10 gap-6 relative">
-        <div className="col-span-4">
-          <QuickSearch 
-            searchQuery={searchQuery}
-            filteredJobs={filteredJobs}
-            onViewDetails={handleViewDetails}
-            onSearchChange={setSearchQuery}
-          />
-        </div>
-        <div className="col-span-4">
-          <ActivitiesSection />
-        </div>
-        <ShortcutGadgets onViewChange={onViewChange} floating />
-      </div>
       <JobDetails
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
         job={selectedJob}
       />
-      {/* Show job details modal for approvals */}
+      
       <JobDetails
         isOpen={showApprovalJobModal}
         onClose={() => setShowApprovalJobModal(false)}
@@ -149,12 +152,10 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
                 title: selectedJobOrder.title ?? "",
                 customer: selectedJobOrder.customer?.name ?? "Unknown Customer",
                 assignee: selectedJobOrder.assignee ?? "Unassigned",
-                // Map JobOrder 'urgent' priority to 'high'
                 priority:
                   selectedJobOrder.priority === "urgent"
                     ? "high"
                     : (selectedJobOrder.priority as "low" | "medium" | "high"),
-                // Map JobOrder status "working" to Job "in-progress"
                 status:
                   selectedJobOrder.status === "working"
                     ? "in-progress"
@@ -177,6 +178,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
             : null
         }
       />
+      
       <JobStatusModal
         isOpen={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}

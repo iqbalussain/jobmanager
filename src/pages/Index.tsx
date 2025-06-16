@@ -40,10 +40,8 @@ const Index = () => {
     id: order.id,
     jobOrderNumber: order.job_order_number,
     title: order.title,
-    // description: order.description || "", // REMOVE, jobOrder.description does not exist!
     customer: order.customer?.name || "Unknown Customer",
     assignee: order.assignee || "Unassigned",
-    // Map JobOrder 'urgent' priority to 'high'
     priority: order.priority === "urgent" ? "high" : (order.priority as "low" | "medium" | "high"),
     status: order.status as JobStatus,
     dueDate: order.due_date || new Date().toISOString().split('T')[0],
@@ -62,29 +60,14 @@ const Index = () => {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex items-center justify-center h-64 glass-gaming-strong gaming-pulse mx-2 sm:mx-6 my-8">
+        <div className="flex items-center justify-center h-screen w-full glass-gaming-strong gaming-pulse">
           <div className="text-lg text-gaming-primary">Loading job orders...</div>
         </div>
       );
     }
 
     return (
-      <div className="
-        glass-gaming-strong
-        w-full
-        mx-auto
-        my-2
-        px-2 sm:px-4 md:px-6
-        py-2 md:py-4
-        rounded-2xl
-        shadow-xl
-        border
-        min-h-[80vh]
-        transition-all
-        backdrop-blur-md
-        gaming-pulse
-      ">
-        {/* All main content rendered here as glassy cards */}
+      <div className="w-full h-full">
         {(() => {
           switch (currentView) {
             case "dashboard":
@@ -111,16 +94,9 @@ const Index = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-transparent">
+      <div className="min-h-screen flex w-full bg-background">
         <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-        <main className="
-          flex-1 flex flex-col items-center justify-center
-          bg-transparent
-          min-w-0
-          px-1 xs:px-1 sm:px-1 md:px-1 lg:px-1
-          pt-2 pb-4 md:pt-6 md:pb-8
-          overflow-x-hidden
-        ">
+        <main className="flex-1 h-screen overflow-hidden">
           {renderContent()}
         </main>
       </div>
@@ -129,4 +105,3 @@ const Index = () => {
 };
 
 export default Index;
-
