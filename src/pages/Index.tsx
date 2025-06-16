@@ -118,7 +118,7 @@ const Index = () => {
           flex-1 flex flex-col items-center justify-center
           bg-transparent
           min-w-0
-          px-1 xs:px-2 sm:px-4 md:px-6 lg:px-10
+          px-1 xs:px-1 sm:px-1 md:px-1 lg:px-1
           pt-2 pb-4 md:pt-6 md:pb-8
           overflow-x-hidden
         ">
