@@ -119,7 +119,7 @@ const Index = () => {
           bg-transparent
           min-w-0
           px-1 xs:px-1 sm:px-1 md:px-1 lg:px-1
-          pt-2 pb-4 md:pt-6 md:pb-8
+          pt-1 pb-2 md:pt-2 md:pb-4
           overflow-x-hidden
         ">
           {renderContent()}
