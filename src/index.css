@@ -33,6 +33,7 @@
     color: hsl(var(--foreground));
     min-height: 100vh;
     font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    overflow-x: scroll;
   }
 
   h1, h2 {
@@ -73,6 +74,13 @@
     text-shadow: none;
   }
 
+ /* Text visibility improvements for light mode */
+  .text-gray-600, .text-gray-700, .text-gray-800, .text-gray-900 {
+    color: #374151 !important;
+  }
+  .text-muted-foreground {
+    color: hsl(var(--muted-foreground)) !important;
+  }
   /* Hide neon/glass effects in light mode */
   .glass-gaming, .glass-gaming-strong, .neon-trace-card,
   .gaming-pulse, .animate-glow, .neon-shadow, .neon-dot-shadow, .neon-text,
