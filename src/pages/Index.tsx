@@ -96,7 +96,7 @@ const Index = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-        <main className="flex-1 h-screen overflow-hidden">
+        <main className="flex-2 h-screen overflow-hidden">
           {renderContent()}
         </main>
       </div>
