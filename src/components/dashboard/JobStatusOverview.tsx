@@ -87,15 +87,15 @@ export function JobStatusOverview({
   return (
     <div className="
       grid
-      grid-cols-2
-      sm:grid-cols-3
-      md:grid-cols-4
+      grid-cols-1
+      sm:grid-cols-1
+      md:grid-cols-2
       lg:grid-cols-3
       gap-2
       p-1
-      sm:gap-2
-      md:gap-3
-      lg:gap-4
+      sm:gap-1
+      md:gap-2
+      lg:gap-3
     ">
       {statusKeys.map((key) => (
         <Card
