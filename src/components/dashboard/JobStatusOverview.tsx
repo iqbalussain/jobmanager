@@ -39,13 +39,13 @@ const STATUS_NAME_MAP: Record<StatusKey, string> = {
 };
 
 const STATUS_COLOR_MAP: Record<StatusKey, string> = {
-  total: "bg-primary text-primary-foreground",
-  pending: "bg-secondary text-secondary-foreground",
-  "in-progress": "bg-accent text-accent-foreground",
-  designing: "bg-muted text-foreground",
-  completed: "bg-green-600 text-white",
-  invoiced: "bg-purple-500 text-white",
-  cancelled: "bg-destructive text-destructive-foreground",
+ total: "from-blue-500 via-purple-500 to-pink-500",
+  pending: "from-yellow-400 via-orange-400 to-red-400",
+  "in-progress": "from-cyan-400 via-blue-500 to-indigo-600",
+  designing: "from-purple-400 via-pink-500 to-red-500",
+  completed: "from-green-400 via-emerald-500 to-teal-600",
+  invoiced: "from-indigo-400 via-purple-500 to-pink-600",
+  cancelled: "from-red-400 via-pink-500 to-rose-600",
 };
 
 const ICON_MAP: Record<StatusKey, JSX.Element> = {
