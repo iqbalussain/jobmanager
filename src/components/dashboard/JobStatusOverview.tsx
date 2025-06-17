@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Briefcase,
@@ -9,7 +8,6 @@ import {
   FileText,
   XCircle,
 } from "lucide-react";
-import { useTheme } from "@/components/ui/ThemeContext";
 
 interface JobStats {
   total: number;
@@ -40,24 +38,14 @@ const STATUS_NAME_MAP: Record<StatusKey, string> = {
   cancelled: "Cancelled",
 };
 
-const LIGHT_MODE_COLORS: Record<StatusKey, string> = {
-  total: "bg-gradient-to-br from-blue-100 to-purple-100 text-gray-800 border-blue-200",
-  pending: "bg-gradient-to-br from-yellow-100 to-orange-100 text-gray-800 border-yellow-200",
-  "in-progress": "bg-gradient-to-br from-cyan-100 to-blue-100 text-gray-800 border-cyan-200",
-  designing: "bg-gradient-to-br from-purple-100 to-pink-100 text-gray-800 border-purple-200",
-  completed: "bg-gradient-to-br from-green-100 to-emerald-100 text-gray-800 border-green-200",
-  invoiced: "bg-gradient-to-br from-indigo-100 to-purple-100 text-gray-800 border-indigo-200",
-  cancelled: "bg-gradient-to-br from-red-100 to-pink-100 text-gray-800 border-red-200",
-};
-
-const DARK_MODE_COLORS: Record<StatusKey, string> = {
-  total: "glass-gaming-strong neon-trace-card bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-white border-blue-400/30",
-  pending: "glass-gaming-strong neon-trace-card bg-gradient-to-br from-yellow-500/20 to-orange-500/20 text-white border-yellow-400/30",
-  "in-progress": "glass-gaming-strong neon-trace-card bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-white border-cyan-400/30",
-  designing: "glass-gaming-strong neon-trace-card bg-gradient-to-br from-purple-500/20 to-pink-500/20 text-white border-purple-400/30",
-  completed: "glass-gaming-strong neon-trace-card bg-gradient-to-br from-green-500/20 to-emerald-500/20 text-white border-green-400/30",
-  invoiced: "glass-gaming-strong neon-trace-card bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-white border-indigo-400/30",
-  cancelled: "glass-gaming-strong neon-trace-card bg-gradient-to-br from-red-500/20 to-pink-500/20 text-white border-red-400/30",
+const STATUS_COLOR_MAP: Record<StatusKey, string> = {
+ total: "from-blue-500 via-purple-500 to-pink-500",
+  pending: "from-yellow-400 via-orange-400 to-red-400",
+  "in-progress": "from-cyan-400 via-blue-500 to-indigo-600",
+  designing: "from-purple-400 via-pink-500 to-red-500",
+  completed: "from-green-400 via-emerald-500 to-teal-600",
+  invoiced: "from-indigo-400 via-purple-500 to-pink-600",
+  cancelled: "from-red-400 via-pink-500 to-rose-600",
 };
 
 const ICON_MAP: Record<StatusKey, JSX.Element> = {
@@ -78,13 +66,15 @@ interface JobStatusOverviewProps {
   ) => void;
 }
 
+const cardBase =
+  "flex flex-col items-center justify-center w-full h-24 sm:h-28 md:h-31 rounded-xl shadow-lg cursor-pointer " +
+  "transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-2xl select-none " +
+  "focus:outline-none focus:ring-4 focus:ring-ring animate-[fade-in_0.3s_ease-in]";
+
 export function JobStatusOverview({
   stats,
   onStatusClick,
 }: JobStatusOverviewProps) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-
   const statusKeys: StatusKey[] = [
     "total",
     "pending",
@@ -94,19 +84,19 @@ export function JobStatusOverview({
     "invoiced",
     "cancelled",
   ];
-
-  const getCardStyles = (key: StatusKey) => {
-    const baseStyles = "relative overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-2xl cursor-pointer border-2 backdrop-blur-md";
-    const colorStyles = isDark ? DARK_MODE_COLORS[key] : LIGHT_MODE_COLORS[key];
-    const hoverStyles = isDark 
-      ? "hover:gaming-pulse hover:animate-glow" 
-      : "hover:shadow-lg hover:brightness-105";
-    
-    return `${baseStyles} ${colorStyles} ${hoverStyles}`;
-  };
-
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 p-1 sm:gap-2 md:gap-3 lg:gap-4">
+    <div className="
+      grid
+      grid-cols-2
+      sm:grid-cols-3
+      md:grid-cols-4
+      lg:grid-cols-3
+      gap-2
+      p-1
+      sm:gap-2
+      md:gap-3
+      lg:gap-4
+    ">
       {statusKeys.map((key) => (
         <Card
           key={key}
@@ -115,45 +105,46 @@ export function JobStatusOverview({
           aria-label={`Show ${STATUS_NAME_MAP[key]} jobs`}
           onClick={() => onStatusClick(key, STATUS_NAME_MAP[key])}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onStatusClick(key, STATUS_NAME_MAP[key]); }}
-          className={getCardStyles(key)}
-          style={{
-            minHeight: "80px",
-            "--bg-angle": "0deg",
-            background: isDark 
-              ? `conic-gradient(from var(--bg-angle), rgba(59, 130, 246, 0.1) 0deg, rgba(168, 85, 247, 0.1) 120deg, rgba(16, 185, 129, 0.1) 240deg, rgba(59, 130, 246, 0.1) 360deg)`
-              : undefined,
-            animation: isDark ? "gradient-rotate 4s linear infinite" : undefined,
-          } as React.CSSProperties}
+          className={
+            cardBase +
+            " " +
+            STATUS_COLOR_MAP[key] +
+            " min-h-[80px] sm:min-h-[96px] md:min-h-[104px] lg:min-h-[124px] p-1 sm:p-2"
+          }
+          style={{ maxWidth: "100%", width: "100%" }}
         >
-          <CardContent className="flex flex-col items-center justify-center text-center gap-1 sm:gap-2 w-full h-full p-2 sm:p-3 md:p-4">
-            <span className="flex items-center justify-center text-[11px] sm:text-xs md:text-base font-medium leading-tight">
+          <CardContent className="
+            flex flex-col items-center justify-center text-center gap-1 sm:gap-2
+            w-full h-full p-2 sm:p-3 md:p-4
+          ">
+            <span className="
+              flex items-center justify-center
+              text-[11px] sm:text-xs md:text-base font-medium
+              leading-tight
+            ">
               {ICON_MAP[key]}
               <span className="inline-block truncate max-w-[80px] sm:max-w-[120px] md:max-w-full">
                 {STATUS_NAME_MAP[key]}
               </span>
             </span>
-            <span className="font-bold text-lg sm:text-xl md:text-2xl lg:text-4xl leading-tight truncate max-w-[60px] sm:max-w-[90px] md:max-w-full">
+            <span
+              className="
+                font-bold
+                text-lg
+                sm:text-xl
+                md:text-2xl
+                lg:text-4xl
+                leading-tight
+                truncate
+                max-w-[60px] sm:max-w-[90px] md:max-w-full
+              "
+              style={{ lineHeight: "1.13" }}
+            >
               {stats[key]}
             </span>
           </CardContent>
         </Card>
       ))}
-      <style jsx>{`
-        @property --bg-angle {
-          inherits: false;
-          initial-value: 0deg;
-          syntax: "<angle>";
-        }
-        
-        @keyframes gradient-rotate {
-          from {
-            --bg-angle: 0deg;
-          }
-          to {
-            --bg-angle: 360deg;
-          }
-        }
-      `}</style>
     </div>
   );
 }
