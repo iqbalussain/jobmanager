@@ -25,49 +25,36 @@ export function JobListHeader({
     { value: "cancelled", label: "Cancelled" }
   ];
 
-  // Wrapper function to validate and handle status filter changes
-  const handleStatusFilterChange = (value: string) => {
-    const validStatuses = ["all", "pending", "in-progress", "designing", "completed", "invoiced", "cancelled"];
-    if (validStatuses.includes(value)) {
-      onStatusFilterChange(value);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold mb-1 text-gradient">
-            Job <span className="alt">Management</span>
-          </h1>
-          <p className="text-base text-muted-foreground font-medium">
-            Manage and track all your job orders
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Management</h1>
+          <p className="text-gray-600">Manage and track all your job orders</p>
         </div>
       </div>
-      <div className="flex flex-col md:flex-row gap-2 md:gap-4">
+
+      <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
             placeholder="Search jobs by title, order number, or customer..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 bg-card/70 text-foreground border-border placeholder:text-muted-foreground"
+            className="pl-10 bg-white/90"
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-secondary" />
-          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className="w-32 sm:w-40 bg-card/80 text-foreground border-border text-sm">
+          <Filter className="w-4 h-4 text-gray-500" />
+          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+            <SelectTrigger className="w-40 bg-white/90">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
-            <SelectContent className="bg-card/95">
-              <SelectItem value="all">
-                <span className="text-gradient">All Status</span>
-              </SelectItem>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
               {getStatusOptions().map((option) => (
                 <SelectItem key={option.value} value={option.value}>
-                  <span className="text-gradient">{option.label}</span>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>

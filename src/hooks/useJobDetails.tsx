@@ -1,10 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Job } from "@/pages/Index";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { exportJobOrderToPDF } from "@/utils/pdfExport";
-import { useJobDropdownData } from "@/hooks/useJobDropdownData";
 
 interface UseJobDetailsProps {
   job: Job | null;
@@ -15,16 +15,17 @@ interface UseJobDetailsProps {
 export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) {
   const [editData, setEditData] = useState<Partial<Job>>({});
   const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [customers, setCustomers] = useState<Array<{id: string, name: string}>>([]);
+  const [designers, setDesigners] = useState<Array<{id: string, name: string}>>([]);
+  const [salesmen, setSalesmen] = useState<Array<{id: string, name: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [userRoles, setUserRoles] = useState<string[]>([]);
-  const [rolesLoading, setRolesLoading] = useState(true); // For debug UI
+  const [userRole, setUserRole] = useState<string>('');
   const { toast } = useToast();
   const { user } = useAuth();
-  const { customers, designers, salesmen } = useJobDropdownData(isEditMode, job);
 
   // Check if user is authorized to edit invoice numbers
-  const canEditInvoice = userRoles.includes('admin') || userRoles.includes('job_order_manager');
+  const canEditInvoice = userRole === 'admin' || userRole === 'manager' || userRole === 'job_order_manager';
 
   useEffect(() => {
     if (job) {
@@ -46,37 +47,56 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
 
   useEffect(() => {
     if (user) {
-      fetchUserRoles();
+      fetchUserRole();
     }
   }, [user]);
 
-  const fetchUserRoles = async () => {
-    setRolesLoading(true);
-    if (!user) {
-      setUserRoles([]);
-      setRolesLoading(false);
-      return;
+  useEffect(() => {
+    if (isEditMode && job) {
+      fetchDropdownData();
     }
+  }, [isEditMode, job]);
+
+  const fetchUserRole = async () => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
-        .from('user_roles')
+        .from('profiles')
         .select('role')
-        .eq('user_id', user.id);
-
+        .eq('id', user.id)
+        .single();
+      
       if (error) {
-        setUserRoles([]);
-        console.error("Error fetching user roles:", error.message);
-      } else if (data) {
-        setUserRoles(data.map((row: { role: string }) => row.role));
-        console.log("[DEBUG] useJobDetails roles:", data.map((row: { role: string }) => row.role), "for user:", user.id);
-      } else {
-        setUserRoles([]);
+        console.error('Error fetching user role:', error);
+        return;
       }
-    } catch (error: any) {
-      setUserRoles([]);
-      console.error("Error fetching user roles:", error?.message || error);
-    } finally {
-      setRolesLoading(false);
+      
+      if (data) {
+        setUserRole(data.role);
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+  };
+
+  const fetchDropdownData = async () => {
+    try {
+      const [customersRes, designersRes, salesmenRes] = await Promise.all([
+        supabase.from('customers').select('id, name'),
+        supabase.from('profiles').select('id, full_name').eq('role', 'designer'),
+        supabase.from('profiles').select('id, full_name').eq('role', 'salesman')
+      ]);
+
+      if (customersRes.data) setCustomers(customersRes.data);
+      if (designersRes.data) {
+        setDesigners(designersRes.data.map(d => ({ id: d.id, name: d.full_name || 'Unknown Designer' })));
+      }
+      if (salesmenRes.data) {
+        setSalesmen(salesmenRes.data.map(s => ({ id: s.id, name: s.full_name || 'Unknown Salesman' })));
+      }
+    } catch (error) {
+      console.error('Error fetching dropdown data:', error);
     }
   };
 
@@ -168,8 +188,6 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
     isExporting,
     canEditInvoice,
     handleSave,
-    handleExportPDF,
-    userRoles, // debugging
-    rolesLoading // debugging
+    handleExportPDF
   };
 }

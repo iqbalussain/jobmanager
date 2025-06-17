@@ -19,22 +19,6 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
-  // wrap setStatusFilter in type guard
-  const handleStatusFilterChange = (value: string) => {
-    const validStatuses = [
-      "all",
-      "pending",
-      "in-progress",
-      "designing",
-      "completed",
-      "invoiced",
-      "cancelled",
-    ];
-    if (validStatuses.includes(value)) {
-      setStatusFilter(value as typeof statusFilter); // safe cast
-    }
-  };
-
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = 
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,36 +52,38 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   };
 
   return (
-    <div className="glass-matte rounded-2xl p-8 min-h-screen bg-card">
-      <div className="space-y-6">
-        <JobListHeader
-          searchQuery={searchQuery}
-          statusFilter={statusFilter}
-          onSearchChange={setSearchQuery}
-          onStatusFilterChange={handleStatusFilterChange}
-        />
-        <JobStatsCards stats={stats} />
-        <Card className="glass-matte bg-card border border-border shadow-lg">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredJobs.map((job) => (
-                <JobCard
-                  key={job.id}
-                  job={job}
-                  onViewDetails={handleViewDetails}
-                  onStatusChange={handleStatusChange}
-                />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        {filteredJobs.length === 0 && <EmptyJobState />}
-        <JobDetails
-          isOpen={isJobDetailsOpen}
-          onClose={() => setIsJobDetailsOpen(false)}
-          job={selectedJob}
-        />
-      </div>
+    <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+      <JobListHeader
+        searchQuery={searchQuery}
+        statusFilter={statusFilter}
+        onSearchChange={setSearchQuery}
+        onStatusFilterChange={setStatusFilter}
+      />
+
+      <JobStatsCards stats={stats} />
+
+      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredJobs.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                onViewDetails={handleViewDetails}
+                onStatusChange={handleStatusChange}
+              />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {filteredJobs.length === 0 && <EmptyJobState />}
+
+      <JobDetails
+        isOpen={isJobDetailsOpen}
+        onClose={() => setIsJobDetailsOpen(false)}
+        job={selectedJob}
+      />
     </div>
   );
 }

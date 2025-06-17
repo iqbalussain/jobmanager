@@ -127,10 +127,6 @@ export type Database = {
       job_orders: {
         Row: {
           actual_hours: number | null
-          approval_notes: string | null
-          approval_status: string
-          approved_at: string | null
-          approved_by: string | null
           assignee: string | null
           branch: string | null
           created_at: string
@@ -152,10 +148,6 @@ export type Database = {
         }
         Insert: {
           actual_hours?: number | null
-          approval_notes?: string | null
-          approval_status?: string
-          approved_at?: string | null
-          approved_by?: string | null
           assignee?: string | null
           branch?: string | null
           created_at?: string
@@ -177,10 +169,6 @@ export type Database = {
         }
         Update: {
           actual_hours?: number | null
-          approval_notes?: string | null
-          approval_status?: string
-          approved_at?: string | null
-          approved_by?: string | null
           assignee?: string | null
           branch?: string | null
           created_at?: string

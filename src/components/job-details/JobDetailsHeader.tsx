@@ -36,15 +36,15 @@ export function JobDetailsHeader({ job, isEditMode, isExporting, onExportPDF }: 
 
   return (
     <>
-      <div className="text-2xl font-bold text-white flex items-center gap-2">
-        <FileText className="w-6 h-6 text-blue-300" />
+      <div className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <FileText className="w-6 h-6 text-blue-600" />
         {isEditMode ? "Edit Job Order" : "Job Order Details"}
       </div>
 
-      <div className="glass-gaming-medium border border-white/20 backdrop-blur-md p-6 rounded-lg">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-100">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-white">Job Order #{job.jobOrderNumber}</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Job Order #{job.jobOrderNumber}</h3>
             <div className="flex gap-2 mt-2">
               <Badge className={getPriorityColor(job.priority)}>
                 {job.priority} priority
@@ -58,7 +58,7 @@ export function JobDetailsHeader({ job, isEditMode, isExporting, onExportPDF }: 
             onClick={onExportPDF}
             disabled={isExporting}
             variant="outline"
-            className="bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-md"
+            className="bg-white hover:bg-gray-50"
           >
             <Download className="w-4 h-4 mr-2" />
             {isExporting ? 'Exporting...' : 'Export PDF'}

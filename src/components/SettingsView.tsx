@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,6 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "./ui/ThemeContext";
 
 export function SettingsView() {
   const [notifications, setNotifications] = useState(true);
@@ -35,15 +35,12 @@ export function SettingsView() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (user) {
       fetchProfile();
     }
-    // Sync local mode state with context
-    setDarkMode(theme === "dark");
-  }, [user, theme]);
+  }, [user]);
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -143,16 +140,11 @@ export function SettingsView() {
     }
   };
 
-  const handleDarkModeSwitch = (checked: boolean) => {
-    setDarkMode(checked);
-    setTheme(checked ? "dark" : "light");
-  };
-
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-        <p className="text-gray-600 dark:text-gray-200 mt-2">Manage your application preferences</p>
+        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+        <p className="text-gray-600 mt-2">Manage your application preferences</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -271,20 +263,24 @@ export function SettingsView() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Dark Mode</Label>
-                <p className="text-sm text-gray-500 dark:text-gray-300">
-                  Switch between clean and neon themes
+                <p className="text-sm text-gray-500">
+                  Switch to dark theme
                 </p>
               </div>
               <Switch
                 checked={darkMode}
-                onCheckedChange={handleDarkModeSwitch}
-                aria-label="Toggle dark mode"
+                onCheckedChange={setDarkMode}
               />
             </div>
-            {/* ... keep theme color pickers ... */}
             <Separator />
-            <div className="text-xs text-gray-400 dark:text-gray-300">
-              Dark mode enables the neon gaming theme.
+            <div className="space-y-2">
+              <Label>Theme Color</Label>
+              <div className="flex gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-600 cursor-pointer border-2 border-blue-600"></div>
+                <div className="w-8 h-8 rounded-full bg-green-600 cursor-pointer border-2 border-transparent hover:border-green-600"></div>
+                <div className="w-8 h-8 rounded-full bg-purple-600 cursor-pointer border-2 border-transparent hover:border-purple-600"></div>
+                <div className="w-8 h-8 rounded-full bg-red-600 cursor-pointer border-2 border-transparent hover:border-red-600"></div>
+              </div>
             </div>
           </CardContent>
         </Card>

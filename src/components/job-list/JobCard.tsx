@@ -20,16 +20,15 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
-  // Adjust badge to work on dark backgrounds
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending": return "bg-yellow-600/10 text-yellow-300 border-yellow-600";
-      case "in-progress": return "bg-blue-600/10 text-blue-300 border-blue-600";
-      case "designing": return "bg-purple-700/10 text-purple-300 border-purple-600";
-      case "completed": return "bg-emerald-700/15 text-emerald-200 border-emerald-600";
-      case "invoiced": return "bg-emerald-800/20 text-emerald-100 border-emerald-600";
-      case "cancelled": return "bg-red-800/10 text-red-300 border-red-600";
-      default: return "bg-muted/40 text-muted-foreground border-border";
+      case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-300";
+      case "in-progress": return "bg-blue-100 text-blue-800 border-blue-300";
+      case "designing": return "bg-purple-100 text-purple-800 border-purple-300";
+      case "completed": return "bg-green-100 text-green-800 border-green-300";
+      case "invoiced": return "bg-emerald-100 text-emerald-800 border-emerald-300";
+      case "cancelled": return "bg-red-100 text-red-800 border-red-300";
+      default: return "bg-gray-100 text-gray-800 border-gray-300";
     }
   };
 
@@ -43,76 +42,72 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   ];
 
   return (
-    <div className="glass-matte mb-1 rounded-2xl transition-transform duration-300 hover:scale-104 border border-border bg-card">
-      <div className="rounded-2xl relative bg-card/90 backdrop-blur border-0 shadow-lg w-full min-h-[238px]">
-        <Card className="glass-matte bg-card/90 border-0 shadow w-full min-h-[238px] relative">
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <CardTitle className="text-lg font-bold text-gradient mb-2">{job.title}</CardTitle>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Briefcase className="w-4 h-4 text-primary" />
-                    <span className="font-medium">{job.jobOrderNumber}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Building className="w-4 h-4 text-secondary" />
-                    <span>{job.customer}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="w-4 h-4 text-accent" />
-                    <span>{job.salesman}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4 text-white" />
-                    <span>{new Date(job.dueDate).toLocaleDateString()}</span>
-                  </div>
-                </div>
+    <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-lg font-bold text-gray-900 mb-2">{job.title}</CardTitle>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Briefcase className="w-4 h-4" />
+                <span className="font-medium">{job.jobOrderNumber}</span>
               </div>
-              <div className="ml-4">
-                <Select 
-                  value={job.status} 
-                  onValueChange={(value) => onStatusChange(job.id, value)}
-                >
-                  <SelectTrigger className={`w-32 border-2 ${getStatusColor(job.status)} bg-background/80 text-foreground`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card/95">
-                    {getStatusOptions().map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <Badge variant="outline" className={getStatusColor(option.value)}>
-                          {option.label}
-                        </Badge>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Building className="w-4 h-4" />
+                <span>{job.customer}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <User className="w-4 h-4" />
+                <span>{job.salesman}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Calendar className="w-4 h-4" />
+                <span>{new Date(job.dueDate).toLocaleDateString()}</span>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => onViewDetails(job)}
-                className="flex-1 bg-primary/90 hover:bg-primary text-white border-none shadow"
-              >
-                <Eye className="w-4 h-4 mr-2 text-white" />
-                View Details
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                className="bg-secondary/95 hover:bg-secondary/80 text-black border-none shadow"
-              >
-                <MessageSquare className="w-4 h-4 mr-2 text-black" />
-                Chat
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          </div>
+          <div className="ml-4">
+            <Select 
+              value={job.status} 
+              onValueChange={(value) => onStatusChange(job.id, value)}
+            >
+              <SelectTrigger className={`w-32 border-2 ${getStatusColor(job.status)}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {getStatusOptions().map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <Badge variant="outline" className={getStatusColor(option.value)}>
+                      {option.label}
+                    </Badge>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onViewDetails(job)}
+            className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            View Details
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+          >
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Chat
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

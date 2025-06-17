@@ -3,7 +3,7 @@ import { Job } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Eye } from "lucide-react";
+import { Search, Eye, MessageSquare } from "lucide-react";
 
 interface QuickSearchProps {
   searchQuery: string;
@@ -16,7 +16,7 @@ export function QuickSearch({ searchQuery, filteredJobs, onViewDetails, onSearch
   return (
     <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl overflow-hidden">
       <CardHeader className="pb-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-        <CardTitle className="flex items-center gap-2 text-white text-xs sm:text-base">
+        <CardTitle className="flex items-center gap-2 text-white text-sm">
           <Search className="w-4 h-4" />
           Quick Search
         </CardTitle>
@@ -28,7 +28,7 @@ export function QuickSearch({ searchQuery, filteredJobs, onViewDetails, onSearch
             placeholder="Search jobs..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 rounded-full border-2 border-gray-200 focus:border-blue-500 transition-colors text-xs sm:text-sm"
+            className="pl-10 rounded-full border-2 border-gray-200 focus:border-blue-500 transition-colors"
           />
         </div>
         

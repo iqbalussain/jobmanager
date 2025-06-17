@@ -12,9 +12,6 @@ import { ActivitiesSection } from "@/components/dashboard/ActivitiesSection";
 import { ShortcutGadgets } from "@/components/dashboard/ShortcutGadgets";
 import { useChartData } from "@/hooks/useChartData";
 import { Plus } from "lucide-react";
-import { PendingApprovals } from "@/components/dashboard/PendingApprovals";
-import { JobOrder } from "@/types/jobOrder";
-import { useJobOrders } from "@/hooks/useJobOrders";
 
 interface ModernDashboardProps {
   jobs: Job[];
@@ -31,15 +28,13 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled';
     title: string;
   } | null>(null);
-  const [selectedJobOrder, setSelectedJobOrder] = useState<JobOrder | null>(null);
-  const [showApprovalJobModal, setShowApprovalJobModal] = useState(false);
 
   const { dailyJobData, isLoading: chartLoading } = useChartData();
 
   const stats = {
     total: jobs.length,
     pending: jobs.filter(job => job.status === "pending").length,
-    "in-progress": jobs.filter(job => job.status === "in-progress").length,
+    inProgress: jobs.filter(job => job.status === "in-progress").length,
     designing: jobs.filter(job => job.status === "designing").length,
     completed: jobs.filter(job => job.status === "completed").length,
     invoiced: jobs.filter(job => job.status === "invoiced").length,
@@ -57,10 +52,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     setIsJobDetailsOpen(true);
   };
 
-  const handleStatusClick = (
-    status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', 
-    title: string
-  ) => {
+  const handleStatusClick = (status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', title: string) => {
     setSelectedStatus({ status, title });
     setStatusModalOpen(true);
   };
@@ -76,97 +68,60 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
   ];
 
-  const { jobOrders } = useJobOrders();
-
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-transparent">
-      {/* Content area with no header */}
-      <div className="flex-1 overflow-auto p-6 space-y-6">
-        {/* Admin Approvals */}
-        <PendingApprovals
-          jobs={jobOrders}
-          onView={(jobOrder) => {
-            setSelectedJobOrder(jobOrder);
-            setShowApprovalJobModal(true);
-          }}
-        />
-
-        {/* Main dashboard grid */}
-        <div className="grid grid-cols-10 gap-6">
-          <div className="col-span-6">
-            <div className="h-[400px]">
-              <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
-            </div>
-          </div>
-          <div className="col-span-4">
-            <div className="h-[400px]">
-              <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
-            </div>
-          </div>
+    <div className="space-y-8 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600">Welcome back! Here's what's happening with your projects.</p>
         </div>
-
-        {/* Bottom section */}
-        <div className="grid grid-cols-10 gap-6 relative">
-          <div className="col-span-4">
-            <QuickSearch 
-              searchQuery={searchQuery}
-              filteredJobs={filteredJobs}
-              onViewDetails={handleViewDetails}
-              onSearchChange={setSearchQuery}
-            />
-          </div>
-          <div className="col-span-4">
-            <ActivitiesSection />
-          </div>
-          <ShortcutGadgets onViewChange={onViewChange} floating />
+        <div className="flex items-center gap-4">
+          <DashboardNotifications notifications={notifications} />
+          <Button 
+            onClick={handleCreateJobClick}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Job
+          </Button>
         </div>
       </div>
 
-      {/* Modals */}
+      <div className="grid grid-cols-10 gap-6 h-[400px]">
+        <div className="col-span-6">
+          <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
+        </div>
+        
+        <div className="col-span-4">
+          <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-10 gap-6 h-[400px]">
+        <div className="col-span-4">
+          <QuickSearch 
+            searchQuery={searchQuery}
+            filteredJobs={filteredJobs}
+            onViewDetails={handleViewDetails}
+            onSearchChange={setSearchQuery}
+          />
+        </div>
+
+        <div className="col-span-4">
+          <ActivitiesSection />
+        </div>
+
+        <div className="col-span-2">
+          <ShortcutGadgets onViewChange={onViewChange} />
+        </div>
+      </div>
+
       <JobDetails
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
         job={selectedJob}
       />
-      
-      <JobDetails
-        isOpen={showApprovalJobModal}
-        onClose={() => setShowApprovalJobModal(false)}
-        job={
-          selectedJobOrder
-            ? {
-                id: selectedJobOrder.id,
-                jobOrderNumber: selectedJobOrder.job_order_number,
-                title: selectedJobOrder.title ?? "",
-                customer: selectedJobOrder.customer?.name ?? "Unknown Customer",
-                assignee: selectedJobOrder.assignee ?? "Unassigned",
-                priority:
-                  selectedJobOrder.priority === "urgent"
-                    ? "high"
-                    : (selectedJobOrder.priority as "low" | "medium" | "high"),
-                status:
-                  selectedJobOrder.status === "working"
-                    ? "in-progress"
-                    : (selectedJobOrder.status as
-                        | "pending"
-                        | "in-progress"
-                        | "designing"
-                        | "completed"
-                        | "invoiced"
-                        | "cancelled"
-                        | "finished"),
-                dueDate: selectedJobOrder.due_date ?? "",
-                createdAt: selectedJobOrder.created_at,
-                estimatedHours: selectedJobOrder.estimated_hours ?? 0,
-                branch: selectedJobOrder.branch ?? "",
-                designer: selectedJobOrder.designer?.name ?? "Unassigned",
-                salesman: selectedJobOrder.salesman?.name ?? "Unassigned",
-                jobOrderDetails: selectedJobOrder.job_order_details ?? ""
-              }
-            : null
-        }
-      />
-      
+
       <JobStatusModal
         isOpen={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}
