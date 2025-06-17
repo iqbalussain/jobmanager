@@ -31,36 +31,38 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <JobDetailsHeader 
-            job={job}
-            isEditMode={isEditMode}
-            isExporting={isExporting}
-            onExportPDF={handleExportPDF}
-          />
-        </DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-transparent border-0 shadow-none p-0">
+        <div className="glass-gaming-strong backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-6 m-2">
+          <DialogHeader className="border-0 p-0 mb-6">
+            <JobDetailsHeader 
+              job={job}
+              isEditMode={isEditMode}
+              isExporting={isExporting}
+              onExportPDF={handleExportPDF}
+            />
+          </DialogHeader>
 
-        <div className="space-y-6">
-          <InvoiceNumberSection
-            invoiceNumber={invoiceNumber}
-            onInvoiceNumberChange={setInvoiceNumber}
-            canEditInvoice={canEditInvoice}
-          />
+          <div className="space-y-6">
+            <InvoiceNumberSection
+              invoiceNumber={invoiceNumber}
+              onInvoiceNumberChange={setInvoiceNumber}
+              canEditInvoice={canEditInvoice}
+            />
 
-          <JobDetailsForm
-            job={job}
-            isEditMode={isEditMode}
-            editData={editData}
-            onEditDataChange={setEditData}
-          />
+            <JobDetailsForm
+              job={job}
+              isEditMode={isEditMode}
+              editData={editData}
+              onEditDataChange={setEditData}
+            />
 
-          <JobDetailsActions
-            isEditMode={isEditMode}
-            isLoading={isLoading}
-            onClose={onClose}
-            onSave={handleSave}
-          />
+            <JobDetailsActions
+              isEditMode={isEditMode}
+              isLoading={isLoading}
+              onClose={onClose}
+              onSave={handleSave}
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>
