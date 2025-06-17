@@ -41,13 +41,13 @@ const STATUS_NAME_MAP: Record<StatusKey, string> = {
 };
 
 const LIGHT_MODE_COLORS: Record<StatusKey, string> = {
-  total: "bg-gradient-to-br from-blue-100/80 to-purple-100/80 text-gray-800 border-blue-200/50 backdrop-blur-md bg-white/20",
-  pending: "bg-gradient-to-br from-yellow-100/80 to-orange-100/80 text-gray-800 border-yellow-200/50 backdrop-blur-md bg-white/20",
-  "in-progress": "bg-gradient-to-br from-cyan-100/80 to-blue-100/80 text-gray-800 border-cyan-200/50 backdrop-blur-md bg-white/20",
-  designing: "bg-gradient-to-br from-purple-100/80 to-pink-100/80 text-gray-800 border-purple-200/50 backdrop-blur-md bg-white/20",
-  completed: "bg-gradient-to-br from-green-100/80 to-emerald-100/80 text-gray-800 border-green-200/50 backdrop-blur-md bg-white/20",
-  invoiced: "bg-gradient-to-br from-indigo-100/80 to-purple-100/80 text-gray-800 border-indigo-200/50 backdrop-blur-md bg-white/20",
-  cancelled: "bg-gradient-to-br from-red-100/80 to-pink-100/80 text-gray-800 border-red-200/50 backdrop-blur-md bg-white/20",
+  total: "bg-gradient-to-br from-blue-100 to-purple-100 text-gray-800 border-blue-200",
+  pending: "bg-gradient-to-br from-yellow-100 to-orange-100 text-gray-800 border-yellow-200",
+  "in-progress": "bg-gradient-to-br from-cyan-100 to-blue-100 text-gray-800 border-cyan-200",
+  designing: "bg-gradient-to-br from-purple-100 to-pink-100 text-gray-800 border-purple-200",
+  completed: "bg-gradient-to-br from-green-100 to-emerald-100 text-gray-800 border-green-200",
+  invoiced: "bg-gradient-to-br from-indigo-100 to-purple-100 text-gray-800 border-indigo-200",
+  cancelled: "bg-gradient-to-br from-red-100 to-pink-100 text-gray-800 border-red-200",
 };
 
 const DARK_MODE_COLORS: Record<StatusKey, string> = {
@@ -118,6 +118,7 @@ export function JobStatusOverview({
           className={getCardStyles(key)}
           style={{
             minHeight: "80px",
+            "--bg-angle": "0deg",
             background: isDark 
               ? `conic-gradient(from var(--bg-angle), rgba(59, 130, 246, 0.1) 0deg, rgba(168, 85, 247, 0.1) 120deg, rgba(16, 185, 129, 0.1) 240deg, rgba(59, 130, 246, 0.1) 360deg)`
               : undefined,
@@ -137,6 +138,22 @@ export function JobStatusOverview({
           </CardContent>
         </Card>
       ))}
+      <style jsx>{`
+        @property --bg-angle {
+          inherits: false;
+          initial-value: 0deg;
+          syntax: "<angle>";
+        }
+        
+        @keyframes gradient-rotate {
+          from {
+            --bg-angle: 0deg;
+          }
+          to {
+            --bg-angle: 360deg;
+          }
+        }
+      `}</style>
     </div>
   );
 }
