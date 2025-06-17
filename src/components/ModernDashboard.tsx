@@ -80,25 +80,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-transparent">
-      {/* Header with no top margin/padding */}
-      <div className="flex items-center justify-between bg-card/80 backdrop-blur-md px-6 py-3 shadow-lg border-b border-border/50">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening with your projects.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <DashboardNotifications notifications={notifications} />
-          <Button 
-            onClick={handleCreateJobClick}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Job
-          </Button>
-        </div>
-      </div>
-
-      {/* Content area with no top padding */}
+      {/* Content area with no header */}
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Admin Approvals */}
         <PendingApprovals

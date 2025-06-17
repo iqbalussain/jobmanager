@@ -40,10 +40,8 @@ const Index = () => {
     id: order.id,
     jobOrderNumber: order.job_order_number,
     title: order.title,
-    // description: order.description || "", // REMOVE, jobOrder.description does not exist!
     customer: order.customer?.name || "Unknown Customer",
     assignee: order.assignee || "Unassigned",
-    // Map JobOrder 'urgent' priority to 'high'
     priority: order.priority === "urgent" ? "high" : (order.priority as "low" | "medium" | "high"),
     status: order.status as JobStatus,
     dueDate: order.due_date || new Date().toISOString().split('T')[0],
@@ -73,13 +71,12 @@ const Index = () => {
         glass-gaming-strong
         w-full
         mx-auto
-        my-2
         px-2 sm:px-4 md:px-6
         py-2 md:py-4
         rounded-2xl
         shadow-xl
         border
-        min-h-[80vh]
+        min-h-[95vh]
         transition-all
         backdrop-blur-md
         gaming-pulse
@@ -114,11 +111,11 @@ const Index = () => {
       <div className="min-h-screen flex w-full bg-transparent">
         <Sidebar currentView={currentView} onViewChange={setCurrentView} />
         <main className="
-          flex-1 flex flex-col items-center justify-center
+          flex-1 flex flex-col items-center justify-start
           bg-transparent
           min-w-0
           px-1 xs:px-1 sm:px-1 md:px-1 lg:px-1
-          pt-2 pb-4 md:pt-6 md:pb-8
+          pt-2 pb-4
           overflow-x-hidden
         ">
           {renderContent()}
@@ -129,4 +126,3 @@ const Index = () => {
 };
 
 export default Index;
-

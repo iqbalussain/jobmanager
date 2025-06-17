@@ -118,12 +118,7 @@ export function JobStatusOverview({
           className={getCardStyles(key)}
           style={{
             minHeight: "80px",
-            "--bg-angle": "0deg",
-            background: isDark 
-              ? `conic-gradient(from var(--bg-angle), rgba(59, 130, 246, 0.1) 0deg, rgba(168, 85, 247, 0.1) 120deg, rgba(16, 185, 129, 0.1) 240deg, rgba(59, 130, 246, 0.1) 360deg)`
-              : undefined,
-            animation: isDark ? "gradient-rotate 4s linear infinite" : undefined,
-          } as React.CSSProperties}
+          }}
         >
           <CardContent className="flex flex-col items-center justify-center text-center gap-1 sm:gap-2 w-full h-full p-2 sm:p-3 md:p-4">
             <span className="flex items-center justify-center text-[11px] sm:text-xs md:text-base font-medium leading-tight">
@@ -138,22 +133,6 @@ export function JobStatusOverview({
           </CardContent>
         </Card>
       ))}
-      <style jsx>{`
-        @property --bg-angle {
-          inherits: false;
-          initial-value: 0deg;
-          syntax: "<angle>";
-        }
-        
-        @keyframes gradient-rotate {
-          from {
-            --bg-angle: 0deg;
-          }
-          to {
-            --bg-angle: 360deg;
-          }
-        }
-      `}</style>
     </div>
   );
 }

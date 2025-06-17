@@ -12,11 +12,14 @@ import { ProjectDetailsSection } from "./job-form/ProjectDetailsSection";
 import { ScheduleSection } from "./job-form/ScheduleSection";
 import { JobOrderDetailsSection } from "./job-form/JobOrderDetailsSection";
 import { FormActions } from "./job-form/FormActions";
+import { useTheme } from "@/components/ui/ThemeContext";
 
 export function JobForm({ onCancel }: { onCancel?: () => void }) {
   const { toast } = useToast();
   const { createJobOrder, isCreating } = useCreateJobOrder();
   const { customers, designers, salesmen, jobTitles } = useDropdownData();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const [formData, setFormData] = useState({
     customer: '',
@@ -82,13 +85,23 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
     }
   };
 
+  const cardClassName = isDark 
+    ? "glass-gaming-strong neon-trace-card bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-400/30 text-white backdrop-blur-md"
+    : "bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200 text-gray-800 shadow-lg backdrop-blur-sm";
+
+  const headerClassName = isDark
+    ? "bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-blue-400/30"
+    : "bg-gradient-to-r from-blue-100 to-purple-100 border-b border-blue-200";
+
   return (
-    <Card className="max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center">Create New Job Order</CardTitle>
+    <Card className={`max-w-4xl mx-auto ${cardClassName}`}>
+      <CardHeader className={headerClassName}>
+        <CardTitle className={`text-2xl font-bold text-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
+          Create New Job Order
+        </CardTitle>
       </CardHeader>
       
-      <CardContent>
+      <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <BranchSection 
             value={formData.branch} 
