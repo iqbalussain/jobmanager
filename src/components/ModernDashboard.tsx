@@ -98,8 +98,8 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-4 h-[400px]">
-        <div className="col-span-3">
+      <div className="grid grid-cols-9 gap-2 h-[400px]">
+        <div className="col-span-2">
           <QuickSearch 
             searchQuery={searchQuery}
             filteredJobs={filteredJobs}
@@ -108,11 +108,11 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           />
         </div>
 
-        <div className="col-span-3">
+        <div className="col-span-2">
           <ActivitiesSection />
         </div>
 
-        <div className="col-span-2">
+        <div className="col-span-4">
           <ApprovalBox />
         </div>
 
