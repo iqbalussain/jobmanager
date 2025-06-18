@@ -9,6 +9,7 @@ import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
 import { DailyTrendsChart } from "@/components/dashboard/DailyTrendsChart";
 import { QuickSearch } from "@/components/dashboard/QuickSearch";
 import { ActivitiesSection } from "@/components/dashboard/ActivitiesSection";
+import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
 import { ShortcutGadgets } from "@/components/dashboard/ShortcutGadgets";
 import { useChartData } from "@/hooks/useChartData";
 import { Plus } from "lucide-react";
@@ -98,7 +99,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
       </div>
 
       <div className="grid grid-cols-10 gap-6 h-[400px]">
-        <div className="col-span-4">
+        <div className="col-span-3">
           <QuickSearch 
             searchQuery={searchQuery}
             filteredJobs={filteredJobs}
@@ -107,8 +108,12 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           />
         </div>
 
-        <div className="col-span-4">
+        <div className="col-span-3">
           <ActivitiesSection />
+        </div>
+
+        <div className="col-span-2">
+          <ApprovalBox />
         </div>
 
         <div className="col-span-2">

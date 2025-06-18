@@ -41,6 +41,10 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
     }
   };
 
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value as "all" | "pending" | "in-progress" | "designing" | "completed" | "invoiced" | "cancelled");
+  };
+
   const stats = {
     total: jobs.length,
     pending: jobs.filter(job => job.status === "pending").length,
@@ -57,7 +61,7 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
         searchQuery={searchQuery}
         statusFilter={statusFilter}
         onSearchChange={setSearchQuery}
-        onStatusFilterChange={setStatusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
       />
 
       <JobStatsCards stats={stats} />

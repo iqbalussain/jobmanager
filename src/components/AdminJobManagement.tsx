@@ -181,6 +181,23 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
     setIsEditMode(true);
   };
 
+  const handleStatusChange = async (jobId: string, newStatus: string) => {
+    try {
+      await onStatusUpdate(jobId, newStatus as JobStatus);
+      toast({
+        title: "Status Updated",
+        description: "Job order status has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update job order status. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -289,6 +306,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                 <TableHead>Customer</TableHead>
                 <TableHead>Branch</TableHead>
                 <TableHead>Salesman</TableHead>
+                <TableHead>Created Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Invoice #</TableHead>
                 <TableHead>Actions</TableHead>
@@ -302,10 +320,23 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                   <TableCell>{job.customer}</TableCell>
                   <TableCell>{job.branch || "N/A"}</TableCell>
                   <TableCell>{job.salesman}</TableCell>
+                  <TableCell>{new Date(job.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(job.status)}>
-                      {job.status === 'in-progress' ? 'In Progress' : job.status.replace('-', ' ')}
-                    </Badge>
+                    <Select 
+                      value={job.status} 
+                      onValueChange={(value) => handleStatusChange(job.id, value)}
+                    >
+                      <SelectTrigger className={`w-32 border-2 ${getStatusColor(job.status)}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="designing">Designing</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="invoiced">Invoiced</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-gray-600">
