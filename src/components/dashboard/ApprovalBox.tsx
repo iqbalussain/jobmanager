@@ -25,7 +25,7 @@ export function ApprovalBox() {
   const { data: pendingJobs = [], isLoading } = useQuery({
     queryKey: ['pending-approvals'],
     queryFn: async (): Promise<PendingJob[]> => {
-      const { data, error } = await supabase
+      const { data: jobOrders, error } = await supabase
         .from('job_orders')
         .select(`
           id,
@@ -33,22 +33,42 @@ export function ApprovalBox() {
           job_order_details,
           created_at,
           created_by,
-          customer:customers(name),
-          creator:profiles!job_orders_created_by_fkey(full_name)
+          customer:customers(name)
         `)
         .eq('approval_status', 'pending_approval')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return data.map(job => ({
-        id: job.id,
-        job_order_number: job.job_order_number,
-        customer_name: job.customer?.name || 'Unknown Customer',
-        created_at: job.created_at,
-        job_order_details: job.job_order_details || '',
-        created_by_name: job.creator?.full_name || 'Unknown User'
-      }));
+      // Fetch creator names separately
+      const jobsWithCreators = await Promise.all(
+        jobOrders.map(async (job) => {
+          let createdByName = 'Unknown User';
+          
+          if (job.created_by) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', job.created_by)
+              .single();
+            
+            if (profile?.full_name) {
+              createdByName = profile.full_name;
+            }
+          }
+
+          return {
+            id: job.id,
+            job_order_number: job.job_order_number,
+            customer_name: job.customer?.name || 'Unknown Customer',
+            created_at: job.created_at,
+            job_order_details: job.job_order_details || '',
+            created_by_name: createdByName
+          };
+        })
+      );
+
+      return jobsWithCreators;
     },
     enabled: !!user
   });
