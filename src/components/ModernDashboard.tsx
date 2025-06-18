@@ -98,7 +98,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-10 gap-6 h-[400px]">
+      <div className="grid grid-cols-5 gap-4 h-[400px]">
         <div className="col-span-3">
           <QuickSearch 
             searchQuery={searchQuery}
@@ -116,7 +116,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           <ApprovalBox />
         </div>
 
-        <div className="col-span-2">
+        <div className="col-span-1">
           <ShortcutGadgets onViewChange={onViewChange} />
         </div>
       </div>
