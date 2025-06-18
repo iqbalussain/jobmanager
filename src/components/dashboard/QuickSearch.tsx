@@ -14,7 +14,7 @@ interface QuickSearchProps {
 
 export function QuickSearch({ searchQuery, filteredJobs, onViewDetails, onSearchChange }: QuickSearchProps) {
   return (
-    <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl overflow-scroll">
+    <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl overflow-hidden">
       <CardHeader className="pb-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
         <CardTitle className="flex items-center gap-2 text-white text-sm">
           <Search className="w-4 h-4" />
