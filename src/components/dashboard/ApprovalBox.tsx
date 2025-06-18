@@ -111,12 +111,12 @@ export function ApprovalBox() {
     return (
       <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full">
         <CardHeader className="pb-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-          <CardTitle className="flex items-center gap-2 text-white text-sm">
+          <CardTitle className="flex items-center gap-1 text-white text-sm">
             <AlertCircle className="w-4 h-4" />
             Pending Approvals
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-3">
           <div className="text-center text-gray-500">Loading approvals...</div>
         </CardContent>
       </Card>
@@ -126,7 +126,7 @@ export function ApprovalBox() {
   return (
     <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full">
       <CardHeader className="pb-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-        <CardTitle className="flex items-center gap-2 text-white text-sm">
+        <CardTitle className="flex items-center gap-1 text-white text-sm">
           <AlertCircle className="w-4 h-4" />
           Pending Approvals ({pendingJobs.length})
         </CardTitle>
@@ -134,7 +134,7 @@ export function ApprovalBox() {
       <CardContent className="pt-4">
         {pendingJobs.length === 0 ? (
           <div className="text-center text-gray-500 py-4">
-            <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
+            <CheckCircle className="w-10 h-8 mx-auto mb-1 text-green-500" />
             <p className="text-sm">No pending approvals</p>
           </div>
         ) : (
