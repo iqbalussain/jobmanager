@@ -112,7 +112,7 @@ export function ApprovalBox() {
         <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl">
         <CardHeader className="pb-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
           <CardTitle className="flex items-center gap-1 text-white text-sm">
-            <AlertCircle className="w-4 h-4" />
+            <AlertCircle className="w-6 h-5" />
             Pending Approvals
           </CardTitle>
         </CardHeader>
@@ -127,7 +127,7 @@ export function ApprovalBox() {
     <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl">
       <CardHeader className="pb-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
         <CardTitle className="flex items-center gap-1 text-white text-sm">
-          <AlertCircle className="w-4 h-4" />
+          <AlertCircle className="w-5 h-6" />
           Pending Approvals ({pendingJobs.length})
         </CardTitle>
       </CardHeader>
@@ -165,7 +165,7 @@ export function ApprovalBox() {
                       onClick={() => handleApproval(job.id, 'approve')}
                       disabled={approvalMutation.isPending}
                     >
-                      <CheckCircle className="w-3 h-3 mr-1" />
+                      <CheckCircle className="w-3 h-3 mr-2" />
                       Approve
                     </Button>
                     <Button
@@ -175,7 +175,7 @@ export function ApprovalBox() {
                       onClick={() => handleApproval(job.id, 'reject')}
                       disabled={approvalMutation.isPending}
                     >
-                      <XCircle className="w-3 h-3 mr-1" />
+                      <XCircle className="w-3 h-3 mr-2" />
                       Reject
                     </Button>
                   </div>
