@@ -1,10 +1,8 @@
-
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ModernDashboard } from "@/components/ModernDashboard";
 import { JobForm } from "@/components/JobForm";
 import { JobList } from "@/components/JobList";
-import { CalendarView } from "@/components/CalendarView";
 import { SettingsView } from "@/components/SettingsView";
 import { AdminJobManagement } from "@/components/AdminJobManagement";
 import { AdminManagement } from "@/components/AdminManagement";
@@ -34,7 +32,7 @@ export interface Job {
 }
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<"dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management" | "reports">("dashboard");
+  const [currentView, setCurrentView] = useState<"dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports">("dashboard");
   const { jobOrders, isLoading, updateStatus } = useJobOrders();
 
   // Transform database job orders to match the existing Job interface
@@ -77,8 +75,6 @@ const Index = () => {
         return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
       case "create":
         return <JobForm onCancel={() => setCurrentView("dashboard")} />;
-      case "calendar":
-        return <CalendarView jobs={transformedJobs} />;
       case "settings":
         return <SettingsView />;
       case "admin":

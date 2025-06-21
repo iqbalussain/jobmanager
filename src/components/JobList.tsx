@@ -7,6 +7,7 @@ import { JobListHeader } from "@/components/job-list/JobListHeader";
 import { JobStatsCards } from "@/components/job-list/JobStatsCards";
 import { JobCard } from "@/components/job-list/JobCard";
 import { EmptyJobState } from "@/components/job-list/EmptyJobState";
+import { isWithinInterval } from "date-fns";
 
 interface JobListProps {
   jobs: Job[];
@@ -16,6 +17,7 @@ interface JobListProps {
 export function JobList({ jobs, onStatusUpdate }: JobListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "in-progress" | "designing" | "completed" | "invoiced" | "cancelled">("all");
+  const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date } | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
@@ -27,7 +29,17 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
     
     const matchesStatus = statusFilter === "all" || job.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    let matchesDate = true;
+    if (dateFilter?.from) {
+      const jobDate = new Date(job.createdAt);
+      if (dateFilter.to) {
+        matchesDate = isWithinInterval(jobDate, { start: dateFilter.from, end: dateFilter.to });
+      } else {
+        matchesDate = jobDate >= dateFilter.from;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const handleViewDetails = (job: Job) => {
@@ -60,8 +72,10 @@ export function JobList({ jobs, onStatusUpdate }: JobListProps) {
       <JobListHeader
         searchQuery={searchQuery}
         statusFilter={statusFilter}
+        dateFilter={dateFilter}
         onSearchChange={setSearchQuery}
         onStatusFilterChange={handleStatusFilterChange}
+        onDateFilterChange={setDateFilter}
       />
 
       <JobStatsCards stats={stats} />

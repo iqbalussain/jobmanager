@@ -1,16 +1,15 @@
-
 import { 
   LayoutDashboard, 
   Briefcase, 
   Plus,
-  Calendar,
   Settings,
   User,
   Shield,
   UsersRound,
   Menu,
   Home,
-  FileText
+  FileText,
+  BarChart3
 } from "lucide-react";
 import {
   Sidebar as SidebarBase,
@@ -33,7 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface SidebarProps {
   currentView: string;
-  onViewChange: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management") => void;
+  onViewChange: (view: "dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports") => void;
 }
 
 interface UserProfile {
@@ -109,15 +108,6 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         setIsMobileMenuOpen(false);
       },
       isActive: currentView === "settings"
-    },
-    {
-      title: "Calendar",
-      icon: Calendar,
-      onClick: () => {
-        onViewChange("calendar");
-        setIsMobileMenuOpen(false);
-      },
-      isActive: currentView === "calendar"
     }
   ];
 
@@ -139,6 +129,15 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         setIsMobileMenuOpen(false);
       },
       isActive: currentView === "admin-management"
+    },
+    {
+      title: "Reports",
+      icon: BarChart3,
+      onClick: () => {
+        onViewChange("reports");
+        setIsMobileMenuOpen(false);
+      },
+      isActive: currentView === "reports"
     }
   ];
 
