@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ModernDashboard } from "@/components/ModernDashboard";
@@ -7,6 +8,7 @@ import { CalendarView } from "@/components/CalendarView";
 import { SettingsView } from "@/components/SettingsView";
 import { AdminJobManagement } from "@/components/AdminJobManagement";
 import { AdminManagement } from "@/components/AdminManagement";
+import { ReportsPage } from "@/components/ReportsPage";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
 
@@ -28,10 +30,11 @@ export interface Job {
   branch?: string;
   jobOrderDetails?: string;
   invoiceNumber?: string;
+  totalValue?: number;
 }
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<"dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management">("dashboard");
+  const [currentView, setCurrentView] = useState<"dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management" | "reports">("dashboard");
   const { jobOrders, isLoading, updateStatus } = useJobOrders();
 
   // Transform database job orders to match the existing Job interface
@@ -50,7 +53,8 @@ const Index = () => {
     branch: order.branch || "",
     designer: order.designer?.name || "Unassigned",
     salesman: order.salesman?.name || "Unassigned",
-    jobOrderDetails: order.job_order_details || ""
+    jobOrderDetails: order.job_order_details || "",
+    totalValue: order.total_value || 0
   }));
 
   const handleStatusUpdate = (jobId: string, status: JobStatus) => {
@@ -81,6 +85,8 @@ const Index = () => {
         return <AdminJobManagement jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
       case "admin-management":
         return <AdminManagement />;
+      case "reports":
+        return <ReportsPage />;
       default:
         return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />;
     }
