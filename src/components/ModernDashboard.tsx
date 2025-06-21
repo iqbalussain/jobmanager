@@ -10,13 +10,12 @@ import { DailyTrendsChart } from "@/components/dashboard/DailyTrendsChart";
 import { QuickSearch } from "@/components/dashboard/QuickSearch";
 import { ActivitiesSection } from "@/components/dashboard/ActivitiesSection";
 import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
-import { ShortcutGadgets } from "@/components/dashboard/ShortcutGadgets";
 import { useChartData } from "@/hooks/useChartData";
 import { Plus } from "lucide-react";
 
 interface ModernDashboardProps {
   jobs: Job[];
-  onViewChange?: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management") => void;
+  onViewChange?: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management" | "reports") => void;
   onStatusUpdate?: (jobId: string, status: string) => void;
 }
 
@@ -98,8 +97,8 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-9 gap-2 h-[400px]">
-        <div className="col-span-2">
+      <div className="grid grid-cols-8 gap-4 h-[400px]">
+        <div className="col-span-3">
           <QuickSearch 
             searchQuery={searchQuery}
             filteredJobs={filteredJobs}
@@ -112,12 +111,8 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           <ActivitiesSection />
         </div>
 
-        <div className="col-span-4">
+        <div className="col-span-3">
           <ApprovalBox />
-        </div>
-
-        <div className="col-span-1">
-          <ShortcutGadgets onViewChange={onViewChange} />
         </div>
       </div>
 

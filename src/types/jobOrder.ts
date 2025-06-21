@@ -38,6 +38,7 @@ export interface JobOrder {
   actual_hours: number | null;
   branch: string | null;
   job_order_details: string | null;
+  total_value: number | null;
   created_at: string;
   updated_at: string;
   created_by: string;

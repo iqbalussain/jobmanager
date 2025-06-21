@@ -33,6 +33,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
   const [isEditMode, setIsEditMode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [jobsWithInvoices, setJobsWithInvoices] = useState<Job[]>(jobs);
+  const [editingTotalValue, setEditingTotalValue] = useState<{ [key: string]: string }>({});
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -52,7 +53,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
     checkAdminRole();
   }, [user]);
 
-  // Fetch fresh job data with invoice numbers
+  // Fetch fresh job data with invoice numbers and total values
   useEffect(() => {
     const fetchJobsWithInvoices = async () => {
       try {
@@ -125,7 +126,8 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
             designer: designer?.name || "Unassigned",
             salesman: salesman?.name || "Unassigned",
             jobOrderDetails: jobOrder.job_order_details || "",
-            invoiceNumber: jobOrder.invoice_number || ""
+            invoiceNumber: jobOrder.invoice_number || "",
+            totalValue: jobOrder.total_value || 0
           };
         }));
         
@@ -138,6 +140,48 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
     
     fetchJobsWithInvoices();
   }, [jobs]);
+
+  const handleTotalValueUpdate = async (jobId: string, totalValue: string) => {
+    try {
+      const numericValue = parseFloat(totalValue) || 0;
+      
+      const { error } = await supabase
+        .from('job_orders')
+        .update({ total_value: numericValue })
+        .eq('id', jobId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Total value updated successfully",
+      });
+
+      // Update local state
+      setJobsWithInvoices(prev => 
+        prev.map(job => 
+          job.id === jobId 
+            ? { ...job, totalValue: numericValue }
+            : job
+        )
+      );
+
+      // Clear editing state
+      setEditingTotalValue(prev => {
+        const newState = { ...prev };
+        delete newState[jobId];
+        return newState;
+      });
+
+    } catch (error) {
+      console.error('Error updating total value:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update total value",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!isAdmin) {
     return (
@@ -309,6 +353,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                 <TableHead>Created Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Invoice #</TableHead>
+                <TableHead>Total Value</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -344,6 +389,56 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                     </span>
                   </TableCell>
                   <TableCell>
+                    {editingTotalValue[job.id] !== undefined ? (
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={editingTotalValue[job.id]}
+                          onChange={(e) => setEditingTotalValue(prev => ({
+                            ...prev,
+                            [job.id]: e.target.value
+                          }))}
+                          className="w-24"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => handleTotalValueUpdate(job.id, editingTotalValue[job.id])}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingTotalValue(prev => {
+                            const newState = { ...prev };
+                            delete newState[job.id];
+                            return newState;
+                          })}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">
+                          ${job.totalValue?.toFixed(2) || '0.00'}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditingTotalValue(prev => ({
+                            ...prev,
+                            [job.id]: job.totalValue?.toString() || '0'
+                          }))}
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -364,7 +459,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
         isOpen={isJobDetailsOpen}
         onClose={() => {
           setIsJobDetailsOpen(false);
-          // Refresh data when closing modal to get latest invoice numbers
+          // Refresh data when closing modal to get latest invoice numbers and total values
           const fetchJobs = async () => {
             try {
               const { data, error } = await supabase
