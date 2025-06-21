@@ -144,9 +144,9 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
   const SidebarContentComponent = () => (
     <>
-      <SidebarHeader className="border-b border-purple-100 p-1">
+      <SidebarHeader className="border-b border-purple-100 p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
             <span className="text-white font-bold text-sm">
               {userProfile?.full_name?.charAt(0) || 'U'}
             </span>
