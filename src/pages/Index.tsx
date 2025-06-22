@@ -1,6 +1,6 @@
 
 import { useState, lazy, Suspense } from "react";
-import { Sidebar } from "@/components/Sidebar";
+import { ModernSidebar } from "@/components/ModernSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
 
@@ -98,9 +98,9 @@ const Index = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50">
-        <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-        <main className="flex-1">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+        <ModernSidebar currentView={currentView} onViewChange={setCurrentView} />
+        <main className="flex-1 overflow-auto">
           <Suspense fallback={<LoadingSpinner />}>
             {renderContent()}
           </Suspense>
