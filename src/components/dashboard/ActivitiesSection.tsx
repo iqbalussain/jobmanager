@@ -75,11 +75,11 @@ export function ActivitiesSection() {
       <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl">
         <CardHeader className="pb-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white">
           <CardTitle className="flex items-center gap-2 text-white text-sm">
-            <Activity className="w-4 h-4" />
+            <Activity className="w-4 h-5" />
             Recent Activities
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-4 flex-1">
+        <CardContent className="pt-4">
           <div className="text-center text-gray-500">Loading activities...</div>
         </CardContent>
       </Card>
@@ -90,11 +90,11 @@ export function ActivitiesSection() {
     <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl">
       <CardHeader className="pb-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white">
         <CardTitle className="flex items-center gap-2 text-white text-sm">
-          <Activity className="w-4 h-4" />
+          <Activity className="w-4 h-5" />
           Recent Activities
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-4 flex-1">
+      <CardContent className="pt-4">
         {/* Activities List - Full height with scroll */}
         <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <div className="space-y-3">
