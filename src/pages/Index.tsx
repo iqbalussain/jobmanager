@@ -1,14 +1,17 @@
-import { useState } from "react";
+
+import { useState, lazy, Suspense } from "react";
 import { Sidebar } from "@/components/Sidebar";
-import { ModernDashboard } from "@/components/ModernDashboard";
-import { JobForm } from "@/components/JobForm";
-import { JobList } from "@/components/JobList";
-import { SettingsView } from "@/components/SettingsView";
-import { AdminJobManagement } from "@/components/AdminJobManagement";
-import { AdminManagement } from "@/components/AdminManagement";
-import { ReportsPage } from "@/components/ReportsPage";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
+
+// Lazy load components for better performance
+const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(module => ({ default: module.ModernDashboard })));
+const JobForm = lazy(() => import("@/components/JobForm").then(module => ({ default: module.JobForm })));
+const JobList = lazy(() => import("@/components/JobList").then(module => ({ default: module.JobList })));
+const SettingsView = lazy(() => import("@/components/SettingsView").then(module => ({ default: module.SettingsView })));
+const AdminJobManagement = lazy(() => import("@/components/AdminJobManagement").then(module => ({ default: module.AdminJobManagement })));
+const AdminManagement = lazy(() => import("@/components/AdminManagement").then(module => ({ default: module.AdminManagement })));
+const ReportsPage = lazy(() => import("@/components/ReportsPage").then(module => ({ default: module.ReportsPage })));
 
 export type JobStatus = "pending" | "in-progress" | "completed" | "cancelled" | "designing" | "finished" | "invoiced";
 
@@ -31,12 +34,21 @@ export interface Job {
   totalValue?: number;
 }
 
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+  </div>
+);
+
 const Index = () => {
   const [currentView, setCurrentView] = useState<"dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports">("dashboard");
   const { jobOrders, isLoading, updateStatus } = useJobOrders();
 
+  // Filter out pending jobs from view (unless in admin view)
+  const filteredJobOrders = currentView === "admin" ? jobOrders : jobOrders.filter(order => order.status !== "pending");
+
   // Transform database job orders to match the existing Job interface
-  const transformedJobs: Job[] = jobOrders.map(order => ({
+  const transformedJobs: Job[] = filteredJobOrders.map(order => ({
     id: order.id,
     jobOrderNumber: order.job_order_number,
     title: order.title,
@@ -61,11 +73,7 @@ const Index = () => {
 
   const renderContent = () => {
     if (isLoading) {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading job orders...</div>
-        </div>
-      );
+      return <LoadingSpinner />;
     }
 
     switch (currentView) {
@@ -93,7 +101,9 @@ const Index = () => {
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50">
         <Sidebar currentView={currentView} onViewChange={setCurrentView} />
         <main className="flex-1">
-          {renderContent()}
+          <Suspense fallback={<LoadingSpinner />}>
+            {renderContent()}
+          </Suspense>
         </main>
       </div>
     </SidebarProvider>

@@ -15,7 +15,7 @@ import { Plus } from "lucide-react";
 
 interface ModernDashboardProps {
   jobs: Job[];
-  onViewChange?: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management" | "reports") => void;
+  onViewChange?: (view: "dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports") => void;
   onStatusUpdate?: (jobId: string, status: string) => void;
 }
 
