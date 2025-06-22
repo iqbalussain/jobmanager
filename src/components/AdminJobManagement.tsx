@@ -61,7 +61,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
           .from('job_orders')
           .select(`
             *,
-            customer:customer_id(id, name),
+            customer:customers!fk_job_orders_customer(id, name),
             job_title:job_titles(id, job_title_id)
           `)
           .order('created_at', { ascending: false });
@@ -466,7 +466,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementP
                 .from('job_orders')
                 .select(`
                   *,
-                  customer:customer_id(id, name),
+                  customer:customers!fk_job_orders_customer(id, name),
                   job_title:job_titles(id, job_title_id)
                 `)
                 .order('created_at', { ascending: false });
