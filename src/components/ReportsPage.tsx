@@ -54,12 +54,14 @@ export function ReportsPage() {
 
       console.log('Generating report for:', { startDate, endDate, reportType });
 
+      // Updated query to use the foreign key relationships
       const { data: jobOrders, error } = await supabase
         .from('job_orders')
         .select(`
           *,
-          customer:customers(name),
-          salesman_profile:profiles!job_orders_salesman_id_fkey(full_name)
+          customers!fk_job_orders_customer(name),
+          salesman_profiles:profiles!fk_job_orders_salesman(full_name),
+          designer_profiles:profiles!fk_job_orders_designer(full_name)
         `)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
@@ -131,11 +133,11 @@ export function ReportsPage() {
       try {
         switch (type) {
           case 'customer':
-            groupKey = job.customer?.name || 'Unknown Customer';
+            groupKey = job.customers?.name || 'Unknown Customer';
             groupName = groupKey;
             break;
           case 'salesman':
-            groupKey = job.salesman_profile?.full_name || 'Unassigned';
+            groupKey = job.salesman_profiles?.full_name || 'Unassigned';
             groupName = groupKey;
             break;
           case 'branch':

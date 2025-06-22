@@ -1,7 +1,5 @@
-
 import { useState, lazy, Suspense } from "react";
-import { ModernSidebar } from "@/components/ModernSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
 
 // Lazy load components for better performance
@@ -97,16 +95,14 @@ const Index = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-        <ModernSidebar currentView={currentView} onViewChange={setCurrentView} />
-        <main className="flex-1 overflow-auto">
-          <Suspense fallback={<LoadingSpinner />}>
-            {renderContent()}
-          </Suspense>
-        </main>
-      </div>
-    </SidebarProvider>
+    <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+      <MinimalistSidebar currentView={currentView} onViewChange={setCurrentView} />
+      <main className="flex-1 ml-16 overflow-auto">
+        <Suspense fallback={<LoadingSpinner />}>
+          {renderContent()}
+        </Suspense>
+      </main>
+    </div>
   );
 };
 
