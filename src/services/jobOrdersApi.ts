@@ -7,7 +7,7 @@ export async function fetchJobOrders() {
     .from('job_orders')
     .select(`
       *,
-      customer:customers(id, name),
+      customer:customer_id(id, name),
       job_title:job_titles(id, job_title_id)
     `)
     .order('created_at', { ascending: false });

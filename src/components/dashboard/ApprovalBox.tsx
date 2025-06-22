@@ -33,7 +33,7 @@ export function ApprovalBox() {
           job_order_details,
           created_at,
           created_by,
-          customer:customers(name)
+          customer:customer_id(name)
         `)
         .eq('approval_status', 'pending_approval')
         .order('created_at', { ascending: false });
