@@ -217,8 +217,8 @@ export function ReportsPage() {
       'Total Jobs',
       'Completed Jobs',
       'Completion Rate (%)',
-      'Total Value ($)',
-      'Average Job Value ($)'
+      'Total Value (R.O)',
+      'Average Job Value (R.O)'
     ];
 
     const rows = reportData.map(row => [
