@@ -31,6 +31,8 @@ export interface Job {
   jobOrderDetails?: string;
   invoiceNumber?: string;
   totalValue?: number;
+  customer_id?: string;
+  job_title_id?: string;
 }
 
 const LoadingSpinner = () => (

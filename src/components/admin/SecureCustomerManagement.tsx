@@ -2,13 +2,23 @@
 import { CustomerManagement } from "./CustomerManagement";
 import { useAdminQueries } from "@/hooks/useAdminQueries";
 import { useAdminMutations } from "@/hooks/useAdminMutations";
+import { useState } from "react";
 
 export function SecureCustomerManagement() {
   const { customers, customersLoading } = useAdminQueries();
   const { addCustomerMutation } = useAdminMutations();
+  const [customerForm, setCustomerForm] = useState({ name: "" });
 
   const handleCreate = async (data: { name: string }) => {
     await addCustomerMutation.mutateAsync(data);
+  };
+
+  const handleAddCustomer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (customerForm.name.trim()) {
+      handleCreate({ name: customerForm.name });
+      setCustomerForm({ name: "" });
+    }
   };
 
   const handleUpdate = async (id: string, data: { name: string }) => {
@@ -25,9 +35,9 @@ export function SecureCustomerManagement() {
     <CustomerManagement
       customers={customers}
       customersLoading={customersLoading}
-      customerForm={{ name: "" }}
-      setCustomerForm={() => {}}
-      onAddCustomer={handleCreate}
+      customerForm={customerForm}
+      setCustomerForm={setCustomerForm}
+      onAddCustomer={handleAddCustomer}
       isAdding={addCustomerMutation.isPending}
     />
   );
