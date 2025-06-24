@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,8 +64,8 @@ export function JobDetailsForm({ job, isEditMode, editData, onEditDataChange }: 
               <Label className="text-sm font-medium text-gray-600">Customer</Label>
               {isEditMode ? (
                 <Select 
-                  value={editData.customerId || job.customerId} 
-                  onValueChange={(value) => onEditDataChange({ ...editData, customerId: value })}
+                  value={editData.customer_id || job.customer_id} 
+                  onValueChange={(value) => onEditDataChange({ ...editData, customer_id: value })}
                   disabled={dropdownLoading}
                 >
                   <SelectTrigger className="mt-1">
@@ -133,8 +132,8 @@ export function JobDetailsForm({ job, isEditMode, editData, onEditDataChange }: 
             <Label className="text-sm font-medium text-gray-600">Job Title</Label>
             {isEditMode ? (
               <Select 
-                value={editData.jobTitleId || job.jobTitleId} 
-                onValueChange={(value) => onEditDataChange({ ...editData, jobTitleId: value })}
+                value={editData.job_title_id || job.job_title_id} 
+                onValueChange={(value) => onEditDataChange({ ...editData, job_title_id: value })}
                 disabled={dropdownLoading}
               >
                 <SelectTrigger className="mt-1">

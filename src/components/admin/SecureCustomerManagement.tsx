@@ -4,7 +4,7 @@ import { useAdminQueries } from "@/hooks/useAdminQueries";
 import { useAdminMutations } from "@/hooks/useAdminMutations";
 
 export function SecureCustomerManagement() {
-  const { customers, isLoading } = useAdminQueries();
+  const { customers, customersLoading } = useAdminQueries();
   const { addCustomerMutation } = useAdminMutations();
 
   const handleCreate = async (data: { name: string }) => {
@@ -24,10 +24,11 @@ export function SecureCustomerManagement() {
   return (
     <CustomerManagement
       customers={customers}
-      isLoading={isLoading}
-      onCreateCustomer={handleCreate}
-      onUpdateCustomer={handleUpdate}
-      onDeleteCustomer={handleDelete}
+      customersLoading={customersLoading}
+      customerForm={{ name: "" }}
+      setCustomerForm={() => {}}
+      onAddCustomer={handleCreate}
+      isAdding={addCustomerMutation.isPending}
     />
   );
 }

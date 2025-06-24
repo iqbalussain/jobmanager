@@ -35,8 +35,8 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
         estimatedHours: job.estimatedHours,
         branch: job.branch,
         jobOrderDetails: job.jobOrderDetails,
-        customerId: job.customerId,
-        jobTitleId: job.jobTitleId
+        customer_id: job.customer_id,
+        job_title_id: job.job_title_id
       });
       
       // Load existing invoice number if available
@@ -90,11 +90,11 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
       };
 
       // Include customer_id and job_title_id if they were changed
-      if (editData.customerId) {
-        updateData.customer_id = editData.customerId;
+      if (editData.customer_id) {
+        updateData.customer_id = editData.customer_id;
       }
-      if (editData.jobTitleId) {
-        updateData.job_title_id = editData.jobTitleId;
+      if (editData.job_title_id) {
+        updateData.job_title_id = editData.job_title_id;
       }
 
       // Only include invoice_number if user is authorized
