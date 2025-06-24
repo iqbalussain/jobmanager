@@ -23,42 +23,33 @@ export function useCreateJobOrder() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const generateJobOrderNumber = async (branch: string) => {
-  let prefix: string;
-
-  switch (branch) {
-    case 'Wadi Kabeer':
-      prefix = 'WK';
-      break;
-    case 'Wajihath':
-      prefix = 'WJ';
-      break;
-    default:
-      prefix = 'HO';
-  }
-  const generateJobOrderNumber = async (branch: string) => {
-    const prefix = branch === 'Wadi Kabeer' ? 'WK' : 'HO';
-    
-    // Get the latest job order number for this branch
-    const { data: latestOrder } = await supabase
-      .from('job_orders')
-      .select('job_order_number')
-      .like('job_order_number', `${prefix}%`)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    let nextNumber = 10001; // Starting number for both branches
-    
-    if (latestOrder && latestOrder.length > 0) {
-      // Extract the numeric part and increment
-      const lastNumber = parseInt(latestOrder[0].job_order_number.substring(2));
-      if (!isNaN(lastNumber)) {
-        nextNumber = lastNumber + 1;
-      }
-    }
-    
-    return `${prefix}${nextNumber}`;
+const generateJobOrderNumber = async (branch: string) => {
+  const branchPrefixes: Record<string, string> = {
+    'Wadi Kabeer': 'WK',
+    'Wajihath': 'WJ',
+    'Head Office': 'HO',
   };
+
+  const prefix = branchPrefixes[branch] || 'HO'; // fallback to 'HO' if unknown
+
+  const { data: latestOrder } = await supabase
+    .from('job_orders')
+    .select('job_order_number')
+    .like('job_order_number', `${prefix}%`)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  let nextNumber = 10001;
+
+  if (latestOrder && latestOrder.length > 0) {
+    const lastNumber = parseInt(latestOrder[0].job_order_number.substring(2));
+    if (!isNaN(lastNumber)) {
+      nextNumber = lastNumber + 1;
+    }
+  }
+
+  return `${prefix}${nextNumber}`;
+};
 
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: CreateJobOrderData) => {
