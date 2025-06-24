@@ -24,6 +24,19 @@ export function useCreateJobOrder() {
   const { user } = useAuth();
 
   const generateJobOrderNumber = async (branch: string) => {
+  let prefix: string;
+
+  switch (branch) {
+    case 'Wadi Kabeer':
+      prefix = 'WK';
+      break;
+    case 'Wajihath':
+      prefix = 'WJ';
+      break;
+    default:
+      prefix = 'HO';
+  }
+  const generateJobOrderNumber = async (branch: string) => {
     const prefix = branch === 'Wadi Kabeer' ? 'WK' : 'HO';
     
     // Get the latest job order number for this branch
