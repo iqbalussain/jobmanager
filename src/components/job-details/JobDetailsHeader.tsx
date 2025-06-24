@@ -4,14 +4,26 @@ import { Button } from "@/components/ui/button";
 import { FileText, Download } from "lucide-react";
 import { Job } from "@/pages/Index";
 
+// Import WhatsApp icon from lucide-react
+import { MessageCircle } from "lucide-react";
+
 interface JobDetailsHeaderProps {
   job: Job;
   isEditMode: boolean;
   isExporting: boolean;
+  isSharing: boolean;
   onExportPDF: () => void;
+  onShareWhatsApp: () => void;
 }
 
-export function JobDetailsHeader({ job, isEditMode, isExporting, onExportPDF }: JobDetailsHeaderProps) {
+export function JobDetailsHeader({ 
+  job, 
+  isEditMode, 
+  isExporting, 
+  isSharing,
+  onExportPDF, 
+  onShareWhatsApp 
+}: JobDetailsHeaderProps) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high": return "bg-red-100 text-red-800 border-red-200";
@@ -54,15 +66,26 @@ export function JobDetailsHeader({ job, isEditMode, isExporting, onExportPDF }: 
               </Badge>
             </div>
           </div>
-          <Button
-            onClick={onExportPDF}
-            disabled={isExporting}
-            variant="outline"
-            className="bg-white hover:bg-gray-50"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            {isExporting ? 'Exporting...' : 'Export PDF'}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={onShareWhatsApp}
+              disabled={isSharing}
+              variant="outline"
+              className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              {isSharing ? 'Sharing...' : 'WhatsApp'}
+            </Button>
+            <Button
+              onClick={onExportPDF}
+              disabled={isExporting}
+              variant="outline"
+              className="bg-white hover:bg-gray-50"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {isExporting ? 'Exporting...' : 'Export PDF'}
+            </Button>
+          </div>
         </div>
       </div>
     </>

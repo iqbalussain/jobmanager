@@ -41,18 +41,29 @@ export type Database = {
       }
       customers: {
         Row: {
+          created_by: string | null
           id: string
           name: string
         }
         Insert: {
+          created_by?: string | null
           id?: string
           name: string
         }
         Update: {
+          created_by?: string | null
           id?: string
           name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_order_attachments: {
         Row: {

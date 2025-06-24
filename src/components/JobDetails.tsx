@@ -22,9 +22,11 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
     setInvoiceNumber,
     isLoading,
     isExporting,
+    isSharing,
     canEditInvoice,
     handleSave,
-    handleExportPDF
+    handleExportPDF,
+    handleShareWhatsApp
   } = useJobDetails({ job, isEditMode, onClose });
 
   if (!job) return null;
@@ -37,7 +39,9 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
             job={job}
             isEditMode={isEditMode}
             isExporting={isExporting}
+            isSharing={isSharing}
             onExportPDF={handleExportPDF}
+            onShareWhatsApp={handleShareWhatsApp}
           />
         </DialogHeader>
 

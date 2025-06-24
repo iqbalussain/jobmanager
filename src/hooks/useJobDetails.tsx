@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { exportJobOrderToPDF } from "@/utils/pdfExport";
+import { shareJobOrderViaWhatsApp } from "@/utils/whatsappShare";
 
 interface UseJobDetailsProps {
   job: Job | null;
@@ -20,6 +21,7 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
   const [salesmen, setSalesmen] = useState<Array<{id: string, name: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const [userRole, setUserRole] = useState<string>('');
   const { toast } = useToast();
   const { user } = useAuth();
@@ -176,6 +178,36 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
     }
   };
 
+  const handleShareWhatsApp = async () => {
+    if (!job) return;
+
+    setIsSharing(true);
+    try {
+      // If there's an invoice number and user is authorized, save it first
+      if (invoiceNumber && invoiceNumber !== job.invoiceNumber && canEditInvoice) {
+        await supabase
+          .from('job_orders')
+          .update({ invoice_number: invoiceNumber })
+          .eq('id', job.id);
+      }
+
+      await shareJobOrderViaWhatsApp(job, invoiceNumber);
+      toast({
+        title: "Success",
+        description: "Job order shared via WhatsApp successfully",
+      });
+    } catch (error) {
+      console.error('Error sharing via WhatsApp:', error);
+      toast({
+        title: "Error",
+        description: "Failed to share via WhatsApp. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   return {
     editData,
     setEditData,
@@ -186,8 +218,10 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
     salesmen,
     isLoading,
     isExporting,
+    isSharing,
     canEditInvoice,
     handleSave,
-    handleExportPDF
+    handleExportPDF,
+    handleShareWhatsApp
   };
 }
