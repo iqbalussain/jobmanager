@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Job } from "@/pages/Index";
+import { useDropdownData } from "@/hooks/useDropdownData";
 import { 
   User, 
   Calendar, 
@@ -24,6 +25,8 @@ interface JobDetailsFormProps {
 }
 
 export function JobDetailsForm({ job, isEditMode, editData, onEditDataChange }: JobDetailsFormProps) {
+  const { customers, jobTitles, isLoading: dropdownLoading } = useDropdownData();
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high": return "bg-red-100 text-red-800 border-red-200";
@@ -60,7 +63,26 @@ export function JobDetailsForm({ job, isEditMode, editData, onEditDataChange }: 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-sm font-medium text-gray-600">Customer</Label>
-              <p className="mt-1 text-sm font-semibold text-gray-900">{job.customer}</p>
+              {isEditMode ? (
+                <Select 
+                  value={editData.customerId || job.customerId} 
+                  onValueChange={(value) => onEditDataChange({ ...editData, customerId: value })}
+                  disabled={dropdownLoading}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="mt-1 text-sm font-semibold text-gray-900">{job.customer}</p>
+              )}
             </div>
             <div>
               <Label className="text-sm font-medium text-gray-600">Assignee</Label>
@@ -108,14 +130,24 @@ export function JobDetailsForm({ job, isEditMode, editData, onEditDataChange }: 
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label className="text-sm font-medium text-gray-600">Title</Label>
+            <Label className="text-sm font-medium text-gray-600">Job Title</Label>
             {isEditMode ? (
-              <Input
-                value={editData.title || ''}
-                onChange={(e) => onEditDataChange({ ...editData, title: e.target.value })}
-                placeholder="Enter job title"
-                className="mt-1"
-              />
+              <Select 
+                value={editData.jobTitleId || job.jobTitleId} 
+                onValueChange={(value) => onEditDataChange({ ...editData, jobTitleId: value })}
+                disabled={dropdownLoading}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select job title" />
+                </SelectTrigger>
+                <SelectContent>
+                  {jobTitles.map((jobTitle) => (
+                    <SelectItem key={jobTitle.id} value={jobTitle.id}>
+                      {jobTitle.job_title_id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             ) : (
               <p className="mt-1 text-sm font-semibold text-gray-900">{job.title}</p>
             )}

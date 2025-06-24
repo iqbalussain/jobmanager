@@ -16,9 +16,6 @@ interface UseJobDetailsProps {
 export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) {
   const [editData, setEditData] = useState<Partial<Job>>({});
   const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [customers, setCustomers] = useState<Array<{id: string, name: string}>>([]);
-  const [designers, setDesigners] = useState<Array<{id: string, name: string}>>([]);
-  const [salesmen, setSalesmen] = useState<Array<{id: string, name: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -37,7 +34,9 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
         dueDate: job.dueDate,
         estimatedHours: job.estimatedHours,
         branch: job.branch,
-        jobOrderDetails: job.jobOrderDetails
+        jobOrderDetails: job.jobOrderDetails,
+        customerId: job.customerId,
+        jobTitleId: job.jobTitleId
       });
       
       // Load existing invoice number if available
@@ -52,12 +51,6 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
       fetchUserRole();
     }
   }, [user]);
-
-  useEffect(() => {
-    if (isEditMode && job) {
-      fetchDropdownData();
-    }
-  }, [isEditMode, job]);
 
   const fetchUserRole = async () => {
     if (!user) return;
@@ -82,26 +75,6 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
     }
   };
 
-  const fetchDropdownData = async () => {
-    try {
-      const [customersRes, designersRes, salesmenRes] = await Promise.all([
-        supabase.from('customers').select('id, name'),
-        supabase.from('profiles').select('id, full_name').eq('role', 'designer'),
-        supabase.from('profiles').select('id, full_name').eq('role', 'salesman')
-      ]);
-
-      if (customersRes.data) setCustomers(customersRes.data);
-      if (designersRes.data) {
-        setDesigners(designersRes.data.map(d => ({ id: d.id, name: d.full_name || 'Unknown Designer' })));
-      }
-      if (salesmenRes.data) {
-        setSalesmen(salesmenRes.data.map(s => ({ id: s.id, name: s.full_name || 'Unknown Salesman' })));
-      }
-    } catch (error) {
-      console.error('Error fetching dropdown data:', error);
-    }
-  };
-
   const handleSave = async () => {
     if (!job) return;
 
@@ -115,6 +88,14 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
         job_order_details: editData.jobOrderDetails,
         updated_at: new Date().toISOString()
       };
+
+      // Include customer_id and job_title_id if they were changed
+      if (editData.customerId) {
+        updateData.customer_id = editData.customerId;
+      }
+      if (editData.jobTitleId) {
+        updateData.job_title_id = editData.jobTitleId;
+      }
 
       // Only include invoice_number if user is authorized
       if (canEditInvoice) {
@@ -213,9 +194,6 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
     setEditData,
     invoiceNumber,
     setInvoiceNumber,
-    customers,
-    designers,
-    salesmen,
     isLoading,
     isExporting,
     isSharing,
