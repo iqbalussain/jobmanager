@@ -346,6 +346,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_job_order_number: {
+        Args: { branch: string }
+        Returns: string
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
