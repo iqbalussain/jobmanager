@@ -67,29 +67,44 @@ export type Database = {
       }
       job_order_attachments: {
         Row: {
+          alt_text: string | null
           created_at: string
           file_name: string
           file_path: string
           file_size: number | null
+          file_type: string | null
           id: string
+          image_height: number | null
+          image_width: number | null
+          is_image: boolean | null
           job_order_id: string
           uploaded_by: string
         }
         Insert: {
+          alt_text?: string | null
           created_at?: string
           file_name: string
           file_path: string
           file_size?: number | null
+          file_type?: string | null
           id?: string
+          image_height?: number | null
+          image_width?: number | null
+          is_image?: boolean | null
           job_order_id: string
           uploaded_by: string
         }
         Update: {
+          alt_text?: string | null
           created_at?: string
           file_name?: string
           file_path?: string
           file_size?: number | null
+          file_type?: string | null
           id?: string
+          image_height?: number | null
+          image_width?: number | null
+          is_image?: boolean | null
           job_order_id?: string
           uploaded_by?: string
         }

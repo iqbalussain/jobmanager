@@ -1,170 +1,177 @@
+import { jsPDF } from 'jspdf';
 
-import { Job } from '@/pages/Index';
-import { getPriorityColor, getStatusColor } from './pdfStyles';
+const leftMargin = 15;
+let yPos = 20;
 
-export const generatePDFContent = (job: Job, invoiceNumber?: string): string => {
-  const priorityColors = getPriorityColor(job.priority);
-  const statusColors = getStatusColor(job.status);
+const addHeader = (doc: jsPDF, jobOrderNumber: string) => {
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Job Order #${jobOrderNumber}`, leftMargin, yPos);
+  yPos += 15;
+};
 
-  return `
-    <div style="max-width: 100%; font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 13px; line-height: 1.5; color: #1f2937; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; padding: 20px; box-sizing: border-box;">
-      <!-- Invoice Number at Top -->
-      ${invoiceNumber ? `
-      <div style="text-align: center; margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%); border-radius: 12px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25); border: 2px solid #3b82f6;">
-        <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); letter-spacing: 0.5px;">INVOICE #${invoiceNumber}</h2>
-        <p style="margin: 6px 0 0 0; font-size: 12px; color: rgba(255, 255, 255, 0.9); font-weight: 500;">Official Invoice Document</p>
-      </div>
-      ` : ''}
+const addSectionTitle = (doc: jsPDF, title: string) => {
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(title, leftMargin, yPos);
+  yPos += 10;
+};
 
-      <!-- Header Banner -->
-      <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 30%, #60a5fa 70%, #93c5fd 100%); padding: 18px; border-radius: 16px; margin-bottom: 16px; color: white; box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3); border: 2px solid #3b82f6; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: -30%; right: -5%; width: 120px; height: 120px; background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
-        <div style="position: relative; z-index: 2;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
-            <div style="flex: 1;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255, 255, 255, 0.3);">
-                  <span style="font-size: 14px; font-weight: bold;">📋</span>
-                </div>
-                <h1 style="font-size: 20px; font-weight: 800; margin: 0; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); letter-spacing: 0.3px;">${job.jobOrderNumber}</h1>
-              </div>
-              <h2 style="font-size: 16px; margin: 0; opacity: 0.95; font-weight: 600; line-height: 1.3; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">${job.title}</h2>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end; min-width: 140px;">
-              <div style="background: ${statusColors.bg}; color: ${statusColors.text}; padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; border: 2px solid ${statusColors.border}; text-align: center; width: 100%; box-shadow: ${statusColors.shadow}; backdrop-filter: blur(10px);">
-                ${job.status.replace('-', ' ')}
-              </div>
-              <div style="background: ${priorityColors.bg}; color: ${priorityColors.text}; padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; border: 2px solid ${priorityColors.border}; text-align: center; width: 100%; box-shadow: ${priorityColors.shadow}; backdrop-filter: blur(10px);">
-                ${job.priority} PRIORITY
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+const addField = (doc: jsPDF, label: string, value: string | number | null) => {
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`${label}:`, leftMargin, yPos);
 
-      <!-- Main Content Grid -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+  doc.setFont('helvetica', 'normal');
+  const text = value !== null ? value.toString() : 'N/A';
+  const maxWidth = doc.internal.pageSize.getWidth() - 30; // Total width minus left and right margins
+  const textLines = doc.splitTextToSize(text, maxWidth - 20); // Split text to fit within the width
+
+  textLines.forEach(line => {
+    doc.text(line, leftMargin + 40, yPos);
+    yPos += 7; // Adjust line spacing
+  });
+  yPos += 3;
+};
+
+export const generateJobOrderPDF = async (job: any, invoiceNumber?: string) => {
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF();
+  
+  addHeader(doc, job.job_order_number);
+
+  // Job Details Section
+  addSectionTitle(doc, 'Job Details');
+  addField(doc, 'Customer', job.customer?.name || 'N/A');
+  addField(doc, 'Job Title', job.job_title?.job_title_id || 'N/A');
+  addField(doc, 'Status', job.status);
+  addField(doc, 'Priority', job.priority);
+  addField(doc, 'Due Date', job.due_date ? new Date(job.due_date).toLocaleDateString() : 'N/A');
+  addField(doc, 'Estimated Hours', job.estimated_hours);
+  addField(doc, 'Actual Hours', job.actual_hours);
+  addField(doc, 'Branch', job.branch);
+
+  // Team Section
+  addSectionTitle(doc, 'Team');
+  addField(doc, 'Designer', job.designer?.name || 'N/A');
+  addField(doc, 'Salesman', job.salesman?.name || 'N/A');
+  addField(doc, 'Assignee', job.assignee || 'N/A');
+
+  // Invoice Section
+  if (invoiceNumber) {
+    addSectionTitle(doc, 'Invoice Information');
+    addField(doc, 'Invoice Number', invoiceNumber);
+  }
+  
+  // Job Order Details Section
+  addSectionTitle(doc, 'Job Order Details');
+  addField(doc, 'Details', job.job_order_details || 'N/A');
+  
+  // Add images section if images exist
+  const { supabase } = await import('@/integrations/supabase/client');
+  
+  try {
+    const { data: images } = await supabase
+      .from('job_order_attachments')
+      .select('*')
+      .eq('job_order_id', job.id)
+      .eq('is_image', true)
+      .order('created_at', { ascending: false });
+
+    if (images && images.length > 0) {
+      // Add new page for images if needed
+      const currentY = doc.internal.pageSize.height - 30; // Check remaining space
+      if (currentY < 100) {
+        doc.addPage();
+        yPos = 20;
+      } else {
+        yPos += 20;
+      }
+
+      // Images section header
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Reference Images', leftMargin, yPos);
+      yPos += 15;
+
+      // Add images
+      for (let i = 0; i < Math.min(images.length, 4); i++) { // Limit to 4 images for PDF
+        const image = images[i];
         
-        <!-- Customer & Team Section -->
-        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative; overflow: hidden;">
-          <div style="position: absolute; top: -20px; left: -20px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(30, 64, 175, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
-          <div style="position: relative; z-index: 2;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #1e40af;">
-              <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid #3b82f6;">
-                <span style="font-size: 12px;">👥</span>
-              </div>
-              <h3 style="font-size: 14px; font-weight: 800; margin: 0; letter-spacing: 0.3px;">Customer & Team</h3>
-            </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Customer:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="font-size: 12px; color: #1e293b; margin: 0; font-weight: 700;">${job.customer}</p>
-                </div>
-              </div>
+        try {
+          // Get image URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('job-order-images')
+            .getPublicUrl(image.file_path);
 
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Assignee:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.assignee || 'Unassigned'}</p>
-                </div>
-              </div>
+          // Fetch image as blob
+          const response = await fetch(publicUrl);
+          const blob = await response.blob();
+          
+          // Convert to base64
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
 
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Designer:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.designer || 'Not assigned'}</p>
-                </div>
-              </div>
+          // Calculate image dimensions for PDF (max 80x60)
+          const maxWidth = 80;
+          const maxHeight = 60;
+          let imgWidth = maxWidth;
+          let imgHeight = maxHeight;
+          
+          if (image.image_width && image.image_height) {
+            const aspectRatio = image.image_width / image.image_height;
+            if (aspectRatio > maxWidth / maxHeight) {
+              imgHeight = maxWidth / aspectRatio;
+            } else {
+              imgWidth = maxHeight * aspectRatio;
+            }
+          }
 
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Salesman:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.salesman || 'Not assigned'}</p>
-                </div>
-              </div>
+          // Check if we need a new page
+          if (yPos + imgHeight + 20 > doc.internal.pageSize.height - 20) {
+            doc.addPage();
+            yPos = 20;
+          }
 
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Branch:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.branch || 'Head Office'}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+          // Add image to PDF
+          doc.addImage(base64, 'JPEG', leftMargin, yPos, imgWidth, imgHeight);
+          
+          // Add image caption
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          const caption = image.alt_text || image.file_name;
+          doc.text(caption.substring(0, 50), leftMargin, yPos + imgHeight + 5);
+          
+          yPos += imgHeight + 15;
+          
+        } catch (imageError) {
+          console.error('Error adding image to PDF:', imageError);
+          // Continue with next image if one fails
+        }
+      }
+      
+      if (images.length > 4) {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.text(`... and ${images.length - 4} more images`, leftMargin, yPos);
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching images for PDF:', error);
+    // Continue without images if there's an error
+  }
 
-        <!-- Timeline & Details Section -->
-        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative; overflow: hidden;">
-          <div style="position: absolute; top: -20px; right: -20px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(30, 64, 175, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
-          <div style="position: relative; z-index: 2;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #1e40af;">
-              <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid #3b82f6;">
-                <span style="font-size: 12px;">📅</span>
-              </div>
-              <h3 style="font-size: 14px; font-weight: 800; margin: 0; letter-spacing: 0.3px;">Timeline & Details</h3>
-            </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Created Date:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #bfdbfe; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${new Date(job.createdAt).toLocaleDateString()}</p>
-                </div>
-              </div>
+  // Reset yPos for the footer
+  yPos = doc.internal.pageSize.height - 10;
 
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Due Date:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #bfdbfe; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${new Date(job.dueDate).toLocaleDateString()}</p>
-                </div>
-              </div>
+  // Add Footer
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Page 1', leftMargin, yPos);
 
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Est. Hours:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #bfdbfe; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.estimatedHours} hours</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Job Order Details Section -->
-      <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative; overflow: hidden;">
-        <div style="position: absolute; bottom: -30px; right: -30px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(30, 64, 175, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
-        <div style="position: relative; z-index: 2;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #1e40af;">
-            <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid #3b82f6;">
-              <span style="font-size: 12px;">📋</span>
-            </div>
-            <h3 style="font-size: 14px; font-weight: 800; margin: 0; letter-spacing: 0.3px;">Job Order Details</h3>
-          </div>
-          <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 14px; border-radius: 12px; border: 2px solid #bfdbfe; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);">
-            <p style="color: #374151; margin: 0; white-space: pre-wrap; line-height: 1.6; font-size: 12px; text-align: justify; font-weight: 500;">
-              ${job.jobOrderDetails || 'No additional details provided.'}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div style="border-top: 3px solid #3b82f6; padding-top: 12px; text-align: center; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); margin: 0 -20px -20px -20px; padding: 16px 20px; border-radius: 0 0 16px 16px;">
-        <div style="max-width: 400px; margin: 0 auto;">
-          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
-            <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 6px; display: flex; align-items: center; justify-content: center;">
-              <span style="font-size: 10px; color: white;">🏢</span>
-            </div>
-            <h4 style="margin: 0; font-size: 12px; font-weight: 800; color: #1e40af; letter-spacing: 0.3px;">JobFlow Management System</h4>
-          </div>
-          <p style="margin: 0 0 8px 0; font-size: 10px; color: #64748b; font-weight: 600;">Professional Job Order Management & Tracking</p>
-          <div style="padding-top: 8px; border-top: 2px solid #cbd5e1;">
-            <p style="margin: 0; font-size: 9px; color: #94a3b8; font-weight: 500;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+  
+  return doc;
 };
