@@ -107,12 +107,9 @@ export function useCreateJobOrder() {
       console.log('Job order created successfully:', newJobOrder);
       return newJobOrder;
     },
-    onSuccess: () => {
+    onSuccess: (newJobOrder) => {
       queryClient.invalidateQueries({ queryKey: ['job-orders'] });
-      toast({
-        title: "Success",
-        description: "Job order created successfully",
-      });
+      // Don't show the success toast here, let the component handle it
     },
     onError: (error) => {
       console.error('Error creating job order:', error);
