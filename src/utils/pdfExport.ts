@@ -1,24 +1,16 @@
 
 import { Job } from '@/pages/Index';
-import { createStyledElement } from './pdf/pdfStyles';
-import { generatePDFContent } from './pdf/pdfContentGenerator';
-import { generatePDFFromElement } from './pdf/pdfGenerator';
+import { generateJobOrderPDF } from './pdf/pdfContentGenerator';
 
 export const exportJobOrderToPDF = async (job: Job, invoiceNumber?: string) => {
   try {
-    // Create a temporary div with the job order content
-    const element = createStyledElement();
-    element.innerHTML = generatePDFContent(job, invoiceNumber);
-
-    document.body.appendChild(element);
-
+    const doc = await generateJobOrderPDF(job, invoiceNumber);
+    
     const fileName = invoiceNumber 
       ? `invoice-${invoiceNumber}-job-${job.jobOrderNumber}.pdf`
       : `job-order-${job.jobOrderNumber}.pdf`;
 
-    await generatePDFFromElement(element, fileName);
-
-    document.body.removeChild(element);
+    doc.save(fileName);
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw new Error('Failed to generate PDF');

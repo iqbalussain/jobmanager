@@ -2,13 +2,48 @@
 import html2canvas from 'html2canvas';
 import { Job } from '@/pages/Index';
 import { createStyledElement } from './pdf/pdfStyles';
-import { generatePDFContent } from './pdf/pdfContentGenerator';
+
+const generateJobOrderHTML = (job: Job, invoiceNumber?: string): string => {
+  return `
+    <div style="padding: 20px; font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+      <div style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
+        <h1 style="margin: 0; color: #333;">Job Order #${job.jobOrderNumber}</h1>
+        ${invoiceNumber ? `<p style="margin: 5px 0; font-weight: bold;">Invoice: ${invoiceNumber}</p>` : ''}
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <h2 style="color: #555; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Job Details</h2>
+        <p><strong>Customer:</strong> ${job.customer}</p>
+        <p><strong>Title:</strong> ${job.title}</p>
+        <p><strong>Status:</strong> ${job.status}</p>
+        <p><strong>Priority:</strong> ${job.priority}</p>
+        <p><strong>Due Date:</strong> ${job.dueDate ? new Date(job.dueDate).toLocaleDateString() : 'N/A'}</p>
+        <p><strong>Estimated Hours:</strong> ${job.estimatedHours || 'N/A'}</p>
+        <p><strong>Branch:</strong> ${job.branch || 'N/A'}</p>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <h2 style="color: #555; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Team</h2>
+        <p><strong>Designer:</strong> ${job.designer || 'N/A'}</p>
+        <p><strong>Salesman:</strong> ${job.salesman || 'N/A'}</p>
+        <p><strong>Assignee:</strong> ${job.assignee || 'N/A'}</p>
+      </div>
+      
+      ${job.jobOrderDetails ? `
+        <div style="margin-bottom: 20px;">
+          <h2 style="color: #555; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Job Order Details</h2>
+          <p>${job.jobOrderDetails}</p>
+        </div>
+      ` : ''}
+    </div>
+  `;
+};
 
 export const shareJobOrderViaWhatsApp = async (job: Job, invoiceNumber?: string) => {
   try {
     // Create a temporary div with the job order content
     const element = createStyledElement();
-    element.innerHTML = generatePDFContent(job, invoiceNumber);
+    element.innerHTML = generateJobOrderHTML(job, invoiceNumber);
     
     // Make the element visible but positioned off-screen
     element.style.position = 'absolute';
