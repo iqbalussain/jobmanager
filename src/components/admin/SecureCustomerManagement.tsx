@@ -5,8 +5,8 @@ import { useAdminMutations } from "@/hooks/useAdminMutations";
 import { useState } from "react";
 
 export function SecureCustomerManagement() {
-  const { customers, customersLoading } = useAdminQueries();
-  const { addCustomerMutation } = useAdminMutations('customers');
+  const { customers, customersLoading, checkAdminAccess } = useAdminQueries();
+  const { addCustomerMutation } = useAdminMutations(checkAdminAccess);
   const [customerForm, setCustomerForm] = useState({ name: "" });
 
   const handleCreate = async (data: { name: string }) => {

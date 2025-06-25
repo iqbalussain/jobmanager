@@ -18,7 +18,7 @@ export const rolePermissions = {
 } as const;
 
 export function hasPermission(userRole: Role, permission: keyof typeof rolePermissions): boolean {
-  return rolePermissions[permission].includes(userRole);
+  return (rolePermissions[permission] as readonly Role[]).includes(userRole);
 }
 
 export { allowedRoles };
