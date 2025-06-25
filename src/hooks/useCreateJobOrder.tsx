@@ -23,33 +23,33 @@ export function useCreateJobOrder() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-const generateJobOrderNumber = async (branch: string) => {
-  const branchPrefixes: Record<string, string> = {
-    'Wadi Kabeer': 'WK',
-    'Wajihath': 'WJ',
-    'Head Office': 'HO',
-  };
+  const generateJobOrderNumber = async (branch: string) => {
+    const branchPrefixes: Record<string, string> = {
+      'Wadi Kabeer': 'WK',
+      'Wajihath': 'WJ',
+      'Head Office': 'HO',
+    };
 
-  const prefix = branchPrefixes[branch] || 'HO'; // fallback to 'HO' if unknown
+    const prefix = branchPrefixes[branch] || 'HO'; // fallback to 'HO' if unknown
 
-  const { data: latestOrder } = await supabase
-    .from('job_orders')
-    .select('job_order_number')
-    .like('job_order_number', `${prefix}%`)
-    .order('created_at', { ascending: false })
-    .limit(1);
+    const { data: latestOrder } = await supabase
+      .from('job_orders')
+      .select('job_order_number')
+      .like('job_order_number', `${prefix}%`)
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-  let nextNumber = 10001;
+    let nextNumber = 10001;
 
-  if (latestOrder && latestOrder.length > 0) {
-    const lastNumber = parseInt(latestOrder[0].job_order_number.substring(2));
-    if (!isNaN(lastNumber)) {
-      nextNumber = lastNumber + 1;
+    if (latestOrder && latestOrder.length > 0) {
+      const lastNumber = parseInt(latestOrder[0].job_order_number.substring(2));
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
     }
-  }
 
-  return `${prefix}${nextNumber}`;
-};
+    return `${prefix}${nextNumber}`;
+  };
 
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: CreateJobOrderData) => {
@@ -59,8 +59,25 @@ const generateJobOrderNumber = async (branch: string) => {
         throw new Error('User must be authenticated to create job orders');
       }
       
+      // Check if user has permission to create job orders
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile || !['admin', 'manager', 'salesman'].includes(profile.role)) {
+        throw new Error('You do not have permission to create job orders');
+      }
+      
       // Generate job order number based on branch
       const jobOrderNumber = await generateJobOrderNumber(data.branch);
+      
+      // If user is a salesman, automatically set them as the salesman for the job order
+      let salesmanId = data.salesman_id;
+      if (profile.role === 'salesman') {
+        salesmanId = user.id;
+      }
       
       const { data: newJobOrder, error } = await supabase
         .from('job_orders')
@@ -69,7 +86,7 @@ const generateJobOrderNumber = async (branch: string) => {
           customer_id: data.customer_id,
           job_title_id: data.job_title_id,
           designer_id: data.designer_id,
-          salesman_id: data.salesman_id,
+          salesman_id: salesmanId,
           assignee: data.assignee || null,
           priority: data.priority,
           status: data.status,

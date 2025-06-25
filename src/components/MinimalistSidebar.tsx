@@ -83,6 +83,7 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
       title: "Create Job",
       icon: Plus,
       view: "create" as const,
+      roles: ["admin", "manager", "salesman"] // Allow salesmen to create jobs
     },
     {
       title: "Settings",
@@ -96,21 +97,29 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
       title: "Job Administration",
       icon: Shield,
       view: "admin" as const,
+      roles: ["admin", "manager"] // Admin only
     },
     {
       title: "User Management",
       icon: UsersRound,
       view: "admin-management" as const,
+      roles: ["admin", "manager"] // Admin only
     },
     {
       title: "Reports & Analytics",
       icon: BarChart3,
       view: "reports" as const,
+      roles: ["admin", "manager", "salesman"] // Include salesmen for reports
     }
   ];
 
   const handleMenuClick = (view: any) => {
     onViewChange(view);
+  };
+
+  const canAccessMenuItem = (item: any) => {
+    if (!item.roles) return true; // No role restriction
+    return item.roles.includes(userProfile?.role);
   };
 
   return (
@@ -135,7 +144,7 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
 
         {/* Main Navigation */}
         <div className="flex-1 py-4 space-y-2">
-          {mainMenuItems.map((item) => (
+          {mainMenuItems.filter(canAccessMenuItem).map((item) => (
             <Tooltip key={item.view}>
               <TooltipTrigger asChild>
                 <Button
@@ -158,11 +167,13 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
             </Tooltip>
           ))}
 
-          {/* Separator */}
-          <div className="mx-3 my-4 border-t border-gray-200"></div>
+          {/* Separator - only show if there are admin items to show */}
+          {adminMenuItems.filter(canAccessMenuItem).length > 0 && (
+            <div className="mx-3 my-4 border-t border-gray-200"></div>
+          )}
 
           {/* Admin Navigation */}
-          {adminMenuItems.map((item) => (
+          {adminMenuItems.filter(canAccessMenuItem).map((item) => (
             <Tooltip key={item.view}>
               <TooltipTrigger asChild>
                 <Button
