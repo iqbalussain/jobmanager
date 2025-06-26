@@ -14,7 +14,7 @@ export const exportJobOrderToPDF = async (job: Job, invoiceNumber?: string) => {
       priority: job.priority,
       due_date: job.dueDate,
       estimated_hours: job.estimatedHours,
-      actual_hours: job.actual_hours || 0, // Fixed: use actual_hours instead of actualHours
+      actual_hours: job.actualHours || 0,
       branch: job.branch,
       designer: { name: job.designer },
       salesman: { name: job.salesman },
