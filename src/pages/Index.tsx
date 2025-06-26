@@ -37,7 +37,7 @@ export interface Job {
   totalValue?: number;
 }
 
-type ViewType = 'dashboard' | 'jobs' | 'calendar' | 'reports' | 'admin' | 'settings' | 'create';
+type ViewType = 'dashboard' | 'jobs' | 'calendar' | 'reports' | 'admin' | 'settings' | 'create' | 'admin-management';
 
 export default function Index() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -105,6 +105,8 @@ export default function Index() {
       case 'reports':
         return <ReportsPage />;
       case 'admin':
+        return <AdminManagement />;
+      case 'admin-management':
         return <AdminManagement />;
       case 'settings':
         return <SettingsView />;
