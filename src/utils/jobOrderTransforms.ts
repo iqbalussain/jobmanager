@@ -15,12 +15,18 @@ export function transformJobOrderData(data: JobOrder[]): Job[] {
       actualHours = timeDiffHours > 0 ? timeDiffHours : 0;
     }
 
+    // Map status from JobOrder to Job (handle 'working' -> 'in-progress')
+    let status: Job['status'] = jobOrder.status as Job['status'];
+    if (jobOrder.status === 'working' as any) {
+      status = 'in-progress';
+    }
+
     return {
       id: jobOrder.id,
       jobOrderNumber: jobOrder.job_order_number,
       customer: jobOrder.customer?.name || 'Unknown Customer',
       title: jobOrder.job_title?.job_title_id || 'No Title',
-      status: jobOrder.status,
+      status: status,
       priority: jobOrder.priority,
       dueDate: jobOrder.due_date,
       estimatedHours: jobOrder.estimated_hours,
@@ -33,7 +39,8 @@ export function transformJobOrderData(data: JobOrder[]): Job[] {
       createdAt: jobOrder.created_at,
       customer_id: jobOrder.customer_id,
       job_title_id: jobOrder.job_title_id,
-      invoiceNumber: jobOrder.invoice_number
+      invoiceNumber: jobOrder.invoice_number || '',
+      totalValue: jobOrder.total_value || 0
     };
   });
 }

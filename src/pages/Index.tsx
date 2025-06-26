@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { JobList } from '@/components/JobList';
 import { JobForm } from '@/components/JobForm';
@@ -10,13 +11,16 @@ import { SettingsView } from '@/components/SettingsView';
 import { MinimalistSidebar } from '@/components/MinimalistSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { LoginPage } from '@/components/LoginPage';
+import { useJobOrders } from '@/hooks/useJobOrders';
+
+export type JobStatus = 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced';
 
 export interface Job {
   id: string;
   jobOrderNumber: string;
   customer: string;
   title: string;
-  status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced';
+  status: JobStatus;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   dueDate?: string;
   estimatedHours?: number;
@@ -30,6 +34,7 @@ export interface Job {
   customer_id?: string;
   job_title_id?: string;
   invoiceNumber?: string;
+  totalValue?: number;
 }
 
 type ViewType = 'dashboard' | 'jobs' | 'calendar' | 'reports' | 'admin' | 'settings';
@@ -40,7 +45,8 @@ export default function Index() {
   const [isJobFormOpen, setIsJobFormOpen] = useState(false);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
+  const { jobOrders, isLoading, updateStatus } = useJobOrders();
 
   const handleViewJob = (job: Job) => {
     setSelectedJob(job);
@@ -68,7 +74,11 @@ export default function Index() {
     setIsJobFormOpen(false);
   };
 
-  if (isLoading) {
+  const handleStatusUpdate = (jobId: string, status: string) => {
+    updateStatus({ id: jobId, status });
+  };
+
+  if (loading || isLoading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
 
@@ -79,11 +89,11 @@ export default function Index() {
   const renderContent = () => {
     switch (currentView) {
       case 'dashboard':
-        return <ModernDashboard />;
+        return <ModernDashboard jobs={jobOrders} onStatusUpdate={handleStatusUpdate} />;
       case 'jobs':
-        return <JobList onViewJob={handleViewJob} onEditJob={handleEditJob} onCreateJob={handleCreateJob} />;
+        return <JobList jobs={jobOrders} onStatusUpdate={handleStatusUpdate} />;
       case 'calendar':
-        return <CalendarView />;
+        return <CalendarView jobs={jobOrders} />;
       case 'reports':
         return <ReportsPage />;
       case 'admin':
@@ -91,7 +101,7 @@ export default function Index() {
       case 'settings':
         return <SettingsView />;
       default:
-        return <ModernDashboard />;
+        return <ModernDashboard jobs={jobOrders} onStatusUpdate={handleStatusUpdate} />;
     }
   };
 
