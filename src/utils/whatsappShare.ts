@@ -1,7 +1,19 @@
 
 import html2canvas from 'html2canvas';
 import { Job } from '@/pages/Index';
-import { createStyledElement } from './pdf/pdfStyles';
+
+const createStyledElement = (): HTMLElement => {
+  const element = document.createElement('div');
+  element.style.cssText = `
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    color: black;
+  `;
+  return element;
+};
 
 const generateJobOrderHTML = (job: Job, invoiceNumber?: string): string => {
   return `
@@ -89,7 +101,7 @@ export const shareJobOrderViaWhatsApp = async (job: Job, invoiceNumber?: string)
         `Customer: ${job.customer}\n` +
         `Title: ${job.title}\n` +
         `Status: ${job.status}\n` +
-        `Due Date: ${new Date(job.dueDate).toLocaleDateString()}\n` +
+        `Due Date: ${job.dueDate ? new Date(job.dueDate).toLocaleDateString() : 'N/A'}\n` +
         `Priority: ${job.priority}\n` +
         (invoiceNumber ? `Invoice: ${invoiceNumber}\n` : '') +
         '\n📋 Job order image attached above'

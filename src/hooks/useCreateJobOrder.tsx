@@ -30,25 +30,32 @@ export function useCreateJobOrder() {
       'Head Office': 'HO',
     };
 
-    const prefix = branchPrefixes[branch] || 'HO'; // fallback to 'HO' if unknown
+    const prefix = branchPrefixes[branch] || 'HO';
 
-    const { data: latestOrder } = await supabase
-      .from('job_orders')
-      .select('job_order_number')
-      .like('job_order_number', `${prefix}%`)
-      .order('created_at', { ascending: false })
-      .limit(1);
+    try {
+      const { data: latestOrder } = await supabase
+        .from('job_orders')
+        .select('job_order_number')
+        .like('job_order_number', `${prefix}%`)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-    let nextNumber = 10001;
+      let nextNumber = 10001;
 
-    if (latestOrder && latestOrder.length > 0) {
-      const lastNumber = parseInt(latestOrder[0].job_order_number.substring(2));
-      if (!isNaN(lastNumber)) {
-        nextNumber = lastNumber + 1;
+      if (latestOrder && latestOrder.length > 0) {
+        const lastNumber = parseInt(latestOrder[0].job_order_number.substring(2));
+        if (!isNaN(lastNumber)) {
+          nextNumber = lastNumber + 1;
+        }
       }
-    }
 
-    return `${prefix}${nextNumber}`;
+      return `${prefix}${nextNumber}`;
+    } catch (error) {
+      console.error('Error generating job order number:', error);
+      // Fallback to timestamp-based number if query fails
+      const timestamp = Date.now().toString().slice(-6);
+      return `${prefix}${timestamp}`;
+    }
   };
 
   const createJobOrderMutation = useMutation({
@@ -72,6 +79,7 @@ export function useCreateJobOrder() {
       
       // Generate job order number based on branch
       const jobOrderNumber = await generateJobOrderNumber(data.branch);
+      console.log('Generated job order number:', jobOrderNumber, 'for branch:', data.branch);
       
       // If user is a salesman, automatically set them as the salesman for the job order
       let salesmanId = data.salesman_id;

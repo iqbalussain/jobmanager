@@ -149,6 +149,8 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
               onChange={(value) => setFormData(prev => ({ ...prev, jobOrderDetails: value }))}
             />
 
+            <ImageUploadSection />
+
             <FormActions onCancel={onCancel} isCreating={isCreating} />
           </form>
         ) : (
