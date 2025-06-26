@@ -37,7 +37,7 @@ export interface Job {
   totalValue?: number;
 }
 
-type ViewType = 'dashboard' | 'jobs' | 'calendar' | 'reports' | 'admin' | 'settings';
+type ViewType = 'dashboard' | 'jobs' | 'calendar' | 'reports' | 'admin' | 'settings' | 'create';
 
 export default function Index() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -78,6 +78,14 @@ export default function Index() {
     updateStatus({ id: jobId, status });
   };
 
+  const handleViewChange = (view: ViewType) => {
+    if (view === 'create') {
+      setIsJobFormOpen(true);
+    } else {
+      setCurrentView(view);
+    }
+  };
+
   if (loading || isLoading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
@@ -107,15 +115,14 @@ export default function Index() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <MinimalistSidebar currentView={currentView} onViewChange={setCurrentView} />
+      <MinimalistSidebar currentView={currentView} onViewChange={handleViewChange} />
       
       <main className="flex-1 overflow-auto">
         {renderContent()}
       </main>
 
       <JobForm 
-        isOpen={isJobFormOpen} 
-        onClose={handleCloseJobForm} 
+        onCancel={handleCloseJobForm}
       />
 
       <JobDetails

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateJobOrder } from "@/hooks/useCreateJobOrder";
 import { useDropdownData } from "@/hooks/useDropdownData";
@@ -14,7 +15,11 @@ import { JobOrderDetailsSection } from "./job-form/JobOrderDetailsSection";
 import { ImageUploadSection } from "./job-form/ImageUploadSection";
 import { FormActions } from "./job-form/FormActions";
 
-export function JobForm({ onCancel }: { onCancel?: () => void }) {
+interface JobFormProps {
+  onCancel?: () => void;
+}
+
+export function JobForm({ onCancel }: JobFormProps) {
   const { toast } = useToast();
   const { createJobOrder, isCreating } = useCreateJobOrder();
   const { customers, designers, salesmen, jobTitles } = useDropdownData();
