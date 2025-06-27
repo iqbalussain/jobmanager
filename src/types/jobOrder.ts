@@ -32,7 +32,7 @@ export interface JobOrder {
   designer_id: string | null;
   salesman_id: string | null;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced';
+  status: 'pending' | 'working' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced';
   due_date: string | null;
   estimated_hours: number | null;
   actual_hours: number | null;
@@ -48,5 +48,4 @@ export interface JobOrder {
   job_title: JobTitle | null;
   title?: string;
   description?: string;
-  invoice_number?: string;
 }

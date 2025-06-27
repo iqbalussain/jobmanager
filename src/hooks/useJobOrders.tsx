@@ -4,7 +4,6 @@ import { fetchJobOrders, updateJobOrderStatus } from '@/services/jobOrdersApi';
 import { transformJobOrderData } from '@/utils/jobOrderTransforms';
 import { useToast } from '@/hooks/use-toast';
 import { JobOrder } from '@/types/jobOrder';
-import { Job } from '@/pages/Index';
 import { useAuth } from '@/hooks/useAuth';
 
 export function useJobOrders() {
@@ -14,7 +13,7 @@ export function useJobOrders() {
 
   const { data: jobOrders = [], isLoading, error } = useQuery({
     queryKey: ['job-orders', user?.id],
-    queryFn: async (): Promise<Job[]> => {
+    queryFn: async (): Promise<JobOrder[]> => {
       const data = await fetchJobOrders();
       return transformJobOrderData(data);
     },

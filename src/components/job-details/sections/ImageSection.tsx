@@ -16,7 +16,10 @@ export function ImageSection({ job, isEditMode = false }: ImageSectionProps) {
   const { user } = useAuth();
   
   // Check if user can upload images
-  const canUpload = user && hasPermission(user.role as any, 'canEditJobOrders');
+  const canUpload = user && (
+    hasPermission(user.role as any, 'canEditJobOrders') || 
+    (job.created_by === user.id && hasPermission(user.role as any, 'canViewOwnJobOrders'))
+  );
 
   const canEdit = user && hasPermission(user.role as any, 'canEditJobOrders');
 

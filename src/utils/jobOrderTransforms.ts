@@ -1,46 +1,51 @@
 
-import { JobOrder } from '@/types/jobOrder';
-import { Job } from '@/pages/Index';
+import { sanitizeHtml } from '@/utils/inputValidation';
+import { JobOrder, Designer, Salesman, Customer, JobTitle } from '@/types/jobOrder';
 
-export function transformJobOrderData(data: JobOrder[]): Job[] {
-  return data.map(jobOrder => {
-    // Calculate actual hours if job is completed
-    let actualHours = jobOrder.actual_hours || 0;
-    
-    if (jobOrder.status === 'completed' && jobOrder.created_at) {
-      const createdAt = new Date(jobOrder.created_at);
-      const completedAt = new Date(jobOrder.updated_at);
-      const timeDiffMs = completedAt.getTime() - createdAt.getTime();
-      const timeDiffHours = Math.round(timeDiffMs / (1000 * 60 * 60));
-      actualHours = timeDiffHours > 0 ? timeDiffHours : 0;
+export function transformJobOrderData(data: any[]): JobOrder[] {
+  return data?.map(order => {
+    // Handle designer with proper null checks
+    let designer: Designer | null = null;
+    if (order.designer && order.designer !== null && typeof order.designer === 'object' && 'id' in order.designer) {
+      const designerData = order.designer as any;
+      designer = {
+        id: designerData.id,
+        name: sanitizeHtml(designerData.name || 'Unknown Designer'),
+        phone: designerData.phone
+      };
     }
 
-    // Map status from JobOrder to Job (handle 'working' -> 'in-progress')
-    let status: Job['status'] = jobOrder.status as Job['status'];
-    if (jobOrder.status === 'working' as any) {
-      status = 'in-progress';
+    // Handle salesman with proper null checks
+    let salesman: Salesman | null = null;
+    if (order.salesman && order.salesman !== null && typeof order.salesman === 'object' && 'id' in order.salesman) {
+      const salesmanData = order.salesman as any;
+      salesman = {
+        id: salesmanData.id,
+        name: sanitizeHtml(salesmanData.name || 'Unknown Salesman'),
+        email: salesmanData.email,
+        phone: salesmanData.phone
+      };
+    }
+
+    // Handle job title properly
+    let jobTitleDisplay = '';
+    if (order.job_title && typeof order.job_title === 'object' && 'job_title_id' in order.job_title) {
+      jobTitleDisplay = sanitizeHtml(order.job_title.job_title_id || '');
     }
 
     return {
-      id: jobOrder.id,
-      jobOrderNumber: jobOrder.job_order_number,
-      customer: jobOrder.customer?.name || 'Unknown Customer',
-      title: jobOrder.job_title?.job_title_id || 'No Title',
-      status: status,
-      priority: jobOrder.priority,
-      dueDate: jobOrder.due_date,
-      estimatedHours: jobOrder.estimated_hours,
-      actualHours: actualHours,
-      branch: jobOrder.branch,
-      designer: jobOrder.designer?.name || 'Not Assigned',
-      salesman: jobOrder.salesman?.name || 'Not Assigned',
-      assignee: jobOrder.assignee,
-      jobOrderDetails: jobOrder.job_order_details,
-      createdAt: jobOrder.created_at,
-      customer_id: jobOrder.customer_id,
-      job_title_id: jobOrder.job_title_id,
-      invoiceNumber: jobOrder.invoice_number || '',
-      totalValue: jobOrder.total_value || 0
+      ...order,
+      customer: order.customer && typeof order.customer === 'object' && 'id' in order.customer 
+        ? order.customer as Customer 
+        : null,
+      designer,
+      salesman,
+      job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title
+        ? order.job_title as JobTitle
+        : null,
+      // Use the proper job title for display
+      title: jobTitleDisplay || sanitizeHtml(order.job_order_details || `Job Order ${order.job_order_number}`),
+      description: sanitizeHtml(order.job_order_details || '')
     };
-  });
+  }) || [];
 }

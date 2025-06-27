@@ -1,191 +1,177 @@
-
 import { jsPDF } from 'jspdf';
+
+const leftMargin = 15;
+let yPos = 20;
+
+const addHeader = (doc: jsPDF, jobOrderNumber: string) => {
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Job Order #${jobOrderNumber}`, leftMargin, yPos);
+  yPos += 15;
+};
+
+const addSectionTitle = (doc: jsPDF, title: string) => {
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(title, leftMargin, yPos);
+  yPos += 10;
+};
+
+const addField = (doc: jsPDF, label: string, value: string | number | null) => {
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`${label}:`, leftMargin, yPos);
+
+  doc.setFont('helvetica', 'normal');
+  const text = value !== null ? value.toString() : 'N/A';
+  const maxWidth = doc.internal.pageSize.getWidth() - 30; // Total width minus left and right margins
+  const textLines = doc.splitTextToSize(text, maxWidth - 20); // Split text to fit within the width
+
+  textLines.forEach(line => {
+    doc.text(line, leftMargin + 40, yPos);
+    yPos += 7; // Adjust line spacing
+  });
+  yPos += 3;
+};
 
 export const generateJobOrderPDF = async (job: any, invoiceNumber?: string) => {
   const { jsPDF } = await import('jspdf');
-  const doc = new jsPDF('portrait', 'mm', 'a4'); // Changed to portrait for better readability
+  const doc = new jsPDF();
   
-  const pageWidth = 210; // A4 portrait width
-  const pageHeight = 297; // A4 portrait height
-  const margin = 20;
-  
-  // Colors for professional design
-  const primaryColor = '#1e40af'; // Professional blue
-  const lightGray = '#f8fafc';
-  const darkGray = '#374151';
-  const mediumGray = '#6b7280';
-  
-  // Header section with company branding
-  doc.setFillColor(30, 64, 175); // Primary blue
-  doc.rect(0, 0, pageWidth, 35, 'F');
-  
-  // Company title
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(28);
-  doc.setFont('helvetica', 'bold');
-  doc.text('JOB ORDER', margin, 22);
-  
-  // Job order number
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`#${job.job_order_number}`, pageWidth - margin - 50, 18);
-  
-  // Invoice number if provided
-  if (invoiceNumber) {
-    doc.setFontSize(14);
-    doc.text(`Invoice: ${invoiceNumber}`, pageWidth - margin - 50, 28);
-  }
-  
-  let yPos = 50;
-  
-  // Job Information Section
-  createSection(doc, margin, yPos, pageWidth - 2 * margin, 'JOB INFORMATION', [
-    ['Job Order Number', job.job_order_number],
-    ['Customer', job.customer?.name || 'N/A'],
-    ['Job Title', job.job_title?.job_title_id || 'N/A'],
-    ['Status', capitalizeStatus(job.status)],
-    ['Priority', capitalizePriority(job.priority)],
-    ['Branch', job.branch || 'N/A']
-  ], primaryColor, darkGray);
-  
-  yPos += 85;
-  
-  // Schedule & Team Section
-  createSection(doc, margin, yPos, pageWidth - 2 * margin, 'SCHEDULE & TEAM', [
-    ['Due Date', job.due_date ? formatDate(job.due_date) : 'N/A'],
-    ['Estimated Hours', `${job.estimated_hours || 0} hours`],
-    ['Actual Hours', `${job.actual_hours || 0} hours`],
-    ['Designer', job.designer?.name || 'Not Assigned'],
-    ['Salesman', job.salesman?.name || 'Not Assigned'],
-    ['Assignee', job.assignee || 'Not Assigned']
-  ], primaryColor, darkGray);
-  
-  yPos += 95;
-  
+  addHeader(doc, job.job_order_number);
+
   // Job Details Section
-  if (job.job_order_details) {
-    doc.setFillColor(248, 250, 252);
-    doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 50, 3, 3, 'F');
-    
-    // Section header
-    doc.setFillColor(30, 64, 175);
-    doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 12, 3, 3, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('JOB ORDER DETAILS', margin + 8, yPos + 8);
-    
-    // Details content
-    doc.setTextColor(darkGray);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    const detailsLines = doc.splitTextToSize(job.job_order_details, pageWidth - 2 * margin - 16);
-    doc.text(detailsLines, margin + 8, yPos + 20);
-    
-    yPos += 60;
+  addSectionTitle(doc, 'Job Details');
+  addField(doc, 'Customer', job.customer?.name || 'N/A');
+  addField(doc, 'Job Title', job.job_title?.job_title_id || 'N/A');
+  addField(doc, 'Status', job.status);
+  addField(doc, 'Priority', job.priority);
+  addField(doc, 'Due Date', job.due_date ? new Date(job.due_date).toLocaleDateString() : 'N/A');
+  addField(doc, 'Estimated Hours', job.estimated_hours);
+  addField(doc, 'Actual Hours', job.actual_hours);
+  addField(doc, 'Branch', job.branch);
+
+  // Team Section
+  addSectionTitle(doc, 'Team');
+  addField(doc, 'Designer', job.designer?.name || 'N/A');
+  addField(doc, 'Salesman', job.salesman?.name || 'N/A');
+  addField(doc, 'Assignee', job.assignee || 'N/A');
+
+  // Invoice Section
+  if (invoiceNumber) {
+    addSectionTitle(doc, 'Invoice Information');
+    addField(doc, 'Invoice Number', invoiceNumber);
   }
   
-  // Footer
-  const footerY = pageHeight - 30;
-  doc.setDrawColor(200, 200, 200);
-  doc.setLineWidth(0.5);
-  doc.line(margin, footerY, pageWidth - margin, footerY);
+  // Job Order Details Section
+  addSectionTitle(doc, 'Job Order Details');
+  addField(doc, 'Details', job.job_order_details || 'N/A');
   
-  doc.setTextColor(mediumGray);
-  doc.setFontSize(9);
+  // Add images section if images exist
+  const { supabase } = await import('@/integrations/supabase/client');
+  
+  try {
+    const { data: images } = await supabase
+      .from('job_order_attachments')
+      .select('*')
+      .eq('job_order_id', job.id)
+      .eq('is_image', true)
+      .order('created_at', { ascending: false });
+
+    if (images && images.length > 0) {
+      // Add new page for images if needed
+      const currentY = doc.internal.pageSize.height - 30; // Check remaining space
+      if (currentY < 100) {
+        doc.addPage();
+        yPos = 20;
+      } else {
+        yPos += 20;
+      }
+
+      // Images section header
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Reference Images', leftMargin, yPos);
+      yPos += 15;
+
+      // Add images
+      for (let i = 0; i < Math.min(images.length, 4); i++) { // Limit to 4 images for PDF
+        const image = images[i];
+        
+        try {
+          // Get image URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('job-order-images')
+            .getPublicUrl(image.file_path);
+
+          // Fetch image as blob
+          const response = await fetch(publicUrl);
+          const blob = await response.blob();
+          
+          // Convert to base64
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+
+          // Calculate image dimensions for PDF (max 80x60)
+          const maxWidth = 80;
+          const maxHeight = 60;
+          let imgWidth = maxWidth;
+          let imgHeight = maxHeight;
+          
+          if (image.image_width && image.image_height) {
+            const aspectRatio = image.image_width / image.image_height;
+            if (aspectRatio > maxWidth / maxHeight) {
+              imgHeight = maxWidth / aspectRatio;
+            } else {
+              imgWidth = maxHeight * aspectRatio;
+            }
+          }
+
+          // Check if we need a new page
+          if (yPos + imgHeight + 20 > doc.internal.pageSize.height - 20) {
+            doc.addPage();
+            yPos = 20;
+          }
+
+          // Add image to PDF
+          doc.addImage(base64, 'JPEG', leftMargin, yPos, imgWidth, imgHeight);
+          
+          // Add image caption
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          const caption = image.alt_text || image.file_name;
+          doc.text(caption.substring(0, 50), leftMargin, yPos + imgHeight + 5);
+          
+          yPos += imgHeight + 15;
+          
+        } catch (imageError) {
+          console.error('Error adding image to PDF:', imageError);
+          // Continue with next image if one fails
+        }
+      }
+      
+      if (images.length > 4) {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.text(`... and ${images.length - 4} more images`, leftMargin, yPos);
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching images for PDF:', error);
+    // Continue without images if there's an error
+  }
+
+  // Reset yPos for the footer
+  yPos = doc.internal.pageSize.height - 10;
+
+  // Add Footer
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Generated on: ${formatDate(new Date().toISOString())}`, margin, footerY + 10);
-  doc.text(`Generated at: ${new Date().toLocaleTimeString()}`, margin, footerY + 18);
-  doc.text('Page 1 of 1', pageWidth - margin - 25, footerY + 10);
+  doc.text('Page 1', leftMargin, yPos);
+
   
   return doc;
 };
-
-function createSection(
-  doc: jsPDF, 
-  x: number, 
-  y: number, 
-  width: number, 
-  title: string, 
-  data: string[][], 
-  headerColor: string, 
-  textColor: string
-) {
-  const rowHeight = 12;
-  const headerHeight = 15;
-  
-  // Section header
-  doc.setFillColor(headerColor);
-  doc.roundedRect(x, y, width, headerHeight, 3, 3, 'F');
-  
-  // Section title
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(title, x + 8, y + 10);
-  
-  // Data rows with clean formatting
-  data.forEach((row, index) => {
-    const rowY = y + headerHeight + (index * rowHeight);
-    
-    // Alternating row background
-    if (index % 2 === 0) {
-      doc.setFillColor(255, 255, 255);
-    } else {
-      doc.setFillColor(248, 250, 252);
-    }
-    doc.rect(x, rowY, width, rowHeight, 'F');
-    
-    // Label (left side)
-    doc.setTextColor(textColor);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text(row[0] + ':', x + 8, rowY + 8);
-    
-    // Value (right side)
-    doc.setFont('helvetica', 'normal');
-    doc.text(row[1], x + width/2, rowY + 8);
-  });
-  
-  // Section border
-  doc.setDrawColor(220, 220, 220);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(x, y, width, headerHeight + (data.length * rowHeight), 3, 3, 'S');
-}
-
-function capitalizeStatus(status: string): string {
-  const statusMap: { [key: string]: string } = {
-    'pending': 'Pending',
-    'in-progress': 'In Progress',
-    'designing': 'Designing',
-    'completed': 'Completed',
-    'finished': 'Finished',
-    'cancelled': 'Cancelled',
-    'invoiced': 'Invoiced'
-  };
-  return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-function capitalizePriority(priority: string): string {
-  const priorityMap: { [key: string]: string } = {
-    'low': 'Low Priority',
-    'medium': 'Medium Priority',
-    'high': 'High Priority', 
-    'urgent': 'Urgent Priority'
-  };
-  return priorityMap[priority] || priority.charAt(0).toUpperCase() + priority.slice(1);
-}
-
-function formatDate(dateString: string): string {
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  } catch (error) {
-    return dateString;
-  }
-}

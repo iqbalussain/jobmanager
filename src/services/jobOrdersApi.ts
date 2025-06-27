@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export async function fetchJobOrders() {
@@ -69,35 +68,12 @@ export async function fetchJobOrders() {
 
 export async function updateJobOrderStatus(id: string, status: string) {
   console.log('Updating job order status:', id, status);
-  
-  // Calculate actual hours if status is being changed to completed
-  let updateData: any = { 
-    status: status as any,
-    updated_at: new Date().toISOString()
-  };
-  
-  if (status === 'completed') {
-    // Fetch the job order to get creation time
-    const { data: jobOrder } = await supabase
-      .from('job_orders')
-      .select('created_at')
-      .eq('id', id)
-      .single();
-    
-    if (jobOrder) {
-      const createdAt = new Date(jobOrder.created_at);
-      const completedAt = new Date();
-      const timeDiffMs = completedAt.getTime() - createdAt.getTime();
-      const timeDiffHours = Math.round(timeDiffMs / (1000 * 60 * 60));
-      updateData.actual_hours = timeDiffHours > 0 ? timeDiffHours : 0;
-      
-      console.log('Calculated actual hours:', updateData.actual_hours);
-    }
-  }
-  
   const { data, error } = await supabase
     .from('job_orders')
-    .update(updateData)
+    .update({ 
+      status: status as any,
+      updated_at: new Date().toISOString()
+    })
     .eq('id', id)
     .select()
     .single();
