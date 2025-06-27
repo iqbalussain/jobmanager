@@ -30,14 +30,20 @@ export function useCreateJobOrder() {
       'Head Office': 'HO',
     };
 
-    const prefix = branchPrefixes[branch] || 'HO'; // fallback to 'HO' if unknown
+    const prefix = branchPrefixes[branch] || 'HO';
 
-    const { data: latestOrder } = await supabase
+    // Get the latest job order number for this prefix with a more robust query
+    const { data: latestOrder, error } = await supabase
       .from('job_orders')
       .select('job_order_number')
       .like('job_order_number', `${prefix}%`)
-      .order('created_at', { ascending: false })
+      .order('job_order_number', { ascending: false })
       .limit(1);
+
+    if (error) {
+      console.error('Error fetching latest job order:', error);
+      throw error;
+    }
 
     let nextNumber = 10001;
 
