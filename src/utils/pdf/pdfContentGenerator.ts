@@ -1,3 +1,70 @@
+
+import { Job } from '@/pages/Index';
+
+export const generatePDFContent = (job: Job, invoiceNumber?: string): string => {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white;">
+      <!-- Header -->
+      <div style="border-bottom: 3px solid #3b82f6; padding-bottom: 20px; margin-bottom: 30px;">
+        <h1 style="color: #1e40af; font-size: 28px; font-weight: bold; margin: 0; text-align: center;">
+          Job Order #${job.jobOrderNumber}
+        </h1>
+        ${invoiceNumber ? `<p style="text-align: center; color: #6b7280; font-size: 16px; margin: 10px 0 0 0;">Invoice: ${invoiceNumber}</p>` : ''}
+      </div>
+
+      <!-- Job Details Section -->
+      <div style="margin-bottom: 30px;">
+        <h2 style="color: #374151; font-size: 20px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">
+          Job Details
+        </h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div>
+            <p style="margin: 8px 0;"><strong>Customer:</strong> ${job.customer}</p>
+            <p style="margin: 8px 0;"><strong>Title:</strong> ${job.title}</p>
+            <p style="margin: 8px 0;"><strong>Status:</strong> <span style="text-transform: capitalize; padding: 4px 8px; background: #f3f4f6; border-radius: 4px;">${job.status}</span></p>
+            <p style="margin: 8px 0;"><strong>Priority:</strong> <span style="text-transform: capitalize; padding: 4px 8px; background: ${job.priority === 'high' ? '#fef2f2' : job.priority === 'medium' ? '#fffbeb' : '#f0fdf4'}; color: ${job.priority === 'high' ? '#dc2626' : job.priority === 'medium' ? '#d97706' : '#16a34a'}; border-radius: 4px;">${job.priority}</span></p>
+          </div>
+          <div>
+            <p style="margin: 8px 0;"><strong>Due Date:</strong> ${new Date(job.dueDate).toLocaleDateString()}</p>
+            <p style="margin: 8px 0;"><strong>Estimated Hours:</strong> ${job.estimatedHours || 'N/A'}</p>
+            <p style="margin: 8px 0;"><strong>Branch:</strong> ${job.branch || 'N/A'}</p>
+            <p style="margin: 8px 0;"><strong>Total Value:</strong> ${job.totalValue ? `$${job.totalValue}` : 'N/A'}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team Section -->
+      <div style="margin-bottom: 30px;">
+        <h2 style="color: #374151; font-size: 20px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">
+          Team
+        </h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+          <p style="margin: 8px 0;"><strong>Designer:</strong> ${job.designer || 'Unassigned'}</p>
+          <p style="margin: 8px 0;"><strong>Salesman:</strong> ${job.salesman || 'Unassigned'}</p>
+          <p style="margin: 8px 0;"><strong>Assignee:</strong> ${job.assignee || 'Unassigned'}</p>
+        </div>
+      </div>
+
+      <!-- Job Order Details -->
+      ${job.jobOrderDetails ? `
+        <div style="margin-bottom: 30px;">
+          <h2 style="color: #374151; font-size: 20px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">
+            Job Order Details
+          </h2>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <p style="margin: 0; line-height: 1.6; white-space: pre-wrap;">${job.jobOrderDetails}</p>
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Footer -->
+      <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px;">
+        <p style="margin: 0;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+      </div>
+    </div>
+  `;
+};
+
 import { jsPDF } from 'jspdf';
 
 const leftMargin = 15;

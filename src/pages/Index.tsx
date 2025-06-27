@@ -1,4 +1,3 @@
-
 import { useState, lazy, Suspense } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
@@ -33,6 +32,7 @@ export interface Job {
   totalValue?: number;
   customer_id?: string;
   job_title_id?: string;
+  created_by?: string;
 }
 
 const LoadingSpinner = () => (
@@ -65,7 +65,8 @@ const Index = () => {
     designer: order.designer?.name || "Unassigned",
     salesman: order.salesman?.name || "Unassigned",
     jobOrderDetails: order.job_order_details || "",
-    totalValue: order.total_value || 0
+    totalValue: order.total_value || 0,
+    created_by: order.created_by
   }));
 
   const handleStatusUpdate = (jobId: string, status: JobStatus) => {
