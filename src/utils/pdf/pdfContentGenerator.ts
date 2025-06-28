@@ -132,11 +132,11 @@ export const generatePDFContent = (job: Job, invoiceNumber?: string): string => 
       </div>
 
       <!-- Job Order Details Section -->
-      <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative; overflow: hidden;">
+      <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative;">
         <div style="position: absolute; bottom: -30px; right: -30px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(30, 64, 175, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
         <div style="position: relative; z-index: 2;">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #1e40af;">
-            <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid #3b82f6;">
+            <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 4px; display: flex; align-items: center; justify-content: center; border: 2px solid #3b82f6;">
               <span style="font-size: 12px;">📋</span>
             </div>
             <h3 style="font-size: 14px; font-weight: 800; margin: 0; letter-spacing: 0.3px;">Job Order Details</h3>
@@ -150,14 +150,6 @@ export const generatePDFContent = (job: Job, invoiceNumber?: string): string => 
       </div>
 
       <!-- Footer -->
-      <div style="border-top: 3px solid #3b82f6; padding-top: 12px; text-align: center; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); margin: 0 -20px -20px -20px; padding: 16px 20px; border-radius: 0 0 16px 16px;">
-        <div style="max-width: 400px; margin: 0 auto;">
-          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
-            <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 6px; display: flex; align-items: center; justify-content: center;">
-              <span style="font-size: 10px; color: white;">🏢</span>
-            </div>
-            <h4 style="margin: 0; font-size: 12px; font-weight: 800; color: #1e40af; letter-spacing: 0.3px;">JobFlow Management System</h4>
-          </div>
           <p style="margin: 0 0 8px 0; font-size: 10px; color: #64748b; font-weight: 600;">Professional Job Order Management & Tracking</p>
           <div style="padding-top: 8px; border-top: 2px solid #cbd5e1;">
             <p style="margin: 0; font-size: 9px; color: #94a3b8; font-weight: 500;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
