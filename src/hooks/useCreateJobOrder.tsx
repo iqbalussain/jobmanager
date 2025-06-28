@@ -26,11 +26,10 @@ export function useCreateJobOrder() {
   const generateJobOrderNumber = async (branch: string) => {
     const branchPrefixes: Record<string, string> = {
       'Wadi Kabeer': 'WK',
-      'Wajihath': 'WJ',
+      'Wajihat Ruwi': 'WJ',
       'Head Office': 'HO',
     };
 
-    const prefix = branchPrefixes[branch] || 'HO';
 
     // Get the latest job order number for this prefix with a more robust query
     const { data: latestOrder, error } = await supabase
@@ -63,17 +62,6 @@ export function useCreateJobOrder() {
       
       if (!user) {
         throw new Error('User must be authenticated to create job orders');
-      }
-      
-      // Check if user has permission to create job orders
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (!profile || !['admin', 'manager', 'salesman'].includes(profile.role)) {
-        throw new Error('You do not have permission to create job orders');
       }
       
       // Generate job order number based on branch
