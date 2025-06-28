@@ -6,8 +6,9 @@ import {
   Shield,
   UsersRound,
   BarChart3,
-  User,
-  Plus
+  Plus,
+  ClipboardList,
+  CheckCircle
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -20,10 +21,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserProfileDropdown } from "@/components/user-profile/UserProfileDropdown";
 
 interface MinimalistSidebarProps {
   currentView: string;
-  onViewChange: (view: "dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports") => void;
+  onViewChange: (view: "dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports" | "unapproved-jobs" | "approved-jobs") => void;
 }
 
 interface UserProfile {
@@ -75,9 +77,15 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
       view: "dashboard" as const,
     },
     {
-      title: "Job Management",
-      icon: FileText,
-      view: "jobs" as const,
+      title: "Unapproved Jobs",
+      icon: ClipboardList,
+      view: "unapproved-jobs" as const,
+      roles: ["admin", "manager", "salesman", "designer"] // Show to relevant roles
+    },
+    {
+      title: "Approved Jobs",
+      icon: CheckCircle,
+      view: "approved-jobs" as const,
     },
     {
       title: "Create Job",
@@ -197,22 +205,9 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
           ))}
         </div>
 
-        {/* User Profile at Bottom */}
+        {/* User Profile Dropdown at Bottom */}
         <div className="p-3 border-t border-gray-100">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-10 h-10 rounded-xl hover:bg-gray-100 text-gray-600"
-              >
-                <User className="w-5 h-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="bg-gray-900 text-white">
-              <p>Profile Settings</p>
-            </TooltipContent>
-          </Tooltip>
+          <UserProfileDropdown userProfile={userProfile} />
         </div>
       </div>
     </TooltipProvider>
