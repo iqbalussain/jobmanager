@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchJobOrders, updateJobOrderStatus } from '@/services/jobOrdersApi';
 import { transformJobOrderData } from '@/utils/jobOrderTransforms';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { JobOrder } from '@/types/jobOrder';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,7 +12,12 @@ export function useJobOrders() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: jobOrders = [], isLoading, error } = useQuery({
+  const {
+  data: jobOrders = [],
+  isLoading,
+  error,
+  refetch
+} = useQuery({
     queryKey: ['job-orders', user?.id],
     queryFn: async (): Promise<JobOrder[]> => {
       const data = await fetchJobOrders();
@@ -20,10 +26,15 @@ export function useJobOrders() {
     enabled: !!user
   });
 
-  const updateStatusMutation = useMutation({
+    const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      return updateJobOrderStatus(id, status);
+      const { error } = await supabase
+        .from('job_orders')
+        .update({ status })
+        .eq('id', id);
+      if (error) throw error;
     },
+      
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['job-orders'] });
       toast({
@@ -49,10 +60,10 @@ export function useJobOrders() {
   });
 
   return {
-    jobOrders,
+    jobOrders: jobOrders || [],
     isLoading,
-    error,
-    updateStatus: updateStatusMutation.mutate
+    updateStatus: updateStatus.mutate,
+    refetch, 
   };
 }
 
