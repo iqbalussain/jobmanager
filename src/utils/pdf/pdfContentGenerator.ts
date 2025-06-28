@@ -1,7 +1,11 @@
 
 import { Job } from '@/pages/Index';
+import { getPriorityColor, getStatusColor } from './pdfStyles';
 
 export const generatePDFContent = (job: Job, invoiceNumber?: string): string => {
+  const priorityColors = getPriorityColor(job.priority);
+  const statusColors = getStatusColor(job.status);
+  
   return `
     <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white;">
       <!-- Header -->
