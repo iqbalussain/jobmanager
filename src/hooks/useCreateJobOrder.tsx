@@ -24,13 +24,14 @@ export function useCreateJobOrder() {
   const { user } = useAuth();
 
   const branchPrefixes: Record<string, string> = {
-    'Wadi Kabeer': 'WK2',
-    'Wajihat Ruwi': 'WR3',
-    'Head Office': 'HO1',
+    'Wadi Kabeer': 'WK',
+    'Wajihat Ruwi': 'WR',
+    'Head Office': 'HO',
   };
 
-  const generateJobOrderNumber = async (branch: string): Promise<string> => {
-    const prefix = branchPrefixes[branch] || 'HO';
+const generateJobOrderNumber = async (branch: string): Promise<string> => {
+  const prefix = branchPrefixes[branch] || 'HO';
+  const startNumber = branchStartNumbers[prefix] || 10001;
 
     const { data: latestOrder, error } = await supabase
       .from('job_orders')
@@ -44,17 +45,16 @@ export function useCreateJobOrder() {
       throw error;
     }
 
-    let nextNumber = 0001;
+ let nextNumber = startNumber;
 
-    if (latestOrder && latestOrder.length > 0) {
-      const match = latestOrder[0].job_order_number.match(/\d+$/);
-      const lastNumber = match ? parseInt(match[0], 10) : 10000;
-      nextNumber = lastNumber + 1;
-    }
+  if (latestOrder && latestOrder.length > 0) {
+    const match = latestOrder[0].job_order_number.match(/\d+$/);
+    const lastNumber = match ? parseInt(match[0], 10) : startNumber - 1;
+    nextNumber = Math.max(lastNumber + 1, startNumber);
+  }
 
-    return `${prefix}${nextNumber}`;
-  };
-
+  return `${prefix}${nextNumber}`;
+};
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: CreateJobOrderData) => {
       if (!user) throw new Error('User must be authenticated to create job orders');
