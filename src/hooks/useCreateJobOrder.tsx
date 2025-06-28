@@ -28,6 +28,11 @@ export function useCreateJobOrder() {
     'Wajihat Ruwi': 'WR',
     'Head Office': 'HO',
   };
+  const branchStartNumbers: Record<string, number> = {
+  'WK': 20001,
+  'WR': 30001,
+  'HO': 10001,
+  };
 
 const generateJobOrderNumber = async (branch: string): Promise<string> => {
   const prefix = branchPrefixes[branch] || 'HO';
