@@ -1,3 +1,4 @@
+
 import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
@@ -44,6 +45,7 @@ export interface Job {
   customer_id?: string;
   job_title_id?: string;
   created_by?: string;
+  approval_status?: string;
 }
 
 const LoadingSpinner = () => (
@@ -67,7 +69,7 @@ const Index = () => {
 
   const [userRole, setUserRole] = useState<string>("employee");
   const { user } = useAuth();
-  const { jobOrders, isLoading, updateStatus, refetch } = useJobOrders();
+  const { jobOrders, isLoading, updateStatus, updateJobData, refetch } = useJobOrders();
 
   // Fetch role on load
   useEffect(() => {
@@ -88,15 +90,10 @@ const Index = () => {
     fetchUserRole();
   }, [user]);
 
-  const filteredJobOrders =
-    currentView === "admin"
-      ? jobOrders
-      : jobOrders.filter((order) => order.status !== "pending");
-
-  const transformedJobs: Job[] = filteredJobOrders.map((order) => ({
+  const transformedJobs: Job[] = jobOrders.map((order) => ({
     id: order.id,
     jobOrderNumber: order.job_order_number,
-    title: order.title,
+    title: order.title || order.job_order_details || `Job Order ${order.job_order_number}`,
     description: order.description || "",
     customer: order.customer?.name || "Unknown Customer",
     assignee: order.assignee || "Unassigned",
@@ -104,21 +101,27 @@ const Index = () => {
     status: order.status as JobStatus,
     dueDate: order.due_date || new Date().toISOString().split("T")[0],
     createdAt: order.created_at.split("T")[0],
-    estimatedHours: order.estimated_hours,
+    estimatedHours: order.estimated_hours || 0,
     branch: order.branch || "",
     designer: order.designer?.name || "Unassigned",
     salesman: order.salesman?.name || "Unassigned",
     jobOrderDetails: order.job_order_details || "",
     totalValue: order.total_value || 0,
     created_by: order.created_by,
+    invoiceNumber: order.invoice_number || "",
+    approval_status: order.approval_status,
   }));
 
   const handleStatusUpdate = (jobId: string, status: JobStatus) => {
     updateStatus({ id: jobId, status });
   };
 
+  const handleJobDataUpdate = (jobData: { id: string; [key: string]: any }) => {
+    updateJobData(jobData);
+  };
+
   const handleJobApproved = () => {
-    refetch(); // ✅ Refresh job orders without full page reload
+    refetch(); // Refresh job orders after approval
   };
 
   const renderContent = () => {
@@ -134,7 +137,13 @@ const Index = () => {
       case "settings":
         return <SettingsView />;
       case "admin":
-        return <AdminJobManagement jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
+        return (
+          <AdminJobManagement 
+            jobs={transformedJobs} 
+            onStatusUpdate={handleStatusUpdate}
+            onJobDataUpdate={handleJobDataUpdate}
+          />
+        );
       case "admin-management":
         return <AdminManagement />;
       case "reports":
@@ -142,7 +151,7 @@ const Index = () => {
       case "unapproved-jobs":
         return (
           <UnapprovedJobsList
-            jobs={transformedJobs}
+            jobs={transformedJobs.filter(job => job.approval_status === 'pending_approval')}
             userRole={userRole}
             onJobApproved={handleJobApproved}
           />
@@ -150,7 +159,7 @@ const Index = () => {
       case "approved-jobs":
         return (
           <ApprovedJobsList
-            jobs={transformedJobs}
+            jobs={transformedJobs.filter(job => job.approval_status === 'approved')}
             onStatusUpdate={handleStatusUpdate}
           />
         );
@@ -161,7 +170,10 @@ const Index = () => {
 
   return (
     <div className="flex h-screen">
-      <MinimalistSidebar currentView={currentView} setCurrentView={setCurrentView} />
+      <MinimalistSidebar 
+        currentView={currentView} 
+        onViewChange={setCurrentView}
+      />
       <div className="flex-1 overflow-y-auto">
         <Suspense fallback={<LoadingSpinner />}>
           {renderContent()}

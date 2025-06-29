@@ -13,11 +13,11 @@ export function useJobOrders() {
   const { user } = useAuth();
 
   const {
-  data: jobOrders = [],
-  isLoading,
-  error,
-  refetch
-} = useQuery({
+    data: jobOrders = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
     queryKey: ['job-orders', user?.id],
     queryFn: async (): Promise<JobOrder[]> => {
       const data = await fetchJobOrders();
@@ -26,7 +26,7 @@ export function useJobOrders() {
     enabled: !!user
   });
 
-    const updateStatus = useMutation({
+  const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase
         .from('job_orders')
@@ -52,6 +52,43 @@ export function useJobOrders() {
     }
   });
 
+  const updateJobData = useMutation({
+    mutationFn: async (jobData: { id: string; [key: string]: any }) => {
+      const { id, ...updateData } = jobData;
+      const { error } = await supabase
+        .from('job_orders')
+        .update(updateData)
+        .eq('id', id);
+      if (error) throw error;
+      return { id, ...updateData };
+    },
+    
+    onSuccess: (updatedData) => {
+      // Update the specific job in the cache instead of refetching all
+      queryClient.setQueryData(['job-orders', user?.id], (oldData: JobOrder[] | undefined) => {
+        if (!oldData) return oldData;
+        return oldData.map(job => 
+          job.id === updatedData.id 
+            ? { ...job, ...updatedData }
+            : job
+        );
+      });
+      
+      toast({
+        title: "Job updated",
+        description: "Job has been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update job. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   console.log('Job orders hook state:', {
     count: jobOrders.length,
     isLoading,
@@ -63,6 +100,7 @@ export function useJobOrders() {
     jobOrders: jobOrders || [],
     isLoading,
     updateStatus: updateStatus.mutate,
+    updateJobData: updateJobData.mutate,
     refetch, 
   };
 }

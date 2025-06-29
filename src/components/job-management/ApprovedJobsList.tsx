@@ -21,14 +21,7 @@ export function ApprovedJobsList({ jobs, onStatusUpdate }: ApprovedJobsListProps
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
-  // Filter for approved jobs with specific statuses
-  const approvedJobs = jobs.filter(job => {
-    const approvedStatuses = ['pending', 'in-progress', 'designing', 'completed', 'invoiced'];
-    return approvedStatuses.includes(job.status);
-    // Note: This assumes approved jobs have moved past the initial pending_approval status
-  });
-
-  const filteredJobs = approvedJobs.filter(job => {
+  const filteredJobs = jobs.filter(job => {
     const matchesSearch = 
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.jobOrderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -65,13 +58,13 @@ export function ApprovedJobsList({ jobs, onStatusUpdate }: ApprovedJobsListProps
   };
 
   const stats = {
-    total: approvedJobs.length,
-    pending: approvedJobs.filter(job => job.status === "pending").length,
-    inProgress: approvedJobs.filter(job => job.status === "in-progress").length,
-    designing: approvedJobs.filter(job => job.status === "designing").length,
-    completed: approvedJobs.filter(job => job.status === "completed").length,
-    invoiced: approvedJobs.filter(job => job.status === "invoiced").length,
-    cancelled: approvedJobs.filter(job => job.status === "cancelled").length
+    total: jobs.length,
+    pending: jobs.filter(job => job.status === "pending").length,
+    inProgress: jobs.filter(job => job.status === "in-progress").length,
+    designing: jobs.filter(job => job.status === "designing").length,
+    completed: jobs.filter(job => job.status === "completed").length,
+    invoiced: jobs.filter(job => job.status === "invoiced").length,
+    cancelled: jobs.filter(job => job.status === "cancelled").length
   };
 
   return (

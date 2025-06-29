@@ -27,14 +27,7 @@ export function UnapprovedJobsList({ jobs, userRole, onJobApproved }: Unapproved
   const [approvingJobs, setApprovingJobs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
-  // Filter for unapproved jobs only
-  const unapprovedJobs = jobs.filter(job => {
-    // Assuming jobs without explicit approval status are unapproved
-    // or we need to add approval_status to the Job interface
-    return true; // For now, showing all jobs - this needs to be updated based on approval_status
-  });
-
-  const filteredJobs = unapprovedJobs.filter(job => {
+  const filteredJobs = jobs.filter(job => {
     const matchesSearch = 
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.jobOrderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||

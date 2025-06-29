@@ -1,6 +1,6 @@
 
 import { sanitizeHtml } from '@/utils/inputValidation';
-import { JobOrder, Designer, Salesman, Customer, JobTitle } from '@/types/jobOrder';
+import { JobOrder, Designer, Salesman, Customer, JobTitle, JobStatus, ApprovalStatus } from '@/types/jobOrder';
 
 export function transformJobOrderData(data: any[]): JobOrder[] {
   return data?.map(order => {
@@ -35,6 +35,8 @@ export function transformJobOrderData(data: any[]): JobOrder[] {
 
     return {
       ...order,
+      status: order.status as JobStatus,
+      approval_status: (order.approval_status || 'pending_approval') as ApprovalStatus,
       customer: order.customer && typeof order.customer === 'object' && 'id' in order.customer 
         ? order.customer as Customer 
         : null,

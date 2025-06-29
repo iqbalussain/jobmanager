@@ -11,9 +11,10 @@ interface UseJobDetailsProps {
   job: Job | null;
   isEditMode: boolean;
   onClose: () => void;
+  onJobUpdated?: (jobData: { id: string; [key: string]: any }) => void;
 }
 
-export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) {
+export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJobDetailsProps) {
   const [editData, setEditData] = useState<Partial<Job>>({});
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -114,9 +115,12 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
         description: "Job order updated successfully",
       });
       
+      // Call the callback to update the parent component's state
+      if (onJobUpdated) {
+        onJobUpdated({ id: job.id, ...updateData });
+      }
+      
       onClose();
-      // Refresh the page to show updated data
-      window.location.reload();
     } catch (error) {
       console.error('Error updating job:', error);
       toast({
@@ -140,6 +144,11 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
           .from('job_orders')
           .update({ invoice_number: invoiceNumber })
           .eq('id', job.id);
+        
+        // Update parent state as well
+        if (onJobUpdated) {
+          onJobUpdated({ id: job.id, invoice_number: invoiceNumber });
+        }
       }
 
       await exportJobOrderToPDF(job, invoiceNumber);
@@ -170,6 +179,11 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
           .from('job_orders')
           .update({ invoice_number: invoiceNumber })
           .eq('id', job.id);
+        
+        // Update parent state as well
+        if (onJobUpdated) {
+          onJobUpdated({ id: job.id, invoice_number: invoiceNumber });
+        }
       }
 
       await shareJobOrderViaWhatsApp(job, invoiceNumber);
