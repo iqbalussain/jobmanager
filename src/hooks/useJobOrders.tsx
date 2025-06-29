@@ -4,7 +4,7 @@ import { fetchJobOrders, updateJobOrderStatus } from '@/services/jobOrdersApi';
 import { transformJobOrderData } from '@/utils/jobOrderTransforms';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { JobOrder } from '@/types/jobOrder';
+import { JobOrder, JobStatus } from '@/types/jobOrder';
 import { useAuth } from '@/hooks/useAuth';
 
 export function useJobOrders() {
@@ -27,7 +27,7 @@ export function useJobOrders() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+    mutationFn: async ({ id, status }: { id: string; status: JobStatus }) => {
       const { error } = await supabase
         .from('job_orders')
         .update({ status })

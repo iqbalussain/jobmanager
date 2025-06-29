@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Job, JobStatus } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -265,7 +264,6 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
             )}
           </div>
 
-          {/* Filters */}
           <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="salesmanFilter">Filter by Salesman</Label>
