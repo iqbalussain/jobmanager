@@ -22,7 +22,7 @@ export interface JobTitle {
   job_title_id: string;
 }
 
-export type JobStatus = 'pending' | 'working' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced' | 'in-progress';
+export type JobStatus = 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced';
 export type ApprovalStatus = 'pending_approval' | 'approved' | 'rejected';
 
 export interface JobOrder {
