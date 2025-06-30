@@ -134,9 +134,9 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
 
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="fixed left-0 top-0 h-full w-16 bg-white border-r border-gray-200 shadow-lg z-50 flex flex-col">
+      <div className="flex h-screen">
         {/* User Avatar */}
-        <div className="p-3 border-b border-gray-100">
+        <div className="w-16 bg-white border-r shadow-lg flex flex-col">
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
@@ -153,7 +153,7 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
         </div>
 
         {/* Main Navigation */}
-        <div className="flex-1 py-4 space-y-2">
+        <div className="flex-1 overflow-y-auto">
           {mainMenuItems.filter(canAccessMenuItem).map((item) => (
             <Tooltip key={item.view}>
               <TooltipTrigger asChild>
