@@ -1,28 +1,30 @@
-import { useState, useEffect } from 'react';
 import { 
-  Calendar, 
-  Briefcase, 
-  Plus, 
-  Settings, 
-  Shield, 
-  Users,
+  Home,
+  FileText,
+  Settings,
+  Shield,
+  UsersRound,
   BarChart3,
-  CheckCircle,
-  Clock,
-  ChevronDown,
-  ChevronRight,
-  Building2
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { UserProfileDropdown } from '@/components/user-profile/UserProfileDropdown';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+  Plus,
+  ClipboardList,
+  CheckCircle
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { UserProfileDropdown } from "@/components/user-profile/UserProfileDropdown";
 
 interface MinimalistSidebarProps {
   currentView: string;
   onViewChange: (view: "dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports" | "unapproved-jobs" | "approved-jobs") => void;
-
 }
 
 interface UserProfile {
@@ -31,271 +33,196 @@ interface UserProfile {
 }
 
 export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSidebarProps) {
-  const { user } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isJobManagementExpanded, setIsJobManagementExpanded] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('full_name, role')
-          .eq('id', user.id)
-          .single();
-        
-        if (error) {
-          console.error('Error fetching user profile:', error);
-          return;
-        }
-        
-        if (data) {
-          setUserProfile(data);
-        }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      }
-    };
-    
     if (user) {
       fetchUserProfile();
     }
   }, [user]);
 
-  // Expand job management section if we're in unapproved or approved jobs view
-  useEffect(() => {
-    if (currentView === 'unapproved-jobs' || currentView === 'approved-jobs') {
-      setIsJobManagementExpanded(true);
+  const fetchUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, role')
+        .eq('id', user.id)
+        .single();
+
+      if (data) {
+        setUserProfile(data);
+      } else {
+        setUserProfile({
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          role: 'employee'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setUserProfile({
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        role: 'employee'
+      });
     }
-  }, [currentView]);
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'manager';
-
-  const menuItems = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: Calendar,
-      badge: null,
-    },
-    {
-      id: 'jobs',
-      label: 'Jobs',
-      icon: Briefcase,
-      badge: null,
-    },
-    {
-      id: 'create',
-      label: 'Create Job',
-      icon: Plus,
-      badge: null,
-    },
-  ];
-  const adminItems = [
-    {
-      id: 'admin',
-      label: 'Admin Jobs',
-      icon: Shield,
-      badge: null,
-    },
-    {
-      id: 'admin-management',
-      label: 'User Management',
-      icon: Users,
-      badge: null,
-    },
-    {
-      id: 'reports',
-      label: 'Reports',
-      icon: BarChart3,
-      badge: null,
-    },
-  ];
-  const jobManagementItems = [
-    {
-      id: 'unapproved-jobs',
-      label: 'Unapproved Jobs',
-      icon: Clock,
-      badge: null,
-    },
-    {
-      id: 'approved-jobs',
-      label: 'Approved Jobs',
-      icon: CheckCircle,
-      badge: null,
-    },
-  ];
-
-  const handleJobManagementToggle = () => {
-    setIsJobManagementExpanded(!isJobManagementExpanded);
   };
 
-  const handleJobManagementItemClick = (viewId: "unapproved-jobs" | "approved-jobs") => {
-    onViewChange(viewId);
-    setIsJobManagementExpanded(true);
+  const mainMenuItems = [
+    {
+      title: "Dashboard",
+      icon: Home,
+      view: "dashboard" as const,
+    },
+    {
+      title: "Unapproved Jobs",
+      icon: ClipboardList,
+      view: "unapproved-jobs" as const,
+      roles: ["admin", "manager", "salesman", "designer"] // Show to relevant roles
+    },
+    {
+      title: "Approved Jobs",
+      icon: CheckCircle,
+      view: "approved-jobs" as const,
+    },
+    {
+      title: "Create Job",
+      icon: Plus,
+      view: "create" as const,
+      roles: ["admin", "manager", "salesman"] // Allow salesmen to create jobs
+    },
+    {
+      title: "Settings",
+      icon: Settings,
+      view: "settings" as const,
+    }
+  ];
+
+  const adminMenuItems = [
+    {
+      title: "Job Administration",
+      icon: Shield,
+      view: "admin" as const,
+      roles: ["admin", "manager"] // Admin only
+    },
+    {
+      title: "User Management",
+      icon: UsersRound,
+      view: "admin-management" as const,
+      roles: ["admin", "manager"] // Admin only
+    },
+    {
+      title: "Reports & Analytics",
+      icon: BarChart3,
+      view: "reports" as const,
+      roles: ["admin", "manager", "salesman"] // Include salesmen for reports
+    }
+  ];
+
+  const handleMenuClick = (view: any) => {
+    onViewChange(view);
+  };
+
+  const canAccessMenuItem = (item: any) => {
+    if (!item.roles) return true; // No role restriction
+    return item.roles.includes(userProfile?.role);
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-100">
-        <h1 className="text-xl font-bold text-gray-900">JobFlow</h1>
-        <p className="text-sm text-gray-500 mt-1">Management System</p>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
-
-              {/* Main Menu Items */}
-        {menuItems.map((item) => (
-          <Button
-            key={item.id}
-            variant={currentView === item.id ? "default" : "ghost"}
-            className={`w-full justify-start text-left ${
-              currentView === item.id 
-                ? "bg-blue-600 text-white hover:bg-blue-700" 
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            }`}
-            onClick={() => onViewChange(item.id as any)}
-          >
-            <item.icon className="w-4 h-4 mr-3" />
-            <span>{item.label}</span>
-            {item.badge && (
-              <Badge variant="secondary" className="ml-auto">
-                {item.badge}
-              </Badge>
-            )}
-          </Button>
-        ))}
-
-        {/* Jobs */}
-        <Button
-          variant={currentView === "jobs" ? "default" : "ghost"}
-          className={`w-full justify-start text-left ${
-            currentView === "jobs" 
-              ? "bg-blue-600 text-white hover:bg-blue-700" 
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          }`}
-          onClick={() => onViewChange("jobs")}
-        >
-          <Briefcase className="w-4 h-4 mr-3" />
-          <span>Jobs</span>
-        </Button>
-
-        {/* Create Job */}
-        <Button
-          variant={currentView === "create" ? "default" : "ghost"}
-          className={`w-full justify-start text-left ${
-            currentView === "create" 
-              ? "bg-blue-600 text-white hover:bg-blue-700" 
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          }`}
-          onClick={() => onViewChange("create")}
-        >
-          <Plus className="w-4 h-4 mr-3" />
-          <span>Create Job</span>
-        </Button>
-
-        {/* Job Management Section */}
-        <div className="space-y-1">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            onClick={handleJobManagementToggle}
-          >
-            {isJobManagementExpanded ? (
-              <ChevronDown className="w-4 h-4 mr-3" />
-            ) : (
-              <ChevronRight className="w-4 h-4 mr-3" />
-            )}
-            <span>Job Management</span>
-          </Button>
-
-          {isJobManagementExpanded && (
-            <div className="ml-6 space-y-1">
-              {jobManagementItems.map((item) => (
-                <Button
-                  key={item.id}
-                  variant={currentView === item.id ? "default" : "ghost"}
-                  className={`w-full justify-start text-left ${
-                    currentView === item.id 
-                      ? "bg-blue-600 text-white hover:bg-blue-700" 
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                  }`}
-                  onClick={() => handleJobManagementItemClick(item.id as any)}
-                >
-                  <item.icon className="w-4 h-4 mr-3" />
-                  <span>{item.label}</span>
-                </Button>
-              ))}
-            </div>
-          )}
+    <TooltipProvider delayDuration={100}>
+      <div className="fixed left-0 top-0 h-full w-16 bg-white border-r border-gray-200 shadow-lg z-50 flex flex-col">
+        {/* User Avatar */}
+        <div className="p-3 border-b border-gray-100">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
+                <span className="text-white font-bold text-sm">
+                  {userProfile?.full_name?.charAt(0) || 'U'}
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-gray-900 text-white">
+              <p className="font-medium">{userProfile?.full_name || 'User'}</p>
+              <p className="text-xs text-gray-300 capitalize">{userProfile?.role || 'Employee'}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
-                {/* Admin Section */}
-        {isAdmin && (
-          <>
-            <div className="border-t border-gray-200 pt-4 mt-4">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
-                Admin
-              </p>
-              {adminItems.map((item) => (
+
+        {/* Main Navigation */}
+        <div className="flex-1 py-4 space-y-2">
+          {mainMenuItems.filter(canAccessMenuItem).map((item) => (
+            <Tooltip key={item.view}>
+              <TooltipTrigger asChild>
                 <Button
-                  key={item.id}
-                  variant={currentView === item.id ? "default" : "ghost"}
-                  className={`w-full justify-start text-left ${
-                    currentView === item.id 
-                      ? "bg-red-600 text-white hover:bg-red-700" 
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                  }`}
-                  onClick={() => onViewChange(item.id as any)}
-                >
-                  <item.icon className="w-4 h-4 mr-3" />
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <Badge variant="destructive" className="ml-auto">
-                      {item.badge}
-                    </Badge>
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleMenuClick(item.view)}
+                  className={cn(
+                    "w-10 h-10 mx-3 rounded-xl transition-all duration-200",
+                    currentView === item.view 
+                      ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                      : 'hover:bg-gray-100 text-gray-600'
                   )}
+                >
+                  <item.icon className="w-5 h-5" />
                 </Button>
-              ))}
-            </div>
-          </>
-        )}
-        {/* Settings */}
-        <div className="border-t border-gray-200 pt-4 mt-4">
-          <Button
-            variant={currentView === 'settings' ? "default" : "ghost"}
-            className={`w-full justify-start text-left ${
-              currentView === 'settings' 
-                ? "bg-blue-600 text-white hover:bg-blue-700" 
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            }`}
-            onClick={() => onViewChange('settings')}
-          >
-            <Settings className="w-4 h-4 mr-3" />
-            <span>Settings</span>
-          </Button>
-        </div>
-        {/* Branch Queue */}
-        <Button
-          variant={currentView === "branch-queue" ? "default" : "ghost"}
-          className={`w-full justify-start text-left ${
-            currentView === "branch-queue" 
-              ? "bg-blue-600 text-white hover:bg-blue-700" 
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          }`}
-          onClick={() => onViewChange("branch-queue")}
-        >
-          <Building2 className="w-4 h-4 mr-3" />
-          <span>Branch Queue</span>
-        </Button>
-      </nav>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-gray-900 text-white">
+                <p>{item.title}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
 
-      {/* User Profile */}
-      <div className="p-4 border-t border-gray-200">
-        <UserProfileDropdown userProfile={userProfile} />
+          {/* Separator - only show if there are admin items to show */}
+          {adminMenuItems.filter(canAccessMenuItem).length > 0 && (
+            <div className="mx-3 my-4 border-t border-gray-200"></div>
+          )}
+
+          {/* Admin Navigation */}
+          {adminMenuItems.filter(canAccessMenuItem).map((item) => (
+            <Tooltip key={item.view}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleMenuClick(item.view)}
+                  className={cn(
+                    "w-10 h-10 mx-3 rounded-xl transition-all duration-200",
+                    currentView === item.view 
+                      ? 'bg-red-100 text-red-700 shadow-sm' 
+                      : 'hover:bg-gray-100 text-gray-600'
+                  )}
+                >
+                  <item.icon className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-gray-900 text-white">
+                <p>{item.title}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+
+        {/* User Profile Dropdown at Bottom */}
+        <div className="p-3 border-t border-gray-100">
+            <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-10 h-10 rounded-xl hover:bg-gray-100 text-gray-600"
+              >
+                <User className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-gray-900 text-white">
+              <p>Profile Settings</p>
+            </TooltipContent>
+          </Tooltip>
+          <UserProfileDropdown userProfile={userProfile} />
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

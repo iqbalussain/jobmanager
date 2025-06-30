@@ -1,3 +1,4 @@
+
 import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
@@ -68,8 +69,7 @@ const [currentView, setCurrentView] = useState<
     | "unapproved-jobs"
     | "approved-jobs"
     | "branch-queue"
-  >("jobs");
-
+  >("dashboard");
 
   const [userRole, setUserRole] = useState<string>("employee");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -135,10 +135,20 @@ const [currentView, setCurrentView] = useState<
     if (isLoading) return <LoadingSpinner />;
 
     switch (currentView) {
+       case "dashboard":
+        return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />
       case "jobs":
         return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
       case "create":
         return <JobFormWithImageUpload onCancel={() => setCurrentView("jobs")} />;
+      case "settings":
+        return <SettingsView />;
+      case "admin":
+        return <AdminJobManagement jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
+      case "admin-management":
+        return <AdminManagement />;
+      case "reports":
+        return <ReportsPage />;
       case "unapproved-jobs":
         return (
           <UnapprovedJobsList
