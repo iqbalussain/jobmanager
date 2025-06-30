@@ -180,7 +180,7 @@ const [currentView, setCurrentView] = useState<
   };
 
   return (
-    <div className="ml-16 flex-1 overflow-y-auto">
+    <div className="ml-20 flex-1 overflow-y-auto">
       <MinimalistSidebar 
         currentView={currentView} 
         onViewChange={setCurrentView}
