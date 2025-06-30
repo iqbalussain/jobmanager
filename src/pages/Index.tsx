@@ -1,4 +1,3 @@
-
 import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
@@ -7,8 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { JobDetails } from "@/components/JobDetails";
 
 // Lazy loaded components for performance
+const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
 const JobFormWithImageUpload = lazy(() => import("@/components/job-form/JobFormWithImageUpload").then(m => ({ default: m.JobFormWithImageUpload })));
 const JobList = lazy(() => import("@/components/JobList").then(m => ({ default: m.JobList })));
+const SettingsView = lazy(() => import("@/components/SettingsView").then(m => ({ default: m.SettingsView })));
+const AdminJobManagement = lazy(() => import("@/components/AdminJobManagement").then(m => ({ default: m.AdminJobManagement })));
+const AdminManagement = lazy(() => import("@/components/AdminManagement").then(m => ({ default: m.AdminManagement })));
+const ReportsPage = lazy(() => import("@/components/ReportsPage").then(m => ({ default: m.ReportsPage })));
 const UnapprovedJobsList = lazy(() => import("@/components/job-management/UnapprovedJobsList").then(m => ({ default: m.UnapprovedJobsList })));
 const ApprovedJobsList = lazy(() => import("@/components/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
 const BranchJobQueue = lazy(() => import("@/components/BranchJobQueue").then(m => ({ default: m.BranchJobQueue })));
@@ -52,13 +56,21 @@ const LoadingSpinner = () => (
 );
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<
+
+const [currentView, setCurrentView] = useState<
+    | "dashboard"
     | "jobs"
     | "create"
+    | "settings"
+    | "admin"
+    | "admin-management"
+    | "reports"
     | "unapproved-jobs"
     | "approved-jobs"
     | "branch-queue"
+  >("dashboard");
   >("jobs");
+
 
   const [userRole, setUserRole] = useState<string>("employee");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -119,10 +131,6 @@ const Index = () => {
     refetch(); // Refresh job orders after approval
   };
 
-  const handleViewJob = (job: Job) => {
-    setSelectedJob(job);
-    setIsJobDetailsOpen(true);
-  };
 
   const renderContent = () => {
     if (isLoading) return <LoadingSpinner />;
