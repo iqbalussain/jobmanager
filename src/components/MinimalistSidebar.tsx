@@ -139,7 +139,7 @@ export function MinimalistSidebar({
                 </span>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-black text-white">
+            <TooltipContent side="right" className="bg-green text-dark">
               <p className="font-medium">{userProfile?.full_name || "User"}</p>
               <p className="text-xs text-gray-300 capitalize">{userProfile?.role || "Employee"}</p>
             </TooltipContent>
