@@ -12,9 +12,10 @@ interface JobDetailsProps {
   onClose: () => void;
   job: Job | null;
   isEditMode?: boolean;
+  onJobUpdated?: (updatedJobData: { id: string; [key: string]: any }) => void;
 }
 
-export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDetailsProps) {
+export function JobDetails({ isOpen, onClose, job, isEditMode = false, onJobUpdated }: JobDetailsProps) {
   const {
     editData,
     setEditData,
@@ -27,7 +28,7 @@ export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDeta
     handleSave,
     handleExportPDF,
     handleShareWhatsApp
-  } = useJobDetails({ job, isEditMode, onClose });
+  } = useJobDetails({ job, isEditMode, onClose, onJobUpdated });
 
   if (!job) return null;
 

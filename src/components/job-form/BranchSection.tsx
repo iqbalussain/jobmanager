@@ -18,7 +18,7 @@ export function BranchSection({ value, onChange }: BranchSectionProps) {
         <SelectContent>
           <SelectItem value="Head Office">Head Office</SelectItem>
           <SelectItem value="Wadi Kabeer">Wadi Kabeer</SelectItem>
-          <SelectItem value="Wajihat Ruwi">Wajihat Ruwi</SelectItem>
+          <SelectItem value="Wajihat Ruwi">Wajihat ruwi</SelectItem>
         </SelectContent>
       </Select>
     </div>

@@ -4,6 +4,7 @@ import { useDropdownData } from "@/hooks/useDropdownData";
 import { CustomerTeamSection } from "./sections/CustomerTeamSection";
 import { ProjectDetailsSection } from "./sections/ProjectDetailsSection";
 import { JobOrderDetailsSection } from "./sections/JobOrderDetailsSection";
+import { ImageSection } from "./sections/ImageSection";
 
 interface JobDetailsFormProps {
   job: Job;
@@ -16,30 +17,38 @@ export function JobDetailsForm({ job, isEditMode, editData, onEditDataChange }: 
   const { customers, jobTitles, isLoading: dropdownLoading } = useDropdownData();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <CustomerTeamSection
-        job={job}
-        isEditMode={isEditMode}
-        editData={editData}
-        onEditDataChange={onEditDataChange}
-        customers={customers}
-        dropdownLoading={dropdownLoading}
-      />
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CustomerTeamSection
+          job={job}
+          isEditMode={isEditMode}
+          editData={editData}
+          onEditDataChange={onEditDataChange}
+          customers={customers}
+          dropdownLoading={dropdownLoading}
+        />
 
-      <ProjectDetailsSection
-        job={job}
-        isEditMode={isEditMode}
-        editData={editData}
-        onEditDataChange={onEditDataChange}
-        jobTitles={jobTitles}
-        dropdownLoading={dropdownLoading}
-      />
+        <ProjectDetailsSection
+          job={job}
+          isEditMode={isEditMode}
+          editData={editData}
+          onEditDataChange={onEditDataChange}
+          jobTitles={jobTitles}
+          dropdownLoading={dropdownLoading}
+        />
 
-      <JobOrderDetailsSection
-        job={job}
-        isEditMode={isEditMode}
-        editData={editData}
-        onEditDataChange={onEditDataChange}
+        <JobOrderDetailsSection
+          job={job}
+          isEditMode={isEditMode}
+          editData={editData}
+          onEditDataChange={onEditDataChange}
+        />
+      </div>
+
+      {/* Image section spans full width */}
+      <ImageSection 
+        job={job} 
+        isEditMode={isEditMode} 
       />
     </div>
   );

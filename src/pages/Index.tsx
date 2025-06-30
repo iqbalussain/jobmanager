@@ -1,18 +1,26 @@
 
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { JobDetails } from "@/components/JobDetails";
 
-// Lazy load components for better performance
-const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(module => ({ default: module.ModernDashboard })));
-const JobForm = lazy(() => import("@/components/JobForm").then(module => ({ default: module.JobForm })));
-const JobList = lazy(() => import("@/components/JobList").then(module => ({ default: module.JobList })));
-const SettingsView = lazy(() => import("@/components/SettingsView").then(module => ({ default: module.SettingsView })));
-const AdminJobManagement = lazy(() => import("@/components/AdminJobManagement").then(module => ({ default: module.AdminJobManagement })));
-const AdminManagement = lazy(() => import("@/components/AdminManagement").then(module => ({ default: module.AdminManagement })));
-const ReportsPage = lazy(() => import("@/components/ReportsPage").then(module => ({ default: module.ReportsPage })));
+// Lazy loaded components for performance
+const JobFormWithImageUpload = lazy(() => import("@/components/job-form/JobFormWithImageUpload").then(m => ({ default: m.JobFormWithImageUpload })));
+const JobList = lazy(() => import("@/components/JobList").then(m => ({ default: m.JobList })));
+const UnapprovedJobsList = lazy(() => import("@/components/job-management/UnapprovedJobsList").then(m => ({ default: m.UnapprovedJobsList })));
+const ApprovedJobsList = lazy(() => import("@/components/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
+const BranchJobQueue = lazy(() => import("@/components/BranchJobQueue").then(m => ({ default: m.BranchJobQueue })));
 
-export type JobStatus = "pending" | "in-progress" | "completed" | "cancelled" | "designing" | "finished" | "invoiced";
+export type JobStatus =
+  | "pending"
+  | "in-progress"
+  | "completed"
+  | "cancelled"
+  | "designing"
+  | "finished"
+  | "invoiced";
 
 export interface Job {
   id: string;
@@ -22,8 +30,8 @@ export interface Job {
   assignee?: string;
   designer?: string;
   salesman?: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'pending' | 'in-progress' | 'completed' | 'cancelled' | 'designing' | 'finished' | 'invoiced';
+  priority: "low" | "medium" | "high";
+  status: JobStatus;
   dueDate: string;
   estimatedHours: number;
   createdAt: string;
@@ -33,6 +41,8 @@ export interface Job {
   totalValue?: number;
   customer_id?: string;
   job_title_id?: string;
+  created_by?: string;
+  approval_status?: string;
 }
 
 const LoadingSpinner = () => (
@@ -42,69 +52,132 @@ const LoadingSpinner = () => (
 );
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<"dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports">("dashboard");
-  const { jobOrders, isLoading, updateStatus } = useJobOrders();
+  const [currentView, setCurrentView] = useState<
+    | "jobs"
+    | "create"
+    | "unapproved-jobs"
+    | "approved-jobs"
+    | "branch-queue"
+  >("jobs");
 
-  // Filter out pending jobs from view (unless in admin view)
-  const filteredJobOrders = currentView === "admin" ? jobOrders : jobOrders.filter(order => order.status !== "pending");
+  const [userRole, setUserRole] = useState<string>("employee");
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
+  const { user } = useAuth();
+  const { jobOrders, isLoading, updateStatus, updateJobData, refetch } = useJobOrders();
 
-  // Transform database job orders to match the existing Job interface
-  const transformedJobs: Job[] = filteredJobOrders.map(order => ({
+  // Fetch role on load
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user) return;
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (data?.role) setUserRole(data.role);
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+      }
+    };
+    fetchUserRole();
+  }, [user]);
+
+  const transformedJobs: Job[] = jobOrders.map((order) => ({
     id: order.id,
     jobOrderNumber: order.job_order_number,
-    title: order.title,
+    title: order.title || order.job_order_details || `Job Order ${order.job_order_number}`,
     description: order.description || "",
     customer: order.customer?.name || "Unknown Customer",
     assignee: order.assignee || "Unassigned",
-    priority: order.priority as "low" | "medium" | "high",
+    priority: order.priority as Job["priority"],
     status: order.status as JobStatus,
-    dueDate: order.due_date || new Date().toISOString().split('T')[0],
-    createdAt: order.created_at.split('T')[0],
-    estimatedHours: order.estimated_hours,
+    dueDate: order.due_date || new Date().toISOString().split("T")[0],
+    createdAt: order.created_at.split("T")[0],
+    estimatedHours: order.estimated_hours || 0,
     branch: order.branch || "",
     designer: order.designer?.name || "Unassigned",
     salesman: order.salesman?.name || "Unassigned",
     jobOrderDetails: order.job_order_details || "",
-    totalValue: order.total_value || 0
+    totalValue: order.total_value || 0,
+    created_by: order.created_by,
+    invoiceNumber: order.invoice_number || "",
+    approval_status: order.approval_status,
   }));
 
   const handleStatusUpdate = (jobId: string, status: JobStatus) => {
     updateStatus({ id: jobId, status });
   };
 
+  const handleJobDataUpdate = (jobData: { id: string; [key: string]: any }) => {
+    updateJobData(jobData);
+  };
+
+  const handleJobApproved = () => {
+    refetch(); // Refresh job orders after approval
+  };
+
+  const handleViewJob = (job: Job) => {
+    setSelectedJob(job);
+    setIsJobDetailsOpen(true);
+  };
+
   const renderContent = () => {
-    if (isLoading) {
-      return <LoadingSpinner />;
-    }
+    if (isLoading) return <LoadingSpinner />;
 
     switch (currentView) {
-      case "dashboard":
-        return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />;
       case "jobs":
         return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
       case "create":
-        return <JobForm onCancel={() => setCurrentView("dashboard")} />;
-      case "settings":
-        return <SettingsView />;
-      case "admin":
-        return <AdminJobManagement jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
-      case "admin-management":
-        return <AdminManagement />;
-      case "reports":
-        return <ReportsPage />;
+        return <JobFormWithImageUpload onCancel={() => setCurrentView("jobs")} />;
+      case "unapproved-jobs":
+        return (
+          <UnapprovedJobsList
+            jobs={transformedJobs.filter(job => job.approval_status === 'pending_approval')}
+            userRole={userRole}
+            onJobApproved={handleJobApproved}
+          />
+        );
+      case "approved-jobs":
+        return (
+          <ApprovedJobsList
+            jobs={transformedJobs.filter(job => job.approval_status === 'approved')}
+            onStatusUpdate={handleStatusUpdate}
+          />
+        );
+      case "branch-queue":
+        return (
+          <BranchJobQueue
+            jobs={transformedJobs}
+            onViewJob={handleViewJob}
+          />
+        );
       default:
-        return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />;
+        return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
     }
   };
 
   return (
-    <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-      <MinimalistSidebar currentView={currentView} onViewChange={setCurrentView} />
-      <main className="flex-1 ml-16 overflow-auto">
+    <div className="flex h-screen">
+      <MinimalistSidebar 
+        currentView={currentView} 
+        onViewChange={setCurrentView}
+      />
+      <div className="flex-1 overflow-y-auto">
         <Suspense fallback={<LoadingSpinner />}>
           {renderContent()}
         </Suspense>
-      </main>
+      </div>
+
+      {/* Job Details Modal */}
+      <JobDetails
+        isOpen={isJobDetailsOpen}
+        onClose={() => setIsJobDetailsOpen(false)}
+        job={selectedJob}
+        onJobUpdated={handleJobDataUpdate}
+      />
     </div>
   );
 };
