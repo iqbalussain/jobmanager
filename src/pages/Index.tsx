@@ -68,7 +68,6 @@ const [currentView, setCurrentView] = useState<
     | "unapproved-jobs"
     | "approved-jobs"
     | "branch-queue"
-  >("dashboard");
   >("jobs");
 
 
