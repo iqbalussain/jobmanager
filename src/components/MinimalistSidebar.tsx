@@ -17,6 +17,9 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { Suspense } from "react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner"
+
 import {
   Tooltip,
   TooltipContent,
