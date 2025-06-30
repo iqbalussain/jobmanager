@@ -1,8 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { 
+  Calendar, 
   Briefcase, 
   Plus, 
+  Settings, 
+  Shield, 
+  Users,
+  BarChart3,
   CheckCircle,
   Clock,
   ChevronDown,
@@ -10,13 +14,15 @@ import {
   Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { UserProfileDropdown } from '@/components/user-profile/UserProfileDropdown';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MinimalistSidebarProps {
   currentView: string;
-  onViewChange: (view: "jobs" | "create" | "unapproved-jobs" | "approved-jobs" | "branch-queue") => void;
+  onViewChange: (view: "dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports" | "unapproved-jobs" | "approved-jobs") => void;
+
 }
 
 interface UserProfile {
@@ -64,6 +70,62 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
       setIsJobManagementExpanded(true);
     }
   }, [currentView]);
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'manager';
+
+  const menuItems = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: Calendar,
+      badge: null,
+    },
+    {
+      id: 'jobs',
+      label: 'Jobs',
+      icon: Briefcase,
+      badge: null,
+    },
+    {
+      id: 'create',
+      label: 'Create Job',
+      icon: Plus,
+      badge: null,
+    },
+  ];
+  const adminItems = [
+    {
+      id: 'admin',
+      label: 'Admin Jobs',
+      icon: Shield,
+      badge: null,
+    },
+    {
+      id: 'admin-management',
+      label: 'User Management',
+      icon: Users,
+      badge: null,
+    },
+    {
+      id: 'reports',
+      label: 'Reports',
+      icon: BarChart3,
+      badge: null,
+    },
+  ];
+  const jobManagementItems = [
+    {
+      id: 'unapproved-jobs',
+      label: 'Unapproved Jobs',
+      icon: Clock,
+      badge: null,
+    },
+    {
+      id: 'approved-jobs',
+      label: 'Approved Jobs',
+      icon: CheckCircle,
+      badge: null,
+    },
+  ];
 
   const handleJobManagementToggle = () => {
     setIsJobManagementExpanded(!isJobManagementExpanded);
@@ -84,6 +146,29 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
+
+              {/* Main Menu Items */}
+        {menuItems.map((item) => (
+          <Button
+            key={item.id}
+            variant={currentView === item.id ? "default" : "ghost"}
+            className={`w-full justify-start text-left ${
+              currentView === item.id 
+                ? "bg-blue-600 text-white hover:bg-blue-700" 
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+            onClick={() => onViewChange(item.id as any)}
+          >
+            <item.icon className="w-4 h-4 mr-3" />
+            <span>{item.label}</span>
+            {item.badge && (
+              <Badge variant="secondary" className="ml-auto">
+                {item.badge}
+              </Badge>
+            )}
+          </Button>
+        ))}
+
         {/* Jobs */}
         <Button
           variant={currentView === "jobs" ? "default" : "ghost"}
@@ -126,38 +211,72 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
             )}
             <span>Job Management</span>
           </Button>
-          
+
           {isJobManagementExpanded && (
             <div className="ml-6 space-y-1">
-              <Button
-                variant={currentView === "unapproved-jobs" ? "default" : "ghost"}
-                className={`w-full justify-start text-left ${
-                  currentView === "unapproved-jobs" 
-                    ? "bg-blue-600 text-white hover:bg-blue-700" 
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                }`}
-                onClick={() => handleJobManagementItemClick("unapproved-jobs")}
-              >
-                <Clock className="w-4 h-4 mr-3" />
-                <span>Unapproved Jobs</span>
-              </Button>
-              
-              <Button
-                variant={currentView === "approved-jobs" ? "default" : "ghost"}
-                className={`w-full justify-start text-left ${
-                  currentView === "approved-jobs" 
-                    ? "bg-blue-600 text-white hover:bg-blue-700" 
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                }`}
-                onClick={() => handleJobManagementItemClick("approved-jobs")}
-              >
-                <CheckCircle className="w-4 h-4 mr-3" />
-                <span>Approved Jobs</span>
-              </Button>
+              {jobManagementItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={currentView === item.id ? "default" : "ghost"}
+                  className={`w-full justify-start text-left ${
+                    currentView === item.id 
+                      ? "bg-blue-600 text-white hover:bg-blue-700" 
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                  onClick={() => handleJobManagementItemClick(item.id as any)}
+                >
+                  <item.icon className="w-4 h-4 mr-3" />
+                  <span>{item.label}</span>
+                </Button>
+              ))}
             </div>
           )}
         </div>
-
+                {/* Admin Section */}
+        {isAdmin && (
+          <>
+            <div className="border-t border-gray-200 pt-4 mt-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
+                Admin
+              </p>
+              {adminItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={currentView === item.id ? "default" : "ghost"}
+                  className={`w-full justify-start text-left ${
+                    currentView === item.id 
+                      ? "bg-red-600 text-white hover:bg-red-700" 
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                  onClick={() => onViewChange(item.id as any)}
+                >
+                  <item.icon className="w-4 h-4 mr-3" />
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <Badge variant="destructive" className="ml-auto">
+                      {item.badge}
+                    </Badge>
+                  )}
+                </Button>
+              ))}
+            </div>
+          </>
+        )}
+        {/* Settings */}
+        <div className="border-t border-gray-200 pt-4 mt-4">
+          <Button
+            variant={currentView === 'settings' ? "default" : "ghost"}
+            className={`w-full justify-start text-left ${
+              currentView === 'settings' 
+                ? "bg-blue-600 text-white hover:bg-blue-700" 
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+            onClick={() => onViewChange('settings')}
+          >
+            <Settings className="w-4 h-4 mr-3" />
+            <span>Settings</span>
+          </Button>
+        </div>
         {/* Branch Queue */}
         <Button
           variant={currentView === "branch-queue" ? "default" : "ghost"}
