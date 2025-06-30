@@ -128,12 +128,13 @@ export function MinimalistSidebar({
 
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="fixed left-0 top-0 h-full w-13 bg-glass-to-b from-white-200 text-black-500 z-50 flex flex-col justify-between py-2">
+      div className="fixed left-0 top-0 h-full w-14 bg-white border-r border-gray-200 shadow-lg z-50 flex flex-col">
         {/* Avatar */}
-        <div className="flex justify-center">
+        <div className="p-3 border-b border-gray-100">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="w-10 h-10 bg-white text-Black-700 font-bold flex items-center justify-center shadow-lg cursor-pointer">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-black-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer>
+                <span className="text-white font-bold text-sm">
                 {userProfile?.full_name?.charAt(0) || "U"}
               </div>
             </TooltipTrigger>
