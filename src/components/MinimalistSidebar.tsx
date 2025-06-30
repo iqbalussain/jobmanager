@@ -128,12 +128,12 @@ export function MinimalistSidebar({
 
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="fixed left-0 top-0 h-full w-13 bg-gradient-to-b from-fuchsia-200 to-indigo-200 text-white z-50 flex flex-col justify-between py-4">
+      <div className="fixed left-0 top-0 h-full w-12 bg-gradient-to-b from-fuchsia-200 text-black-500 z-50 flex flex-col justify-between py-2">
         {/* Avatar */}
         <div className="flex justify-center">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="w-10 h-10 bg-white text-fuchsia-700 font-bold rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
+              <div className="w-10 h-10 bg-white text-fuchsia-700 font-bold flex items-center justify-center shadow-lg cursor-pointer">
                 {userProfile?.full_name?.charAt(0) || "U"}
               </div>
             </TooltipTrigger>
@@ -200,13 +200,6 @@ export function MinimalistSidebar({
         <div className="flex justify-center p-3 border-t border-gray-100">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-10 h-10 rounded-xl hover:bg-gray-400 text-white"
-              >
-                <User className="w-5 h-5" />
-              </Button>
             </TooltipTrigger>
             <TooltipContent side="right" className="bg-gray-400 text-white">
               <p>Profile Settings</p>
