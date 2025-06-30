@@ -134,7 +134,7 @@ export function MinimalistSidebar({
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
-                <span className="text-white font-bold text-sm">
+                <span className="text-Black font-bold text-sm">
                 {userProfile?.full_name?.charAt(0) || "U"}
                 </span>
               </div>
@@ -159,7 +159,7 @@ export function MinimalistSidebar({
                     "w-10 h-10 mx-auto rounded-xl transition-all duration-200",
                     currentView === item.view
                       ? "bg-white text-gray-200 shadow"
-                      : "hover:bg-gray-400 text-white"
+                      : "hover:bg-gray-400 text-black"
                   )}
                 >
                   <item.icon className="w-5 h-5" />
@@ -185,7 +185,7 @@ export function MinimalistSidebar({
                     "w-10 h-10 mx-auto rounded-xl transition-all duration-200",
                     currentView === item.view
                       ? "bg-white text-gray-200 shadow"
-                      : "hover:bg-gray-400 text-white"
+                      : "hover:bg-gray-400 text-black"
                   )}
                 >
                   <item.icon className="w-5 h-5" />
@@ -203,7 +203,7 @@ export function MinimalistSidebar({
           <Tooltip>
             <TooltipTrigger asChild>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-gray-400 text-white">
+            <TooltipContent side="right" className="bg-gray-400 text-black">
               <p>Profile Settings</p>
             </TooltipContent>
           </Tooltip>
