@@ -67,44 +67,29 @@ export type Database = {
       }
       job_order_attachments: {
         Row: {
-          alt_text: string | null
           created_at: string
           file_name: string
           file_path: string
           file_size: number | null
-          file_type: string | null
           id: string
-          image_height: number | null
-          image_width: number | null
-          is_image: boolean | null
           job_order_id: string
           uploaded_by: string
         }
         Insert: {
-          alt_text?: string | null
           created_at?: string
           file_name: string
           file_path: string
           file_size?: number | null
-          file_type?: string | null
           id?: string
-          image_height?: number | null
-          image_width?: number | null
-          is_image?: boolean | null
           job_order_id: string
           uploaded_by: string
         }
         Update: {
-          alt_text?: string | null
           created_at?: string
           file_name?: string
           file_path?: string
           file_size?: number | null
-          file_type?: string | null
           id?: string
-          image_height?: number | null
-          image_width?: number | null
-          is_image?: boolean | null
           job_order_id?: string
           uploaded_by?: string
         }
@@ -361,10 +346,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_job_order_number: {
-        Args: { branch: string }
-        Returns: string
-      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]

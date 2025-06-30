@@ -1,38 +1,29 @@
+
 import { 
-  LayoutDashboard, 
-  Briefcase, 
-  Plus,
-  Calendar,
+  Home,
+  FileText,
   Settings,
-  User,
   Shield,
   UsersRound,
-  Menu,
-  Home,
-  FileText
+  BarChart3,
+  User,
+  Plus
 } from "lucide-react";
-import {
-  Sidebar as SidebarBase,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarTrigger
-} from "@/components/ui/sidebar";
-import { UserProfile } from "@/components/UserProfile";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-interface SidebarProps {
+interface MinimalistSidebarProps {
   currentView: string;
-  onViewChange: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management") => void;
+  onViewChange: (view: "dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports") => void;
 }
 
 interface UserProfile {
@@ -40,9 +31,7 @@ interface UserProfile {
   role: string;
 }
 
-export function Sidebar({ currentView, onViewChange }: SidebarProps) {
-  const [showProfile, setShowProfile] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSidebarProps) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { user } = useAuth();
 
@@ -65,7 +54,6 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       if (data) {
         setUserProfile(data);
       } else {
-        // Fallback to user metadata if profile doesn't exist
         setUserProfile({
           full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
           role: 'employee'
@@ -73,7 +61,6 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      // Fallback to user metadata
       setUserProfile({
         full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
         role: 'employee'
@@ -81,205 +68,153 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     }
   };
 
-  const mainNavItems = [
+  const mainMenuItems = [
     {
-      title: "Home",
+      title: "Dashboard",
       icon: Home,
-      onClick: () => {
-        onViewChange("dashboard");
-        setIsMobileMenuOpen(false);
-      },
-      isActive: currentView === "dashboard",
-      bg: "bg-primary",
-      fg: "text-primary-foreground"
+      view: "dashboard" as const,
     },
     {
-      title: "All Files",
+      title: "Job Management",
       icon: FileText,
-      onClick: () => {
-        onViewChange("jobs");
-        setIsMobileMenuOpen(false);
-      },
-      isActive: currentView === "jobs",
-      bg: "bg-accent",
-      fg: "text-accent-foreground"
+      view: "jobs" as const,
+    },
+    {
+      title: "Create Job",
+      icon: Plus,
+      view: "create" as const,
+      roles: ["admin", "manager", "salesman"] // Allow salesmen to create jobs
     },
     {
       title: "Settings",
       icon: Settings,
-      onClick: () => {
-        onViewChange("settings");
-        setIsMobileMenuOpen(false);
-      },
-      isActive: currentView === "settings",
-      bg: "bg-muted",
-      fg: "text-foreground"
-    },
-    {
-      title: "Calendar",
-      icon: Calendar,
-      onClick: () => {
-        onViewChange("calendar");
-        setIsMobileMenuOpen(false);
-      },
-      isActive: currentView === "calendar",
-      bg: "bg-secondary",
-      fg: "text-secondary-foreground"
+      view: "settings" as const,
     }
   ];
 
   const adminMenuItems = [
     {
-      title: "Job Management",
+      title: "Job Administration",
       icon: Shield,
-      onClick: () => {
-        onViewChange("admin");
-        setIsMobileMenuOpen(false);
-      },
-      isActive: currentView === "admin"
+      view: "admin" as const,
+      roles: ["admin", "manager"] // Admin only
     },
     {
       title: "User Management",
       icon: UsersRound,
-      onClick: () => {
-        onViewChange("admin-management");
-        setIsMobileMenuOpen(false);
-      },
-      isActive: currentView === "admin-management"
+      view: "admin-management" as const,
+      roles: ["admin", "manager"] // Admin only
+    },
+    {
+      title: "Reports & Analytics",
+      icon: BarChart3,
+      view: "reports" as const,
+      roles: ["admin", "manager", "salesman"] // Include salesmen for reports
     }
   ];
 
-  const SidebarContentComponent = () => (
-    <>
-      <SidebarHeader className="border-b border-border p-4 bg-card bg-opacity-90">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">
-              {userProfile?.full_name?.charAt(0) || 'U'}
-            </span>
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-foreground">
-              {userProfile?.full_name || 'User'}
-            </h1>
-            <p className="text-xs text-muted-foreground capitalize">
-              {userProfile?.role || 'Employee'}
-            </p>
-          </div>
-        </div>
-      </SidebarHeader>
-      
-      <SidebarContent className="px-3">
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground px-3 mb-3 mt-2 text-xs">
-            Main Navigation
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            {/* Icon Card Menu Style */}
-            <div className="grid grid-cols-2 gap-2">
-              {mainNavItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.title}
-                    aria-label={item.title}
-                    onClick={item.onClick}
-                    className={`
-                      flex flex-col items-center justify-center gap-2 py-4 rounded-xl shadow 
-                      transition-all duration-150 active:scale-95
-                      ${item.bg} ${item.fg}
-                      ${item.isActive ? "ring-2 ring-offset-2 ring-primary" : "hover:opacity-90"}
-                      focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
-                      h-28
-                    `}
-                  >
-                    <Icon className="w-7 h-7" />
-                    <span className="text-xs font-semibold tracking-wide">{item.title}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </SidebarGroupContent>
-        </SidebarGroup>
+  const handleMenuClick = (view: any) => {
+    onViewChange(view);
+  };
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground px-3 mb-2 text-xs">
-            Administration
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {adminMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    onClick={item.onClick}
-                    isActive={item.isActive}
-                    className={`w-full flex gap-2 items-center px-3 py-2 rounded-lg
-                      ${item.isActive ? 'bg-destructive text-destructive-foreground' : 'hover:bg-accent text-foreground'}`}
-                  >
-                    <item.icon className="w-4 h-4" />
-                    <span className="text-xs font-medium">{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* User Profile Card */}
-        <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-primary via-muted to-card text-primary-foreground">
-          <div className="flex items-center mb-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
-              <User className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm">{userProfile?.full_name || 'User'}</p>
-              <p className="text-xs text-muted-foreground capitalize">{userProfile?.role || 'Employee'}</p>
-            </div>
-          </div>
-          <Button 
-            onClick={() => setShowProfile(!showProfile)}
-            variant="secondary"
-            size="sm"
-            className="w-full bg-secondary hover:bg-accent text-primary border-0 text-xs"
-          >
-            View Profile
-          </Button>
-          {showProfile && (
-            <div className="mt-3">
-              <UserProfile />
-            </div>
-          )}
-        </div>
-      </SidebarContent>
-    </>
-  );
+  const canAccessMenuItem = (item: any) => {
+    if (!item.roles) return true; // No role restriction
+    return item.roles.includes(userProfile?.role);
+  };
 
   return (
-    <>
-      {/* Desktop Sidebar */}
-      <SidebarBase className="hidden md:flex border-r border-border bg-card w-64">
-        <SidebarContentComponent />
-      </SidebarBase>
+    <TooltipProvider delayDuration={100}>
+      <div className="fixed left-0 top-0 h-full w-16 bg-white border-r border-gray-200 shadow-lg z-50 flex flex-col">
+        {/* User Avatar */}
+        <div className="p-3 border-b border-gray-100">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
+                <span className="text-white font-bold text-sm">
+                  {userProfile?.full_name?.charAt(0) || 'U'}
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-gray-900 text-white">
+              <p className="font-medium">{userProfile?.full_name || 'User'}</p>
+              <p className="text-xs text-gray-300 capitalize">{userProfile?.role || 'Employee'}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
 
-      {/* Mobile Menu */}
-      <div className="md:hidden">
-        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="fixed top-4 left-4 z-50 bg-card border-border"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-64 bg-card">
-            <div className="h-full bg-card">
-              <SidebarContentComponent />
-            </div>
-          </SheetContent>
-        </Sheet>
+        {/* Main Navigation */}
+        <div className="flex-1 py-4 space-y-2">
+          {mainMenuItems.filter(canAccessMenuItem).map((item) => (
+            <Tooltip key={item.view}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleMenuClick(item.view)}
+                  className={cn(
+                    "w-10 h-10 mx-3 rounded-xl transition-all duration-200",
+                    currentView === item.view 
+                      ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                      : 'hover:bg-gray-100 text-gray-600'
+                  )}
+                >
+                  <item.icon className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-gray-900 text-white">
+                <p>{item.title}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+
+          {/* Separator - only show if there are admin items to show */}
+          {adminMenuItems.filter(canAccessMenuItem).length > 0 && (
+            <div className="mx-3 my-4 border-t border-gray-200"></div>
+          )}
+
+          {/* Admin Navigation */}
+          {adminMenuItems.filter(canAccessMenuItem).map((item) => (
+            <Tooltip key={item.view}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleMenuClick(item.view)}
+                  className={cn(
+                    "w-10 h-10 mx-3 rounded-xl transition-all duration-200",
+                    currentView === item.view 
+                      ? 'bg-red-100 text-red-700 shadow-sm' 
+                      : 'hover:bg-gray-100 text-gray-600'
+                  )}
+                >
+                  <item.icon className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-gray-900 text-white">
+                <p>{item.title}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+
+        {/* User Profile at Bottom */}
+        <div className="p-3 border-t border-gray-100">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-10 h-10 rounded-xl hover:bg-gray-100 text-gray-600"
+              >
+                <User className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-gray-900 text-white">
+              <p>Profile Settings</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </div>
-    </>
+    </TooltipProvider>
   );
 }

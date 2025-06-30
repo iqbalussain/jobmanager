@@ -23,127 +23,109 @@ export function useCreateJobOrder() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const branchPrefixes: Record<string, string> = {
-    'Wadi Kabeer': 'WK',
-    'Wajihat Ruwi': 'WR',
-    'Head Office': 'HO',
-  };
-  const branchStartNumbers: Record<string, number> = {
-  'WK': 20001,
-  'WR': 30001,
-  'HO': 10001,
-  };
+  const generateJobOrderNumber = async (branch: string) => {
+    const branchPrefixes: Record<string, string> = {
+      'Wadi Kabeer': 'WK',
+      'Wajihath': 'WJ',
+      'Head Office': 'HO',
+    };
 
-const generateJobOrderNumber = async (branch: string): Promise<string> => {
-  const prefix = branchPrefixes[branch] || 'HO';
-  const startNumber = branchStartNumbers[prefix] || 10001;
+    const prefix = branchPrefixes[branch] || 'HO'; // fallback to 'HO' if unknown
 
-    const { data: latestOrder, error } = await supabase
+    const { data: latestOrder } = await supabase
       .from('job_orders')
       .select('job_order_number')
       .like('job_order_number', `${prefix}%`)
-      .order('job_order_number', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(1);
 
-    if (error) {
-      console.error('Error fetching latest job order:', error);
-      throw error;
+    let nextNumber = 10001;
+
+    if (latestOrder && latestOrder.length > 0) {
+      const lastNumber = parseInt(latestOrder[0].job_order_number.substring(2));
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
     }
 
- let nextNumber = startNumber;
+    return `${prefix}${nextNumber}`;
+  };
 
-  if (latestOrder && latestOrder.length > 0) {
-    const match = latestOrder[0].job_order_number.match(/\d+$/);
-    const lastNumber = match ? parseInt(match[0], 10) : startNumber - 1;
-    nextNumber = Math.max(lastNumber + 1, startNumber);
-  }
-
-  return `${prefix}${nextNumber}`;
-};
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: CreateJobOrderData) => {
-      if (!user) throw new Error('User must be authenticated to create job orders');
-
+      console.log('Creating job order with data:', data);
+      
+      if (!user) {
+        throw new Error('User must be authenticated to create job orders');
+      }
+      
+      // Check if user has permission to create job orders
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile || !['admin', 'manager', 'salesman'].includes(profile.role)) {
+        throw new Error('You do not have permission to create job orders');
+      }
+      
+      // Generate job order number based on branch
+      const jobOrderNumber = await generateJobOrderNumber(data.branch);
+      
+      // If user is a salesman, automatically set them as the salesman for the job order
       let salesmanId = data.salesman_id;
-      if (user?.role === 'salesman') {
+      if (profile.role === 'salesman') {
         salesmanId = user.id;
       }
+      
+      const { data: newJobOrder, error } = await supabase
+        .from('job_orders')
+        .insert({
+          job_order_number: jobOrderNumber,
+          customer_id: data.customer_id,
+          job_title_id: data.job_title_id,
+          designer_id: data.designer_id,
+          salesman_id: salesmanId,
+          assignee: data.assignee || null,
+          priority: data.priority,
+          status: data.status,
+          due_date: data.due_date,
+          estimated_hours: data.estimated_hours,
+          branch: data.branch,
+          job_order_details: data.job_order_details,
+          created_by: user.id
+        })
+        .select()
+        .single();
 
-      let attempts = 0;
-      let newJobOrder = null;
-      let insertError = null;
-
-      while (attempts < 5) {
-        const jobOrderNumber = await generateJobOrderNumber(data.branch);
-
-        const { data: inserted, error } = await supabase
-          .from('job_orders')
-          .insert({
-            job_order_number: jobOrderNumber,
-            customer_id: data.customer_id,
-            job_title_id: data.job_title_id,
-            designer_id: data.designer_id,
-            salesman_id: salesmanId,
-            assignee: data.assignee || null,
-            priority: data.priority,
-            status: data.status,
-            due_date: data.due_date,
-            estimated_hours: data.estimated_hours,
-            branch: data.branch,
-            job_order_details: data.job_order_details,
-            created_by: user.id
-          })
-          .select()
-          .single();
-
-        if (!error) {
-          newJobOrder = inserted;
-          break;
-        }
-
-        if (error.message.includes('duplicate key')) {
-          console.warn(`Duplicate job order number: ${jobOrderNumber}. Retrying...`);
-          attempts++;
-          continue;
-        }
-
-        insertError = error;
-        break;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
       }
-
-      if (insertError) {
-        console.error('Supabase insert error:', insertError);
-        throw insertError;
-      }
-
-      if (!newJobOrder) {
-        throw new Error('Failed to generate unique job order number after multiple attempts');
-      }
-
+      
+      console.log('Job order created successfully:', newJobOrder);
       return newJobOrder;
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['job-orders'] });
       toast({
-        title: 'Success',
-        description: 'Job order created successfully',
+        title: "Success",
+        description: "Job order created successfully",
       });
     },
-
     onError: (error) => {
       console.error('Error creating job order:', error);
       toast({
-        title: 'Error',
+        title: "Error",
         description: `Failed to create job order: ${error.message}`,
-        variant: 'destructive',
+        variant: "destructive",
       });
-    },
+    }
   });
 
   return {
     createJobOrder: createJobOrderMutation.mutateAsync,
-    isCreating: createJobOrderMutation.isPending,
+    isCreating: createJobOrderMutation.isPending
   };
 }
-

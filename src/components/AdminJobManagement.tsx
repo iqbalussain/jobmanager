@@ -1,44 +1,38 @@
+
 import { useState, useEffect } from "react";
 import { Job, JobStatus } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { JobDetails } from "@/components/JobDetails";
 import { 
   Filter,
   Plus,
-  Settings,
-  Calendar as CalendarIcon,
-  X
+  Settings
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { isWithinInterval } from "date-fns";
 
 interface AdminJobManagementProps {
   jobs: Job[];
   onStatusUpdate: (jobId: string, status: JobStatus) => void;
-  onJobDataUpdate?: (jobData: { id: string; [key: string]: any }) => void;
 }
 
-export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: AdminJobManagementProps) {
+export function AdminJobManagement({ jobs, onStatusUpdate }: AdminJobManagementProps) {
   const [salesmanFilter, setSalesmanFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [customerFilter, setCustomerFilter] = useState("all");
   const [branchFilter, setBranchFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date } | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [jobsWithInvoices, setJobsWithInvoices] = useState<Job[]>(jobs);
   const [editingTotalValue, setEditingTotalValue] = useState<{ [key: string]: string }>({});
   const { user } = useAuth();
   const { toast } = useToast();
@@ -59,6 +53,94 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
     checkAdminRole();
   }, [user]);
 
+  // Fetch fresh job data with invoice numbers and total values
+  useEffect(() => {
+    const fetchJobsWithInvoices = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('job_orders')
+          .select(`
+            *,
+            customer:customers!fk_job_orders_customer(id, name),
+            job_title:job_titles(id, job_title_id)
+          `)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        // Transform the data to match Job interface
+        const transformedJobs = await Promise.all(data.map(async (jobOrder) => {
+          let designer = null;
+          let salesman = null;
+          
+          if (jobOrder.designer_id) {
+            const { data: designerData } = await supabase
+              .from('profiles')
+              .select('id, full_name, phone')
+              .eq('id', jobOrder.designer_id)
+              .single();
+            
+            if (designerData) {
+              designer = {
+                id: designerData.id,
+                name: designerData.full_name || 'Unknown Designer',
+                phone: designerData.phone
+              };
+            }
+          }
+          
+          if (jobOrder.salesman_id) {
+            const { data: salesmanData } = await supabase
+              .from('profiles')
+              .select('id, full_name, email, phone')
+              .eq('id', jobOrder.salesman_id)
+              .single();
+            
+            if (salesmanData) {
+              salesman = {
+                id: salesmanData.id,
+                name: salesmanData.full_name || 'Unknown Salesman',
+                email: salesmanData.email,
+                phone: salesmanData.phone
+              };
+            }
+          }
+          
+          // Create the title from available data
+          const title = jobOrder.job_title?.job_title_id || 
+                       jobOrder.job_order_details || 
+                       `Job Order ${jobOrder.job_order_number}`;
+          
+          return {
+            id: jobOrder.id,
+            jobOrderNumber: jobOrder.job_order_number,
+            title: title,
+            customer: jobOrder.customer?.name || "Unknown Customer",
+            assignee: jobOrder.assignee || "Unassigned",
+            priority: jobOrder.priority as "low" | "medium" | "high",
+            status: jobOrder.status as JobStatus,
+            dueDate: jobOrder.due_date || new Date().toISOString().split('T')[0],
+            createdAt: jobOrder.created_at.split('T')[0],
+            estimatedHours: jobOrder.estimated_hours || 0,
+            branch: jobOrder.branch || "",
+            designer: designer?.name || "Unassigned",
+            salesman: salesman?.name || "Unassigned",
+            jobOrderDetails: jobOrder.job_order_details || "",
+            invoiceNumber: jobOrder.invoice_number || "",
+            totalValue: jobOrder.total_value || 0
+          };
+        }));
+        
+        setJobsWithInvoices(transformedJobs);
+      } catch (error) {
+        console.error('Error fetching jobs with invoices:', error);
+        setJobsWithInvoices(jobs);
+      }
+    };
+    
+    fetchJobsWithInvoices();
+  }, [jobs]);
+
   const handleTotalValueUpdate = async (jobId: string, totalValue: string) => {
     try {
       const numericValue = parseFloat(totalValue) || 0;
@@ -75,10 +157,14 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
         description: "Total value updated successfully",
       });
 
-      // Update parent state instead of local state
-      if (onJobDataUpdate) {
-        onJobDataUpdate({ id: jobId, totalValue: numericValue });
-      }
+      // Update local state
+      setJobsWithInvoices(prev => 
+        prev.map(job => 
+          job.id === jobId 
+            ? { ...job, totalValue: numericValue }
+            : job
+        )
+      );
 
       // Clear editing state
       setEditingTotalValue(prev => {
@@ -97,13 +183,9 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
     }
   };
 
-  const clearDateFilter = () => {
-    setDateFilter(null);
-  };
-
   if (!isAdmin) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Access Denied</h1>
           <p className="text-gray-600">You don't have permission to access the admin job management panel.</p>
@@ -112,29 +194,18 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
     );
   }
 
-  const filteredJobs = jobs.filter(job => {
-    const matchesSalesman = salesmanFilter === "all" || job.salesman?.toLowerCase().includes(salesmanFilter.toLowerCase());
+  const filteredJobs = jobsWithInvoices.filter(job => {
+    const matchesSalesman = salesmanFilter === "all" || job.salesman.toLowerCase().includes(salesmanFilter.toLowerCase());
     const matchesStatus = statusFilter === "all" || job.status === statusFilter;
     const matchesCustomer = customerFilter === "all" || job.customer.toLowerCase().includes(customerFilter.toLowerCase());
     const matchesBranch = branchFilter === "all" || (job.branch && job.branch.toLowerCase().includes(branchFilter.toLowerCase()));
-    
-    let matchesDate = true;
-    if (dateFilter?.from) {
-      const jobDate = new Date(job.createdAt);
-      if (dateFilter.to) {
-        matchesDate = isWithinInterval(jobDate, { start: dateFilter.from, end: dateFilter.to });
-      } else {
-        matchesDate = jobDate >= dateFilter.from;
-      }
-    }
-    
-    return matchesSalesman && matchesStatus && matchesCustomer && matchesBranch && matchesDate;
+    return matchesSalesman && matchesStatus && matchesCustomer && matchesBranch;
   });
 
   // Get unique values for filter dropdowns
-  const uniqueSalesmen = [...new Set(jobs.map(job => job.salesman))].filter(Boolean).sort();
-  const uniqueCustomers = [...new Set(jobs.map(job => job.customer))].filter(Boolean).sort();
-  const uniqueBranches = [...new Set(jobs.map(job => job.branch))].filter(Boolean).sort();
+  const uniqueSalesmen = [...new Set(jobsWithInvoices.map(job => job.salesman))].filter(Boolean).sort();
+  const uniqueCustomers = [...new Set(jobsWithInvoices.map(job => job.customer))].filter(Boolean).sort();
+  const uniqueBranches = [...new Set(jobsWithInvoices.map(job => job.branch))].filter(Boolean).sort();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -171,14 +242,8 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
     }
   };
 
-  const handleJobUpdated = (updatedJobData: { id: string; [key: string]: any }) => {
-    if (onJobDataUpdate) {
-      onJobDataUpdate(updatedJobData);
-    }
-  };
-
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Job Management</h1>
@@ -205,65 +270,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Date Filter */}
-          <div className="mb-4 flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-auto justify-start text-left font-normal",
-                    !dateFilter && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateFilter?.from ? (
-                    dateFilter.to ? (
-                      <>
-                        {format(dateFilter.from, "LLL dd, y")} -{" "}
-                        {format(dateFilter.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(dateFilter.from, "LLL dd, y")
-                    )
-                  ) : (
-                    <span>Filter by date range</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateFilter?.from}
-                  selected={dateFilter ? { from: dateFilter.from, to: dateFilter.to } : undefined}
-                  onSelect={(range) => {
-                    if (range) {
-                      setDateFilter({
-                        from: range.from,
-                        to: range.to
-                      });
-                    } else {
-                      setDateFilter(null);
-                    }
-                  }}
-                  numberOfMonths={2}
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-            {dateFilter && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearDateFilter}
-                className="h-8 px-2 lg:px-3"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-
+          {/* Filters */}
           <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="salesmanFilter">Filter by Salesman</Label>
@@ -274,8 +281,8 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
                 <SelectContent>
                   <SelectItem value="all">All Salesmen</SelectItem>
                   {uniqueSalesmen.map((salesman) => (
-                    <SelectItem key={salesman} value={salesman || ''}>
-                      {salesman || 'Unassigned'}
+                    <SelectItem key={salesman} value={salesman}>
+                      {salesman}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -308,8 +315,8 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
                 <SelectContent>
                   <SelectItem value="all">All Branches</SelectItem>
                   {uniqueBranches.map((branch) => (
-                    <SelectItem key={branch} value={branch || ''}>
-                      {branch || 'No Branch'}
+                    <SelectItem key={branch} value={branch}>
+                      {branch}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -339,7 +346,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
             <TableHeader>
               <TableRow>
                 <TableHead>Job Order #</TableHead>
-                <TableHead>Title</TableHead>  
+                <TableHead>Title</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Branch</TableHead>
                 <TableHead>Salesman</TableHead>
@@ -357,7 +364,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
                   <TableCell className="font-medium">{job.title}</TableCell>
                   <TableCell>{job.customer}</TableCell>
                   <TableCell>{job.branch || "N/A"}</TableCell>
-                  <TableCell>{job.salesman || "Unassigned"}</TableCell>
+                  <TableCell>{job.salesman}</TableCell>
                   <TableCell>{new Date(job.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <Select 
@@ -450,10 +457,92 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
       {/* Job Details Modal */}
       <JobDetails
         isOpen={isJobDetailsOpen}
-        onClose={() => setIsJobDetailsOpen(false)}
+        onClose={() => {
+          setIsJobDetailsOpen(false);
+          // Refresh data when closing modal to get latest invoice numbers and total values
+          const fetchJobs = async () => {
+            try {
+              const { data, error } = await supabase
+                .from('job_orders')
+                .select(`
+                  *,
+                  customer:customers!fk_job_orders_customer(id, name),
+                  job_title:job_titles(id, job_title_id)
+                `)
+                .order('created_at', { ascending: false });
+              
+              if (error) throw error;
+              
+              const transformedJobs = await Promise.all(data.map(async (jobOrder) => {
+                let designer = null;
+                let salesman = null;
+                
+                if (jobOrder.designer_id) {
+                  const { data: designerData } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, phone')
+                    .eq('id', jobOrder.designer_id)
+                    .single();
+                  
+                  if (designerData) {
+                    designer = {
+                      id: designerData.id,
+                      name: designerData.full_name || 'Unknown Designer',
+                      phone: designerData.phone
+                    };
+                  }
+                }
+                
+                if (jobOrder.salesman_id) {
+                  const { data: salesmanData } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, email, phone')
+                    .eq('id', jobOrder.salesman_id)
+                    .single();
+                  
+                  if (salesmanData) {
+                    salesman = {
+                      id: salesmanData.id,
+                      name: salesmanData.full_name || 'Unknown Salesman',
+                      email: salesmanData.email,
+                      phone: salesmanData.phone
+                    };
+                  }
+                }
+                
+                // Create the title from available data
+                const title = jobOrder.job_title?.job_title_id || 
+                             jobOrder.job_order_details || 
+                             `Job Order ${jobOrder.job_order_number}`;
+                
+                return {
+                  id: jobOrder.id,
+                  jobOrderNumber: jobOrder.job_order_number,
+                  title: title,
+                  customer: jobOrder.customer?.name || "Unknown Customer",
+                  assignee: jobOrder.assignee || "Unassigned",
+                  priority: jobOrder.priority as "low" | "medium" | "high",
+                  status: jobOrder.status as JobStatus,
+                  dueDate: jobOrder.due_date || new Date().toISOString().split('T')[0],
+                  createdAt: jobOrder.created_at.split('T')[0],
+                  estimatedHours: jobOrder.estimated_hours || 0,
+                  branch: jobOrder.branch || "",
+                  designer: designer?.name || "Unassigned",
+                  salesman: salesman?.name || "Unassigned",
+                  jobOrderDetails: jobOrder.job_order_details || "",
+                  invoiceNumber: jobOrder.invoice_number || ""
+                };
+              }));
+              
+              setJobsWithInvoices(transformedJobs);
+            } catch (error) {
+              console.error('Error refreshing jobs:', error);
+            }
+          };
+          fetchJobs();
+        }}
         job={selectedJob}
         isEditMode={isEditMode}
-        onJobUpdated={handleJobUpdated}
       />
     </div>
   );
