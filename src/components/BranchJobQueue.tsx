@@ -204,7 +204,7 @@ export function BranchJobQueue({ jobs, onViewJob }: BranchJobQueueProps) {
               </div>
 
               {/* Job List */}
-              <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
+              <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-400 scrollbar-track-slate-100">
                 {data.jobs.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Building2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -254,23 +254,6 @@ export function BranchJobQueue({ jobs, onViewJob }: BranchJobQueueProps) {
           </Card>
         ))}
       </div>
-
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f5f9;
-          border-radius: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
-        }
-      `}</style>
     </div>
   );
 }

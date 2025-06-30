@@ -1,4 +1,3 @@
-
 import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
@@ -130,6 +129,10 @@ const [currentView, setCurrentView] = useState<
     refetch(); // Refresh job orders after approval
   };
 
+  const handleViewJob = (job: Job) => {
+    setSelectedJob(job);
+    setIsJobDetailsOpen(true);
+  };
 
   const renderContent = () => {
     if (isLoading) return <LoadingSpinner />;
