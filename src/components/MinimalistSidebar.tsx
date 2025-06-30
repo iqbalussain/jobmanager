@@ -141,7 +141,7 @@ export function MinimalistSidebar({
             </TooltipTrigger>
             <TooltipContent side="right" className="bg-green text-dark">
               <p className="font-medium">{userProfile?.full_name || "User"}</p>
-              <p className="text-xs text-gray-300 capitalize">{userProfile?.role || "Employee"}</p>
+              <p className="text-xs text-Blue-300 capitalize">{userProfile?.role || "Employee"}</p>
             </TooltipContent>
           </Tooltip>
         </div>
@@ -184,7 +184,7 @@ export function MinimalistSidebar({
                   className={cn(
                     "w-10 h-10 mx-auto rounded-xl transition-all duration-200",
                     currentView === item.view
-                      ? "bg-white text-gray-200 shadow"
+                      ? "bg-Green text-gray-400 shadow"
                       : "hover:bg-gray-400 text-black"
                   )}
                 >
