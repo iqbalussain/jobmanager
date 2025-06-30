@@ -136,7 +136,8 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
     <TooltipProvider delayDuration={100}>
       <div className="flex h-screen">
         {/* User Avatar */}
-        <div className="w-16 bg-white border-r shadow-lg flex flex-col">
+        <div className="overflow-y-auto">
+          <Suspense fallback={<LoadingSpinner />}>
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
@@ -150,6 +151,7 @@ export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSideb
               <p className="text-xs text-gray-300 capitalize">{userProfile?.role || 'Employee'}</p>
             </TooltipContent>
           </Tooltip>
+          </Suspense>
         </div>
 
         {/* Main Navigation */}
