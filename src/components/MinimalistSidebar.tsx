@@ -21,7 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface MinimalistSidebarProps {
   currentView: string;
-  onViewChange: (view: "dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports" | "unapproved-jobs" | "approved-jobs") => void;
+  onViewChange: (view: "dashboard" | "create" | "settings" | "admin" | "admin-management" | "reports" | "unapproved-jobs" | "approved-jobs") => void;
 }
 
 interface UserProfile {
