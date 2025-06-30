@@ -5,6 +5,7 @@ import {
   Shield,
   UsersRound,
   BarChart3,
+  user,
   Plus,
   ClipboardList,
   CheckCircle,
@@ -128,12 +129,12 @@ export function MinimalistSidebar({
 
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="fixed left-0 top-0 h-full w-20 bg-gradient-to-b from-purple-700 to-indigo-800 text-white z-50 flex flex-col justify-between py-4">
+      <div className="fixed left-0 top-0 h-full w-20 bg-gradient-to-b from-gray-700 to-indigo-800 text-white z-50 flex flex-col justify-between py-4">
         {/* Avatar */}
         <div className="flex justify-center">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="w-10 h-10 bg-white text-purple-700 font-bold rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
+              <div className="w-10 h-10 bg-white text-gray-700 font-bold rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
                 {userProfile?.full_name?.charAt(0) || "U"}
               </div>
             </TooltipTrigger>
@@ -156,8 +157,8 @@ export function MinimalistSidebar({
                   className={cn(
                     "w-10 h-10 mx-auto rounded-xl transition-all duration-200",
                     currentView === item.view
-                      ? "bg-white text-purple-700 shadow"
-                      : "hover:bg-purple-600 text-white"
+                      ? "bg-white text-gray-700 shadow"
+                      : "hover:bg-gray-600 text-white"
                   )}
                 >
                   <item.icon className="w-5 h-5" />
@@ -182,8 +183,8 @@ export function MinimalistSidebar({
                   className={cn(
                     "w-10 h-10 mx-auto rounded-xl transition-all duration-200",
                     currentView === item.view
-                      ? "bg-white text-purple-700 shadow"
-                      : "hover:bg-purple-600 text-white"
+                      ? "bg-white text-gray-700 shadow"
+                      : "hover:bg-gray-600 text-white"
                   )}
                 >
                   <item.icon className="w-5 h-5" />
@@ -197,21 +198,22 @@ export function MinimalistSidebar({
         </div>
 
         {/* Profile Icon Bottom */}
-        <div className="flex justify-center">
+        <div className="flex justify-center p-3 border-t border-gray-100">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-10 h-10 rounded-xl hover:bg-purple-600 text-white"
+                className="w-10 h-10 rounded-xl hover:bg-gray-600 text-white"
               >
                 <User className="w-5 h-5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right">
+            <TooltipContent side="right" className="bg-gray-900 text-white">
               <p>Profile Settings</p>
             </TooltipContent>
           </Tooltip>
+          <UserProfileDropdown userProfile={userProfile} />
         </div>
       </div>
     </TooltipProvider>
