@@ -133,9 +133,10 @@ export function MinimalistSidebar({
         <div className="p-3 border-b border-gray-100">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-black-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
                 <span className="text-white font-bold text-sm">
                 {userProfile?.full_name?.charAt(0) || "U"}
+                </span>
               </div>
             </TooltipTrigger>
             <TooltipContent side="right" className="bg-black text-white">
