@@ -5,7 +5,6 @@ import {
   Shield,
   UsersRound,
   BarChart3,
-  User,
   Plus,
   ClipboardList,
   CheckCircle,
