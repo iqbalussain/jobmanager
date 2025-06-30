@@ -1,27 +1,38 @@
-
-import { useState, useEffect } from 'react';
 import { 
-  Calendar, 
+  LayoutDashboard, 
   Briefcase, 
-  Plus, 
-  Settings, 
-  Shield, 
-  Users,
-  BarChart3,
-  CheckCircle,
-  Clock,
-  ChevronDown,
-  ChevronRight
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { UserProfileDropdown } from '@/components/user-profile/UserProfileDropdown';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+  Plus,
+  Calendar,
+  Settings,
+  User,
+  Shield,
+  UsersRound,
+  Menu,
+  Home,
+  FileText
+} from "lucide-react";
+import {
+  Sidebar as SidebarBase,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+  SidebarTrigger
+} from "@/components/ui/sidebar";
+import { UserProfile } from "@/components/UserProfile";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
-interface MinimalistSidebarProps {
+interface SidebarProps {
   currentView: string;
-  onViewChange: (view: "dashboard" | "create" | "settings" | "admin" | "admin-management" | "reports" | "unapproved-jobs" | "approved-jobs") => void;
+  onViewChange: (view: "dashboard" | "jobs" | "create" | "calendar" | "settings" | "admin" | "admin-management") => void;
 }
 
 interface UserProfile {
@@ -29,235 +40,246 @@ interface UserProfile {
   role: string;
 }
 
-export function MinimalistSidebar({ currentView, onViewChange }: MinimalistSidebarProps) {
-  const { user } = useAuth();
+export function Sidebar({ currentView, onViewChange }: SidebarProps) {
+  const [showProfile, setShowProfile] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isJobManagementExpanded, setIsJobManagementExpanded] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('full_name, role')
-          .eq('id', user.id)
-          .single();
-        
-        if (error) {
-          console.error('Error fetching user profile:', error);
-          return;
-        }
-        
-        if (data) {
-          setUserProfile(data);
-        }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      }
-    };
-    
     if (user) {
       fetchUserProfile();
     }
   }, [user]);
 
-  // Expand job management section if we're in unapproved or approved jobs view
-  useEffect(() => {
-    if (currentView === 'unapproved-jobs' || currentView === 'approved-jobs') {
-      setIsJobManagementExpanded(true);
+  const fetchUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, role')
+        .eq('id', user.id)
+        .single();
+
+      if (data) {
+        setUserProfile(data);
+      } else {
+        // Fallback to user metadata if profile doesn't exist
+        setUserProfile({
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          role: 'employee'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      // Fallback to user metadata
+      setUserProfile({
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        role: 'employee'
+      });
     }
-  }, [currentView]);
+  };
 
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'manager';
-
-  const menuItems = [
+  const mainNavItems = [
     {
-      id: 'dashboard',
-      label: 'Dashboard',
+      title: "Home",
+      icon: Home,
+      onClick: () => {
+        onViewChange("dashboard");
+        setIsMobileMenuOpen(false);
+      },
+      isActive: currentView === "dashboard",
+      bg: "bg-primary",
+      fg: "text-primary-foreground"
+    },
+    {
+      title: "All Files",
+      icon: FileText,
+      onClick: () => {
+        onViewChange("jobs");
+        setIsMobileMenuOpen(false);
+      },
+      isActive: currentView === "jobs",
+      bg: "bg-accent",
+      fg: "text-accent-foreground"
+    },
+    {
+      title: "Settings",
+      icon: Settings,
+      onClick: () => {
+        onViewChange("settings");
+        setIsMobileMenuOpen(false);
+      },
+      isActive: currentView === "settings",
+      bg: "bg-muted",
+      fg: "text-foreground"
+    },
+    {
+      title: "Calendar",
       icon: Calendar,
-      badge: null,
-    },
-    {
-      id: 'jobs',
-      label: 'Jobs',
-      icon: Briefcase,
-      badge: null,
-    },
-    {
-      id: 'create',
-      label: 'Create Job',
-      icon: Plus,
-      badge: null,
-    },
+      onClick: () => {
+        onViewChange("calendar");
+        setIsMobileMenuOpen(false);
+      },
+      isActive: currentView === "calendar",
+      bg: "bg-secondary",
+      fg: "text-secondary-foreground"
+    }
   ];
 
-  const adminItems = [
+  const adminMenuItems = [
     {
-      id: 'admin',
-      label: 'Admin Jobs',
+      title: "Job Management",
       icon: Shield,
-      badge: null,
+      onClick: () => {
+        onViewChange("admin");
+        setIsMobileMenuOpen(false);
+      },
+      isActive: currentView === "admin"
     },
     {
-      id: 'admin-management',
-      label: 'User Management',
-      icon: Users,
-      badge: null,
-    },
-    {
-      id: 'reports',
-      label: 'Reports',
-      icon: BarChart3,
-      badge: null,
-    },
+      title: "User Management",
+      icon: UsersRound,
+      onClick: () => {
+        onViewChange("admin-management");
+        setIsMobileMenuOpen(false);
+      },
+      isActive: currentView === "admin-management"
+    }
   ];
 
-  const jobManagementItems = [
-    {
-      id: 'unapproved-jobs',
-      label: 'Unapproved Jobs',
-      icon: Clock,
-      badge: null,
-    },
-    {
-      id: 'approved-jobs',
-      label: 'Approved Jobs',
-      icon: CheckCircle,
-      badge: null,
-    },
-  ];
+  const SidebarContentComponent = () => (
+    <>
+      <SidebarHeader className="border-b border-border p-4 bg-card bg-opacity-90">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">
+              {userProfile?.full_name?.charAt(0) || 'U'}
+            </span>
+          </div>
+          <div>
+            <h1 className="text-sm font-bold text-foreground">
+              {userProfile?.full_name || 'User'}
+            </h1>
+            <p className="text-xs text-muted-foreground capitalize">
+              {userProfile?.role || 'Employee'}
+            </p>
+          </div>
+        </div>
+      </SidebarHeader>
+      
+      <SidebarContent className="px-3">
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-muted-foreground px-3 mb-3 mt-2 text-xs">
+            Main Navigation
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            {/* Icon Card Menu Style */}
+            <div className="grid grid-cols-2 gap-2">
+              {mainNavItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.title}
+                    aria-label={item.title}
+                    onClick={item.onClick}
+                    className={`
+                      flex flex-col items-center justify-center gap-2 py-4 rounded-xl shadow 
+                      transition-all duration-150 active:scale-95
+                      ${item.bg} ${item.fg}
+                      ${item.isActive ? "ring-2 ring-offset-2 ring-primary" : "hover:opacity-90"}
+                      focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
+                      h-28
+                    `}
+                  >
+                    <Icon className="w-7 h-7" />
+                    <span className="text-xs font-semibold tracking-wide">{item.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-  const handleJobManagementToggle = () => {
-    setIsJobManagementExpanded(!isJobManagementExpanded);
-  };
-
-  const handleJobManagementItemClick = (viewId: "unapproved-jobs" | "approved-jobs") => {
-    onViewChange(viewId);
-    setIsJobManagementExpanded(true);
-  };
-
-  return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-100">
-        <h1 className="text-xl font-bold text-gray-900">JobFlow</h1>
-        <p className="text-sm text-gray-500 mt-1">Management System</p>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
-        {/* Main Menu Items */}
-        {menuItems.map((item) => (
-          <Button
-            key={item.id}
-            variant={currentView === item.id ? "default" : "ghost"}
-            className={`w-full justify-start text-left ${
-              currentView === item.id 
-                ? "bg-blue-600 text-white hover:bg-blue-700" 
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            }`}
-            onClick={() => onViewChange(item.id as any)}
-          >
-            <item.icon className="w-4 h-4 mr-3" />
-            <span>{item.label}</span>
-            {item.badge && (
-              <Badge variant="secondary" className="ml-auto">
-                {item.badge}
-              </Badge>
-            )}
-          </Button>
-        ))}
-
-        {/* Job Management Section */}
-        <div className="space-y-1">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            onClick={handleJobManagementToggle}
-          >
-            {isJobManagementExpanded ? (
-              <ChevronDown className="w-4 h-4 mr-3" />
-            ) : (
-              <ChevronRight className="w-4 h-4 mr-3" />
-            )}
-            <span>Job Management</span>
-          </Button>
-          
-          {isJobManagementExpanded && (
-            <div className="ml-6 space-y-1">
-              {jobManagementItems.map((item) => (
-                <Button
-                  key={item.id}
-                  variant={currentView === item.id ? "default" : "ghost"}
-                  className={`w-full justify-start text-left ${
-                    currentView === item.id 
-                      ? "bg-blue-600 text-white hover:bg-blue-700" 
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                  }`}
-                  onClick={() => handleJobManagementItemClick(item.id as any)}
-                >
-                  <item.icon className="w-4 h-4 mr-3" />
-                  <span>{item.label}</span>
-                </Button>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-muted-foreground px-3 mb-2 text-xs">
+            Administration
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {adminMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    onClick={item.onClick}
+                    isActive={item.isActive}
+                    className={`w-full flex gap-2 items-center px-3 py-2 rounded-lg
+                      ${item.isActive ? 'bg-destructive text-destructive-foreground' : 'hover:bg-accent text-foreground'}`}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span className="text-xs font-medium">{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* User Profile Card */}
+        <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-primary via-muted to-card text-primary-foreground">
+          <div className="flex items-center mb-3">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
+              <User className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">{userProfile?.full_name || 'User'}</p>
+              <p className="text-xs text-muted-foreground capitalize">{userProfile?.role || 'Employee'}</p>
+            </div>
+          </div>
+          <Button 
+            onClick={() => setShowProfile(!showProfile)}
+            variant="secondary"
+            size="sm"
+            className="w-full bg-secondary hover:bg-accent text-primary border-0 text-xs"
+          >
+            View Profile
+          </Button>
+          {showProfile && (
+            <div className="mt-3">
+              <UserProfile />
             </div>
           )}
         </div>
+      </SidebarContent>
+    </>
+  );
 
-        {/* Admin Section */}
-        {isAdmin && (
-          <>
-            <div className="border-t border-gray-200 pt-4 mt-4">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
-                Admin
-              </p>
-              {adminItems.map((item) => (
-                <Button
-                  key={item.id}
-                  variant={currentView === item.id ? "default" : "ghost"}
-                  className={`w-full justify-start text-left ${
-                    currentView === item.id 
-                      ? "bg-red-600 text-white hover:bg-red-700" 
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                  }`}
-                  onClick={() => onViewChange(item.id as any)}
-                >
-                  <item.icon className="w-4 h-4 mr-3" />
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <Badge variant="destructive" className="ml-auto">
-                      {item.badge}
-                    </Badge>
-                  )}
-                </Button>
-              ))}
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <SidebarBase className="hidden md:flex border-r border-border bg-card w-64">
+        <SidebarContentComponent />
+      </SidebarBase>
+
+      {/* Mobile Menu */}
+      <div className="md:hidden">
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="fixed top-4 left-4 z-50 bg-card border-border"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-64 bg-card">
+            <div className="h-full bg-card">
+              <SidebarContentComponent />
             </div>
-          </>
-        )}
-
-        {/* Settings */}
-        <div className="border-t border-gray-200 pt-4 mt-4">
-          <Button
-            variant={currentView === 'settings' ? "default" : "ghost"}
-            className={`w-full justify-start text-left ${
-              currentView === 'settings' 
-                ? "bg-blue-600 text-white hover:bg-blue-700" 
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            }`}
-            onClick={() => onViewChange('settings')}
-          >
-            <Settings className="w-4 h-4 mr-3" />
-            <span>Settings</span>
-          </Button>
-        </div>
-      </nav>
-
-      {/* User Profile */}
-      <div className="p-4 border-t border-gray-200">
-        <UserProfileDropdown userProfile={userProfile} />
+          </SheetContent>
+        </Sheet>
       </div>
-    </div>
+    </>
   );
 }
