@@ -52,14 +52,10 @@ export function MinimalistSidebar({
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      fetchUserProfile();
-    }
+    if (user) fetchUserProfile();
   }, [user]);
 
   const fetchUserProfile = async () => {
-    if (!user) return;
-
     try {
       const { data } = await supabase
         .from("profiles")
@@ -67,25 +63,19 @@ export function MinimalistSidebar({
         .eq("id", user.id)
         .single();
 
-      if (data) {
-        setUserProfile(data);
-      } else {
-        fallbackProfile();
-      }
+      setUserProfile(
+        data || {
+          full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
+          role: "employee",
+        }
+      );
     } catch (error) {
       console.error("Error fetching user profile:", error);
-      fallbackProfile();
+      setUserProfile({
+        full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
+        role: "employee",
+      });
     }
-  };
-
-  const fallbackProfile = () => {
-    setUserProfile({
-      full_name:
-        user?.user_metadata?.full_name ||
-        user?.email?.split("@")[0] ||
-        "User",
-      role: "employee",
-    });
   };
 
   const mainMenuItems = [
@@ -138,31 +128,24 @@ export function MinimalistSidebar({
 
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="flex h-screen font-sans">
+      <div className="fixed left-0 top-0 h-full w-20 bg-gradient-to-b from-purple-700 to-indigo-800 text-white z-50 flex flex-col justify-between py-4">
         {/* Avatar */}
-        <aside className="w-64 bg-gradient-to-br from-purple-900 to-indigo-900 text-white flex flex-col p-4 shadow-lg z-50">
-        <div className="text-3xl font-bold mb-10 tracking-tight">PRINTWAVES</div>
+        <div className="flex justify-center">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
-                <span className="text-white font-bold text-sm">
-                  {userProfile?.full_name?.charAt(0) || "U"}
-                </span>
+              <div className="w-10 h-10 bg-white text-purple-700 font-bold rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
+                {userProfile?.full_name?.charAt(0) || "U"}
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-gray-900 text-white">
-              <p className="font-medium">
-                {userProfile?.full_name || "User"}
-              </p>
-              <p className="text-xs text-gray-300 capitalize">
-                {userProfile?.role || "Employee"}
-              </p>
+            <TooltipContent side="right" className="bg-black text-white">
+              <p className="font-medium">{userProfile?.full_name || "User"}</p>
+              <p className="text-xs text-gray-300 capitalize">{userProfile?.role || "Employee"}</p>
             </TooltipContent>
           </Tooltip>
         </div>
 
         {/* Main Menu */}
-        <main className="flex-1 bg-gray-50 p-8 overflow-auto">
+        <div className="flex flex-col space-y-2 mt-10">
           {mainMenuItems.filter(canAccessMenuItem).map((item) => (
             <Tooltip key={item.view}>
               <TooltipTrigger asChild>
@@ -171,27 +154,24 @@ export function MinimalistSidebar({
                   size="icon"
                   onClick={() => onViewChange(item.view)}
                   className={cn(
-                    "w-10 h-10 mx-3 rounded-xl transition-all duration-200",
+                    "w-10 h-10 mx-auto rounded-xl transition-all duration-200",
                     currentView === item.view
-                      ? "bg-blue-100 text-blue-700 shadow-sm"
-                      : "hover:bg-gray-100 text-gray-600"
+                      ? "bg-white text-purple-700 shadow"
+                      : "hover:bg-purple-600 text-white"
                   )}
                 >
                   <item.icon className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-gray-900 text-white">
+              <TooltipContent side="right">
                 <p>{item.title}</p>
               </TooltipContent>
             </Tooltip>
           ))}
+        </div>
 
-          {/* Separator */}
-          {adminMenuItems.filter(canAccessMenuItem).length > 0 && (
-            <div className="mx-3 my-4 border-t border-gray-200" />
-          )}
-
-          {/* Admin Menu */}
+        {/* Admin Menu */}
+        <div className="flex flex-col space-y-2 mt-4">
           {adminMenuItems.filter(canAccessMenuItem).map((item) => (
             <Tooltip key={item.view}>
               <TooltipTrigger asChild>
@@ -200,39 +180,38 @@ export function MinimalistSidebar({
                   size="icon"
                   onClick={() => onViewChange(item.view)}
                   className={cn(
-                    "w-10 h-10 mx-3 rounded-xl transition-all duration-200",
+                    "w-10 h-10 mx-auto rounded-xl transition-all duration-200",
                     currentView === item.view
-                      ? "bg-red-100 text-red-700 shadow-sm"
-                      : "hover:bg-gray-100 text-gray-600"
+                      ? "bg-white text-purple-700 shadow"
+                      : "hover:bg-purple-600 text-white"
                   )}
                 >
                   <item.icon className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-gray-900 text-white">
+              <TooltipContent side="right">
                 <p>{item.title}</p>
               </TooltipContent>
             </Tooltip>
           ))}
         </div>
 
-        {/* Bottom Profile */}
-        <div className="p-3 border-t border-gray-100">
+        {/* Profile Icon Bottom */}
+        <div className="flex justify-center">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-10 h-10 rounded-xl hover:bg-gray-100 text-gray-600"
+                className="w-10 h-10 rounded-xl hover:bg-purple-600 text-white"
               >
                 <User className="w-5 h-5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-gray-900 text-white">
+            <TooltipContent side="right">
               <p>Profile Settings</p>
             </TooltipContent>
           </Tooltip>
-          <UserProfileDropdown userProfile={userProfile} />
         </div>
       </div>
     </TooltipProvider>
