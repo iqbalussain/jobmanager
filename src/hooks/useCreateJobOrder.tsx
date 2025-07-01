@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -27,11 +26,13 @@ export function useCreateJobOrder() {
     'Wadi Kabeer': 'WK',
     'Wajihat Ruwi': 'WR',
     'Head Office': 'HO',
+    'Ruwi Branch': 'RB',
   };
   const branchStartNumbers: Record<string, number> = {
   'WK': 20001,
   'WR': 30001,
   'HO': 10001,
+  'RB': 40001,
   };
 
 const generateJobOrderNumber = async (branch: string): Promise<string> => {
@@ -60,6 +61,7 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
 
   return `${prefix}${nextNumber}`;
 };
+
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: CreateJobOrderData) => {
       if (!user) throw new Error('User must be authenticated to create job orders');
@@ -146,4 +148,3 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
     isCreating: createJobOrderMutation.isPending,
   };
 }
-
