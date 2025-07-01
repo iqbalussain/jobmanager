@@ -134,7 +134,7 @@ export function MinimalistSidebar({
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
-                <span className="text-Black font-bold text-sm">
+                <span className="text-white font-bold text-md">
                 {userProfile?.full_name?.charAt(0) || "U"}
                 </span>
               </div>
