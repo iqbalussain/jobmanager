@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Job } from "@/pages/Index";
 import { JobTitle } from "@/types/jobOrder";
-import { FileText, Calendar, Clock } from "lucide-react";
+import { FileText, Calendar, Clock, MapPin } from "lucide-react";
 
 interface ProjectDetailsSectionProps {
   job: Job;
@@ -78,6 +78,57 @@ export function ProjectDetailsSection({
           ) : (
             <p className="mt-1 text-sm font-semibold text-gray-900">{job.title}</p>
           )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label className="text-sm font-medium text-gray-600">Branch</Label>
+            {isEditMode ? (
+              <Select 
+                value={editData.branch || job.branch || ''} 
+                onValueChange={(value) => onEditDataChange({ ...editData, branch: value })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Head Office">Head Office</SelectItem>
+                  <SelectItem value="Wadi Kabeer">Wadi Kabeer</SelectItem>
+                  <SelectItem value="Wajihat Ruwi">Wajihat Ruwi</SelectItem>
+                  <SelectItem value="Ruwi Branch">Ruwi Branch</SelectItem>
+                  <SelectItem value="Ghubra Branch">Ghubra Branch</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <p className="mt-1 text-sm text-gray-700">{job.branch || 'Head Office'}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+              <MapPin className="w-4 h-4" />
+              Delivered At
+            </Label>
+            {isEditMode ? (
+              <Select 
+                value={editData.deliveredAt || job.deliveredAt || ''} 
+                onValueChange={(value) => onEditDataChange({ ...editData, deliveredAt: value })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select delivery location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Head Office">Head Office</SelectItem>
+                  <SelectItem value="Faiyaz">Faiyaz</SelectItem>
+                  <SelectItem value="Babu">Babu</SelectItem>
+                  <SelectItem value="Asif">Asif</SelectItem>
+                  <SelectItem value="Abbas">Abbas</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <p className="mt-1 text-sm text-gray-700">{job.deliveredAt || 'Not specified'}</p>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

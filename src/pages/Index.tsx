@@ -1,3 +1,4 @@
+
 import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
@@ -47,6 +48,7 @@ export interface Job {
   job_title_id?: string;
   created_by?: string;
   approval_status?: string;
+  deliveredAt?: string;
 }
 
 const LoadingSpinner = () => (
@@ -115,6 +117,7 @@ const [currentView, setCurrentView] = useState<
     created_by: order.created_by,
     invoiceNumber: order.invoice_number || "",
     approval_status: order.approval_status,
+    deliveredAt: order.delivered_at || "",
   }));
 
   const handleStatusUpdate = (jobId: string, status: JobStatus) => {

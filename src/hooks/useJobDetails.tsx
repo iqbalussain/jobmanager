@@ -37,7 +37,8 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
         branch: job.branch,
         jobOrderDetails: job.jobOrderDetails,
         customer_id: job.customer_id,
-        job_title_id: job.job_title_id
+        job_title_id: job.job_title_id,
+        deliveredAt: job.deliveredAt
       });
       
       // Load existing invoice number if available
@@ -87,6 +88,7 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
         estimated_hours: editData.estimatedHours,
         branch: editData.branch,
         job_order_details: editData.jobOrderDetails,
+        delivered_at: editData.deliveredAt,
         updated_at: new Date().toISOString()
       };
 

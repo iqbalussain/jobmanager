@@ -1,3 +1,4 @@
+
 import { Job } from '@/pages/Index';
 import { getPriorityColor, getStatusColor } from './pdfStyles';
 
@@ -90,6 +91,13 @@ export const generatePDFContent = (job: Job, invoiceNumber?: string): string => 
                   <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.branch || 'Head Office'}</p>
                 </div>
               </div>
+
+              <div>
+                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Delivered At:</label>
+                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
+                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.deliveredAt || 'Not specified'}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -150,6 +158,8 @@ export const generatePDFContent = (job: Job, invoiceNumber?: string): string => 
       </div>
 
       <!-- Footer -->
+      <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 2px solid #cbd5e1;">
+        <div style="margin-bottom: 8px;">
           <p style="margin: 0 0 8px 0; font-size: 10px; color: #64748b; font-weight: 600;">Professional Job Order Management & Tracking</p>
           <div style="padding-top: 8px; border-top: 2px solid #cbd5e1;">
             <p style="margin: 0; font-size: 9px; color: #94a3b8; font-weight: 500;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
