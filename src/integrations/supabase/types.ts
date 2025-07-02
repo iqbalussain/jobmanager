@@ -162,6 +162,7 @@ export type Database = {
           created_at: string
           created_by: string
           customer_id: string
+          delivered_at: string | null
           designer_id: string | null
           due_date: string | null
           estimated_hours: number | null
@@ -170,7 +171,6 @@ export type Database = {
           job_order_details: string | null
           job_order_number: string
           job_title_id: string | null
-          job_type_id: string | null
           priority: Database["public"]["Enums"]["priority_level"]
           salesman_id: string | null
           status: Database["public"]["Enums"]["job_status"]
@@ -188,6 +188,7 @@ export type Database = {
           created_at?: string
           created_by: string
           customer_id: string
+          delivered_at?: string | null
           designer_id?: string | null
           due_date?: string | null
           estimated_hours?: number | null
@@ -196,7 +197,6 @@ export type Database = {
           job_order_details?: string | null
           job_order_number: string
           job_title_id?: string | null
-          job_type_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"]
           salesman_id?: string | null
           status?: Database["public"]["Enums"]["job_status"]
@@ -214,6 +214,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           customer_id?: string
+          delivered_at?: string | null
           designer_id?: string | null
           due_date?: string | null
           estimated_hours?: number | null
@@ -222,7 +223,6 @@ export type Database = {
           job_order_details?: string | null
           job_order_number?: string
           job_title_id?: string | null
-          job_type_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"]
           salesman_id?: string | null
           status?: Database["public"]["Enums"]["job_status"]
