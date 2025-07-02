@@ -55,4 +55,5 @@ export interface JobOrder {
   invoice_number?: string;
   approved_by?: string | null;
   approved_at?: string | null;
+  delivered_at?: string | null;
 }
