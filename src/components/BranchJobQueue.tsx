@@ -122,10 +122,10 @@ export function BranchJobQueue({ jobs, onViewJob }: BranchJobQueueProps) {
           </div>
           
           <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-48 bg-white">
               <SelectValue placeholder="Select branch" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               <SelectItem value="all">All Branches</SelectItem>
               {branches.map((branch) => (
                 <SelectItem key={branch} value={branch}>
@@ -136,10 +136,10 @@ export function BranchJobQueue({ jobs, onViewJob }: BranchJobQueueProps) {
           </Select>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-48 bg-white">
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="in-progress">In Progress</SelectItem>
@@ -204,7 +204,7 @@ export function BranchJobQueue({ jobs, onViewJob }: BranchJobQueueProps) {
               </div>
 
               {/* Job List */}
-              <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-400 scrollbar-track-slate-100">
+              <div className="space-y-3 max-h-64 overflow-y-auto">
                 {data.jobs.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Building2 className="w-12 h-12 mx-auto mb-2 opacity-50" />

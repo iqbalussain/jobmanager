@@ -1,3 +1,4 @@
+
 import {
   Home,
   FileText,
@@ -9,6 +10,7 @@ import {
   ClipboardList,
   CheckCircle,
   User,
+  Building2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +38,7 @@ interface MinimalistSidebarProps {
       | "reports"
       | "unapproved-jobs"
       | "approved-jobs"
+      | "branch-queue"
   ) => void;
 }
 
@@ -92,6 +95,11 @@ export function MinimalistSidebar({
       view: "approved-jobs" as const,
     },
     {
+      title: "Branch Queue",
+      icon: Building2,
+      view: "branch-queue" as const,
+    },
+    {
       title: "Create Job",
       icon: Plus,
       view: "create" as const,
@@ -133,15 +141,15 @@ export function MinimalistSidebar({
         <div className="p-3 border-b border-gray-100">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
+              <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
                 <span className="text-white font-bold text-md">
                 {userProfile?.full_name?.charAt(0) || "U"}
                 </span>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-green text-dark">
+            <TooltipContent side="right" className="bg-white text-gray-900 border">
               <p className="font-medium">{userProfile?.full_name || "User"}</p>
-              <p className="text-xs text-Blue-300 capitalize">{userProfile?.role || "Employee"}</p>
+              <p className="text-xs text-gray-500 capitalize">{userProfile?.role || "Employee"}</p>
             </TooltipContent>
           </Tooltip>
         </div>
@@ -158,14 +166,14 @@ export function MinimalistSidebar({
                   className={cn(
                     "w-10 h-10 mx-auto rounded-xl transition-all duration-200",
                     currentView === item.view
-                      ? "bg-white text-gray-200 shadow"
-                      : "hover:bg-gray-400 text-black"
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
+                      : "hover:bg-gray-100 text-gray-600"
                   )}
                 >
                   <item.icon className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="bg-white text-gray-900 border">
                 <p>{item.title}</p>
               </TooltipContent>
             </Tooltip>
@@ -184,14 +192,14 @@ export function MinimalistSidebar({
                   className={cn(
                     "w-10 h-10 mx-auto rounded-xl transition-all duration-200",
                     currentView === item.view
-                      ? "bg-Green text-gray-400 shadow"
-                      : "hover:bg-gray-400 text-black"
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
+                      : "hover:bg-gray-100 text-gray-600"
                   )}
                 >
                   <item.icon className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="bg-white text-gray-900 border">
                 <p>{item.title}</p>
               </TooltipContent>
             </Tooltip>
@@ -199,14 +207,7 @@ export function MinimalistSidebar({
         </div>
 
         {/* Profile Icon Bottom */}
-        <div className="flex justify-center p-3 border-t border-gray-100">
-          <Tooltip>
-            <TooltipTrigger asChild>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="bg-gray-400 text-black">
-              <p>Profile Settings</p>
-            </TooltipContent>
-          </Tooltip>
+        <div className="flex justify-center p-3 border-t border-gray-100 mt-auto">
           <UserProfileDropdown userProfile={userProfile} />
         </div>
       </div>

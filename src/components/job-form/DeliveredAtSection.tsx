@@ -2,25 +2,25 @@
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface BranchSectionProps {
+interface DeliveredAtSectionProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-export function BranchSection({ value, onChange }: BranchSectionProps) {
+export function DeliveredAtSection({ value, onChange }: DeliveredAtSectionProps) {
   return (
     <div>
-      <Label htmlFor="branch">Branch *</Label>
+      <Label htmlFor="delivered-at">Delivered At</Label>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger>
-          <SelectValue placeholder="Select branch" />
+          <SelectValue placeholder="Select delivery location" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="Head Office">Head Office</SelectItem>
-          <SelectItem value="Wadi Kabeer">Wadi Kabeer</SelectItem>
-          <SelectItem value="Wajihat Ruwi">Wajihat ruwi</SelectItem>
-          <SelectItem value="Ruwi Branch">Ruwi Branch</SelectItem>
-          <SelectItem value="Ghubra Branch">Ghubra Branch</SelectItem>
+          <SelectItem value="Faiyaz">Faiyaz</SelectItem>
+          <SelectItem value="Babu">Babu</SelectItem>
+          <SelectItem value="Asif">Asif</SelectItem>
+          <SelectItem value="Abbas">Abbas</SelectItem>
         </SelectContent>
       </Select>
     </div>

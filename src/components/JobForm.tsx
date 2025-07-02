@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreateJobOrder } from "@/hooks/useCreateJobOrder";
 import { useDropdownData } from "@/hooks/useDropdownData";
 import { BranchSection } from "./job-form/BranchSection";
+import { DeliveredAtSection } from "./job-form/DeliveredAtSection";
 import { CustomerSection } from "./job-form/CustomerSection";
 import { JobDetailsSection } from "./job-form/JobDetailsSection";
 import { TeamSection } from "./job-form/TeamSection";
@@ -29,6 +30,7 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
     dueDate: new Date().toISOString().split('T')[0],
     estimatedHours: 8,
     branch: 'Head Office',
+    deliveredAt: '',
     jobOrderDetails: ''
   });
 
@@ -47,6 +49,7 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
         due_date: formData.dueDate,
         estimated_hours: formData.estimatedHours,
         branch: formData.branch,
+        delivered_at: formData.deliveredAt,
         job_order_details: formData.jobOrderDetails
       });
 
@@ -67,6 +70,7 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
         dueDate: new Date().toISOString().split('T')[0],
         estimatedHours: 8,
         branch: 'Head Office',
+        deliveredAt: '',
         jobOrderDetails: ''
       });
 
@@ -83,63 +87,72 @@ export function JobForm({ onCancel }: { onCancel?: () => void }) {
   };
 
   return (
-    <Card className="max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center">Create New Job Order</CardTitle>
-      </CardHeader>
-      
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <BranchSection 
-            value={formData.branch} 
-            onChange={(value) => setFormData(prev => ({ ...prev, branch: value }))} 
-          />
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
+      <Card className="max-w-4xl mx-auto bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+          <CardTitle className="text-2xl font-bold text-center">Create New Job Order</CardTitle>
+        </CardHeader>
+        
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <BranchSection 
+                value={formData.branch} 
+                onChange={(value) => setFormData(prev => ({ ...prev, branch: value }))} 
+              />
 
-          <CustomerSection 
-            value={formData.customer} 
-            onChange={(value) => setFormData(prev => ({ ...prev, customer: value }))}
-            customers={customers}
-          />
+              <DeliveredAtSection 
+                value={formData.deliveredAt} 
+                onChange={(value) => setFormData(prev => ({ ...prev, deliveredAt: value }))} 
+              />
+            </div>
 
-          <JobDetailsSection 
-            jobTitle={formData.jobTitle}
-            assignee={formData.assignee}
-            onJobTitleChange={(value) => setFormData(prev => ({ ...prev, jobTitle: value }))}
-            onAssigneeChange={(value) => setFormData(prev => ({ ...prev, assignee: value }))}
-            jobTitles={jobTitles}
-          />
+            <CustomerSection 
+              value={formData.customer} 
+              onChange={(value) => setFormData(prev => ({ ...prev, customer: value }))}
+              customers={customers}
+            />
 
-          <TeamSection 
-            designer={formData.designer}
-            salesman={formData.salesman}
-            onDesignerChange={(value) => setFormData(prev => ({ ...prev, designer: value }))}
-            onSalesmanChange={(value) => setFormData(prev => ({ ...prev, salesman: value }))}
-            designers={designers}
-            salesmen={salesmen}
-          />
+            <JobDetailsSection 
+              jobTitle={formData.jobTitle}
+              assignee={formData.assignee}
+              onJobTitleChange={(value) => setFormData(prev => ({ ...prev, jobTitle: value }))}
+              onAssigneeChange={(value) => setFormData(prev => ({ ...prev, assignee: value }))}
+              jobTitles={jobTitles}
+            />
 
-          <ProjectDetailsSection 
-            priority={formData.priority}
-            status={formData.status}
-            onPriorityChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
-            onStatusChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
-          />
+            <TeamSection 
+              designer={formData.designer}
+              salesman={formData.salesman}
+              onDesignerChange={(value) => setFormData(prev => ({ ...prev, designer: value }))}
+              onSalesmanChange={(value) => setFormData(prev => ({ ...prev, salesman: value }))}
+              designers={designers}
+              salesmen={salesmen}
+            />
 
-          <ScheduleSection 
-            dueDate={formData.dueDate}
-            estimatedHours={formData.estimatedHours}
-            onDueDateChange={(value) => setFormData(prev => ({ ...prev, dueDate: value }))}
-            onEstimatedHoursChange={(value) => setFormData(prev => ({ ...prev, estimatedHours: value }))}
-          />
+            <ProjectDetailsSection 
+              priority={formData.priority}
+              status={formData.status}
+              onPriorityChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
+              onStatusChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+            />
 
-          <JobOrderDetailsSection 
-            value={formData.jobOrderDetails}
-            onChange={(value) => setFormData(prev => ({ ...prev, jobOrderDetails: value }))}
-          />
+            <ScheduleSection 
+              dueDate={formData.dueDate}
+              estimatedHours={formData.estimatedHours}
+              onDueDateChange={(value) => setFormData(prev => ({ ...prev, dueDate: value }))}
+              onEstimatedHoursChange={(value) => setFormData(prev => ({ ...prev, estimatedHours: value }))}
+            />
 
-          <FormActions onCancel={onCancel} isCreating={isCreating} />
-        </form>
-      </CardContent>
-    </Card>
+            <JobOrderDetailsSection 
+              value={formData.jobOrderDetails}
+              onChange={(value) => setFormData(prev => ({ ...prev, jobOrderDetails: value }))}
+            />
+
+            <FormActions onCancel={onCancel} isCreating={isCreating} />
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
