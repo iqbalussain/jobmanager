@@ -1,4 +1,5 @@
-import { Job } from '@/types/job';
+
+import { Job } from '@/pages/Index';
 import { getPriorityColor, getStatusColor } from './pdfStyles';
 
 export const generatePDFContent = (job: Job, invoiceNumber?: string): string => {

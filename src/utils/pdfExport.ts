@@ -1,4 +1,5 @@
-import { Job } from '@/types/job';
+
+import { Job } from '@/pages/Index';
 import { createStyledElement } from './pdf/pdfStyles';
 import { generatePDFContent } from './pdf/pdfContentGenerator';
 import { generatePDFFromElement } from './pdf/pdfGenerator';

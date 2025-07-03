@@ -1,7 +1,8 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, Download } from "lucide-react";
-import { Job } from "@/types/job";
+import { Job } from "@/pages/Index";
 
 // Import WhatsApp icon from lucide-react
 import { MessageCircle } from "lucide-react";
