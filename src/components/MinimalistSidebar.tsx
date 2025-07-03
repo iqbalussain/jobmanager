@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { 
   Home, 
@@ -14,12 +14,18 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SidebarItem {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   path: string;
   roles?: string[];
+}
+
+interface UserProfile {
+  full_name: string | null;
+  role: string;
 }
 
 const sidebarItems: SidebarItem[] = [
@@ -36,6 +42,32 @@ export function MinimalistSidebar() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('full_name, role')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching user profile:', error);
+          return;
+        }
+        
+        setUserProfile(data);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -48,7 +80,7 @@ export function MinimalistSidebar() {
 
   const filteredItems = sidebarItems.filter(item => {
     if (!item.roles) return true;
-    return user?.role && item.roles.includes(user.role);
+    return userProfile?.role && item.roles.includes(userProfile.role);
   });
 
   return (
@@ -106,12 +138,12 @@ export function MinimalistSidebar() {
 
         {/* User Section */}
         <div className="p-4 border-t border-gray-200">
-          {!isCollapsed && user && (
+          {!isCollapsed && userProfile && (
             <div className="mb-3">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {user.full_name || user.email}
+                {userProfile.full_name || user?.email}
               </p>
-              <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+              <p className="text-xs text-gray-500 capitalize">{userProfile.role}</p>
             </div>
           )}
           

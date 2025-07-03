@@ -1,4 +1,3 @@
-
 import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
@@ -58,8 +57,7 @@ const LoadingSpinner = () => (
 );
 
 const Index = () => {
-
-const [currentView, setCurrentView] = useState<
+  const [currentView, setCurrentView] = useState<
     | "dashboard"
     | "jobs"
     | "create"
@@ -78,7 +76,6 @@ const [currentView, setCurrentView] = useState<
   const { user } = useAuth();
   const { jobOrders, isLoading, updateStatus, updateJobData, refetch } = useJobOrders();
 
-  // Fetch role on load
   useEffect(() => {
     const fetchUserRole = async () => {
       if (!user) return;
@@ -141,7 +138,7 @@ const [currentView, setCurrentView] = useState<
     if (isLoading) return <LoadingSpinner />;
 
     switch (currentView) {
-       case "dashboard":
+      case "dashboard":
         return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />
       case "jobs":
         return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
