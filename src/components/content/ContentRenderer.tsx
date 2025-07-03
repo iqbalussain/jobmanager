@@ -53,7 +53,7 @@ export function ContentRenderer({
       case "settings":
         return <SettingsView />;
       case "admin":
-        return <AdminJobManagement jobs={jobs} onStatusUpdate={onStatusUpdate} />;
+        return <AdminJobManagement />;
       case "admin-management":
         return <AdminManagement />;
       case "reports":
