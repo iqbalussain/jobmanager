@@ -4,6 +4,7 @@ import { useJobOrders } from "@/hooks/useJobOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { JobDetails } from "@/components/JobDetails";
+import { useLocation } from "react-router-dom";
 
 // Lazy loaded components for performance
 const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
@@ -57,19 +58,7 @@ const LoadingSpinner = () => (
 );
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<
-    | "dashboard"
-    | "jobs"
-    | "create"
-    | "settings"
-    | "admin"
-    | "admin-management"
-    | "reports"
-    | "unapproved-jobs"
-    | "approved-jobs"
-    | "branch-queue"
-  >("dashboard");
-
+  const location = useLocation();
   const [userRole, setUserRole] = useState<string>("employee");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -134,16 +123,46 @@ const Index = () => {
     setIsJobDetailsOpen(true);
   };
 
+  const getCurrentView = () => {
+    const path = location.pathname;
+    switch (path) {
+      case "/":
+        return "dashboard";
+      case "/jobs":
+        return "jobs";
+      case "/create":
+        return "create";
+      case "/settings":
+        return "settings";
+      case "/admin":
+        return "admin";
+      case "/admin-management":
+        return "admin-management";
+      case "/reports":
+        return "reports";
+      case "/unapproved-jobs":
+        return "unapproved-jobs";
+      case "/approved-jobs":
+        return "approved-jobs";
+      case "/branch-queue":
+        return "branch-queue";
+      default:
+        return "dashboard";
+    }
+  };
+
   const renderContent = () => {
     if (isLoading) return <LoadingSpinner />;
 
+    const currentView = getCurrentView();
+    
     switch (currentView) {
       case "dashboard":
-        return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />
+        return <ModernDashboard jobs={transformedJobs} onViewChange={() => {}} />
       case "jobs":
         return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
       case "create":
-        return <JobFormWithImageUpload onCancel={() => setCurrentView("jobs")} />;
+        return <JobFormWithImageUpload onCancel={() => window.history.back()} />;
       case "settings":
         return <SettingsView />;
       case "admin":
@@ -180,11 +199,8 @@ const Index = () => {
   };
 
   return (
-    <div className="ml-20 flex-1 overflow-y-auto">
-      <MinimalistSidebar 
-        currentView={currentView} 
-        onViewChange={setCurrentView}
-      />
+    <div className="flex h-screen">
+      <MinimalistSidebar />
       <div className="flex-1 overflow-y-auto">
         <Suspense fallback={<LoadingSpinner />}>
           {renderContent()}
