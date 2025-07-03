@@ -1,216 +1,130 @@
 
-import {
-  Home,
-  FileText,
-  Settings,
-  Shield,
-  UsersRound,
-  BarChart3,
-  Plus,
-  ClipboardList,
-  CheckCircle,
-  User,
-  Building2,
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { 
+  Home, 
+  Calendar, 
+  BarChart3, 
+  Settings, 
+  Users,
+  MessageCircle,
+  LogOut,
+  Menu,
+  X
 } from "lucide-react";
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { UserProfileDropdown } from "@/components/user-profile/UserProfileDropdown";
 
-interface MinimalistSidebarProps {
-  currentView: string;
-  onViewChange: (
-    view:
-      | "dashboard"
-      | "jobs"
-      | "create"
-      | "settings"
-      | "admin"
-      | "admin-management"
-      | "reports"
-      | "unapproved-jobs"
-      | "approved-jobs"
-      | "branch-queue"
-  ) => void;
+interface SidebarItem {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  path: string;
+  roles?: string[];
 }
 
-interface UserProfile {
-  full_name: string;
-  role: string;
-}
+const sidebarItems: SidebarItem[] = [
+  { icon: Home, label: "Dashboard", path: "/" },
+  { icon: MessageCircle, label: "Chat", path: "/chat" },
+  { icon: Calendar, label: "Calendar", path: "/calendar" },
+  { icon: BarChart3, label: "Reports", path: "/reports" },
+  { icon: Users, label: "Admin", path: "/admin", roles: ["admin", "manager"] },
+  { icon: Settings, label: "Settings", path: "/settings" },
+];
 
-export function MinimalistSidebar({
-  currentView,
-  onViewChange,
-}: MinimalistSidebarProps) {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const { user } = useAuth();
+export function MinimalistSidebar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  useEffect(() => {
-    if (user) fetchUserProfile();
-  }, [user]);
-
-  const fetchUserProfile = async () => {
+  const handleSignOut = async () => {
     try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, role")
-        .eq("id", user.id)
-        .single();
-
-      setUserProfile(
-        data || {
-          full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
-          role: "employee",
-        }
-      );
+      await signOut();
+      navigate("/");
     } catch (error) {
-      console.error("Error fetching user profile:", error);
-      setUserProfile({
-        full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
-        role: "employee",
-      });
+      console.error("Error signing out:", error);
     }
   };
 
-  const mainMenuItems = [
-    { title: "Dashboard", icon: Home, view: "dashboard" as const },
-    {
-      title: "Unapproved Jobs",
-      icon: ClipboardList,
-      view: "unapproved-jobs" as const,
-      roles: ["admin", "manager", "salesman", "designer"],
-    },
-    {
-      title: "Approved Jobs",
-      icon: CheckCircle,
-      view: "approved-jobs" as const,
-    },
-    {
-      title: "Branch Queue",
-      icon: Building2,
-      view: "branch-queue" as const,
-    },
-    {
-      title: "Create Job",
-      icon: Plus,
-      view: "create" as const,
-      roles: ["admin", "manager", "salesman"],
-    },
-    { title: "Settings", icon: Settings, view: "settings" as const },
-  ];
-
-  const adminMenuItems = [
-    {
-      title: "Job Administration",
-      icon: Shield,
-      view: "admin" as const,
-      roles: ["admin", "manager"],
-    },
-    {
-      title: "User Management",
-      icon: UsersRound,
-      view: "admin-management" as const,
-      roles: ["admin", "manager"],
-    },
-    {
-      title: "Reports & Analytics",
-      icon: BarChart3,
-      view: "reports" as const,
-      roles: ["admin", "manager", "salesman"],
-    },
-  ];
-
-  const canAccessMenuItem = (item: any) => {
+  const filteredItems = sidebarItems.filter(item => {
     if (!item.roles) return true;
-    return item.roles.includes(userProfile?.role);
-  };
+    return user?.role && item.roles.includes(user.role);
+  });
 
   return (
-    <TooltipProvider delayDuration={100}>
-      <div className="fixed left-0 top-0 h-full w-16 bg-white border-r border-gray-200 shadow-lg z-50 flex flex-col">
-        {/* Avatar */}
-        <div className="p-3 border-b border-gray-100">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg cursor-pointer">
-                <span className="text-white font-bold text-md">
-                {userProfile?.full_name?.charAt(0) || "U"}
-                </span>
+    <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${
+      isCollapsed ? 'w-16' : 'w-64'
+    }`}>
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className={`flex items-center space-x-3 ${isCollapsed ? 'justify-center' : ''}`}>
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">JM</span>
               </div>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="bg-white text-gray-900 border">
-              <p className="font-medium">{userProfile?.full_name || "User"}</p>
-              <p className="text-xs text-gray-500 capitalize">{userProfile?.role || "Employee"}</p>
-            </TooltipContent>
-          </Tooltip>
+              {!isCollapsed && (
+                <span className="font-semibold text-gray-900">Job Manager</span>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="p-1"
+            >
+              {isCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
+            </Button>
+          </div>
         </div>
 
-        {/* Main Menu */}
-        <div className="flex flex-col space-y-2 mt-10">
-          {mainMenuItems.filter(canAccessMenuItem).map((item) => (
-            <Tooltip key={item.view}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onViewChange(item.view)}
-                  className={cn(
-                    "w-10 h-10 mx-auto rounded-xl transition-all duration-200",
-                    currentView === item.view
-                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
-                      : "hover:bg-gray-100 text-gray-600"
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white text-gray-900 border">
-                <p>{item.title}</p>
-              </TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
+        {/* Navigation */}
+        <nav className="flex-1 p-4">
+          <ul className="space-y-2">
+            {filteredItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              
+              return (
+                <li key={item.path}>
+                  <button
+                    onClick={() => navigate(item.path)}
+                    className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    } ${isCollapsed ? 'justify-center' : ''}`}
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    {!isCollapsed && <span className="font-medium">{item.label}</span>}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
-        {/* Admin Menu */}
-        <div className="flex flex-col space-y-2 mt-4">
-          {adminMenuItems.filter(canAccessMenuItem).map((item) => (
-            <Tooltip key={item.view}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onViewChange(item.view)}
-                  className={cn(
-                    "w-10 h-10 mx-auto rounded-xl transition-all duration-200",
-                    currentView === item.view
-                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
-                      : "hover:bg-gray-100 text-gray-600"
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white text-gray-900 border">
-                <p>{item.title}</p>
-              </TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
-
-        {/* Profile Icon Bottom */}
-        <div className="flex justify-center p-3 border-t border-gray-100 mt-auto">
-          <UserProfileDropdown userProfile={userProfile} />
+        {/* User Section */}
+        <div className="p-4 border-t border-gray-200">
+          {!isCollapsed && user && (
+            <div className="mb-3">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user.full_name || user.email}
+              </p>
+              <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+            </div>
+          )}
+          
+          <Button
+            onClick={handleSignOut}
+            variant="ghost"
+            className={`w-full ${isCollapsed ? 'justify-center px-2' : 'justify-start'} text-gray-700 hover:text-red-600 hover:bg-red-50`}
+          >
+            <LogOut className="w-4 h-4" />
+            {!isCollapsed && <span className="ml-2">Sign Out</span>}
+          </Button>
         </div>
       </div>
-    </TooltipProvider>
+    </div>
   );
 }
