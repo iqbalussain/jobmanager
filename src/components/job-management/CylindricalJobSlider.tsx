@@ -39,7 +39,7 @@ export function CylindricalJobSlider({ jobs, selectedIndex, onJobSelect }: Cylin
 
   return (
     <div className="relative w-full h-96 overflow-hidden">
-      <style jsx>{`
+      <style>{`
         .cylinder-container {
           position: relative;
           width: 100%;
@@ -61,10 +61,6 @@ export function CylindricalJobSlider({ jobs, selectedIndex, onJobSelect }: Cylin
           position: absolute;
           left: 50%;
           top: calc(50% - 1.2rem);
-          transform: rotateX(calc(15deg * (var(--day-idx) - var(--current-day)))) 
-                    translateZ(190px) 
-                    translateX(-50%) 
-                    scale(var(--scale, 1));
           width: 85%;
           height: 2.8rem;
           display: grid;
@@ -75,10 +71,11 @@ export function CylindricalJobSlider({ jobs, selectedIndex, onJobSelect }: Cylin
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.1);
+          cursor: pointer;
         }
         
         .cylinder-item.active {
-          --scale: 1.15;
+          transform: rotateX(0deg) translateZ(190px) translateX(-50%) scale(1.15);
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
           border: 1px solid rgba(255, 255, 255, 0.3);
         }
@@ -167,36 +164,42 @@ export function CylindricalJobSlider({ jobs, selectedIndex, onJobSelect }: Cylin
 
       <div className="cylinder-container">
         <ul className="cylinder-list">
-          {jobs.map((job, index) => (
-            <li
-              key={job.id}
-              className={`cylinder-item ${index === currentDay ? 'active' : ''}`}
-              style={{
-                '--day-idx': index,
-                '--current-day': currentDay,
-                backgroundColor: getJobColor(job, index),
-                backgroundImage: `linear-gradient(135deg, 
-                  ${getJobColor(job, index)}, 
-                  ${getJobColor(job, index).replace('50%', '35%')})`
-              } as React.CSSProperties}
-              onClick={() => {
-                setCurrentDay(index);
-                onJobSelect(index);
-              }}
-            >
-              <div className="job-number">
-                #{job.jobOrderNumber}
-              </div>
-              <div className="job-title">
-                {job.title}
-              </div>
-              <div 
-                className="priority-dot"
-                style={{ backgroundColor: getPriorityColor(job.priority) }}
-                title={`${job.priority} priority`}
-              />
-            </li>
-          ))}
+          {jobs.map((job, index) => {
+            const rotateX = 15 * (index - currentDay);
+            const isActive = index === currentDay;
+            
+            return (
+              <li
+                key={job.id}
+                className={`cylinder-item ${isActive ? 'active' : ''}`}
+                style={{
+                  transform: isActive 
+                    ? `rotateX(0deg) translateZ(190px) translateX(-50%) scale(1.15)`
+                    : `rotateX(${rotateX}deg) translateZ(190px) translateX(-50%) scale(1)`,
+                  backgroundColor: getJobColor(job, index),
+                  backgroundImage: `linear-gradient(135deg, 
+                    ${getJobColor(job, index)}, 
+                    ${getJobColor(job, index).replace('50%', '35%')})`
+                }}
+                onClick={() => {
+                  setCurrentDay(index);
+                  onJobSelect(index);
+                }}
+              >
+                <div className="job-number">
+                  #{job.jobOrderNumber}
+                </div>
+                <div className="job-title">
+                  {job.title}
+                </div>
+                <div 
+                  className="priority-dot"
+                  style={{ backgroundColor: getPriorityColor(job.priority) }}
+                  title={`${job.priority} priority`}
+                />
+              </li>
+            );
+          })}
         </ul>
 
         <div className="border-frame"></div>
