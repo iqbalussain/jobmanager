@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { JobDetails } from "@/components/JobDetails";
-import { Slider } from "@/components/ui/slider";
 import { 
   Building, 
   Calendar, 
@@ -15,7 +15,8 @@ import {
   ChevronUp, 
   ChevronDown,
   Eye,
-  Edit
+  Edit,
+  Search
 } from "lucide-react";
 
 interface ApprovedJobsSliderProps {
@@ -25,6 +26,8 @@ interface ApprovedJobsSliderProps {
 
 export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderProps) {
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
+  const [selectedSalesman, setSelectedSalesman] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedJobIndex, setSelectedJobIndex] = useState(0);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -35,15 +38,27 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
   const branches = Array.from(new Set(jobs.map(job => job.branch).filter(Boolean)));
   branches.unshift("all"); // Add "all" option
 
-  // Filter jobs by branch
-  const filteredJobs = selectedBranch === "all" 
-    ? jobs 
-    : jobs.filter(job => job.branch === selectedBranch);
+  // Get unique salesmen
+  const salesmen = Array.from(new Set(jobs.map(job => job.salesman).filter(Boolean)));
+  salesmen.unshift("all"); // Add "all" option
 
-  // Reset index when branch changes
+  // Filter jobs by branch, salesman, and search query
+  const filteredJobs = jobs.filter(job => {
+    const branchMatch = selectedBranch === "all" || job.branch === selectedBranch;
+    const salesmanMatch = selectedSalesman === "all" || job.salesman === selectedSalesman;
+    const searchMatch = searchQuery === "" || 
+      (job.jobOrderDetails && job.jobOrderDetails.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      job.jobOrderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.customer.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return branchMatch && salesmanMatch && searchMatch;
+  });
+
+  // Reset index when filters change
   useEffect(() => {
     setSelectedJobIndex(0);
-  }, [selectedBranch]);
+  }, [selectedBranch, selectedSalesman, searchQuery]);
 
   const handleJobSelect = (jobNumber: string) => {
     const index = filteredJobs.findIndex(job => job.jobOrderNumber === jobNumber);
@@ -98,7 +113,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
       <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Approved Jobs</h1>
         <Card className="text-center p-12">
-          <p className="text-gray-500">No approved jobs found for the selected branch.</p>
+          <p className="text-gray-500">No approved jobs found for the selected filters.</p>
         </Card>
       </div>
     );
@@ -114,6 +129,15 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
           <p className="text-gray-600">Interactive job order slider view</p>
         </div>
         <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Search job orders..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
           <Select value={selectedBranch} onValueChange={setSelectedBranch}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Select Branch" />
@@ -123,6 +147,19 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
               {branches.slice(1).map((branch) => (
                 <SelectItem key={branch} value={branch}>
                   {branch}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedSalesman} onValueChange={setSelectedSalesman}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Select Salesman" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Salesmen</SelectItem>
+              {salesmen.slice(1).map((salesman) => (
+                <SelectItem key={salesman} value={salesman}>
+                  {salesman}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -270,24 +307,6 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
                 </p>
               </div>
             )}
-
-            {/* Progress Slider */}
-            <div className="p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium">Job Progress</span>
-                <span className="text-sm text-gray-600">
-                  {selectedJobIndex + 1} / {filteredJobs.length}
-                </span>
-              </div>
-              <Slider
-                value={[selectedJobIndex]}
-                onValueChange={(value) => setSelectedJobIndex(value[0])}
-                max={filteredJobs.length - 1}
-                min={0}
-                step={1}
-                className="w-full"
-              />
-            </div>
           </CardContent>
         </Card>
       </div>
