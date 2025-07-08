@@ -81,30 +81,37 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
     if (!job) return;
 
     setIsLoading(true);
+    
+    // Optimistic update - show changes immediately
+    const updateData: any = {
+      priority: editData.priority,
+      due_date: editData.dueDate,
+      estimated_hours: editData.estimatedHours,
+      branch: editData.branch,
+      job_order_details: editData.jobOrderDetails,
+      delivered_at: editData.deliveredAt,
+      updated_at: new Date().toISOString()
+    };
+
+    // Include customer_id and job_title_id if they were changed
+    if (editData.customer_id) {
+      updateData.customer_id = editData.customer_id;
+    }
+    if (editData.job_title_id) {
+      updateData.job_title_id = editData.job_title_id;
+    }
+
+    // Only include invoice_number if user is authorized
+    if (canEditInvoice) {
+      updateData.invoice_number = invoiceNumber || null;
+    }
+
+    // Call the callback to update the parent component's state immediately
+    if (onJobUpdated) {
+      onJobUpdated({ id: job.id, ...updateData });
+    }
+
     try {
-      const updateData: any = {
-        priority: editData.priority,
-        due_date: editData.dueDate,
-        estimated_hours: editData.estimatedHours,
-        branch: editData.branch,
-        job_order_details: editData.jobOrderDetails,
-        delivered_at: editData.deliveredAt,
-        updated_at: new Date().toISOString()
-      };
-
-      // Include customer_id and job_title_id if they were changed
-      if (editData.customer_id) {
-        updateData.customer_id = editData.customer_id;
-      }
-      if (editData.job_title_id) {
-        updateData.job_title_id = editData.job_title_id;
-      }
-
-      // Only include invoice_number if user is authorized
-      if (canEditInvoice) {
-        updateData.invoice_number = invoiceNumber || null;
-      }
-
       const { error } = await supabase
         .from('job_orders')
         .update(updateData)
@@ -117,14 +124,24 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
         description: "Job order updated successfully",
       });
       
-      // Call the callback to update the parent component's state
-      if (onJobUpdated) {
-        onJobUpdated({ id: job.id, ...updateData });
-      }
-      
       onClose();
     } catch (error) {
       console.error('Error updating job:', error);
+      
+      // Revert the optimistic update on error
+      if (onJobUpdated) {
+        onJobUpdated({ 
+          id: job.id, 
+          priority: job.priority,
+          due_date: job.dueDate,
+          estimated_hours: job.estimatedHours,
+          branch: job.branch,
+          job_order_details: job.jobOrderDetails,
+          delivered_at: job.deliveredAt,
+          invoice_number: job.invoiceNumber
+        });
+      }
+      
       toast({
         title: "Error",
         description: "Failed to update job order",

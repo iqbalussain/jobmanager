@@ -85,21 +85,50 @@ export function ApprovalBox() {
         .eq('id', jobId);
 
       if (error) throw error;
+      return { jobId, action };
     },
+    
+    onMutate: async ({ jobId, action }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['pending-approvals'] });
+      await queryClient.cancelQueries({ queryKey: ['job-orders'] });
+      
+      // Snapshot the previous values
+      const previousPendingJobs = queryClient.getQueryData(['pending-approvals']);
+      
+      // Optimistically remove from pending approvals
+      queryClient.setQueryData(['pending-approvals'], (old: PendingJob[] | undefined) => {
+        if (!old) return old;
+        return old.filter(job => job.id !== jobId);
+      });
+      
+      return { previousPendingJobs };
+    },
+    
     onSuccess: (_, { action }) => {
-      queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
       toast({
         title: action === 'approve' ? "Job Approved" : "Job Rejected",
         description: `Job order has been ${action}d successfully.`,
       });
     },
-    onError: (error) => {
+    
+    onError: (error, _, context) => {
+      // Roll back optimistic updates
+      if (context?.previousPendingJobs) {
+        queryClient.setQueryData(['pending-approvals'], context.previousPendingJobs);
+      }
       console.error('Approval error:', error);
       toast({
         title: "Error",
         description: "Failed to process approval. Please try again.",
         variant: "destructive",
       });
+    },
+    
+    onSettled: () => {
+      // Always refetch to sync with server state
+      queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['job-orders'] });
     }
   });
 

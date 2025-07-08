@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { CheckCircle, Eye, Calendar, Building, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useJobOrders } from "@/hooks/useJobOrders";
 import { isWithinInterval } from "date-fns";
 
 interface UnapprovedJobsTableProps {
@@ -31,8 +31,8 @@ export function UnapprovedJobsTable({ jobs, userRole, onJobApproved }: Unapprove
   const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date } | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
-  const [approvingJobs, setApprovingJobs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const { approveJob, isApprovingJob } = useJobOrders();
 
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = 
@@ -60,7 +60,7 @@ export function UnapprovedJobsTable({ jobs, userRole, onJobApproved }: Unapprove
     setIsJobDetailsOpen(true);
   };
 
-  const handleApproveJob = async (jobId: string) => {
+  const handleApproveJob = (jobId: string) => {
     if (!['admin', 'manager'].includes(userRole)) {
       toast({
         title: "Access Denied",
@@ -70,41 +70,10 @@ export function UnapprovedJobsTable({ jobs, userRole, onJobApproved }: Unapprove
       return;
     }
 
-    setApprovingJobs(prev => new Set(prev).add(jobId));
-
-    try {
-      const { error } = await supabase
-        .from('job_orders')
-        .update({ 
-          approval_status: 'approved',
-          approved_by: (await supabase.auth.getUser()).data.user?.id,
-          approved_at: new Date().toISOString()
-        })
-        .eq('id', jobId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Job Approved",
-        description: "Job has been approved successfully.",
-      });
-
-      if (onJobApproved) {
-        onJobApproved();
-      }
-    } catch (error) {
-      console.error('Error approving job:', error);
-      toast({
-        title: "Error",
-        description: "Failed to approve job. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setApprovingJobs(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(jobId);
-        return newSet;
-      });
+    approveJob({ jobId });
+    
+    if (onJobApproved) {
+      onJobApproved();
     }
   };
 
@@ -215,11 +184,11 @@ export function UnapprovedJobsTable({ jobs, userRole, onJobApproved }: Unapprove
                         <Button
                           size="sm"
                           onClick={() => handleApproveJob(job.id)}
-                          disabled={approvingJobs.has(job.id)}
+                          disabled={isApprovingJob}
                           className="bg-green-600 hover:bg-green-700 text-white"
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
-                          {approvingJobs.has(job.id) ? 'Approving...' : 'Approve'}
+                          {isApprovingJob ? 'Approving...' : 'Approve'}
                         </Button>
                       )}
                     </div>

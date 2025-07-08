@@ -33,22 +33,119 @@ export function useJobOrders() {
         .update({ status })
         .eq('id', id);
       if (error) throw error;
+      return { id, status };
+    },
+    
+    onMutate: async ({ id, status }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['job-orders'] });
+      
+      // Snapshot the previous value
+      const previousJobOrders = queryClient.getQueryData(['job-orders', user?.id]);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData(['job-orders', user?.id], (old: JobOrder[] | undefined) => {
+        if (!old) return old;
+        return old.map(job => 
+          job.id === id ? { ...job, status } : job
+        );
+      });
+      
+      return { previousJobOrders };
     },
       
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['job-orders'] });
       toast({
         title: "Status updated",
         description: "Job order status has been updated successfully.",
       });
     },
-    onError: (error) => {
+    onError: (error, _, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousJobOrders) {
+        queryClient.setQueryData(['job-orders', user?.id], context.previousJobOrders);
+      }
       console.error('Failed to update status:', error);
       toast({
         title: "Error",
         description: "Failed to update job order status. Please try again.",
         variant: "destructive",
       });
+    },
+    onSettled: () => {
+      // Always refetch after error or success to sync with server state
+      queryClient.invalidateQueries({ queryKey: ['job-orders'] });
+    }
+  });
+
+  const approveJob = useMutation({
+    mutationFn: async ({ jobId }: { jobId: string }) => {
+      const { data: user } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from('job_orders')
+        .update({ 
+          approval_status: 'approved',
+          approved_by: user.user?.id,
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', jobId);
+      if (error) throw error;
+      return { jobId };
+    },
+    
+    onMutate: async ({ jobId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['job-orders'] });
+      await queryClient.cancelQueries({ queryKey: ['pending-approvals'] });
+      
+      // Snapshot the previous values
+      const previousJobOrders = queryClient.getQueryData(['job-orders', user?.id]);
+      const previousPendingJobs = queryClient.getQueryData(['pending-approvals']);
+      
+      // Optimistically update job orders
+      queryClient.setQueryData(['job-orders', user?.id], (old: JobOrder[] | undefined) => {
+        if (!old) return old;
+        return old.map(job => 
+          job.id === jobId ? { ...job, approval_status: 'approved' } : job
+        );
+      });
+      
+      // Optimistically remove from pending approvals
+      queryClient.setQueryData(['pending-approvals'], (old: any[] | undefined) => {
+        if (!old) return old;
+        return old.filter(job => job.id !== jobId);
+      });
+      
+      return { previousJobOrders, previousPendingJobs };
+    },
+    
+    onSuccess: () => {
+      toast({
+        title: "Job Approved",
+        description: "Job has been approved successfully.",
+      });
+    },
+    
+    onError: (error, _, context) => {
+      // Roll back optimistic updates
+      if (context?.previousJobOrders) {
+        queryClient.setQueryData(['job-orders', user?.id], context.previousJobOrders);
+      }
+      if (context?.previousPendingJobs) {
+        queryClient.setQueryData(['pending-approvals'], context.previousPendingJobs);
+      }
+      console.error('Failed to approve job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve job. Please try again.",
+        variant: "destructive",
+      });
+    },
+    
+    onSettled: () => {
+      // Always refetch to sync with server state
+      queryClient.invalidateQueries({ queryKey: ['job-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
     }
   });
 
@@ -101,6 +198,8 @@ export function useJobOrders() {
     isLoading,
     updateStatus: updateStatus.mutate,
     updateJobData: updateJobData.mutate,
+    approveJob: approveJob.mutate,
+    isApprovingJob: approveJob.isPending,
     refetch, 
   };
 }
