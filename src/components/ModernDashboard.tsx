@@ -4,6 +4,7 @@ import { Job } from "@/pages/Index";
 import { Button } from "@/components/ui/button";
 import { JobDetails } from "@/components/JobDetails";
 import { JobStatusModal } from "@/components/JobStatusModal";
+import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 import { DashboardNotifications } from "@/components/dashboard/DashboardNotifications";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
 import { DailyTrendsChart } from "@/components/dashboard/DailyTrendsChart";
@@ -15,7 +16,7 @@ import { Plus } from "lucide-react";
 
 interface ModernDashboardProps {
   jobs: Job[];
-  onViewChange?: (view: "dashboard" | "jobs" | "create" | "settings" | "admin" | "admin-management" | "reports") => void;
+  onViewChange?: (view: "dashboard" | "jobs" | "settings" | "admin" | "admin-management" | "reports") => void;
   onStatusUpdate?: (jobId: string, status: string) => void;
 }
 
@@ -24,6 +25,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [isCreateJobDialogOpen, setIsCreateJobDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<{
     status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled';
     title: string;
@@ -58,9 +60,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   };
 
   const handleCreateJobClick = () => {
-    if (onViewChange) {
-      onViewChange("create");
-    }
+    setIsCreateJobDialogOpen(true);
   };
 
   const notifications = [
@@ -115,6 +115,12 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           <ApprovalBox />
         </div>
       </div>
+
+      {/* Create Job Order Dialog */}
+      <CreateJobOrderDialog
+        open={isCreateJobDialogOpen}
+        onOpenChange={setIsCreateJobDialogOpen}
+      />
 
       <JobDetails
         isOpen={isJobDetailsOpen}

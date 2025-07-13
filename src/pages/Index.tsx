@@ -1,4 +1,3 @@
-
 import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
@@ -8,7 +7,6 @@ import { JobDetails } from "@/components/JobDetails";
 
 // Lazy loaded components for performance
 const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
-const JobFormWithImageUpload = lazy(() => import("@/components/job-form/JobFormWithImageUpload").then(m => ({ default: m.JobFormWithImageUpload })));
 const JobList = lazy(() => import("@/components/JobList").then(m => ({ default: m.JobList })));
 const SettingsView = lazy(() => import("@/components/SettingsView").then(m => ({ default: m.SettingsView })));
 const AdminJobManagement = lazy(() => import("@/components/AdminJobManagement").then(m => ({ default: m.AdminJobManagement })));
@@ -62,7 +60,6 @@ const Index = () => {
 const [currentView, setCurrentView] = useState<
     | "dashboard"
     | "jobs"
-    | "create"
     | "settings"
     | "admin"
     | "admin-management"
@@ -145,8 +142,6 @@ const [currentView, setCurrentView] = useState<
         return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />
       case "jobs":
         return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
-      case "create":
-        return <JobFormWithImageUpload onCancel={() => setCurrentView("jobs")} />;
       case "settings":
         return <SettingsView />;
       case "admin":
