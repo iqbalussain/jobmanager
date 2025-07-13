@@ -1,5 +1,5 @@
-
-import { Job } from '@/pages/Index';
+import { jsPDF } from 'jspdf';
+import { Job } from '@/types/job';
 import { createStyledElement } from './pdf/pdfStyles';
 import { generatePDFContent } from './pdf/pdfContentGenerator';
 import { generatePDFFromElement } from './pdf/pdfGenerator';

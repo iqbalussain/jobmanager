@@ -1,6 +1,5 @@
-
-import { useState } from "react";
-import { Job } from "@/pages/Index";
+import React, { useState, useEffect } from 'react';
+import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { JobDetails } from "@/components/JobDetails";
 import { JobStatusModal } from "@/components/JobStatusModal";

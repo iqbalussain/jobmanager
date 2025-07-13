@@ -1,8 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Job } from "@/pages/Index";
+import { Job } from "@/types/job";
 import { Building } from "lucide-react";
 
 interface JobOrderDetailsSectionProps {

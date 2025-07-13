@@ -10,6 +10,9 @@ import { ApprovedJobsList } from '@/components/job-management/ApprovedJobsList';
 import { BranchJobQueue } from '@/components/BranchJobQueue';
 import { useAuth } from '@/hooks/useAuth';
 
+// Re-export types for backward compatibility
+export type { Job, JobStatus } from '@/types/job';
+
 type ViewType = 'dashboard' | 'jobs' | 'settings' | 'admin' | 'admin-management' | 'reports' | 'unapproved-jobs' | 'approved-jobs' | 'branch-queue';
 
 const Index = () => {
@@ -25,21 +28,21 @@ const Index = () => {
       case 'dashboard':
         return <ModernDashboard onViewChange={handleViewChange} />;
       case 'jobs':
-        return <JobList onBack={() => setCurrentView('dashboard')} />;
+        return <JobList />;
       case 'settings':
-        return <SettingsView onBack={() => setCurrentView('dashboard')} />;
+        return <SettingsView />;
       case 'admin':
-        return <AdminManagement onBack={() => setCurrentView('dashboard')} />;
+        return <AdminManagement />;
       case 'admin-management':
-        return <AdminManagement onBack={() => setCurrentView('dashboard')} />;
+        return <AdminManagement />;
       case 'reports':
-        return <ReportsPage onBack={() => setCurrentView('dashboard')} />;
+        return <ReportsPage />;
       case 'unapproved-jobs':
-        return <UnapprovedJobsList onBack={() => setCurrentView('dashboard')} />;
+        return <UnapprovedJobsList />;
       case 'approved-jobs':
-        return <ApprovedJobsList onBack={() => setCurrentView('dashboard')} />;
+        return <ApprovedJobsList />;
       case 'branch-queue':
-        return <BranchJobQueue onBack={() => setCurrentView('dashboard')} />;
+        return <BranchJobQueue />;
       default:
         return <ModernDashboard onViewChange={handleViewChange} />;
     }
