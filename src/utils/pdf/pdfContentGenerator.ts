@@ -1,7 +1,78 @@
-import jsPDF from 'jspdf';
 import { Job } from '@/types/job';
 
-export const generateJobOrderContent = (doc: jsPDF, job: Job, x: number, y: number) => {
+export const generatePDFContent = (job: Job, invoiceNumber?: string) => {
+  const invoiceSection = invoiceNumber 
+    ? `<div class="invoice-section">
+         <h2>Invoice Information</h2>
+         <p><strong>Invoice Number:</strong> ${invoiceNumber}</p>
+       </div>`
+    : '';
+
+  return `
+    <div class="job-order-content">
+      <div class="header-section">
+        <h1>Job Order Details</h1>
+      </div>
+      
+      ${invoiceSection}
+      
+      <div class="job-details-section">
+        <h2>Job Details</h2>
+        <div class="detail-row">
+          <span class="label">Job Order Number:</span>
+          <span class="value">${job.jobOrderNumber}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Title:</span>
+          <span class="value">${job.title}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Customer:</span>
+          <span class="value">${job.customer}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Salesman:</span>
+          <span class="value">${job.salesman}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Due Date:</span>
+          <span class="value">${new Date(job.dueDate).toLocaleDateString()}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Priority:</span>
+          <span class="value">${job.priority}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Status:</span>
+          <span class="value">${job.status}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Branch:</span>
+          <span class="value">${job.branch || 'N/A'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Delivered At:</span>
+          <span class="value">${job.deliveredAt || 'N/A'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Estimated Hours:</span>
+          <span class="value">${job.estimatedHours}</span>
+        </div>
+      </div>
+      
+      ${job.jobOrderDetails ? `
+        <div class="job-order-details-section">
+          <h2>Job Order Details</h2>
+          <div class="details-content">
+            ${job.jobOrderDetails}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+};
+
+export const generateJobOrderContent = (doc: any, job: Job, x: number, y: number) => {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 10;
   let currentY = y;

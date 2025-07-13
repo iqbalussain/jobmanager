@@ -19,6 +19,7 @@ export interface Job {
   deliveredAt?: string;
   totalValue?: number;
   created_by?: string;
+  invoiceNumber?: string;
 }
 
 export type JobStatus = 
