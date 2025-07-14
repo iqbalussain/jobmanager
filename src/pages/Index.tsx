@@ -16,7 +16,7 @@ type ViewType = 'dashboard' | 'jobs' | 'calendar' | 'reports' | 'settings' | 'ad
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
-  const { data: jobs = [], isLoading } = useJobOrdersQuery();
+  const { jobOrders = [], isLoading } = useJobOrdersQuery();
 
   const handleViewChange = (view: ViewType) => {
     setCurrentView(view);
@@ -25,11 +25,11 @@ const Index = () => {
   const renderCurrentView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <ModernDashboard jobs={jobs} onViewChange={handleViewChange} />;
+        return <ModernDashboard jobs={jobOrders} onViewChange={handleViewChange} />;
       case 'jobs':
-        return <JobList jobs={jobs} />;
+        return <JobList jobs={jobOrders} />;
       case 'calendar':
-        return <CalendarView />;
+        return <CalendarView jobs={jobOrders} />;
       case 'reports':
         return <ReportsPage />;
       case 'settings':
@@ -37,9 +37,9 @@ const Index = () => {
       case 'admin':
         return <AdminManagement />;
       case 'branch-queue':
-        return <BranchJobQueue jobs={jobs} onViewJob={() => {}} />;
+        return <BranchJobQueue jobs={jobOrders} onViewJob={() => {}} />;
       default:
-        return <ModernDashboard jobs={jobs} onViewChange={handleViewChange} />;
+        return <ModernDashboard jobs={jobOrders} onViewChange={handleViewChange} />;
     }
   };
 
