@@ -14,9 +14,7 @@ const AdminJobManagement = lazy(() => import("@/components/AdminJobManagement").
 const AdminManagement = lazy(() => import("@/components/AdminManagement").then(m => ({ default: m.AdminManagement })));
 const ReportsPage = lazy(() => import("@/components/ReportsPage").then(m => ({ default: m.ReportsPage })));
 const ApprovedJobsList = lazy(() => import("@/components/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
-
-// User Access Management will be created
-const UserAccessManagement = lazy(() => import("@/components/UserAccessManagement").then(m => ({ default: m.UserAccessManagement })));
+const UserAccessManagement = lazy(() => import("@/components/UserAccessManagement").then(m => ({ default: m.default })));
 
 export type JobStatus =
   | "pending"
@@ -60,7 +58,7 @@ const LoadingSpinner = () => (
 const Index = () => {
   const [currentView, setCurrentView] = useState<
     | "dashboard"
-    | "approved-jobs"
+    | "jobs"
     | "settings"
     | "admin"
     | "admin-management"
@@ -98,7 +96,6 @@ const Index = () => {
     id: order.id,
     jobOrderNumber: order.job_order_number,
     title: order.title || order.job_order_details || `Job Order ${order.job_order_number}`,
-    description: order.description || "",
     customer: order.customer?.name || "Unknown Customer",
     assignee: order.assignee || "Unassigned",
     priority: order.priority as Job["priority"],
@@ -138,6 +135,14 @@ const Index = () => {
     setIsCreateJobOpen(true);
   };
 
+  const handleViewChange = (view: string) => {
+    if (view === "create") {
+      handleCreateJob();
+    } else {
+      setCurrentView(view as any);
+    }
+  };
+
   const renderContent = () => {
     if (isLoading) return <LoadingSpinner />;
 
@@ -146,16 +151,10 @@ const Index = () => {
         return (
           <ModernDashboard 
             jobs={transformedJobs} 
-            onViewChange={(view) => {
-              if (view === "create") {
-                handleCreateJob();
-              } else {
-                setCurrentView(view as any);
-              }
-            }}
+            onViewChange={handleViewChange}
           />
         );
-      case "approved-jobs":
+      case "jobs":
         return (
           <ApprovedJobsList
             jobs={transformedJobs.filter(job => job.approval_status === 'approved')}
@@ -173,13 +172,7 @@ const Index = () => {
       case "user-access":
         return <UserAccessManagement />;
       default:
-        return <ModernDashboard jobs={transformedJobs} onViewChange={(view) => {
-          if (view === "create") {
-            handleCreateJob();
-          } else {
-            setCurrentView(view as any);
-          }
-        }} />;
+        return <ModernDashboard jobs={transformedJobs} onViewChange={handleViewChange} />;
     }
   };
 

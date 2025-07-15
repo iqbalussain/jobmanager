@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -51,15 +50,18 @@ const permissions: Permission[] = [
   { id: 'view_own_jobs', name: 'View Own Jobs', description: 'See only own created jobs', category: 'data', icon: <Eye className="w-4 h-4" /> },
 ];
 
-const roleTemplates = {
+type ValidRole = "admin" | "manager" | "salesman" | "employee" | "designer" | "job_order_manager";
+
+const roleTemplates: Record<ValidRole, string[]> = {
   admin: ['dashboard', 'jobs', 'reports', 'admin', 'settings', 'create_jobs', 'edit_jobs', 'delete_jobs', 'manage_users', 'view_all_jobs'],
   manager: ['dashboard', 'jobs', 'reports', 'settings', 'create_jobs', 'edit_jobs', 'view_all_jobs'],
   employee: ['dashboard', 'jobs', 'create_jobs', 'edit_jobs', 'view_own_jobs'],
   designer: ['dashboard', 'jobs', 'view_own_jobs'],
   salesman: ['dashboard', 'jobs', 'reports', 'create_jobs', 'edit_jobs', 'view_all_jobs'],
+  job_order_manager: ['dashboard', 'jobs', 'reports', 'create_jobs', 'edit_jobs', 'view_all_jobs'],
 };
 
-export default function UserAccessManagement() {
+function UserAccessManagement() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -106,7 +108,7 @@ export default function UserAccessManagement() {
       
       // Update permissions based on role template
       if (selectedUser?.id === userId) {
-        const templatePermissions = roleTemplates[newRole as keyof typeof roleTemplates] || [];
+        const templatePermissions = roleTemplates[newRole as ValidRole] || [];
         setUserPermissions(templatePermissions);
       }
 
@@ -135,7 +137,7 @@ export default function UserAccessManagement() {
   const selectUser = (user: UserProfile) => {
     setSelectedUser(user);
     // Load permissions based on role template
-    const templatePermissions = roleTemplates[user.role as keyof typeof roleTemplates] || [];
+    const templatePermissions = roleTemplates[user.role as ValidRole] || [];
     setUserPermissions(templatePermissions);
   };
 
@@ -229,6 +231,7 @@ export default function UserAccessManagement() {
                               <SelectItem value="employee">Employee</SelectItem>
                               <SelectItem value="designer">Designer</SelectItem>
                               <SelectItem value="salesman">Salesman</SelectItem>
+                              <SelectItem value="job_order_manager">Job Order Manager</SelectItem>
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -367,3 +370,5 @@ export default function UserAccessManagement() {
     </div>
   );
 }
+
+export default UserAccessManagement;
