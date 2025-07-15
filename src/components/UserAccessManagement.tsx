@@ -99,7 +99,7 @@ function UserAccessManagement() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ role: newRole })
+        .update({ role: newRole as ValidRole })
         .eq('id', userId);
 
       if (error) throw error;

@@ -58,7 +58,7 @@ const LoadingSpinner = () => (
 const Index = () => {
   const [currentView, setCurrentView] = useState<
     | "dashboard"
-    | "jobs"
+    | "approved-jobs"
     | "settings"
     | "admin"
     | "admin-management"
@@ -154,7 +154,7 @@ const Index = () => {
             onViewChange={handleViewChange}
           />
         );
-      case "jobs":
+      case "approved-jobs":
         return (
           <ApprovedJobsList
             jobs={transformedJobs.filter(job => job.approval_status === 'approved')}
@@ -176,11 +176,23 @@ const Index = () => {
     }
   };
 
+  const handleSidebarViewChange = (view: 
+    | "dashboard"
+    | "approved-jobs"
+    | "settings"
+    | "admin"
+    | "admin-management"
+    | "reports"
+    | "user-access"
+  ) => {
+    setCurrentView(view);
+  };
+
   return (
     <div className="ml-20 flex-1 overflow-y-auto">
       <MinimalistSidebar 
         currentView={currentView} 
-        onViewChange={setCurrentView}
+        onViewChange={handleSidebarViewChange}
       />
       <div className="flex-1 overflow-y-auto">
         <Suspense fallback={<LoadingSpinner />}>
