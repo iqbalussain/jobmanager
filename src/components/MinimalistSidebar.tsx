@@ -1,16 +1,12 @@
 
 import {
   Home,
-  FileText,
   Settings,
   Shield,
   UsersRound,
   BarChart3,
-  Plus,
-  ClipboardList,
   CheckCircle,
-  User,
-  Building2,
+  UserCheck,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -30,15 +26,12 @@ interface MinimalistSidebarProps {
   onViewChange: (
     view:
       | "dashboard"
-      | "jobs"
-      | "create"
+      | "approved-jobs"
       | "settings"
       | "admin"
       | "admin-management"
       | "reports"
-      | "unapproved-jobs"
-      | "approved-jobs"
-      | "branch-queue"
+      | "user-access"
   ) => void;
 }
 
@@ -84,26 +77,9 @@ export function MinimalistSidebar({
   const mainMenuItems = [
     { title: "Dashboard", icon: Home, view: "dashboard" as const },
     {
-      title: "Unapproved Jobs",
-      icon: ClipboardList,
-      view: "unapproved-jobs" as const,
-      roles: ["admin", "manager", "salesman", "designer"],
-    },
-    {
       title: "Approved Jobs",
       icon: CheckCircle,
       view: "approved-jobs" as const,
-    },
-    {
-      title: "Branch Queue",
-      icon: Building2,
-      view: "branch-queue" as const,
-    },
-    {
-      title: "Create Job",
-      icon: Plus,
-      view: "create" as const,
-      roles: ["admin", "manager", "salesman"],
     },
     { title: "Settings", icon: Settings, view: "settings" as const },
   ];
@@ -120,6 +96,12 @@ export function MinimalistSidebar({
       icon: UsersRound,
       view: "admin-management" as const,
       roles: ["admin", "manager"],
+    },
+    {
+      title: "User Access Control",
+      icon: UserCheck,
+      view: "user-access" as const,
+      roles: ["admin"],
     },
     {
       title: "Reports & Analytics",
@@ -156,7 +138,7 @@ export function MinimalistSidebar({
 
         {/* Main Menu */}
         <div className="flex flex-col space-y-2 mt-10">
-          {mainMenuItems.filter(canAccessMenuItem).map((item) => (
+          {mainMenuItems.map((item) => (
             <Tooltip key={item.view}>
               <TooltipTrigger asChild>
                 <Button

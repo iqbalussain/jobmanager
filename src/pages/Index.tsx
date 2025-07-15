@@ -1,20 +1,22 @@
+
 import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { JobDetails } from "@/components/JobDetails";
+import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 
 // Lazy loaded components for performance
 const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
-const JobList = lazy(() => import("@/components/JobList").then(m => ({ default: m.JobList })));
 const SettingsView = lazy(() => import("@/components/SettingsView").then(m => ({ default: m.SettingsView })));
 const AdminJobManagement = lazy(() => import("@/components/AdminJobManagement").then(m => ({ default: m.AdminJobManagement })));
 const AdminManagement = lazy(() => import("@/components/AdminManagement").then(m => ({ default: m.AdminManagement })));
 const ReportsPage = lazy(() => import("@/components/ReportsPage").then(m => ({ default: m.ReportsPage })));
-const UnapprovedJobsList = lazy(() => import("@/components/job-management/UnapprovedJobsList").then(m => ({ default: m.UnapprovedJobsList })));
 const ApprovedJobsList = lazy(() => import("@/components/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
-const BranchJobQueue = lazy(() => import("@/components/BranchJobQueue").then(m => ({ default: m.BranchJobQueue })));
+
+// User Access Management will be created
+const UserAccessManagement = lazy(() => import("@/components/UserAccessManagement").then(m => ({ default: m.UserAccessManagement })));
 
 export type JobStatus =
   | "pending"
@@ -56,22 +58,20 @@ const LoadingSpinner = () => (
 );
 
 const Index = () => {
-
-const [currentView, setCurrentView] = useState<
+  const [currentView, setCurrentView] = useState<
     | "dashboard"
-    | "jobs"
+    | "approved-jobs"
     | "settings"
     | "admin"
     | "admin-management"
     | "reports"
-    | "unapproved-jobs"
-    | "approved-jobs"
-    | "branch-queue"
+    | "user-access"
   >("dashboard");
 
   const [userRole, setUserRole] = useState<string>("employee");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
+  const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
   const { user } = useAuth();
   const { jobOrders, isLoading, updateStatus, updateJobData, refetch } = useJobOrders();
 
@@ -134,28 +134,25 @@ const [currentView, setCurrentView] = useState<
     setIsJobDetailsOpen(true);
   };
 
+  const handleCreateJob = () => {
+    setIsCreateJobOpen(true);
+  };
+
   const renderContent = () => {
     if (isLoading) return <LoadingSpinner />;
 
     switch (currentView) {
-       case "dashboard":
-        return <ModernDashboard jobs={transformedJobs} onViewChange={setCurrentView} />
-      case "jobs":
-        return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
-      case "settings":
-        return <SettingsView />;
-      case "admin":
-        return <AdminJobManagement jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
-      case "admin-management":
-        return <AdminManagement />;
-      case "reports":
-        return <ReportsPage />;
-      case "unapproved-jobs":
+      case "dashboard":
         return (
-          <UnapprovedJobsList
-            jobs={transformedJobs.filter(job => job.approval_status === 'pending_approval')}
-            userRole={userRole}
-            onJobApproved={handleJobApproved}
+          <ModernDashboard 
+            jobs={transformedJobs} 
+            onViewChange={(view) => {
+              if (view === "create") {
+                handleCreateJob();
+              } else {
+                setCurrentView(view as any);
+              }
+            }}
           />
         );
       case "approved-jobs":
@@ -165,15 +162,24 @@ const [currentView, setCurrentView] = useState<
             onStatusUpdate={handleStatusUpdate}
           />
         );
-      case "branch-queue":
-        return (
-          <BranchJobQueue
-            jobs={transformedJobs}
-            onViewJob={handleViewJob}
-          />
-        );
+      case "settings":
+        return <SettingsView />;
+      case "admin":
+        return <AdminJobManagement jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
+      case "admin-management":
+        return <AdminManagement />;
+      case "reports":
+        return <ReportsPage />;
+      case "user-access":
+        return <UserAccessManagement />;
       default:
-        return <JobList jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
+        return <ModernDashboard jobs={transformedJobs} onViewChange={(view) => {
+          if (view === "create") {
+            handleCreateJob();
+          } else {
+            setCurrentView(view as any);
+          }
+        }} />;
     }
   };
 
@@ -195,6 +201,12 @@ const [currentView, setCurrentView] = useState<
         onClose={() => setIsJobDetailsOpen(false)}
         job={selectedJob}
         onJobUpdated={handleJobDataUpdate}
+      />
+
+      {/* Create Job Order Dialog */}
+      <CreateJobOrderDialog
+        open={isCreateJobOpen}
+        onOpenChange={setIsCreateJobOpen}
       />
     </div>
   );
