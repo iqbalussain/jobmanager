@@ -1,22 +1,23 @@
 
-import { useState } from "react";
-import { ModernDashboard } from "@/components/ModernDashboard";
-import { JobList } from "@/components/JobList";
-import { CalendarView } from "@/components/CalendarView";
-import { ReportsPage } from "@/components/ReportsPage";
-import { SettingsView } from "@/components/SettingsView";
-import { AdminManagement } from "@/components/AdminManagement";
-import { BranchJobQueue } from "@/components/BranchJobQueue";
-import { useJobOrdersQuery } from "@/hooks/useJobOrdersQuery";
+import React, { useState } from 'react';
+import { ModernDashboard } from '@/components/ModernDashboard';
+import { JobList } from '@/components/JobList';
+import { SettingsView } from '@/components/SettingsView';
+import { AdminManagement } from '@/components/AdminManagement';
+import { ReportsPage } from '@/components/ReportsPage';
+import { UnapprovedJobsList } from '@/components/job-management/UnapprovedJobsList';
+import { ApprovedJobsList } from '@/components/job-management/ApprovedJobsList';
+import { BranchJobQueue } from '@/components/BranchJobQueue';
+import { useAuth } from '@/hooks/useAuth';
 
 // Re-export types for backward compatibility
-export type { Job, JobStatus } from "@/types/job";
+export type { Job, JobStatus } from '@/types/job';
 
-type ViewType = 'dashboard' | 'jobs' | 'calendar' | 'reports' | 'settings' | 'admin' | 'branch-queue';
+type ViewType = 'dashboard' | 'jobs' | 'settings' | 'admin' | 'admin-management' | 'reports' | 'unapproved-jobs' | 'approved-jobs' | 'branch-queue';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
-  const { jobOrders = [], isLoading } = useJobOrdersQuery();
+  const { user } = useAuth();
 
   const handleViewChange = (view: ViewType) => {
     setCurrentView(view);
@@ -25,27 +26,27 @@ const Index = () => {
   const renderCurrentView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <ModernDashboard jobs={jobOrders} onViewChange={handleViewChange} />;
+        return <ModernDashboard onViewChange={handleViewChange} />;
       case 'jobs':
-        return <JobList jobs={jobOrders} />;
-      case 'calendar':
-        return <CalendarView jobs={jobOrders} />;
-      case 'reports':
-        return <ReportsPage />;
+        return <JobList />;
       case 'settings':
         return <SettingsView />;
       case 'admin':
         return <AdminManagement />;
+      case 'admin-management':
+        return <AdminManagement />;
+      case 'reports':
+        return <ReportsPage />;
+      case 'unapproved-jobs':
+        return <UnapprovedJobsList />;
+      case 'approved-jobs':
+        return <ApprovedJobsList />;
       case 'branch-queue':
-        return <BranchJobQueue jobs={jobOrders} onViewJob={() => {}} />;
+        return <BranchJobQueue />;
       default:
-        return <ModernDashboard jobs={jobOrders} onViewChange={handleViewChange} />;
+        return <ModernDashboard onViewChange={handleViewChange} />;
     }
   };
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
 
   return (
     <div className="min-h-screen bg-background">
