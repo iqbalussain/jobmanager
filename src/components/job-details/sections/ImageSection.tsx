@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageUploader } from '@/components/image-upload/ImageUploader';
 import { JobImageGallery } from '@/components/image-upload/JobImageGallery';
 import { useAuth } from '@/hooks/useAuth';
 import { hasPermission } from '@/utils/roleValidation';
-import { Job } from '@/types/job';
+import { Job } from '@/pages/Index';
 
 interface ImageSectionProps {
   job: Job;
