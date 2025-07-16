@@ -5,11 +5,9 @@ import { JobDetails } from "@/components/JobDetails";
 import { JobStatusModal } from "@/components/JobStatusModal";
 import { DashboardNotifications } from "@/components/dashboard/DashboardNotifications";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
-import { DailyTrendsChart } from "@/components/dashboard/DailyTrendsChart";
 import { QuickSearch } from "@/components/dashboard/QuickSearch";
 import { ActivitiesSection } from "@/components/dashboard/ActivitiesSection";
 import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
-import { useChartData } from "@/hooks/useChartData";
 
 interface ModernDashboardProps {
   jobs: Job[];
@@ -26,8 +24,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled';
     title: string;
   } | null>(null);
-
-  const { dailyJobData, isLoading: chartLoading } = useChartData();
 
   const stats = {
     total: jobs.length,
@@ -77,7 +73,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
       <div className="grid grid-cols-10 gap-6 h-[400px]">
         <div className="col-span-6">
           <div className="glass-effect rounded-xl p-1">
-            <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
+            <ApprovalBox />
           </div>
         </div>
         
@@ -100,15 +96,9 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           </div>
         </div>
 
-        <div className="col-span-3">
+        <div className="col-span-6">
           <div className="glass-effect rounded-xl p-1 h-full">
             <ActivitiesSection />
-          </div>
-        </div>
-
-        <div className="col-span-3">
-          <div className="glass-effect rounded-xl p-1 h-full">
-            <ApprovalBox />
           </div>
         </div>
       </div>
