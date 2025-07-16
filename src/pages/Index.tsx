@@ -194,7 +194,7 @@ const Index = () => {
   };
 
   return (
-    <div className="ml-20 flex-1 overflow-y-auto">
+    <div className="ml-20 flex-1 overflow-y-auto min-h-screen" style={{ background: 'var(--gradient-background)' }}>
       <MinimalistSidebar 
         currentView={currentView} 
         onViewChange={handleSidebarViewChange}

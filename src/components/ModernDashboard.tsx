@@ -1,10 +1,8 @@
 
 import { useState } from "react";
 import { Job } from "@/pages/Index";
-import { Button } from "@/components/ui/button";
 import { JobDetails } from "@/components/JobDetails";
 import { JobStatusModal } from "@/components/JobStatusModal";
-import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 import { DashboardNotifications } from "@/components/dashboard/DashboardNotifications";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
 import { DailyTrendsChart } from "@/components/dashboard/DailyTrendsChart";
@@ -12,7 +10,6 @@ import { QuickSearch } from "@/components/dashboard/QuickSearch";
 import { ActivitiesSection } from "@/components/dashboard/ActivitiesSection";
 import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
 import { useChartData } from "@/hooks/useChartData";
-import { Plus } from "lucide-react";
 
 interface ModernDashboardProps {
   jobs: Job[];
@@ -25,7 +22,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [isCreateJobDialogOpen, setIsCreateJobDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<{
     status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled';
     title: string;
@@ -59,68 +55,63 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     setStatusModalOpen(true);
   };
 
-  const handleCreateJobClick = () => {
-    setIsCreateJobDialogOpen(true);
-  };
-
   const notifications = [
     {id: '1', type: 'job_created', message: 'New job created', time: '2 hours ago', read: false},
     {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
   ];
 
   return (
-    <div className="space-y-8 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div className="space-y-8 p-6 min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-gray-600">Welcome back! Here's what's happening with your projects.</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent mb-2">
+            Dashboard
+          </h1>
+          <p className="text-gray-600 text-lg">Welcome back! Here's what's happening with your projects.</p>
         </div>
         <div className="flex items-center gap-4">
           <DashboardNotifications notifications={notifications} />
-          <Button 
-            onClick={handleCreateJobClick}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Job
-          </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-10 gap-6 h-[400px]">
         <div className="col-span-6">
-          <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
+          <div className="glass-effect rounded-xl p-1">
+            <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
+          </div>
         </div>
         
         <div className="col-span-4">
-          <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
+          <div className="glass-effect rounded-xl p-1">
+            <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-8 gap-4 h-[400px]">
         <div className="col-span-2">
-          <QuickSearch 
-            searchQuery={searchQuery}
-            filteredJobs={filteredJobs}
-            onViewDetails={handleViewDetails}
-            onSearchChange={setSearchQuery}
-          />
+          <div className="glass-effect rounded-xl p-1 h-full">
+            <QuickSearch 
+              searchQuery={searchQuery}
+              filteredJobs={filteredJobs}
+              onViewDetails={handleViewDetails}
+              onSearchChange={setSearchQuery}
+            />
+          </div>
         </div>
 
         <div className="col-span-3">
-          <ActivitiesSection />
+          <div className="glass-effect rounded-xl p-1 h-full">
+            <ActivitiesSection />
+          </div>
         </div>
 
         <div className="col-span-3">
-          <ApprovalBox />
+          <div className="glass-effect rounded-xl p-1 h-full">
+            <ApprovalBox />
+          </div>
         </div>
       </div>
-
-      {/* Create Job Order Dialog */}
-      <CreateJobOrderDialog
-        open={isCreateJobDialogOpen}
-        onOpenChange={setIsCreateJobDialogOpen}
-      />
 
       <JobDetails
         isOpen={isJobDetailsOpen}
