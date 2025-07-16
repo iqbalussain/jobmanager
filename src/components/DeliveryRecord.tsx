@@ -24,21 +24,21 @@ import { useJobOrders } from "@/hooks/useJobOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { JobStatus } from "@/types/jobOrder";
 
 const deliveryLocations = [
-  "Main Office",
-  "Warehouse A",
-  "Warehouse B",
-  "Customer Site",
-  "Distribution Center",
-  "Branch Office"
+  "Head Office",
+  "Wajihat",
+  "Ruwi Branch",
+  "Ghobra",
+  "Direct Customer"
 ];
 
 const statusOptions = [
-  { value: "completed", label: "Completed", color: "bg-green-100 text-green-800 border-green-200" },
-  { value: "invoiced", label: "Invoiced", color: "bg-blue-100 text-blue-800 border-blue-200" },
-  { value: "delivered", label: "Delivered", color: "bg-purple-100 text-purple-800 border-purple-200" },
-  { value: "in-transit", label: "In Transit", color: "bg-orange-100 text-orange-800 border-orange-200" }
+  { value: "completed" as JobStatus, label: "Completed", color: "bg-green-100 text-green-800 border-green-200" },
+  { value: "invoiced" as JobStatus, label: "Invoiced", color: "bg-blue-100 text-blue-800 border-blue-200" },
+  { value: "finished" as JobStatus, label: "Delivered", color: "bg-purple-100 text-purple-800 border-purple-200" },
+  { value: "in-progress" as JobStatus, label: "In Transit", color: "bg-orange-100 text-orange-800 border-orange-200" }
 ];
 
 export function DeliveryRecord() {
@@ -58,12 +58,12 @@ export function DeliveryRecord() {
     try {
       const { error } = await supabase
         .from('job_orders')
-        .update({ status: newStatus })
+        .update({ status: newStatus as JobStatus })
         .eq('id', jobId);
 
       if (error) throw error;
 
-      updateJobData({ id: jobId, status: newStatus });
+      updateJobData({ id: jobId, status: newStatus as JobStatus });
       toast({
         title: "Status Updated",
         description: "Delivery status has been updated successfully.",
@@ -119,12 +119,12 @@ export function DeliveryRecord() {
                          (job.job_order_details && job.job_order_details.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === "all" || job.status === statusFilter;
     const matchesSalesman = salesmanFilter === "all" || 
-                           (job.salesman && job.salesman.full_name?.toLowerCase().includes(salesmanFilter.toLowerCase()));
+                           (job.salesman && job.salesman.name?.toLowerCase().includes(salesmanFilter.toLowerCase()));
     
     return matchesSearch && matchesStatus && matchesSalesman;
   });
 
-  const uniqueSalesmen = [...new Set(jobOrders.map(job => job.salesman?.full_name).filter(Boolean))];
+  const uniqueSalesmen = [...new Set(jobOrders.map(job => job.salesman?.name).filter(Boolean))];
 
   const getStatusBadgeStyle = (status: string) => {
     const statusOption = statusOptions.find(option => option.value === status);
@@ -361,7 +361,7 @@ export function DeliveryRecord() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4 text-gray-400" />
-                          {job.salesman?.full_name || 'Unassigned'}
+                          {job.salesman?.name || 'Unassigned'}
                         </div>
                       </TableCell>
                       <TableCell>
