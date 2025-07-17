@@ -8,7 +8,7 @@ import { JobDetails } from "@/components/JobDetails";
 import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 
 // Lazy loaded components for performance
-const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
+const ModernDashboard = React.lazy(() => import('@/components/ModernDashboard').then(m => ({ default: m.ModernDashboard })));
 const SettingsView = lazy(() => import("@/components/SettingsView").then(m => ({ default: m.SettingsView })));
 const AdminJobManagement = lazy(() => import("@/components/AdminJobManagement").then(m => ({ default: m.AdminJobManagement })));
 const AdminManagement = lazy(() => import("@/components/AdminManagement").then(m => ({ default: m.AdminManagement })));
