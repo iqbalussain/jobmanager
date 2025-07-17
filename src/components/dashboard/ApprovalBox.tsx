@@ -154,67 +154,69 @@ export function ApprovalBox() {
 
   return (
     <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl">
-      <CardHeader className="pb-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-        <CardTitle className="flex items-center gap-1 text-white text-sm">
-          <AlertCircle className="w-5 h-6" />
+      <CardHeader className="pb-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-2xl">
+        <CardTitle className="flex items-center gap-2 text-white text-base lg:text-lg">
+          <AlertCircle className="w-5 h-5" />
           Pending Approvals ({pendingJobs.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent className="pt-6 pb-6 px-6 flex-1 overflow-hidden">
         {pendingJobs.length === 0 ? (
-          <div className="text-center text-gray-500 py-4">
-            <CheckCircle className="w-10 h-8 mx-auto mb-1 text-green-500" />
-            <p className="text-sm">No pending approvals</p>
+          <div className="text-center text-gray-500 py-8 flex-1 flex flex-col justify-center">
+            <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-500" />
+            <p className="text-base">No pending approvals</p>
           </div>
         ) : (
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {pendingJobs.map((job) => (
-              <div key={job.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-sm text-gray-900">{job.job_order_number}</h4>
-                    <p className="text-xs text-gray-600">{job.customer_name}</p>
-                    <p className="text-xs text-gray-500 truncate">{job.job_order_details}</p>
+          <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            <div className="space-y-4">
+              {pendingJobs.map((job) => (
+                <div key={job.id} className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 space-y-1">
+                    <h4 className="font-semibold text-sm text-gray-900">{job.job_order_number}</h4>
+                    <p className="text-sm text-gray-600">{job.customer_name}</p>
+                    <p className="text-sm text-gray-500 truncate">{job.job_order_details}</p>
                   </div>
-                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 shrink-0">
                     Pending
                   </Badge>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
-                    <Clock className="w-3 h-3" />
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Clock className="w-4 h-4" />
                     <span>{new Date(job.created_at).toLocaleDateString()}</span>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-6 px-2 text-xs bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                      className="h-8 px-3 text-sm bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
                       onClick={() => handleApproval(job.id, 'approve')}
                       disabled={approvalMutation.isPending}
                     >
-                      <CheckCircle className="w-3 h-3 mr-2" />
+                      <CheckCircle className="w-4 h-4 mr-2" />
                       Approve
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-6 px-2 text-xs bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                      className="h-8 px-3 text-sm bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
                       onClick={() => handleApproval(job.id, 'reject')}
                       disabled={approvalMutation.isPending}
                     >
-                      <XCircle className="w-3 h-3 mr-2" />
+                      <XCircle className="w-4 h-4 mr-2" />
                       Reject
                     </Button>
                   </div>
                 </div>
                 
-                <div className="mt-2 text-xs text-gray-500">
+                <div className="text-sm text-gray-500">
                   Created by: {job.created_by_name}
                 </div>
               </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </CardContent>
