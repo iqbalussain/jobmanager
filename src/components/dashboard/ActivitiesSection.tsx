@@ -94,13 +94,13 @@ export function ActivitiesSection() {
           Recent Activities
         </CardTitle>
       </CardHeader>
-      <Cardcontent className="pt-4">
+      <CardContent className="pt-4">
         <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <div className="space-y-3">
             {activities.length === 0 ? (
-              <div className="text-center text-gray-500 py-8 flex-1 flex flex-col justify-center">
-                <Activity className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                <p className="text-base">No recent activities</p>
+              <div className="text-center text-gray-500 py-4">
+                <Activity className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                <p className="text-sm">No recent activities</p>
               </div>
             ) : (
               activities.map((activity) => {
