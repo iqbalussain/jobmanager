@@ -94,7 +94,7 @@ export function ActivitiesSection() {
           Recent Activities
         </CardTitle>
       </CardHeader>
-      <Cardcontent className="pt-4">
+      <CardContent className="pt-4">
         <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <div className="space-y-3">
             {activities.length === 0 ? (
