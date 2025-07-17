@@ -63,14 +63,13 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent mb-2">
             Dashboard
           </h1>
-          <p className="text-gray-600 text-lg lg:text-xl">Welcome back to Printwaves Job Manager! @user_name.</p>
+          <p className="text-gray-600 text-lg lg:text-xl">Welcome back to Printwaves Job Manager!</p>
         </div>
         <div className="flex items-center gap-4">
           <DashboardNotifications notifications={notifications} />
         </div>
       </div>
 
-      {/* Top Row - Approvals and Status Overview */}
       <div className="grid grid-cols-10 gap-6 h-[400px]">
         <div className="col-span-6">
           <div className="glass-effect rounded-xl p-1">
@@ -85,7 +84,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         </div>
       </div>
 
-      {/* Bottom Row - Search and Activities */}
       <div className="grid grid-cols-8 gap-4 h-[400px]">
         <div className="col-span-2">
           <div className="glass-effect rounded-xl p-1 h-full">
