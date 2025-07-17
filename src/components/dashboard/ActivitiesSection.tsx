@@ -88,15 +88,15 @@ export function ActivitiesSection() {
 
   return (
     <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl">
-      <CardHeader className="pb-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-t-2xl">
-        <CardTitle className="flex items-center gap-2 text-white text-base lg:text-lg">
-          <Activity className="w-5 h-5" />
+      <CardHeader className="pb-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white">
+        <CardTitle className="flex items-center gap-2 text-white text-sm">
+          <Activity className="w-4 h-5" />
           Recent Activities
         </CardTitle>
       </CardHeader>
       <Cardcontent className="pt-4">
         <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-          <div className="space-y-4">
+          <div className="space-y-3">
             {activities.length === 0 ? (
               <div className="text-center text-gray-500 py-8 flex-1 flex flex-col justify-center">
                 <Activity className="w-12 h-12 mx-auto mb-3 text-gray-400" />
@@ -108,26 +108,26 @@ export function ActivitiesSection() {
                 const colorConfig = getActivityColor(activity.action);
                 
                 return (
-                  <div key={activity.id} className={`flex items-start gap-4 p-4 ${colorConfig.bgColor} rounded-xl border border-gray-100 hover:shadow-lg transition-all duration-300 hover:scale-[1.01]`}>
-                    <div className={`p-3 rounded-xl bg-gradient-to-r ${colorConfig.color} shadow-lg`}>
-                      <IconComponent className="w-5 h-5 text-white" />
+                  <div key={activity.id} className={`flex items-start gap-3 p-3 ${colorConfig.bgColor} rounded-xl border border-gray-100 hover:shadow-md transition-all duration-300 hover:scale-[1.02]`}>
+                    <div className={`p-2 rounded-lg bg-gradient-to-r ${colorConfig.color} shadow-lg`}>
+                      <IconComponent className="w-4 h-4 text-white" />
                     </div>
-                    <div className="flex-1 min-w-0 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className={`text-sm font-semibold ${colorConfig.textColor} truncate`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className={`text-xs font-semibold ${colorConfig.textColor} truncate`}>
                           {activity.action.replace('_', ' ')}
                         </p>
-                        <Badge variant="secondary" className="text-sm bg-white/80 text-gray-600 ml-3 shrink-0">
+                        <Badge variant="secondary" className="text-xs bg-white/80 text-gray-600 ml-2">
                           {activity.entity_type}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 line-clamp-2">{activity.description}</p>
-                      <div className="flex items-center justify-between pt-1">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-500">{formatTimeAgo(activity.created_at)}</span>
+                     <p className="text-xs text-gray-600 truncate mb-2">{activity.description}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-gray-400" />
+                          <span className="text-xs text-gray-500">{formatTimeAgo(activity.created_at)}</span>
                         </div>
-                        <span className="text-sm text-gray-500 truncate ml-3">{activity.user_name}</span>
+                        <span className="text-xs text-gray-500">{activity.user_name}</span>
                       </div>
                     </div>
                   </div>
