@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { JobDetails } from "@/components/JobDetails";
@@ -63,7 +62,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent mb-2">
             Dashboard
           </h1>
-          <p className="text-gray-600 text-lg lg:text-xl">Welcome back to Printwaves Job Manager!</p>
+          <p className="text-gray-600 text-lg">Welcome back! Here's what's happening with your projects.</p>
         </div>
         <div className="flex items-center gap-4">
           <DashboardNotifications notifications={notifications} />
