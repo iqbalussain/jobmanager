@@ -57,14 +57,13 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   ];
 
   return (
-    <div className="space-y-12 p-8 lg:p-10 min-h-screen">
-      {/* Header Section with better spacing */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="space-y-2">
-          <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent">
+    <div className="space-y-8 p-6 min-h-screen">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent mb-2">
             Dashboard
           </h1>
-          <p className="text-gray-600 text-lg lg:text-xl">Welcome back! Here's what's happening with your projects.</p>
+          <p className="text-gray-600 text-lg lg:text-xl">Welcome back to Printwaves Job Manager! @user_name.</p>
         </div>
         <div className="flex items-center gap-4">
           <DashboardNotifications notifications={notifications} />
@@ -72,24 +71,24 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
       </div>
 
       {/* Top Row - Approvals and Status Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-10 gap-8 h-auto lg:h-[450px]">
-        <div className="lg:col-span-6">
-          <div className="glass-effect rounded-2xl p-4 h-full">
+      <div className="grid grid-cols-10 gap-6 h-[400px]">
+        <div className="col-span-6">
+          <div className="glass-effect rounded-xl p-1">
             <ApprovalBox />
           </div>
         </div>
         
-        <div className="lg:col-span-4">
-          <div className="glass-effect rounded-2xl p-4 h-full">
+        <div className="col-span-4">
+          <div className="glass-effect rounded-xl p-1">
             <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
           </div>
         </div>
       </div>
 
       {/* Bottom Row - Search and Activities */}
-      <div className="grid grid-cols-1 lg:grid-cols-8 gap-8 h-auto lg:h-[450px]">
-        <div className="lg:col-span-2">
-          <div className="glass-effect rounded-2xl p-4 h-full">
+      <div className="grid grid-cols-8 gap-4 h-[400px]">
+        <div className="col-span-2">
+          <div className="glass-effect rounded-xl p-1 h-full">
             <QuickSearch 
               searchQuery={searchQuery}
               filteredJobs={filteredJobs}
@@ -99,8 +98,8 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           </div>
         </div>
 
-        <div className="lg:col-span-6">
-          <div className="glass-effect rounded-2xl p-4 h-full">
+        <div className="col-span-6">
+          <div className="glass-effect rounded-xl p-1 h-full">
             <ActivitiesSection />
           </div>
         </div>
