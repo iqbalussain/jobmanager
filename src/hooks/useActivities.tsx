@@ -73,6 +73,8 @@ export function useActivities() {
   }, [initialActivities]);
 
   useEffect(() => {
+    if (!initialActivities.length) return;
+
     const channel = supabase
       .channel('activities-changes')
       .on(
@@ -103,7 +105,7 @@ export function useActivities() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [initialActivities.length]);
 
   return {
     activities,
