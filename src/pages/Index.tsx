@@ -205,13 +205,13 @@ const Index = () => {
           {/* Mobile Header */}
           <header className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-sm border-b border-gray-200/50 lg:hidden">
             <h1 className="text-lg font-semibold text-gray-900">Job Manager</h1>
-            <SidebarTrigger variant="ghost" size="icon" className="lg:hidden" />
+            <SidebarTrigger className="lg:hidden" />
           </header>
 
           {/* Desktop Header (optional, can be removed if not needed) */}
           <header className="hidden lg:flex items-center justify-between p-6 bg-white/60 backdrop-blur-sm border-b border-gray-200/30">
             <div className="flex items-center gap-4">
-              <SidebarTrigger variant="ghost" size="icon" />
+              <SidebarTrigger />
               <h1 className="text-xl font-semibold text-gray-900">
                 {currentView.charAt(0).toUpperCase() + currentView.slice(1).replace('-', ' ')}
               </h1>
