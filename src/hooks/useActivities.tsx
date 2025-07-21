@@ -16,6 +16,7 @@ interface Activity {
 
 export function useActivities() {
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   const { data: initialActivities = [], isLoading } = useQuery({
     queryKey: ['activities'],
@@ -73,7 +74,7 @@ export function useActivities() {
   }, [initialActivities]);
 
   useEffect(() => {
-    if (!initialActivities.length) return;
+    if (isSubscribed) return; // Prevent multiple subscriptions
 
     const channel = supabase
       .channel('activities-changes')
@@ -102,10 +103,13 @@ export function useActivities() {
       )
       .subscribe();
 
+    setIsSubscribed(true);
+
     return () => {
+      setIsSubscribed(false);
       supabase.removeChannel(channel);
     };
-  }, [initialActivities.length]);
+  }, []); // Empty dependency array to run only once
 
   return {
     activities,
