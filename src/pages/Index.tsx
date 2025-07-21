@@ -117,11 +117,13 @@ const Index = () => {
   }));
 
   const handleStatusUpdate = (jobId: string, status: JobStatus) => {
-    updateStatus({ id: jobId, status });
+    // Status updates are handled via the job details component
+    refetch();
   };
 
   const handleJobDataUpdate = (jobData: { id: string; [key: string]: any }) => {
-    updateJobData(jobData);
+    // Job data will be updated via refetch
+    refetch();
   };
 
   const handleJobApproved = () => {

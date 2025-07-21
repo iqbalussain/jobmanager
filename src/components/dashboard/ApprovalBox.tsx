@@ -50,7 +50,6 @@ export function ApprovalBox({ onViewJob }: ApprovalBoxProps) {
           job_order_details,
           created_at,
           created_by,
-          title,
           priority,
           status,
           due_date,
@@ -61,8 +60,8 @@ export function ApprovalBox({ onViewJob }: ApprovalBoxProps) {
           invoice_number,
           delivered_at,
           customer:customers!fk_job_orders_customer(name),
-          designer:profiles!job_orders_designer_id_fkey(full_name),
-          salesman:profiles!job_orders_salesman_id_fkey(full_name)
+          designer:profiles!designer_id(full_name),
+          salesman:profiles!salesman_id(full_name)
         `)
         .eq('approval_status', 'pending_approval')
         .order('created_at', { ascending: false });
@@ -93,7 +92,7 @@ export function ApprovalBox({ onViewJob }: ApprovalBoxProps) {
             created_at: job.created_at,
             job_order_details: job.job_order_details || '',
             created_by_name: createdByName,
-            title: job.title || job.job_order_details || `Job Order ${job.job_order_number}`,
+            title: job.job_order_details || `Job Order ${job.job_order_number}`,
             priority: job.priority as "low" | "medium" | "high",
             status: job.status,
             due_date: job.due_date || new Date().toISOString().split("T")[0],
