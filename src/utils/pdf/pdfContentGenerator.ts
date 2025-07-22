@@ -8,6 +8,13 @@ export const generatePDFContent = (job: Job, invoiceNumber?: string): string => 
 
   return `
     <div style="max-width: 100%; font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 13px; line-height: 1.5; color: #1f2937; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; padding: 20px; box-sizing: border-box;">
+      
+      <!-- Client Name Header - Prominent Display -->
+      <div style="text-align: center; margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%); border-radius: 16px; box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3); border: 2px solid #10b981;">
+        <h1 style="margin: 0; font-size: 28px; font-weight: 900; color: #ffffff; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); letter-spacing: 1px; text-transform: uppercase;">CLIENT: ${job.customer}</h1>
+        <p style="margin: 8px 0 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.9); font-weight: 600;">Primary Customer</p>
+      </div>
+
       <!-- Invoice Number at Top -->
       ${invoiceNumber ? `
       <div style="text-align: center; margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%); border-radius: 12px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25); border: 2px solid #3b82f6;">
@@ -42,10 +49,10 @@ export const generatePDFContent = (job: Job, invoiceNumber?: string): string => 
         </div>
       </div>
 
-      <!-- Main Content Grid -->
+      <!-- Main Content Grid -->}
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
         
-        <!-- Customer & Team Section -->
+        <!-- Customer & Team Section -->}
         <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative; overflow: hidden;">
           <div style="position: absolute; top: -20px; left: -20px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(30, 64, 175, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
           <div style="position: relative; z-index: 2;">
@@ -59,8 +66,8 @@ export const generatePDFContent = (job: Job, invoiceNumber?: string): string => 
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <div>
                 <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Customer:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="font-size: 12px; color: #1e293b; margin: 0; font-weight: 700;">${job.customer}</p>
+                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 12px 16px; border-radius: 10px; border: 3px solid #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                  <p style="font-size: 14px; color: #1e293b; margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">${job.customer}</p>
                 </div>
               </div>
 
@@ -102,7 +109,7 @@ export const generatePDFContent = (job: Job, invoiceNumber?: string): string => 
           </div>
         </div>
 
-        <!-- Timeline & Details Section -->
+        <!-- Timeline & Details Section -->}
         <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative; overflow: hidden;">
           <div style="position: absolute; top: -20px; right: -20px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(30, 64, 175, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
           <div style="position: relative; z-index: 2;">

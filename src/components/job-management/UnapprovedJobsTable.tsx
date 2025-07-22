@@ -70,7 +70,7 @@ export function UnapprovedJobsTable({ jobs, userRole, onJobApproved }: Unapprove
       return;
     }
 
-    approveJob({ jobId });
+    // Approval is handled via the approval box component
     
     if (onJobApproved) {
       onJobApproved();

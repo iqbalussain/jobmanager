@@ -2,11 +2,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Clock, CheckCircle, XCircle, AlertCircle, Eye } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Job } from "@/pages/Index";
 
 interface PendingJob {
   id: string;
@@ -15,9 +16,25 @@ interface PendingJob {
   created_at: string;
   job_order_details: string;
   created_by_name: string;
+  title: string;
+  priority: "low" | "medium" | "high";
+  status: string;
+  due_date: string;
+  estimated_hours: number;
+  branch: string;
+  assignee: string;
+  designer_name: string;
+  salesman_name: string;
+  total_value: number;
+  invoice_number: string;
+  delivered_at: string;
 }
 
-export function ApprovalBox() {
+interface ApprovalBoxProps {
+  onViewJob?: (job: Job) => void;
+}
+
+export function ApprovalBox({ onViewJob }: ApprovalBoxProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -33,7 +50,18 @@ export function ApprovalBox() {
           job_order_details,
           created_at,
           created_by,
-          customer:customers!fk_job_orders_customer(name)
+          priority,
+          status,
+          due_date,
+          estimated_hours,
+          branch,
+          assignee,
+          total_value,
+          invoice_number,
+          delivered_at,
+          customer:customers!fk_job_orders_customer(name),
+          designer:profiles!designer_id(full_name),
+          salesman:profiles!salesman_id(full_name)
         `)
         .eq('approval_status', 'pending_approval')
         .order('created_at', { ascending: false });
@@ -63,7 +91,19 @@ export function ApprovalBox() {
             customer_name: job.customer?.name || 'Unknown Customer',
             created_at: job.created_at,
             job_order_details: job.job_order_details || '',
-            created_by_name: createdByName
+            created_by_name: createdByName,
+            title: job.job_order_details || `Job Order ${job.job_order_number}`,
+            priority: job.priority as "low" | "medium" | "high",
+            status: job.status,
+            due_date: job.due_date || new Date().toISOString().split("T")[0],
+            estimated_hours: job.estimated_hours || 0,
+            branch: job.branch || '',
+            assignee: job.assignee || 'Unassigned',
+            designer_name: job.designer?.full_name || 'Unassigned',
+            salesman_name: job.salesman?.full_name || 'Unassigned',
+            total_value: job.total_value || 0,
+            invoice_number: job.invoice_number || '',
+            delivered_at: job.delivered_at || ''
           };
         })
       );
@@ -136,6 +176,32 @@ export function ApprovalBox() {
     approvalMutation.mutate({ jobId, action });
   };
 
+  const handleViewJob = (pendingJob: PendingJob) => {
+    if (onViewJob) {
+      const job: Job = {
+        id: pendingJob.id,
+        jobOrderNumber: pendingJob.job_order_number,
+        title: pendingJob.title,
+        customer: pendingJob.customer_name,
+        assignee: pendingJob.assignee,
+        designer: pendingJob.designer_name,
+        salesman: pendingJob.salesman_name,
+        priority: pendingJob.priority,
+        status: pendingJob.status as any,
+        dueDate: pendingJob.due_date,
+        estimatedHours: pendingJob.estimated_hours,
+        createdAt: pendingJob.created_at.split("T")[0],
+        branch: pendingJob.branch,
+        jobOrderDetails: pendingJob.job_order_details,
+        totalValue: pendingJob.total_value,
+        invoiceNumber: pendingJob.invoice_number,
+        deliveredAt: pendingJob.delivered_at,
+        approval_status: 'pending_approval'
+      };
+      onViewJob(job);
+    }
+  };
+
   if (isLoading) {
     return (
         <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl">
@@ -191,11 +257,20 @@ export function ApprovalBox() {
                     <Button
                       size="sm"
                       variant="outline"
+                      className="h-8 px-3 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                      onClick={() => handleViewJob(job)}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="h-8 px-3 text-sm bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
                       onClick={() => handleApproval(job.id, 'approve')}
                       disabled={approvalMutation.isPending}
                     >
-                      <CheckCircle className="w-4 h-4 mr-2" />
+                      <CheckCircle className="w-4 h-4 mr-1" />
                       Approve
                     </Button>
                     <Button
@@ -205,7 +280,7 @@ export function ApprovalBox() {
                       onClick={() => handleApproval(job.id, 'reject')}
                       disabled={approvalMutation.isPending}
                     >
-                      <XCircle className="w-4 h-4 mr-2" />
+                      <XCircle className="w-4 h-4 mr-1" />
                       Reject
                     </Button>
                   </div>

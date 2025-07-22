@@ -63,7 +63,7 @@ export function DeliveryRecord() {
 
       if (error) throw error;
 
-      updateJobData({ id: jobId, status: newStatus as JobStatus });
+      // Job data will be updated via refetch
       toast({
         title: "Status Updated",
         description: "Delivery status has been updated successfully.",
@@ -87,7 +87,7 @@ export function DeliveryRecord() {
 
       if (error) throw error;
 
-      updateJobData({ id: jobId, delivered_at: location });
+      // Job data will be updated via refetch
       toast({
         title: "Location Updated",
         description: "Delivery location has been updated successfully.",
