@@ -14,7 +14,6 @@ const AdminJobManagement = lazy(() => import("@/components/AdminJobManagement").
 const AdminManagement = lazy(() => import("@/components/AdminManagement").then(m => ({ default: m.AdminManagement })));
 const ReportsPage = lazy(() => import("@/components/ReportsPage").then(m => ({ default: m.ReportsPage })));
 const ApprovedJobsList = lazy(() => import("@/components/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
-const UserAccessManagement = lazy(() => import("@/components/UserAccessManagement").then(m => ({ default: m.default })));
 const DeliveryRecord = lazy(() => import("@/components/DeliveryRecord").then(m => ({ default: m.DeliveryRecord })));
 
 export type JobStatus =
@@ -174,8 +173,6 @@ const Index = () => {
         return <AdminManagement />;
       case "reports":
         return <ReportsPage />;
-      case "user-access":
-        return <UserAccessManagement />;
       case "delivery-record":
         return <DeliveryRecord />;
       default:
