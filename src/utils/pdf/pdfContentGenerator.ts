@@ -1,3 +1,4 @@
+
 import { Job } from '@/pages/Index';
 import { getPriorityColor, getStatusColor } from './pdfStyles';
 
