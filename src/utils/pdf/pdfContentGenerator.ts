@@ -46,3 +46,4 @@ export const generatePDFContent = (job: any, invoiceNumber?: string): string => 
     </div>
   `;
 };
+
