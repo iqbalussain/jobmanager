@@ -8,6 +8,12 @@ export const generatePDFContent = (job: Job, invoiceNumber?: string): string => 
 
   return `
     <div style="max-width: 100%; font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 13px; line-height: 1.5; color: #1f2937; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; padding: 20px; box-sizing: border-box;">
+      
+      <!-- Client Name Header - Prominent Display -->
+      <div style="text-align: center; margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%); border-radius: 16px; box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3); border: 2px solid #10b981;">
+        <h1 style="margin: 0; font-size: 28px; font-weight: 900; color: #ffffff; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); letter-spacing: 1px; text-transform: uppercase;">CLIENT: ${job.customer}</h1>
+        <p style="margin: 8px 0 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.9); font-weight: 600;">Primary Customer</p>
+      </div>
 
       <!-- Invoice Number at Top -->
       ${invoiceNumber ? `
