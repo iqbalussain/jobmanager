@@ -1,37 +1,30 @@
 
 import { useState } from "react";
 import { Job } from "@/pages/Index";
-import { Button } from "@/components/ui/button";
 import { JobDetails } from "@/components/JobDetails";
 import { JobStatusModal } from "@/components/JobStatusModal";
-import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 import { DashboardNotifications } from "@/components/dashboard/DashboardNotifications";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
-import { DailyTrendsChart } from "@/components/dashboard/DailyTrendsChart";
 import { QuickSearch } from "@/components/dashboard/QuickSearch";
 import { ActivitiesSection } from "@/components/dashboard/ActivitiesSection";
 import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
-import { useChartData } from "@/hooks/useChartData";
-import { Plus } from "lucide-react";
 
 interface ModernDashboardProps {
   jobs: Job[];
   onViewChange?: (view: "dashboard" | "jobs" | "settings" | "admin" | "admin-management" | "reports") => void;
   onStatusUpdate?: (jobId: string, status: string) => void;
+  onViewJob?: (job: Job) => void;
 }
 
-export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
+export function ModernDashboard({ jobs, onViewChange, onViewJob }: ModernDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [isCreateJobDialogOpen, setIsCreateJobDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<{
     status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled';
     title: string;
   } | null>(null);
-
-  const { dailyJobData, isLoading: chartLoading } = useChartData();
 
   const stats = {
     total: jobs.length,
@@ -59,46 +52,82 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     setStatusModalOpen(true);
   };
 
-  const handleCreateJobClick = () => {
-    setIsCreateJobDialogOpen(true);
-  };
-
-  const notifications = [
-    {id: '1', type: 'job_created', message: 'New job created', time: '2 hours ago', read: false},
-    {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
-  ];
-
   return (
-    <div className="space-y-8 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-gray-600">Welcome back! Here's what's happening with your projects.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <DashboardNotifications notifications={notifications} />
-          <Button 
-            onClick={handleCreateJobClick}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Job
-          </Button>
+    <div className="space-y-6 lg:space-y-8">
+      {/* Header Section */}
+      <div className="space-y-3">
+        <h1 className="text-2xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent">
+          Dashboard
+        </h1>
+        <p className="text-gray-600 text-sm lg:text-lg xl:text-xl">Welcome back! Here's what's happening with your projects.</p>
+      </div>
+
+      {/* Stats Cards for Mobile */}
+      <div className="lg:hidden">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50">
+            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Jobs</h3>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+          </div>
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50">
+            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Pending</h3>
+            <p className="text-2xl font-bold text-orange-600 mt-1">{stats.pending}</p>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-10 gap-6 h-[400px]">
-        <div className="col-span-6">
-          <DailyTrendsChart dailyJobData={dailyJobData} isLoading={chartLoading} />
+      {/* Desktop Layout */}
+      <div className="hidden lg:block">
+        {/* Top Row - Approvals and Status Overview */}
+        <div className="grid grid-cols-1 xl:grid-cols-10 gap-6 lg:gap-8 mb-6 lg:mb-8">
+          <div className="xl:col-span-6">
+            <div className="glass-effect rounded-2xl p-6 h-full min-h-[400px] xl:min-h-[450px]">
+              <ApprovalBox onViewJob={onViewJob} />
+            </div>
+          </div>
+          
+          <div className="xl:col-span-4">
+            <div className="glass-effect rounded-2xl p-6 h-full min-h-[400px] xl:min-h-[450px]">
+              <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
+            </div>
+          </div>
         </div>
-        
-        <div className="col-span-4">
+
+        {/* Bottom Row - Search and Activities */}
+        <div className="grid grid-cols-1 xl:grid-cols-8 gap-6 lg:gap-8">
+          <div className="xl:col-span-2">
+            <div className="glass-effect rounded-2xl p-6 h-full min-h-[400px] xl:min-h-[450px]">
+              <QuickSearch 
+                searchQuery={searchQuery}
+                filteredJobs={filteredJobs}
+                onViewDetails={handleViewDetails}
+                onSearchChange={setSearchQuery}
+              />
+            </div>
+          </div>
+
+          <div className="xl:col-span-6">
+            <div className="glass-effect rounded-2xl p-6 h-full min-h-[400px] xl:min-h-[450px]">
+              <ActivitiesSection />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="lg:hidden space-y-4">
+        {/* Approval Box */}
+        <div className="glass-effect rounded-xl p-4">
+          <ApprovalBox onViewJob={onViewJob} />
+        </div>
+
+        {/* Job Status Overview */}
+        <div className="glass-effect rounded-xl p-4">
           <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
         </div>
-      </div>
 
-      <div className="grid grid-cols-8 gap-4 h-[400px]">
-        <div className="col-span-2">
+        {/* Quick Search */}
+        <div className="glass-effect rounded-xl p-4">
           <QuickSearch 
             searchQuery={searchQuery}
             filteredJobs={filteredJobs}
@@ -107,20 +136,11 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           />
         </div>
 
-        <div className="col-span-3">
+        {/* Activities */}
+        <div className="glass-effect rounded-xl p-4">
           <ActivitiesSection />
         </div>
-
-        <div className="col-span-3">
-          <ApprovalBox />
-        </div>
       </div>
-
-      {/* Create Job Order Dialog */}
-      <CreateJobOrderDialog
-        open={isCreateJobDialogOpen}
-        onOpenChange={setIsCreateJobDialogOpen}
-      />
 
       <JobDetails
         isOpen={isJobDetailsOpen}

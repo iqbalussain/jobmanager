@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export interface CreateJobOrderData {
   customer_id: string;
+  client_name?: string;
   job_title_id: string;
   designer_id: string;
   salesman_id: string;
@@ -66,6 +67,47 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
   return `${prefix}${nextNumber}`;
 };
 
+  const sendNotification = async (jobData: any) => {
+    try {
+      // Get customer and job title details for notification
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('name')
+        .eq('id', jobData.customer_id)
+        .single();
+
+      const { data: jobTitle } = await supabase
+        .from('job_titles')
+        .select('job_title_id')
+        .eq('id', jobData.job_title_id)
+        .single();
+
+      const { data: salesman } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', jobData.salesman_id)
+        .single();
+
+      // Send notification via edge function
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          jobOrderNumber: jobData.job_order_number,
+          customerName: customer?.name || 'Unknown',
+          jobTitle: jobTitle?.job_title_id || 'Unknown',
+          priority: jobData.priority,
+          salesman: salesman?.full_name || 'Unknown',
+          dueDate: jobData.due_date,
+          notificationType: 'email', // You can make this configurable
+          recipientEmail: 'manager@company.com' // Configure this in admin settings
+        }
+      });
+
+      console.log('Notification sent successfully');
+    } catch (error) {
+      console.error('Failed to send notification:', error);
+    }
+  };
+
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: CreateJobOrderData) => {
       if (!user) throw new Error('User must be authenticated to create job orders');
@@ -87,6 +129,7 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
           .insert({
             job_order_number: jobOrderNumber,
             customer_id: data.customer_id,
+            client_name: data.client_name || null,
             job_title_id: data.job_title_id,
             designer_id: data.designer_id,
             salesman_id: salesmanId,
@@ -105,6 +148,10 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
 
         if (!error) {
           newJobOrder = inserted;
+          // Send notification for approval if status is pending
+          if (inserted.status === 'pending') {
+            await sendNotification(inserted);
+          }
           break;
         }
 
@@ -134,7 +181,7 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
       queryClient.invalidateQueries({ queryKey: ['job-orders'] });
       toast({
         title: 'Success',
-        description: 'Job order created successfully',
+        description: 'Job order created successfully. Notification sent for approval.',
       });
     },
 

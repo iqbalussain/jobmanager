@@ -164,6 +164,7 @@ export type Database = {
           approved_by: string | null
           assignee: string | null
           branch: string | null
+          client_name: string | null
           created_at: string
           created_by: string
           customer_id: string
@@ -190,6 +191,7 @@ export type Database = {
           approved_by?: string | null
           assignee?: string | null
           branch?: string | null
+          client_name?: string | null
           created_at?: string
           created_by: string
           customer_id: string
@@ -216,6 +218,7 @@ export type Database = {
           approved_by?: string | null
           assignee?: string | null
           branch?: string | null
+          client_name?: string | null
           created_at?: string
           created_by?: string
           customer_id?: string

@@ -43,28 +43,33 @@ export const shareJobOrderViaWhatsApp = async (job: Job, invoiceNumber?: string)
       const file = new File([blob], `job-order-${job.jobOrderNumber}.png`, { type: 'image/png' });
       
       await navigator.share({
-        title: `Job Order #${job.jobOrderNumber}`,
+        title: `Job Order #${job.jobOrderNumber} - ${job.customer}`,
         text: `Job Order Details for ${job.customer}`,
         files: [file]
       });
     } else {
       // Fallback: Open WhatsApp Web with text message
       const message = encodeURIComponent(
-        `Job Order #${job.jobOrderNumber}\n` +
-        `Customer: ${job.customer}\n` +
-        `Title: ${job.title}\n` +
-        `Status: ${job.status}\n` +
-        `Due Date: ${new Date(job.dueDate).toLocaleDateString()}\n` +
-        `Priority: ${job.priority}\n` +
-        (invoiceNumber ? `Invoice: ${invoiceNumber}\n` : '') +
-        '\n📋 Job order image attached above'
+        `🏢 *CLIENT: ${job.customer.toUpperCase()}*\n\n` +
+        `📋 *Job Order #${job.jobOrderNumber}*\n` +
+        `📝 *Title:* ${job.title}\n` +
+        `📊 *Status:* ${job.status}\n` +
+        `📅 *Due Date:* ${new Date(job.dueDate).toLocaleDateString()}\n` +
+        `⚡ *Priority:* ${job.priority.toUpperCase()}\n` +
+        `👤 *Assignee:* ${job.assignee || 'Unassigned'}\n` +
+        `🎨 *Designer:* ${job.designer || 'Not assigned'}\n` +
+        `💼 *Salesman:* ${job.salesman || 'Not assigned'}\n` +
+        `🏪 *Branch:* ${job.branch || 'Head Office'}\n` +
+        (invoiceNumber ? `🧾 *Invoice:* ${invoiceNumber}\n` : '') +
+        (job.totalValue ? `💰 *Total Value:* ${job.totalValue}\n` : '') +
+        '\n📋 Job order document image attached above'
       );
       
       // Create a download link for the image
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `job-order-${job.jobOrderNumber}.png`;
+      link.download = `job-order-${job.jobOrderNumber}-${job.customer.replace(/[^a-zA-Z0-9]/g, '-')}.png`;
       link.click();
       URL.revokeObjectURL(url);
       
