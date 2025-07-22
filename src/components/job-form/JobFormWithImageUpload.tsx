@@ -30,7 +30,6 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
 
   const [formData, setFormData] = useState({
     customer: '',
-    clientName: '',
     jobTitle: '',
     assignee: '',
     designer: '',
@@ -49,7 +48,6 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
     try {
       const newJob = await createJobOrder({
         customer_id: formData.customer,
-        client_name: formData.clientName,
         job_title_id: formData.jobTitle,
         designer_id: formData.designer,
         salesman_id: formData.salesman,
@@ -87,7 +85,6 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
     // Reset form and close modal
     setFormData({
       customer: '',
-      clientName: '',
       jobTitle: '',
       assignee: '',
       designer: '',
@@ -193,10 +190,8 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
               />
               <CustomerSection 
                 value={formData.customer} 
-                onChange={(value) => setFormData(prev => ({ ...prev, customer: value, clientName: '' }))}
+                onChange={(value) => setFormData(prev => ({ ...prev, customer: value }))}
                 customers={customers}
-                clientName={formData.clientName}
-                onClientNameChange={(value) => setFormData(prev => ({ ...prev, clientName: value }))}
               />
             </div>
           </CardContent>

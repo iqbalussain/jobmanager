@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Activity {
@@ -16,8 +16,6 @@ interface Activity {
 
 export function useActivities() {
   const [activities, setActivities] = useState<Activity[]>([]);
-  const channelRef = useRef<any>(null);
-  const isSubscribedRef = useRef(false);
 
   const { data: initialActivities = [], isLoading } = useQuery({
     queryKey: ['activities'],
@@ -75,11 +73,8 @@ export function useActivities() {
   }, [initialActivities]);
 
   useEffect(() => {
-    // Prevent multiple subscriptions
-    if (isSubscribedRef.current || channelRef.current) return;
-
     const channel = supabase
-      .channel(`activities-changes-${Math.random()}`) // Unique channel name
+      .channel('activities-changes')
       .on(
         'postgres_changes',
         {
@@ -105,17 +100,10 @@ export function useActivities() {
       )
       .subscribe();
 
-    channelRef.current = channel;
-    isSubscribedRef.current = true;
-
     return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-      isSubscribedRef.current = false;
+      supabase.removeChannel(channel);
     };
-  }, []); // Empty dependency array to run only once
+  }, []);
 
   return {
     activities,
