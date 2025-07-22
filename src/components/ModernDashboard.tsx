@@ -13,10 +13,9 @@ interface ModernDashboardProps {
   jobs: Job[];
   onViewChange?: (view: "dashboard" | "jobs" | "settings" | "admin" | "admin-management" | "reports") => void;
   onStatusUpdate?: (jobId: string, status: string) => void;
-  onViewJob?: (job: Job) => void;
 }
 
-export function ModernDashboard({ jobs, onViewChange, onViewJob }: ModernDashboardProps) {
+export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -52,93 +51,58 @@ export function ModernDashboard({ jobs, onViewChange, onViewJob }: ModernDashboa
     setStatusModalOpen(true);
   };
 
+  const notifications = [
+    {id: '1', type: 'job_created', message: 'New job created', time: '2 hours ago', read: false},
+    {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
+  ];
+
   return (
-    <div className="space-y-6 lg:space-y-8">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8 min-h-screen">
       {/* Header Section */}
-      <div className="space-y-3">
-        <h1 className="text-2xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent">
-          Dashboard
-        </h1>
-        <p className="text-gray-600 text-sm lg:text-lg xl:text-xl">Welcome back! Here's what's happening with your projects.</p>
-      </div>
-
-      {/* Stats Cards for Mobile */}
-      <div className="lg:hidden">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50">
-            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Jobs</h3>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
-          </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50">
-            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Pending</h3>
-            <p className="text-2xl font-bold text-orange-600 mt-1">{stats.pending}</p>
-          </div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground text-base sm:text-lg lg:text-xl">Welcome back! Here's what's happening with your projects.</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <DashboardNotifications notifications={notifications} />
         </div>
       </div>
 
-      {/* Desktop Layout */}
-      <div className="hidden lg:block">
-        {/* Top Row - Approvals and Status Overview */}
-        <div className="grid grid-cols-1 xl:grid-cols-10 gap-6 lg:gap-8 mb-6 lg:mb-8">
-          <div className="xl:col-span-6">
-            <div className="glass-effect rounded-2xl p-6 h-full min-h-[400px] xl:min-h-[450px]">
-              <ApprovalBox onViewJob={onViewJob} />
-            </div>
-          </div>
-          
-          <div className="xl:col-span-4">
-            <div className="glass-effect rounded-2xl p-6 h-full min-h-[400px] xl:min-h-[450px]">
-              <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
-            </div>
+      {/* Top Row - Approvals and Status Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-6 h-auto lg:h-[420px]">
+        <div className="lg:col-span-6">
+          <div className="glass-effect rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 h-full">
+            <ApprovalBox />
           </div>
         </div>
-
-        {/* Bottom Row - Search and Activities */}
-        <div className="grid grid-cols-1 xl:grid-cols-8 gap-6 lg:gap-8">
-          <div className="xl:col-span-2">
-            <div className="glass-effect rounded-2xl p-6 h-full min-h-[400px] xl:min-h-[450px]">
-              <QuickSearch 
-                searchQuery={searchQuery}
-                filteredJobs={filteredJobs}
-                onViewDetails={handleViewDetails}
-                onSearchChange={setSearchQuery}
-              />
-            </div>
-          </div>
-
-          <div className="xl:col-span-6">
-            <div className="glass-effect rounded-2xl p-6 h-full min-h-[400px] xl:min-h-[450px]">
-              <ActivitiesSection />
-            </div>
+        
+        <div className="lg:col-span-4">
+          <div className="glass-effect rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 h-full">
+            <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
           </div>
         </div>
       </div>
 
-      {/* Mobile Layout */}
-      <div className="lg:hidden space-y-4">
-        {/* Approval Box */}
-        <div className="glass-effect rounded-xl p-4">
-          <ApprovalBox onViewJob={onViewJob} />
+      {/* Bottom Row - Search and Activities */}
+      <div className="grid grid-cols-1 lg:grid-cols-8 gap-4 lg:gap-6 h-auto lg:h-[420px]">
+        <div className="lg:col-span-2">
+          <div className="glass-effect rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 h-full">
+            <QuickSearch 
+              searchQuery={searchQuery}
+              filteredJobs={filteredJobs}
+              onViewDetails={handleViewDetails}
+              onSearchChange={setSearchQuery}
+            />
+          </div>
         </div>
 
-        {/* Job Status Overview */}
-        <div className="glass-effect rounded-xl p-4">
-          <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
-        </div>
-
-        {/* Quick Search */}
-        <div className="glass-effect rounded-xl p-4">
-          <QuickSearch 
-            searchQuery={searchQuery}
-            filteredJobs={filteredJobs}
-            onViewDetails={handleViewDetails}
-            onSearchChange={setSearchQuery}
-          />
-        </div>
-
-        {/* Activities */}
-        <div className="glass-effect rounded-xl p-4">
-          <ActivitiesSection />
+        <div className="lg:col-span-6">
+          <div className="glass-effect rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 h-full">
+            <ActivitiesSection />
+          </div>
         </div>
       </div>
 
