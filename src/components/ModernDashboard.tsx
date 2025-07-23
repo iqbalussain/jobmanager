@@ -13,10 +13,9 @@ interface ModernDashboardProps {
   jobs: Job[];
   onViewChange?: (view: "dashboard" | "jobs" | "settings" | "admin" | "admin-management" | "reports") => void;
   onStatusUpdate?: (jobId: string, status: string) => void;
-  onViewJob?: (job: Job) => void;
 }
 
-export function ModernDashboard({ jobs, onViewChange, onViewJob }: ModernDashboardProps) {
+export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -52,6 +51,11 @@ export function ModernDashboard({ jobs, onViewChange, onViewJob }: ModernDashboa
     setStatusModalOpen(true);
   };
 
+  const notifications = [
+    {id: '1', type: 'job_created', message: 'New job created', time: '2 hours ago', read: false},
+    {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
+  ];
+
   return (
     <div className="space-y-6 lg:space-y-8">
       {/* Header Section */}
@@ -82,7 +86,7 @@ export function ModernDashboard({ jobs, onViewChange, onViewJob }: ModernDashboa
         <div className="grid grid-cols-1 xl:grid-cols-10 gap-6 lg:gap-8 mb-6 lg:mb-8">
           <div className="xl:col-span-6">
             <div className="glass-effect rounded-2xl p-6 h-full min-h-[400px] xl:min-h-[450px]">
-              <ApprovalBox onViewJob={onViewJob} />
+              <ApprovalBox />
             </div>
           </div>
           
@@ -118,7 +122,7 @@ export function ModernDashboard({ jobs, onViewChange, onViewJob }: ModernDashboa
       <div className="lg:hidden space-y-4">
         {/* Approval Box */}
         <div className="glass-effect rounded-xl p-4">
-          <ApprovalBox onViewJob={onViewJob} />
+          <ApprovalBox />
         </div>
 
         {/* Job Status Overview */}

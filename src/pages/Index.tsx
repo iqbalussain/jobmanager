@@ -5,7 +5,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { JobDetails } from "@/components/JobDetails";
 import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
-import { MinimalistSidebar } from "@/components/MinimalistSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // Lazy loaded components for performance
 const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
@@ -117,13 +120,11 @@ const Index = () => {
   }));
 
   const handleStatusUpdate = (jobId: string, status: JobStatus) => {
-    // Status updates are handled via the job details component
-    refetch();
+    updateStatus({ id: jobId, status });
   };
 
   const handleJobDataUpdate = (jobData: { id: string; [key: string]: any }) => {
-    // Job data will be updated via refetch
-    refetch();
+    updateJobData(jobData);
   };
 
   const handleJobApproved = () => {
@@ -156,7 +157,6 @@ const Index = () => {
           <ModernDashboard 
             jobs={transformedJobs} 
             onViewChange={handleViewChange}
-            onViewJob={handleViewJob}
           />
         );
       case "approved-jobs":
@@ -179,7 +179,7 @@ const Index = () => {
       case "delivery-record":
         return <DeliveryRecord />;
       default:
-        return <ModernDashboard jobs={transformedJobs} onViewChange={handleViewChange} onViewJob={handleViewJob} />;
+        return <ModernDashboard jobs={transformedJobs} onViewChange={handleViewChange} />;
     }
   };
 
@@ -197,41 +197,60 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      <MinimalistSidebar currentView={currentView} onViewChange={handleSidebarViewChange} />
-      
-      <div className="flex-1 flex flex-col min-w-0 ml-16">
-        {/* Header */}
-        <header className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-sm border-b border-gray-200/50">
-          <h1 className="text-xl font-semibold text-gray-900">
-            {currentView.charAt(0).toUpperCase() + currentView.slice(1).replace('-', ' ')}
-          </h1>
-        </header>
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <AppSidebar currentView={currentView} onViewChange={handleSidebarViewChange} />
+        
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Mobile Header */}
+          <header className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-sm border-b border-gray-200/50 lg:hidden">
+            <h1 className="text-lg font-semibold text-gray-900">Job Manager</h1>
+            <SidebarTrigger asChild>
+              <Button variant="ghost" size="icon" className="lg:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SidebarTrigger>
+          </header>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-6 max-w-7xl mx-auto">
-            <Suspense fallback={<LoadingSpinner />}>
-              {renderContent()}
-            </Suspense>
-          </div>
-        </main>
+          {/* Desktop Header (optional, can be removed if not needed) */}
+          <header className="hidden lg:flex items-center justify-between p-6 bg-white/60 backdrop-blur-sm border-b border-gray-200/30">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SidebarTrigger>
+              <h1 className="text-xl font-semibold text-gray-900">
+                {currentView.charAt(0).toUpperCase() + currentView.slice(1).replace('-', ' ')}
+              </h1>
+            </div>
+          </header>
+
+          {/* Main Content */}
+          <main className="flex-1 overflow-auto">
+            <div className="p-4 lg:p-6 max-w-7xl mx-auto">
+              <Suspense fallback={<LoadingSpinner />}>
+                {renderContent()}
+              </Suspense>
+            </div>
+          </main>
+        </div>
+
+        {/* Job Details Modal */}
+        <JobDetails
+          isOpen={isJobDetailsOpen}
+          onClose={() => setIsJobDetailsOpen(false)}
+          job={selectedJob}
+          onJobUpdated={handleJobDataUpdate}
+        />
+
+        {/* Create Job Order Dialog */}
+        <CreateJobOrderDialog
+          open={isCreateJobOpen}
+          onOpenChange={setIsCreateJobOpen}
+        />
       </div>
-
-      {/* Job Details Modal */}
-      <JobDetails
-        isOpen={isJobDetailsOpen}
-        onClose={() => setIsJobDetailsOpen(false)}
-        job={selectedJob}
-        onJobUpdated={handleJobDataUpdate}
-      />
-
-      {/* Create Job Order Dialog */}
-      <CreateJobOrderDialog
-        open={isCreateJobOpen}
-        onOpenChange={setIsCreateJobOpen}
-      />
-    </div>
+    </SidebarProvider>
   );
 };
 
