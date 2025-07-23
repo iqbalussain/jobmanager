@@ -6,7 +6,6 @@ import { useAuth } from '@/hooks/useAuth';
 
 export interface CreateJobOrderData {
   customer_id: string;
-  client_name?: string;
   job_title_id: string;
   designer_id: string;
   salesman_id: string;
@@ -129,7 +128,6 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
           .insert({
             job_order_number: jobOrderNumber,
             customer_id: data.customer_id,
-            client_name: data.client_name || null,
             job_title_id: data.job_title_id,
             designer_id: data.designer_id,
             salesman_id: salesmanId,

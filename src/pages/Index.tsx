@@ -1,14 +1,11 @@
 
 import { useState, lazy, Suspense, useEffect } from "react";
+import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { JobDetails } from "@/components/JobDetails";
 import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import { Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 // Lazy loaded components for performance
 const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
@@ -197,60 +194,31 @@ const Index = () => {
   };
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-white to-slate-100">
-        <AppSidebar currentView={currentView} onViewChange={handleSidebarViewChange} />
-        
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Mobile Header */}
-          <header className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-sm border-b border-gray-200/50 lg:hidden">
-            <h1 className="text-lg font-semibold text-gray-900">Job Manager</h1>
-            <SidebarTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SidebarTrigger>
-          </header>
-
-          {/* Desktop Header (optional, can be removed if not needed) */}
-          <header className="hidden lg:flex items-center justify-between p-6 bg-white/60 backdrop-blur-sm border-b border-gray-200/30">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SidebarTrigger>
-              <h1 className="text-xl font-semibold text-gray-900">
-                {currentView.charAt(0).toUpperCase() + currentView.slice(1).replace('-', ' ')}
-              </h1>
-            </div>
-          </header>
-
-          {/* Main Content */}
-          <main className="flex-1 overflow-auto">
-            <div className="p-4 lg:p-6 max-w-7xl mx-auto">
-              <Suspense fallback={<LoadingSpinner />}>
-                {renderContent()}
-              </Suspense>
-            </div>
-          </main>
-        </div>
-
-        {/* Job Details Modal */}
-        <JobDetails
-          isOpen={isJobDetailsOpen}
-          onClose={() => setIsJobDetailsOpen(false)}
-          job={selectedJob}
-          onJobUpdated={handleJobDataUpdate}
-        />
-
-        {/* Create Job Order Dialog */}
-        <CreateJobOrderDialog
-          open={isCreateJobOpen}
-          onOpenChange={setIsCreateJobOpen}
-        />
+    <div className="ml-20 flex-1 overflow-y-auto min-h-screen" style={{ background: 'var(--gradient-background)' }}>
+      <MinimalistSidebar 
+        currentView={currentView} 
+        onViewChange={handleSidebarViewChange}
+      />
+      <div className="flex-1 overflow-y-auto">
+        <Suspense fallback={<LoadingSpinner />}>
+          {renderContent()}
+        </Suspense>
       </div>
-    </SidebarProvider>
+
+      {/* Job Details Modal */}
+      <JobDetails
+        isOpen={isJobDetailsOpen}
+        onClose={() => setIsJobDetailsOpen(false)}
+        job={selectedJob}
+        onJobUpdated={handleJobDataUpdate}
+      />
+
+      {/* Create Job Order Dialog */}
+      <CreateJobOrderDialog
+        open={isCreateJobOpen}
+        onOpenChange={setIsCreateJobOpen}
+      />
+    </div>
   );
 };
 
