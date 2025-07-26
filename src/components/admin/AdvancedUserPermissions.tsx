@@ -179,6 +179,11 @@ export function AdvancedUserPermissions() {
         ? prev.filter(p => p !== permissionId)
         : [...prev, permissionId]
     );
+    
+    toast({
+      title: "Note",
+      description: "Permission changes are currently stored locally. Database integration pending.",
+    });
   };
 
   const handleBulkPermissionUpdate = async (operation: 'grant' | 'revoke', permissionIds: string[]) => {

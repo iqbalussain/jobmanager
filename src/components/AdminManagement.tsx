@@ -6,7 +6,8 @@ import {
   UserPlus,
   FileText,
   Sparkles,
-  Crown
+  Crown,
+  MessageSquare
 } from "lucide-react";
 import { useCustomerManagement } from "@/hooks/useCustomerManagement";
 import { useJobTitleManagement } from "@/hooks/useJobTitleManagement";
@@ -15,6 +16,7 @@ import { CustomerManagement } from "@/components/admin/CustomerManagement";
 import { JobTitleManagement } from "@/components/admin/JobTitleManagement";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { AdvancedUserPermissions } from "@/components/admin/AdvancedUserPermissions";
+import { CommunicationsManagement } from "@/components/CommunicationsManagement";
 
 export function AdminManagement() {
   const customerHook = useCustomerManagement();
@@ -45,7 +47,7 @@ export function AdminManagement() {
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl border-0 shadow-xl overflow-hidden">
           <Tabs defaultValue="customers" className="w-full">
             <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-1">
-              <TabsList className="grid w-full grid-cols-4 bg-white/20 backdrop-blur-sm rounded-xl border-0 p-1">
+              <TabsList className="grid w-full grid-cols-5 bg-white/20 backdrop-blur-sm rounded-xl border-0 p-1">
                 <TabsTrigger 
                   value="customers" 
                   className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-lg text-white/90 font-medium transition-all duration-200"
@@ -73,6 +75,13 @@ export function AdminManagement() {
                 >
                   <Crown className="w-4 h-4" />
                   Access Control
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="communications" 
+                  className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-lg text-white/90 font-medium transition-all duration-200"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Communications
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -156,6 +165,21 @@ export function AdminManagement() {
                     </div>
                   </div>
                   <AdvancedUserPermissions />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="communications" className="mt-0">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
+                      <MessageSquare className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">Communications Management</h2>
+                      <p className="text-gray-600">Manage email recipients, logs, and communication settings</p>
+                    </div>
+                  </div>
+                  <CommunicationsManagement />
                 </div>
               </TabsContent>
             </div>
