@@ -39,7 +39,8 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
     dueDate: new Date().toISOString().split('T')[0],
     estimatedHours: 8,
     branch: 'Head Office',
-    jobOrderDetails: ''
+    jobOrderDetails: '',
+    clientName: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +58,8 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
         due_date: formData.dueDate,
         estimated_hours: formData.estimatedHours,
         branch: formData.branch,
-        job_order_details: formData.jobOrderDetails
+        job_order_details: formData.jobOrderDetails,
+        client_name: formData.clientName
       });
 
       toast({
@@ -94,7 +96,8 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
       dueDate: new Date().toISOString().split('T')[0],
       estimatedHours: 8,
       branch: 'Head Office',
-      jobOrderDetails: ''
+      jobOrderDetails: '',
+      clientName: ''
     });
     setCurrentStep('form');
     setCreatedJobId(null);
@@ -192,6 +195,8 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
                 value={formData.customer} 
                 onChange={(value) => setFormData(prev => ({ ...prev, customer: value }))}
                 customers={customers}
+                clientName={formData.clientName}
+                onClientNameChange={(value) => setFormData(prev => ({ ...prev, clientName: value }))}
               />
             </div>
           </CardContent>

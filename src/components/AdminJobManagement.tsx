@@ -40,6 +40,7 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
   const [isEditMode, setIsEditMode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingTotalValue, setEditingTotalValue] = useState<{ [key: string]: string }>({});
+  const [userRole, setUserRole] = useState<string>("employee");
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -148,7 +149,35 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
     }
   };
 
+  // Fetch user role on mount
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user) return;
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        if (data?.role) setUserRole(data.role);
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+      }
+    };
+    fetchUserRole();
+  }, [user]);
+
+  const canEditJobs = userRole !== 'salesman';
+
   const handleEditJob = (job: Job) => {
+    if (!canEditJobs) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to edit job orders.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSelectedJob(job);
     setIsJobDetailsOpen(true);
     setIsEditMode(true);

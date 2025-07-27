@@ -57,7 +57,7 @@ const roleTemplates: Record<ValidRole, string[]> = {
   manager: ['dashboard', 'jobs', 'reports', 'settings', 'create_jobs', 'edit_jobs', 'view_all_jobs'],
   employee: ['dashboard', 'jobs', 'create_jobs', 'edit_jobs', 'view_own_jobs'],
   designer: ['dashboard', 'jobs', 'view_own_jobs'],
-  salesman: ['dashboard', 'jobs', 'reports', 'create_jobs', 'edit_jobs', 'view_all_jobs'],
+  salesman: ['dashboard', 'jobs', 'reports', 'create_jobs', 'view_all_jobs'],
   job_order_manager: ['dashboard', 'jobs', 'reports', 'create_jobs', 'edit_jobs', 'view_all_jobs'],
 };
 

@@ -17,6 +17,7 @@ export interface CreateJobOrderData {
   branch: string;
   job_order_details: string;
   delivered_at?: string;
+  client_name?: string;
 }
 
 export function useCreateJobOrder() {
@@ -139,6 +140,7 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
             branch: data.branch,
             job_order_details: data.job_order_details,
             delivered_at: data.delivered_at || null,
+            client_name: data.client_name || null,
             created_by: user.id
           })
           .select()

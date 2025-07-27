@@ -2,11 +2,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Clock, CheckCircle, XCircle, AlertCircle, Eye } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { JobDetails } from "@/components/JobDetails";
+import { useState } from "react";
 
 interface PendingJob {
   id: string;
@@ -21,6 +23,8 @@ export function ApprovalBox() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
   const { data: pendingJobs = [], isLoading } = useQuery({
     queryKey: ['pending-approvals'],
@@ -136,6 +140,58 @@ export function ApprovalBox() {
     approvalMutation.mutate({ jobId, action });
   };
 
+  const handleViewJob = async (jobId: string) => {
+    try {
+      // Fetch full job details separately to avoid complex joins
+      const { data: jobOrder, error } = await supabase
+        .from('job_orders')
+        .select('*')
+        .eq('id', jobId)
+        .single();
+
+      if (error) throw error;
+
+      // Fetch related data separately
+      const [customerData, designerData, salesmanData, jobTitleData] = await Promise.all([
+        supabase.from('customers').select('name').eq('id', jobOrder.customer_id).single(),
+        jobOrder.designer_id ? supabase.from('profiles').select('full_name').eq('id', jobOrder.designer_id).single() : Promise.resolve({ data: null }),
+        jobOrder.salesman_id ? supabase.from('profiles').select('full_name').eq('id', jobOrder.salesman_id).single() : Promise.resolve({ data: null }),
+        jobOrder.job_title_id ? supabase.from('job_titles').select('job_title_id').eq('id', jobOrder.job_title_id).single() : Promise.resolve({ data: null })
+      ]);
+
+      // Transform to match the expected Job interface
+      const transformedJob = {
+        id: jobOrder.id,
+        title: jobTitleData.data?.job_title_id || 'Unknown Job Title',
+        description: jobOrder.job_order_details || '',
+        customer: customerData.data?.name || 'Unknown Customer',
+        designer: designerData.data?.full_name || 'Unassigned',
+        salesman: salesmanData.data?.full_name || 'Unassigned',
+        jobOrderNumber: jobOrder.job_order_number,
+        priority: jobOrder.priority,
+        status: jobOrder.status,
+        dueDate: jobOrder.due_date,
+        estimatedHours: jobOrder.estimated_hours,
+        actualHours: jobOrder.actual_hours,
+        branch: jobOrder.branch,
+        invoiceNumber: jobOrder.invoice_number,
+        clientName: jobOrder.client_name,
+        createdAt: jobOrder.created_at,
+        approvalStatus: jobOrder.approval_status
+      };
+
+      setSelectedJob(transformedJob);
+      setIsJobDetailsOpen(true);
+    } catch (error) {
+      console.error('Error fetching job details:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load job details",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
         <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 h-full flex flex-col rounded-2xl">
@@ -190,11 +246,20 @@ export function ApprovalBox() {
                     <Button
                       size="sm"
                       variant="outline"
+                      className="h-6 px-2 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                      onClick={() => handleViewJob(job.id)}
+                    >
+                      <Eye className="w-3 h-3 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="h-6 px-2 text-xs bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
                       onClick={() => handleApproval(job.id, 'approve')}
                       disabled={approvalMutation.isPending}
                     >
-                      <CheckCircle className="w-3 h-3 mr-2" />
+                      <CheckCircle className="w-3 h-3 mr-1" />
                       Approve
                     </Button>
                     <Button
@@ -204,7 +269,7 @@ export function ApprovalBox() {
                       onClick={() => handleApproval(job.id, 'reject')}
                       disabled={approvalMutation.isPending}
                     >
-                      <XCircle className="w-3 h-3 mr-2" />
+                      <XCircle className="w-3 h-3 mr-1" />
                       Reject
                     </Button>
                   </div>
@@ -218,6 +283,27 @@ export function ApprovalBox() {
           </div>
         )}
       </CardContent>
+
+      {/* Job Details Modal */}
+      <JobDetails
+        isOpen={isJobDetailsOpen}
+        onClose={() => {
+          setIsJobDetailsOpen(false);
+          setSelectedJob(null);
+        }}
+        job={selectedJob}
+        isEditMode={false}
+        onJobUpdated={(updatedJob) => {
+          // Handle approval from within job details
+          if (updatedJob.approvalStatus === 'approved' || updatedJob.approvalStatus === 'rejected') {
+            // Refresh the pending approvals list
+            queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
+            queryClient.invalidateQueries({ queryKey: ['job-orders'] });
+            setIsJobDetailsOpen(false);
+            setSelectedJob(null);
+          }
+        }}
+      />
     </Card>
   );
 }

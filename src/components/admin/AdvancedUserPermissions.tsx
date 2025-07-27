@@ -80,7 +80,7 @@ const roleTemplates: Record<ValidRole, string[]> = {
   admin: permissions.map(p => p.id), // Full access
   manager: ['dashboard', 'jobs', 'reports', 'settings', 'create_jobs', 'edit_jobs', 'approve_jobs', 'reject_jobs', 'manage_customers', 'view_all_jobs', 'view_branch_jobs', 'view_financial_data', 'export_data'],
   job_order_manager: ['dashboard', 'jobs', 'reports', 'create_jobs', 'edit_jobs', 'approve_jobs', 'reject_jobs', 'view_all_jobs', 'view_branch_jobs', 'export_data'],
-  salesman: ['dashboard', 'jobs', 'reports', 'create_jobs', 'edit_jobs', 'manage_customers', 'view_branch_jobs', 'view_own_jobs'],
+  salesman: ['dashboard', 'jobs', 'reports', 'create_jobs', 'manage_customers', 'view_branch_jobs', 'view_own_jobs'],
   designer: ['dashboard', 'jobs', 'view_own_jobs', 'edit_jobs'],
   employee: ['dashboard', 'jobs', 'create_jobs', 'view_own_jobs'],
 };

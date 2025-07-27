@@ -63,6 +63,13 @@ export function CustomerTeamSection({
           </div>
         </div>
 
+        {job.clientName && (
+          <div>
+            <Label className="text-sm font-medium text-gray-600">Client Name</Label>
+            <p className="mt-1 text-sm font-semibold text-gray-900">{job.clientName}</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label className="text-sm font-medium text-gray-600">Designer</Label>

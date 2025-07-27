@@ -48,6 +48,7 @@ export interface Job {
   created_by?: string;
   approval_status?: string;
   deliveredAt?: string;
+  clientName?: string;
 }
 
 const LoadingSpinner = () => (
@@ -114,6 +115,7 @@ const Index = () => {
     invoiceNumber: order.invoice_number || "",
     approval_status: order.approval_status,
     deliveredAt: order.delivered_at || "",
+    clientName: order.client_name || "",
   }));
 
   const handleStatusUpdate = (jobId: string, status: JobStatus) => {

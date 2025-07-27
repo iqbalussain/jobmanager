@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { JobDetails } from "@/components/JobDetails";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Calendar,
   User,
@@ -25,7 +28,30 @@ export function CardStackSlider({ jobs, onStatusUpdate }: CardStackSliderProps) 
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [userRole, setUserRole] = useState<string>("employee");
   const containerRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Fetch user role
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user) return;
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        if (data?.role) setUserRole(data.role);
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+      }
+    };
+    fetchUserRole();
+  }, [user]);
+
+  const canEditJobs = userRole !== 'salesman';
 
   // Filter jobs to show only pending jobs
   const pendingJobs = jobs.filter(job => job.status === "pending");
@@ -174,15 +200,17 @@ export function CardStackSlider({ jobs, onStatusUpdate }: CardStackSliderProps) 
                   View
                 </Button>
                 
-                <Button
-                  onClick={() => handleEditJob(job)}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 border-blue-300 hover:bg-blue-50 hover:border-blue-400 transition-all text-xs shadow-sm"
-                >
-                  <Edit className="w-3 h-3 mr-1" />
-                  Edit
-                </Button>
+                {canEditJobs && (
+                  <Button
+                    onClick={() => handleEditJob(job)}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-blue-300 hover:bg-blue-50 hover:border-blue-400 transition-all text-xs shadow-sm"
+                  >
+                    <Edit className="w-3 h-3 mr-1" />
+                    Edit
+                  </Button>
+                )}
               </div>
 
               <Button
