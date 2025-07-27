@@ -22,7 +22,7 @@ export function useDesignerManagement() {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, phone')
-        .eq('role', 'designer')
+        .or('role.eq.designer,and(role.eq.manager,id.eq.f47e1264-dbb8-4645-a712-013b3d77fed5)')
         .order('full_name');
       
       if (error) {
