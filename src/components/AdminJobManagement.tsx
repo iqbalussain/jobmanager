@@ -147,58 +147,76 @@ export function AdminJobManagement() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
-              <SelectTrigger><SelectValue placeholder="Salesman" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                {uniqueSalesmen.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Salesman</label>
+              <Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
+                <SelectTrigger><SelectValue placeholder="Select salesman" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {uniqueSalesmen.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Status</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={customerFilter} onValueChange={setCustomerFilter}>
-              <SelectTrigger><SelectValue placeholder="Customer" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                {uniqueCustomers.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Customer</label>
+              <Select value={customerFilter} onValueChange={setCustomerFilter}>
+                <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {uniqueCustomers.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={branchFilter} onValueChange={setBranchFilter}>
-              <SelectTrigger><SelectValue placeholder="Branch" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                {uniqueBranches.map((b) => (
-                  <SelectItem key={b} value={b}>{b}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Branch</label>
+              <Select value={branchFilter} onValueChange={setBranchFilter}>
+                <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {uniqueBranches.map((b) => (
+                    <SelectItem key={b} value={b}>{b}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("justify-start w-full", !dateFilter && "text-muted-foreground")}> <CalendarIcon className="mr-2 h-4 w-4" />{dateFilter?.from ? format(dateFilter.from, "LLL dd, y") + (dateFilter.to ? ` - ${format(dateFilter.to, "LLL dd, y")}` : '') : "Pick Date Range"}</Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="p-0 z-50 max-w-full w-auto">
-                <Calendar
-                  mode="range"
-                  selected={dateFilter || undefined}
-                  onSelect={setDateFilter}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Created At</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("justify-start w-full", !dateFilter && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateFilter?.from ? format(dateFilter.from, "LLL dd, y") + (dateFilter.to ? ` - ${format(dateFilter.to, "LLL dd, y")}` : '') : "Pick Date Range"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="p-0 z-50 max-w-full w-auto">
+                  <Calendar
+                    mode="range"
+                    selected={dateFilter || undefined}
+                    onSelect={setDateFilter}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </CardContent>
       </Card>
