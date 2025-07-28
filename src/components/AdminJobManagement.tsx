@@ -14,7 +14,6 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -51,6 +50,10 @@ export function AdminJobManagement() {
 
   const [selectedJob, setSelectedJob] = useState(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
+
+  const [uniqueSalesmen, setUniqueSalesmen] = useState([]);
+  const [uniqueCustomers, setUniqueCustomers] = useState([]);
+  const [uniqueBranches, setUniqueBranches] = useState([]);
 
   useEffect(() => {
     const checkRole = async () => {
@@ -105,8 +108,20 @@ export function AdminJobManagement() {
     setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
   };
 
+  const loadUniqueFields = async () => {
+    const { data, error } = await supabase.from("job_orders").select("salesman, customer, branch");
+    if (!error && data) {
+      setUniqueSalesmen([...new Set(data.map((j) => j.salesman).filter(Boolean))]);
+      setUniqueCustomers([...new Set(data.map((j) => j.customer).filter(Boolean))]);
+      setUniqueBranches([...new Set(data.map((j) => j.branch).filter(Boolean))]);
+    }
+  };
+
   useEffect(() => {
-    if (isAdmin) loadJobs();
+    if (isAdmin) {
+      loadJobs();
+      loadUniqueFields();
+    }
   }, [isAdmin, page, salesmanFilter, statusFilter, customerFilter, branchFilter, dateFilter]);
 
   if (!isAdmin) return (
@@ -136,8 +151,9 @@ export function AdminJobManagement() {
               <SelectTrigger><SelectValue placeholder="Salesman" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
-                <SelectItem value="mohsin">Mohsin</SelectItem>
-                <SelectItem value="others">Others</SelectItem>
+                {uniqueSalesmen.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -154,7 +170,9 @@ export function AdminJobManagement() {
               <SelectTrigger><SelectValue placeholder="Customer" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
-                <SelectItem value="printwaves">Printwaves</SelectItem>
+                {uniqueCustomers.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -162,20 +180,17 @@ export function AdminJobManagement() {
               <SelectTrigger><SelectValue placeholder="Branch" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
-                <SelectItem value="alhail">Al Hail</SelectItem>
+                {uniqueBranches.map((b) => (
+                  <SelectItem key={b} value={b}>{b}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("justify-start", !dateFilter && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateFilter?.from
-                    ? `${format(dateFilter.from, "LLL dd, y")}${dateFilter.to ? ` - ${format(dateFilter.to, "LLL dd, y")}` : ""}`
-                    : "Pick Date Range"}
-                </Button>
+                <Button variant="outline" className={cn("justify-start", !dateFilter && "text-muted-foreground")}> <CalendarIcon className="mr-2 h-4 w-4" />{dateFilter?.from ? format(dateFilter.from, "LLL dd, y") + (dateFilter.to ? ` - ${format(dateFilter.to, "LLL dd, y")}` : '') : "Pick Date Range"}</Button>
               </PopoverTrigger>
-              <PopoverContent align="start" className="p-0">
+              <PopoverContent align="start" className="p-0 z-50 max-w-full">
                 <Calendar
                   mode="range"
                   selected={dateFilter || undefined}
