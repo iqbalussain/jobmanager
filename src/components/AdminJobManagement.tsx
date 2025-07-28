@@ -1,35 +1,21 @@
+// AdminJobManagement.tsx
+
 import { useState, useEffect } from "react";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
+  Card, CardContent, CardHeader, CardTitle,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Button, Input, Label,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Popover, PopoverTrigger, PopoverContent
+} from "@/components/ui";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { JobDetails } from "@/components/JobDetails";
+import { Filter, Calendar as CalendarIcon, X, Pencil } from "lucide-react";
+import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { Filter, Calendar as CalendarIcon } from "lucide-react";
+import { JobDetails } from "@/components/JobDetails";
 
 const PAGE_SIZE = 50;
 
@@ -48,12 +34,14 @@ export function AdminJobManagement() {
   const [branchFilter, setBranchFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState(null);
 
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
-
+  const [editingTotalValue, setEditingTotalValue] = useState({});
   const [uniqueSalesmen, setUniqueSalesmen] = useState([]);
   const [uniqueCustomers, setUniqueCustomers] = useState([]);
   const [uniqueBranches, setUniqueBranches] = useState([]);
+
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     const checkRole = async () => {
@@ -69,46 +57,31 @@ export function AdminJobManagement() {
     checkRole();
   }, [user]);
 
-  const buildFilters = () => {
-    const filters = [];
-    if (salesmanFilter !== "all") filters.push({ field: "salesman", op: "ilike", value: `%${salesmanFilter}%` });
-    if (statusFilter !== "all") filters.push({ field: "status", op: "eq", value: statusFilter });
-    if (customerFilter !== "all") filters.push({ field: "customer", op: "ilike", value: `%${customerFilter}%` });
-    if (branchFilter !== "all") filters.push({ field: "branch", op: "ilike", value: `%${branchFilter}%` });
-    return filters;
-  };
-
   const loadJobs = async () => {
     let query = supabase.from("job_orders").select("*", { count: "exact" });
 
-    const filters = buildFilters();
-    filters.forEach(({ field, op, value }) => {
-      query = query[op](field, value);
-    });
+    if (salesmanFilter !== "all") query = query.ilike("salesman", `%${salesmanFilter}%`);
+    if (statusFilter !== "all") query = query.eq("status", statusFilter);
+    if (customerFilter !== "all") query = query.ilike("customer", `%${customerFilter}%`);
+    if (branchFilter !== "all") query = query.ilike("branch", `%${branchFilter}%`);
 
-    if (dateFilter?.from) {
-      query = query.gte("created_at", dateFilter.from.toISOString());
-    }
-    if (dateFilter?.to) {
-      query = query.lte("created_at", dateFilter.to.toISOString());
-    }
+    if (dateFilter?.from) query = query.gte("created_at", dateFilter.from.toISOString());
+    if (dateFilter?.to) query = query.lte("created_at", dateFilter.to.toISOString());
 
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
-    query = query.range(from, to).order("created_at", { ascending: false });
 
-    const { data, count, error } = await query;
+    const { data, count, error } = await query.range(from, to).order("created_at", { ascending: false });
 
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
+      toast({ title: "Error loading jobs", description: error.message, variant: "destructive" });
+    } else {
+      setJobs(data || []);
+      setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
     }
-
-    setJobs(data || []);
-    setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
   };
 
-  const loadUniqueFields = async () => {
+  const loadFilterOptions = async () => {
     const { data, error } = await supabase.from("job_orders").select("salesman, customer, branch");
     if (!error && data) {
       setUniqueSalesmen([...new Set(data.map((j) => j.salesman).filter(Boolean))]);
@@ -117,120 +90,143 @@ export function AdminJobManagement() {
     }
   };
 
+  const handleStatusChange = async (jobId, newStatus) => {
+    const { error } = await supabase.from("job_orders").update({ status: newStatus }).eq("id", jobId);
+    if (!error) loadJobs();
+  };
+
+  const handleTotalValueUpdate = async (jobId, newValue) => {
+    const { error } = await supabase.from("job_orders").update({ totalValue: parseFloat(newValue) }).eq("id", jobId);
+    if (!error) {
+      toast({ title: "Updated" });
+      setEditingTotalValue(prev => {
+        const newState = { ...prev };
+        delete newState[jobId];
+        return newState;
+      });
+      loadJobs();
+    }
+  };
+
   useEffect(() => {
     if (isAdmin) {
       loadJobs();
-      loadUniqueFields();
+      loadFilterOptions();
     }
-  }, [isAdmin, page, salesmanFilter, statusFilter, customerFilter, branchFilter, dateFilter]);
+  }, [isAdmin, page, salesmanFilter, customerFilter, branchFilter, statusFilter, dateFilter]);
 
-  if (!isAdmin) return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold text-red-600 mb-2">Access Denied</h1>
-      <p className="text-gray-600">You don't have access to this page.</p>
-    </div>
-  );
+  if (!isAdmin) return <div className="p-6">Access Denied</div>;
 
   return (
     <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Job Management</h1>
-          <p className="text-gray-600">Manage jobs with full control</p>
-        </div>
-      </div>
+      <h1 className="text-3xl font-bold text-gray-900 mb-4">Admin Job Management</h1>
 
-      {/* Filters */}
-      <Card>
+      {/* Filter Panel */}
+      <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle><Filter className="inline-block w-5 h-5 mr-2" />Filters</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-gray-900">
+            <Filter className="w-5 h-5 text-blue-600" />
+            Job Orders Management
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Salesman</label>
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label>Filter by Salesman</Label>
               <Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
                 <SelectTrigger><SelectValue placeholder="Select salesman" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
-                  {uniqueSalesmen.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
+                  {uniqueSalesmen.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Status</label>
+            <div className="space-y-2">
+              <Label>Filter by Customer</Label>
+              <Select value={customerFilter} onValueChange={setCustomerFilter}>
+                <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {uniqueCustomers.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filter by Branch</Label>
+              <Select value={branchFilter} onValueChange={setBranchFilter}>
+                <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {uniqueBranches.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filter by Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="designing">Designing</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="invoiced">Invoiced</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Customer</label>
-              <Select value={customerFilter} onValueChange={setCustomerFilter}>
-                <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  {uniqueCustomers.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Branch</label>
-              <Select value={branchFilter} onValueChange={setBranchFilter}>
-                <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  {uniqueBranches.map((b) => (
-                    <SelectItem key={b} value={b}>{b}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Created At</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("justify-start w-full", !dateFilter && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFilter?.from ? format(dateFilter.from, "LLL dd, y") + (dateFilter.to ? ` - ${format(dateFilter.to, "LLL dd, y")}` : '') : "Pick Date Range"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="p-0 z-50 max-w-full w-auto">
-                  <Calendar
-                    mode="range"
-                    selected={dateFilter || undefined}
-                    onSelect={setDateFilter}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+          {/* Date Filter */}
+          <div className="flex items-center gap-2 mt-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn("w-auto justify-start text-left font-normal", !dateFilter && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateFilter?.from
+                    ? `${format(dateFilter.from, "LLL dd, y")}${dateFilter?.to ? ` - ${format(dateFilter.to, "LLL dd, y")}` : ""}`
+                    : "Filter by date range"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 z-50" align="start">
+                <Calendar
+                  mode="range"
+                  selected={dateFilter}
+                  onSelect={setDateFilter}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+            {dateFilter && (
+              <Button variant="ghost" size="sm" onClick={() => setDateFilter(null)}>
+                <X className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Jobs Table */}
+      {/* Job Table */}
       <Card>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Job #</TableHead>
+                <TableHead>Job Order #</TableHead>
+                <TableHead>Title</TableHead>
                 <TableHead>Customer</TableHead>
+                <TableHead>Branch</TableHead>
+                <TableHead>Salesman</TableHead>
+                <TableHead>Created Date</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead>Invoice #</TableHead>
+                <TableHead>Total Value</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -238,15 +234,62 @@ export function AdminJobManagement() {
               {jobs.map((job) => (
                 <TableRow key={job.id}>
                   <TableCell>{job.jobOrderNumber}</TableCell>
+                  <TableCell>{job.title}</TableCell>
                   <TableCell>{job.customer}</TableCell>
-                  <TableCell>{job.status}</TableCell>
+                  <TableCell>{job.branch || "N/A"}</TableCell>
+                  <TableCell>{job.salesman || "Unassigned"}</TableCell>
                   <TableCell>{new Date(job.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <Button size="sm" onClick={() => {
+                    <Select value={job.status} onValueChange={(val) => handleStatusChange(job.id, val)}>
+                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="designing">Designing</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="invoiced">Invoiced</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>{job.invoiceNumber || "Not Assigned"}</TableCell>
+                  <TableCell>
+                    {editingTotalValue[job.id] !== undefined ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={editingTotalValue[job.id]}
+                          onChange={(e) =>
+                            setEditingTotalValue(prev => ({ ...prev, [job.id]: e.target.value }))
+                          }
+                          className="w-24"
+                        />
+                        <Button size="sm" onClick={() => handleTotalValueUpdate(job.id, editingTotalValue[job.id])}>Save</Button>
+                        <Button size="sm" variant="ghost" onClick={() => {
+                          const updated = { ...editingTotalValue };
+                          delete updated[job.id];
+                          setEditingTotalValue(updated);
+                        }}>Cancel</Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span>${job.totalValue?.toFixed(2) || "0.00"}</span>
+                        <Button size="sm" variant="ghost" onClick={() =>
+                          setEditingTotalValue(prev => ({
+                            ...prev,
+                            [job.id]: job.totalValue?.toString() || "0"
+                          }))
+                        }>
+                          Edit
+                        </Button>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button size="sm" variant="outline" onClick={() => {
                       setSelectedJob(job);
                       setIsJobDetailsOpen(true);
+                      setIsEditMode(true);
                     }}>
-                      View
+                      <Pencil className="w-4 h-4 mr-1" /> Edit
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -257,17 +300,18 @@ export function AdminJobManagement() {
       </Card>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center">
-        <Button disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</Button>
+      <div className="flex items-center justify-between mt-4">
+        <Button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Previous</Button>
         <span>Page {page} of {totalPages}</span>
-        <Button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next</Button>
+        <Button disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>Next</Button>
       </div>
 
-      {/* Job Details Modal */}
+      {/* Modal */}
       <JobDetails
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
         job={selectedJob}
+        isEditMode={isEditMode}
       />
     </div>
   );
