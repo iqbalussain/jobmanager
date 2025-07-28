@@ -1,16 +1,16 @@
-// AdminJobManagement.tsx
-
 import { useState, useEffect } from "react";
-import {
-  Card, CardContent, CardHeader, CardTitle,
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-  Button, Input, Label,
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-  Popover, PopoverTrigger, PopoverContent
-} from "@/components/ui";
-import { Calendar } from "@/components/ui/calendar";
-import { Filter, Calendar as CalendarIcon, X, Pencil } from "lucide-react";
 import { format } from "date-fns";
+import { Filter, Calendar as CalendarIcon, X, Pencil } from "lucide-react";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -131,6 +131,7 @@ export function AdminJobManagement() {
         </CardHeader>
         <CardContent>
           <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Salesman Filter */}
             <div className="space-y-2">
               <Label>Filter by Salesman</Label>
               <Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
@@ -142,6 +143,7 @@ export function AdminJobManagement() {
               </Select>
             </div>
 
+            {/* Customer Filter */}
             <div className="space-y-2">
               <Label>Filter by Customer</Label>
               <Select value={customerFilter} onValueChange={setCustomerFilter}>
@@ -153,6 +155,7 @@ export function AdminJobManagement() {
               </Select>
             </div>
 
+            {/* Branch Filter */}
             <div className="space-y-2">
               <Label>Filter by Branch</Label>
               <Select value={branchFilter} onValueChange={setBranchFilter}>
@@ -164,6 +167,7 @@ export function AdminJobManagement() {
               </Select>
             </div>
 
+            {/* Status Filter */}
             <div className="space-y-2">
               <Label>Filter by Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -180,7 +184,7 @@ export function AdminJobManagement() {
             </div>
           </div>
 
-          {/* Date Filter */}
+          {/* Date Range Picker */}
           <div className="flex items-center gap-2 mt-2">
             <Popover>
               <PopoverTrigger asChild>
@@ -306,7 +310,7 @@ export function AdminJobManagement() {
         <Button disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>Next</Button>
       </div>
 
-      {/* Modal */}
+      {/* Job Details Modal */}
       <JobDetails
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
