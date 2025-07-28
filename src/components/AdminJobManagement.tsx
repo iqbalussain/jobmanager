@@ -87,15 +87,15 @@ export function AdminJobManagement() {
     });
 
     if (dateFilter?.from) {
-      query = query.gte("createdAt", dateFilter.from.toISOString());
+      query = query.gte("created_at", dateFilter.from.toISOString());
     }
     if (dateFilter?.to) {
-      query = query.lte("createdAt", dateFilter.to.toISOString());
+      query = query.lte("created_at", dateFilter.to.toISOString());
     }
 
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
-    query = query.range(from, to).order("createdAt", { ascending: false });
+    query = query.range(from, to).order("created_at", { ascending: false });
 
     const { data, count, error } = await query;
 
@@ -188,9 +188,9 @@ export function AdminJobManagement() {
 
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("justify-start", !dateFilter && "text-muted-foreground")}> <CalendarIcon className="mr-2 h-4 w-4" />{dateFilter?.from ? format(dateFilter.from, "LLL dd, y") + (dateFilter.to ? ` - ${format(dateFilter.to, "LLL dd, y")}` : '') : "Pick Date Range"}</Button>
+                <Button variant="outline" className={cn("justify-start w-full", !dateFilter && "text-muted-foreground")}> <CalendarIcon className="mr-2 h-4 w-4" />{dateFilter?.from ? format(dateFilter.from, "LLL dd, y") + (dateFilter.to ? ` - ${format(dateFilter.to, "LLL dd, y")}` : '') : "Pick Date Range"}</Button>
               </PopoverTrigger>
-              <PopoverContent align="start" className="p-0 z-50 max-w-full">
+              <PopoverContent align="start" className="p-0 z-50 max-w-full w-auto">
                 <Calendar
                   mode="range"
                   selected={dateFilter || undefined}
@@ -222,7 +222,7 @@ export function AdminJobManagement() {
                   <TableCell>{job.jobOrderNumber}</TableCell>
                   <TableCell>{job.customer}</TableCell>
                   <TableCell>{job.status}</TableCell>
-                  <TableCell>{new Date(job.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(job.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <Button size="sm" onClick={() => {
                       setSelectedJob(job);
