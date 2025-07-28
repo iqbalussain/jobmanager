@@ -14,7 +14,6 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -29,26 +28,29 @@ import { JobDetails } from "@/components/JobDetails";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { format, isWithinInterval } from "date-fns";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Filter, Plus, Settings, Calendar as CalendarIcon, X } from "lucide-react";
+import { Filter, Calendar as CalendarIcon } from "lucide-react";
 
 const PAGE_SIZE = 50;
 
 export function AdminJobManagement() {
   const { toast } = useToast();
   const { user } = useAuth();
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
+
   const [salesmanFilter, setSalesmanFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [customerFilter, setCustomerFilter] = useState("all");
   const [branchFilter, setBranchFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState(null);
+
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
   useEffect(() => {
     const checkRole = async () => {
@@ -66,26 +68,40 @@ export function AdminJobManagement() {
 
   const buildFilters = () => {
     const filters = [];
-    if (salesmanFilter !== "all") filters.push(["salesman", "ilike", `%${salesmanFilter}%"]);
-    if (statusFilter !== "all") filters.push(["status", "eq", statusFilter]);
-    if (customerFilter !== "all") filters.push(["customer", "ilike", `%${customerFilter}%"]);
-    if (branchFilter !== "all") filters.push(["branch", "ilike", `%${branchFilter}%"]);
+    if (salesmanFilter !== "all") filters.push({ field: "salesman", op: "ilike", value: `%${salesmanFilter}%` });
+    if (statusFilter !== "all") filters.push({ field: "status", op: "eq", value: statusFilter });
+    if (customerFilter !== "all") filters.push({ field: "customer", op: "ilike", value: `%${customerFilter}%` });
+    if (branchFilter !== "all") filters.push({ field: "branch", op: "ilike", value: `%${branchFilter}%` });
     return filters;
   };
 
   const loadJobs = async () => {
     let query = supabase.from("job_orders").select("*", { count: "exact" });
-    buildFilters().forEach(([field, op, value]) => {
+
+    const filters = buildFilters();
+    filters.forEach(({ field, op, value }) => {
       query = query[op](field, value);
     });
-    if (dateFilter?.from && dateFilter?.to) {
-      query = query.gte("createdAt", dateFilter.from.toISOString()).lte("createdAt", dateFilter.to.toISOString());
+
+    if (dateFilter?.from) {
+      query = query.gte("createdAt", dateFilter.from.toISOString());
     }
+    if (dateFilter?.to) {
+      query = query.lte("createdAt", dateFilter.to.toISOString());
+    }
+
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
-    const { data, count, error } = await query.range(from, to).order("createdAt", { ascending: false });
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    setJobs(data);
+    query = query.range(from, to).order("createdAt", { ascending: false });
+
+    const { data, count, error } = await query;
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    setJobs(data || []);
     setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
   };
 
@@ -109,6 +125,7 @@ export function AdminJobManagement() {
         </div>
       </div>
 
+      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle><Filter className="inline-block w-5 h-5 mr-2" />Filters</CardTitle>
@@ -123,6 +140,7 @@ export function AdminJobManagement() {
                 <SelectItem value="others">Others</SelectItem>
               </SelectContent>
             </Select>
+
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
@@ -131,6 +149,7 @@ export function AdminJobManagement() {
                 <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
+
             <Select value={customerFilter} onValueChange={setCustomerFilter}>
               <SelectTrigger><SelectValue placeholder="Customer" /></SelectTrigger>
               <SelectContent>
@@ -138,6 +157,7 @@ export function AdminJobManagement() {
                 <SelectItem value="printwaves">Printwaves</SelectItem>
               </SelectContent>
             </Select>
+
             <Select value={branchFilter} onValueChange={setBranchFilter}>
               <SelectTrigger><SelectValue placeholder="Branch" /></SelectTrigger>
               <SelectContent>
@@ -145,9 +165,15 @@ export function AdminJobManagement() {
                 <SelectItem value="alhail">Al Hail</SelectItem>
               </SelectContent>
             </Select>
+
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("justify-start", !dateFilter && "text-muted-foreground")}> <CalendarIcon className="mr-2 h-4 w-4" />{dateFilter?.from ? format(dateFilter.from, "LLL dd, y") + (dateFilter.to ? ` - ${format(dateFilter.to, "LLL dd, y")}` : '') : "Pick Date Range"}</Button>
+                <Button variant="outline" className={cn("justify-start", !dateFilter && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateFilter?.from
+                    ? `${format(dateFilter.from, "LLL dd, y")}${dateFilter.to ? ` - ${format(dateFilter.to, "LLL dd, y")}` : ""}`
+                    : "Pick Date Range"}
+                </Button>
               </PopoverTrigger>
               <PopoverContent align="start" className="p-0">
                 <Calendar
@@ -162,6 +188,7 @@ export function AdminJobManagement() {
         </CardContent>
       </Card>
 
+      {/* Jobs Table */}
       <Card>
         <CardContent>
           <Table>
@@ -182,7 +209,12 @@ export function AdminJobManagement() {
                   <TableCell>{job.status}</TableCell>
                   <TableCell>{new Date(job.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <Button size="sm" onClick={() => { setSelectedJob(job); setIsJobDetailsOpen(true); }}>View</Button>
+                    <Button size="sm" onClick={() => {
+                      setSelectedJob(job);
+                      setIsJobDetailsOpen(true);
+                    }}>
+                      View
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -191,13 +223,19 @@ export function AdminJobManagement() {
         </CardContent>
       </Card>
 
+      {/* Pagination */}
       <div className="flex justify-between items-center">
         <Button disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</Button>
         <span>Page {page} of {totalPages}</span>
         <Button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next</Button>
       </div>
 
-      <JobDetails isOpen={isJobDetailsOpen} onClose={() => setIsJobDetailsOpen(false)} job={selectedJob} />
+      {/* Job Details Modal */}
+      <JobDetails
+        isOpen={isJobDetailsOpen}
+        onClose={() => setIsJobDetailsOpen(false)}
+        job={selectedJob}
+      />
     </div>
   );
 }
