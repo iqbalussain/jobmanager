@@ -41,14 +41,19 @@ const statusOptions = [
   { value: "in-progress" as JobStatus, label: "In Transit", color: "bg-orange-100 text-orange-800 border-orange-200" }
 ];
 
+const PAGE_SIZE = 50;
+
 export function DeliveryRecord() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState("all");
   const [salesmanFilter, setSalesmanFilter] = useState("all");
   const [customLocations, setCustomLocations] = useState<string[]>([]);
   const [newLocation, setNewLocation] = useState("");
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false);
   const { jobOrders, isLoading, updateJobData } = useJobOrders();
+
   const { user } = useAuth();
   const { toast } = useToast();
 
