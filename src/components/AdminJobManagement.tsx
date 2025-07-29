@@ -21,10 +21,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { JobDetails } from "@/components/JobDetails";
 
 interface AdminJobManagementProps {
-  jobs: Job[];
+  jobs: Job;
   onViewDetails: (job: Job) => void;
   onStatusChange: (jobId: string, status: string) => void;
-  onStatusUpdate?: (jobId: string, status: string) => void;
+  onStatusUpdate: (jobId: string, status: JobStatus) => void;
   onJobDataUpdate?: (jobData: { id: string; [key: string]: any }) => void;
 }
 
@@ -323,7 +323,7 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
           </Table>
         </CardContent>
       </Card>
-    </div>
+
       {/* Pagination */}
       <div className="flex items-center justify-between mt-4">
         <Button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Previous</Button>
@@ -338,5 +338,6 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
         job={selectedJob}
         isEditMode={isEditMode}
       />
+    </div>
   );
 }
