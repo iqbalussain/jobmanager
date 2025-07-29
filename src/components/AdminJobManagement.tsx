@@ -89,7 +89,7 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
 
       toast({ title: "Error loading jobs", description: error.message, variant: "destructive" });
     } else {
-      console.log("Loaded jobs:", data); // Debug output
+      console.log("Jobs loaded from Supabase:", data); // 🔥 This is important!
       setJobs(data || []);
       setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
     }
@@ -251,9 +251,9 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
             <TableBody>
               {jobs.map((job) => (
                 <TableRow key={job.id}>
-                  <TableCell>{job.job_order_Number || "N/A"}</TableCell>
-                    <TableCell>{job.title || "N/A"}</TableCell>
-                    <TableCell>{job.customer || "N/A"}</TableCell>
+                  <TableCell>{job.job_order_number || "N/A"}</TableCell>
+                  <TableCell>{job.title || "N/A"}</TableCell>
+                  <TableCell>{job.customer || "N/A"}</TableCell>
                   <TableCell>{job.branch || "N/A"}</TableCell>
                   <TableCell>{job.salesman || "Unassigned"}</TableCell>
                   <TableCell>{new Date(job.created_at).toLocaleDateString()}</TableCell>
