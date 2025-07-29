@@ -21,7 +21,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { JobDetails } from "@/components/JobDetails";
 
 interface AdminJobManagementProps {
-  jobs: Job[];
+  jobs: Job;
+  onViewDetails: (job: Job) => void;
+  onStatusChange: (jobId: string, status: string) => void;
   onStatusUpdate: (jobId: string, status: JobStatus) => void;
   onJobDataUpdate?: (jobData: { id: string; [key: string]: any }) => void;
 }
@@ -252,10 +254,10 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
               {jobs.map((job) => (
                 <TableRow key={job.id}>
                   <TableCell className="font-mono">{job.job_order_number || "N/A"}</TableCell>
-                  <TableCell className="font-medium">{job.job_title || "N/A"}</TableCell>
-                  <TableCell>{job.customer || "N/A"}</TableCell>
+                  <TableCell className="font-medium">{job.title || "N/A"}</TableCell>
+                  <TableCell>{job.customer?.name || "N/A"}</TableCell>
                   <TableCell>{job.branch || "N/A"}</TableCell>
-                  <TableCell>{job.salesman || "Unassigned"}</TableCell>
+                  <TableCell>{job.salesman?.name || 'Unassigned'}</TableCell>
                   <TableCell>{job.created_at ? new Date(job.created_at).toLocaleDateString() : "N/A"}</TableCell>
                   <TableCell>{job.invoice_number || "Not Assigned"}</TableCell>
                   <TableCell>${job.total_value?.toFixed(2) || "0.00"}</TableCell>
