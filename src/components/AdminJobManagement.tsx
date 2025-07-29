@@ -151,10 +151,13 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
             <div className="space-y-2">
               <Label>Filter by Salesman</Label>
               <Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
-                <SelectTrigger><SelectValue placeholder="Select salesman" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="All Salesmen" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  {uniqueSalesmen.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                 <SelectItem value="all">All Salesmen</SelectItem>
+                  {uniqueSalesmen.map((salesman) => (
+                    <SelectItem key={salesman} value={salesman || ''}>
+                      {salesman || 'Unassigned'}
+                  </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
