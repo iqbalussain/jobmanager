@@ -252,7 +252,7 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
               {jobs.map((job) => (
                 <TableRow key={job.id}>
                   <TableCell className="font-mono">{job.job_order_number || "N/A"}</TableCell>
-                  <TableCell className="font-medium">{job.job_title_id || "N/A"}</TableCell>
+                  <TableCell className="font-medium">{<job className="job_titles"></job> || "N/A"}</TableCell>
                   <TableCell>{job.customer || "N/A"}</TableCell>
                   <TableCell>{job.branch || "N/A"}</TableCell>
                   <TableCell>{job.salesman || "Unassigned"}</TableCell>
