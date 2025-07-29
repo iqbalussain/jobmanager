@@ -42,8 +42,6 @@ const statusOptions = [
 ];
 
 const PAGE_SIZE = 50;
-const paginatedJobs = filteredJobs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
 
 export function DeliveryRecord() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -130,7 +128,7 @@ export function DeliveryRecord() {
     
     return matchesSearch && matchesStatus && matchesSalesman;
   });
-
+const paginatedJobs = filteredJobs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const uniqueSalesmen = [...new Set(jobOrders.map(job => job.salesman?.name).filter(Boolean))];
 
   const getStatusBadgeStyle = (status: string) => {
