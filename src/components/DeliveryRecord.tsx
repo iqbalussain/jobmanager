@@ -42,6 +42,8 @@ const statusOptions = [
 ];
 
 const PAGE_SIZE = 50;
+const paginatedJobs = filteredJobs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
 
 export function DeliveryRecord() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -326,6 +328,13 @@ export function DeliveryRecord() {
           </div>
         </CardContent>
       </Card>
+useEffect(() => {
+  const newTotalPages = Math.ceil(filteredJobs.length / PAGE_SIZE) || 1;
+  setTotalPages(newTotalPages);
+  if (page > newTotalPages) {
+    setPage(1); // Reset if current page is out of bounds
+  }
+}, [filteredJobs]);
 
       {/* Delivery Records Table */}
       <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
@@ -355,7 +364,7 @@ export function DeliveryRecord() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredJobs.map((job) => (
+                  {paginatedJobs.map((job) => (
                     <TableRow key={job.id} className="hover:bg-white/50">
                       <TableCell className="font-mono font-medium">
                         {job.job_order_number}
