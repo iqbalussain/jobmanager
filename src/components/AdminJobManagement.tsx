@@ -251,12 +251,14 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
             <TableBody>
               {jobs.map((job) => (
                 <TableRow key={job.id}>
-                  <TableCell>{job.job_order_number || "N/A"}</TableCell>
-                  <TableCell>{job.title || "N/A"}</TableCell>
+                  <TableCell className="font-mono">{job.job_order_number || "N/A"}</TableCell>
+                  <TableCell className="font-medium">{job.title || "N/A"}</TableCell>
                   <TableCell>{job.customer || "N/A"}</TableCell>
                   <TableCell>{job.branch || "N/A"}</TableCell>
                   <TableCell>{job.salesman || "Unassigned"}</TableCell>
-                  <TableCell>{new Date(job.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>{job.created_at ? new Date(job.created_at).toLocaleDateString() : "N/A"}</TableCell>
+                  <TableCell>{job.invoice_number || "Not Assigned"}</TableCell>
+                  <TableCell>${job.total_value?.toFixed(2) || "0.00"}</TableCell>
                   <TableCell>
                     <Select value={job.status} onValueChange={(val) => handleStatusChange(job.id, val)}>
                       <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
