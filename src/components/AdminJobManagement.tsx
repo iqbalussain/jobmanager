@@ -21,10 +21,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { JobDetails } from "@/components/JobDetails";
 
 interface AdminJobManagementProps {
-  jobs: Job;
+  jobs: Job[];
   onViewDetails: (job: Job) => void;
   onStatusChange: (jobId: string, status: string) => void;
-  onStatusUpdate: (jobId: string, status: JobStatus) => void;
+  onStatusUpdate?: (jobId: string, status: string) => void;
   onJobDataUpdate?: (jobData: { id: string; [key: string]: any }) => void;
 }
 
