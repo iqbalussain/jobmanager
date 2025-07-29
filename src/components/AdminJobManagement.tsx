@@ -1,29 +1,19 @@
 import { useState, useEffect } from "react";
-<<<<<<< HEAD
 import { Job, JobStatus } from "@/pages/Index";
-import { format } from "date-fns";
-import { Filter, Plus, Calendar as CalendarIcon, X, Pencil } from "lucide-react";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-=======
 import { format } from "date-fns";
 import { Filter, Calendar as CalendarIcon, X, Pencil } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
->>>>>>> dfc8ad618896be93144b1551b6454ea3a2ec46f6
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-<<<<<<< HEAD
-import { isWithinInterval } from "date-fns";
-=======
 
->>>>>>> dfc8ad618896be93144b1551b6454ea3a2ec46f6
+import { isWithinInterval } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -38,7 +28,7 @@ interface AdminJobManagementProps {
 
 const PAGE_SIZE = 50;
 
-export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: AdminJobManagementProps) {
+export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobManagementProps) {
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -51,9 +41,9 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
   const [statusFilter, setStatusFilter] = useState("all");
   const [customerFilter, setCustomerFilter] = useState("all");
   const [branchFilter, setBranchFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date } | null>(null);
+  const [dateFilter, setDateFilter] = useState<{ from: Date | undefined; to?: Date | undefined } | null>(null);
 
-  const [editingTotalValue, setEditingTotalValue] = useState({});
+
   const [uniqueSalesmen, setUniqueSalesmen] = useState([]);
   const [uniqueCustomers, setUniqueCustomers] = useState([]);
   const [uniqueBranches, setUniqueBranches] = useState([]);
@@ -96,18 +86,12 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
     const { data, count, error } = await query.range(from, to).order("created_at", { ascending: false });
 
     if (error) {
-<<<<<<< HEAD
+
       toast({ title: "Error loading jobs", description: error.message, variant: "destructive" });
     } else {
       console.log("Loaded jobs:", data); // Debug output
       setJobs(data || []);
       setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
-=======
-      toast({ title: "Error loading jobs", description: error.message, variant: "destructive" });
-    } else {
-      setJobs(data || []);
-      setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
->>>>>>> dfc8ad618896be93144b1551b6454ea3a2ec46f6
     }
   };
 
@@ -120,26 +104,6 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
     }
   };
 
-<<<<<<< HEAD
-  const handleStatusChange = async (jobId, newStatus) => {
-    const { error } = await supabase.from("job_orders").update({ status: newStatus }).eq("id", jobId);
-    if (!error) loadJobs();
-  };
-
-  const handleTotalValueUpdate = async (jobId, totalValue:string) => {
-    const { error } = await supabase.from("job_orders").update({ totalValue: parseFloat(newValue) }).eq("id", jobId);
-    if (!error) {
-      toast({ title: "Updated" });
-      setEditingTotalValue(prev => {
-        const newState = { ...prev };
-        delete newState[jobId];
-        return newState;
-      });
-      loadJobs();
-    }
-  };
-
-=======
   const handleStatusChange = async (jobId, newStatus) => {
     const { error } = await supabase.from("job_orders").update({ status: newStatus }).eq("id", jobId);
     if (!error) loadJobs();
@@ -158,7 +122,6 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
     }
   };
 
->>>>>>> dfc8ad618896be93144b1551b6454ea3a2ec46f6
   useEffect(() => {
     if (isAdmin) {
       loadJobs();
@@ -288,12 +251,12 @@ export function AdminJobManagement({ jobs, onStatusUpdate, onJobDataUpdate }: Ad
             <TableBody>
               {jobs.map((job) => (
                 <TableRow key={job.id}>
-                  <TableCell>{job.jobOrderNumber}</TableCell>
-                  <TableCell>{job.title}</TableCell>
-                  <TableCell>{job.customer}</TableCell>
+                  <TableCell>{job.jobOrderNumber || "N/A"}</TableCell>
+                    <TableCell>{job.title || "N/A"}</TableCell>
+                    <TableCell>{job.customer || "N/A"}</TableCell>
                   <TableCell>{job.branch || "N/A"}</TableCell>
                   <TableCell>{job.salesman || "Unassigned"}</TableCell>
-                  <TableCell>{new Date(job.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(job.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <Select value={job.status} onValueChange={(val) => handleStatusChange(job.id, val)}>
                       <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
