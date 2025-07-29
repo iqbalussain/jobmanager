@@ -255,9 +255,12 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
                 <TableRow key={job.id}>
                   <TableCell className="font-mono">{job.job_order_number || "N/A"}</TableCell>
                   <TableCell className="font-medium">{job.title || "N/A"}</TableCell>
-                  <TableCell>{job.customer?.name || "N/A"}</TableCell>
+                  <TableCell>{job.customer.name || "N/A"}</TableCell>
                   <TableCell>{job.branch || "N/A"}</TableCell>
                   <TableCell>{job.salesman?.name || 'Unassigned'}</TableCell>
+                  <TableCell><div className="flex items-center gap-2">
+                               {job.salesman?.name || 'Unassigned'}
+                              </div> </TableCell>
                   <TableCell>{job.created_at ? new Date(job.created_at).toLocaleDateString() : "N/A"}</TableCell>
                   <TableCell>{job.invoice_number || "Not Assigned"}</TableCell>
                   <TableCell>${job.total_value?.toFixed(2) || "0.00"}</TableCell>
