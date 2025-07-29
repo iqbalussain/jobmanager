@@ -251,12 +251,12 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
             <TableBody>
               {jobs.map((job) => (
                 <TableRow key={job.id}>
-                  <TableCell>{job.jobOrderNumber || "N/A"}</TableCell>
+                  <TableCell>{job.job_order_Number || "N/A"}</TableCell>
                     <TableCell>{job.title || "N/A"}</TableCell>
                     <TableCell>{job.customer || "N/A"}</TableCell>
                   <TableCell>{job.branch || "N/A"}</TableCell>
                   <TableCell>{job.salesman || "Unassigned"}</TableCell>
-                  <TableCell>{new Date(job.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(job.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <Select value={job.status} onValueChange={(val) => handleStatusChange(job.id, val)}>
                       <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
@@ -269,7 +269,7 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>{job.invoiceNumber || "Not Assigned"}</TableCell>
+                  <TableCell>{job.invoice_Number || "Not Assigned"}</TableCell>
                   <TableCell>
                     {editingTotalValue[job.id] !== undefined ? (
                       <div className="flex items-center gap-2">
@@ -289,11 +289,11 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <span>${job.totalValue?.toFixed(2) || "0.00"}</span>
+                        <span>${job.total_value?.toFixed(2) || "0.00"}</span>
                         <Button size="sm" variant="ghost" onClick={() =>
                           setEditingTotalValue(prev => ({
                             ...prev,
-                            [job.id]: job.totalValue?.toString() || "0"
+                            [job.id]: job.total_value?.toString() || "0"
                           }))
                         }>
                           Edit
