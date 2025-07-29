@@ -118,6 +118,13 @@ export function DeliveryRecord() {
       });
     }
   };
+  useEffect(() => {
+  const newTotalPages = Math.ceil(filteredJobs.length / PAGE_SIZE) || 1;
+  setTotalPages(newTotalPages);
+  if (page > newTotalPages) {
+    setPage(1);
+  }
+}, [filteredJobs]);
 
   const filteredJobs = jobOrders.filter(job => {
     const matchesSearch = job.job_order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -326,13 +333,6 @@ const paginatedJobs = filteredJobs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZ
           </div>
         </CardContent>
       </Card>
-useEffect(() => {
-  const newTotalPages = Math.ceil(filteredJobs.length / PAGE_SIZE) || 1;
-  setTotalPages(newTotalPages);
-  if (page > newTotalPages) {
-    setPage(1); // Reset if current page is out of bounds
-  }
-}, [filteredJobs]);
 
       {/* Delivery Records Table */}
       <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
