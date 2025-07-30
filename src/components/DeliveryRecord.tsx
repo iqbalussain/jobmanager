@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,11 +52,33 @@ export function DeliveryRecord() {
   const [newLocation, setNewLocation] = useState("");
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false);
   const { jobOrders, isLoading, updateJobData } = useJobOrders();
-
   const { user } = useAuth();
   const { toast } = useToast();
 
   const allLocations = [...deliveryLocations, ...customLocations];
+
+  const filteredJobs = useMemo(() => {
+    return jobOrders.filter(job => {
+      const matchesSearch = job.job_order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (job.job_order_details && job.job_order_details.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesStatus = statusFilter === "all" || job.status === statusFilter;
+      const matchesSalesman = salesmanFilter === "all" || 
+        (job.salesman && job.salesman.name?.toLowerCase().includes(salesmanFilter.toLowerCase()));
+      return matchesSearch && matchesStatus && matchesSalesman;
+    });
+  }, [jobOrders, searchTerm, statusFilter, salesmanFilter]);
+
+  const paginatedJobs = useMemo(() => {
+    return filteredJobs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  }, [filteredJobs, page]);
+
+  useEffect(() => {
+    const newTotalPages = Math.ceil(filteredJobs.length / PAGE_SIZE) || 1;
+    setTotalPages(newTotalPages);
+    if (page > newTotalPages) {
+      setPage(1);
+    }
+  }, [filteredJobs]);
 
   const handleStatusUpdate = async (jobId: string, newStatus: string) => {
     try {
@@ -118,12 +139,13 @@ export function DeliveryRecord() {
       });
     }
   };
-  useEffect(() => {
-  const newTotalPages = Math.ceil(filteredJobs.length / PAGE_SIZE) || 1;
-  setTotalPages(newTotalPages);
-  if (page > newTotalPages) {
-    setPage(1);
-  }
+
+  const uniqueSalesmen = [...new Set(jobOrders.map(job => job.salesman?.name).filter(Boolean))];
+
+  const getStatusBadgeStyle = (status: string) => {
+    const statusOption = statusOptions.find(option => option.value === status);
+    return statusOption ? statusOption.color : "bg-gray-100 text-gray-800 border-gray-200";
+  };
 }, [filteredJobs]);
 
   const filteredJobs = jobOrders.filter(job => {
