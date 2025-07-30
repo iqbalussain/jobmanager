@@ -146,25 +146,6 @@ export function DeliveryRecord() {
     const statusOption = statusOptions.find(option => option.value === status);
     return statusOption ? statusOption.color : "bg-gray-100 text-gray-800 border-gray-200";
   };
-}, [filteredJobs]);
-
-  const filteredJobs = jobOrders.filter(job => {
-    const matchesSearch = job.job_order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (job.job_order_details && job.job_order_details.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = statusFilter === "all" || job.status === statusFilter;
-    const matchesSalesman = salesmanFilter === "all" || 
-                           (job.salesman && job.salesman.name?.toLowerCase().includes(salesmanFilter.toLowerCase()));
-    
-    return matchesSearch && matchesStatus && matchesSalesman;
-  });
-const paginatedJobs = filteredJobs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const uniqueSalesmen = [...new Set(jobOrders.map(job => job.salesman?.name).filter(Boolean))];
-
-  const getStatusBadgeStyle = (status: string) => {
-    const statusOption = statusOptions.find(option => option.value === status);
-    return statusOption ? statusOption.color : "bg-gray-100 text-gray-800 border-gray-200";
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
       {/* Header Section */}
