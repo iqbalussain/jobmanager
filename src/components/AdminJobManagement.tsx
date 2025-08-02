@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Job, JobStatus } from "@/pages/Index";
 import { format } from "date-fns";
-import { Filter, Calendar as CalendarIcon, X, Pencil } from "lucide-react";
+import { Filter, Calendar as CalendarIcon, X, Pencil, Eye } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -87,11 +87,12 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
     if (error) {
       toast({ title: "Error loading jobs", description: error.message, variant: "destructive" });
     } else {
-      // Enrich with customer, salesman and designer data
+      // Enrich with customer, salesman, designer and job title data
       const enrichedData = await Promise.all((data || []).map(async (job) => {
         let customerName = "Unknown Customer";
         let salesmanName = "Unassigned";
         let designerName = "Unassigned";
+        let jobTitle = "No Title";
         
         // Get customer name
         if (job.customer_id) {
@@ -123,12 +124,22 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
           designerName = designerData?.full_name || "Unassigned";
         }
         
+        // Get job title
+        if (job.job_title_id) {
+          const { data: jobTitleData } = await supabase
+            .from("job_titles")
+            .select("job_title_id")
+            .eq("id", job.job_title_id)
+            .single();
+          jobTitle = jobTitleData?.job_title_id || "No Title";
+        }
+        
         return {
           ...job,
           customer_name: customerName,
           salesman_name: salesmanName,
           designer_name: designerName,
-          title: job.job_order_details || `Job Order ${job.job_order_number}`
+          job_title: jobTitle
         };
       }));
 
@@ -325,13 +336,14 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
             <TableHeader>
               <TableRow>
                 <TableHead>Job Order #</TableHead>
-                <TableHead>Title</TableHead>
+                <TableHead>Job Title</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Branch</TableHead>
                 <TableHead>Salesman</TableHead>
                 <TableHead>Created Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Total Value</TableHead>
+                <TableHead>Invoice #</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -339,7 +351,7 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
               {jobs.map((job) => (
                 <TableRow key={job.id}>
                   <TableCell className="font-mono">{job.job_order_number || "N/A"}</TableCell>
-                  <TableCell className="font-medium">{job.title || "N/A"}</TableCell>
+                  <TableCell className="font-medium">{job.job_title || "N/A"}</TableCell>
                   <TableCell>{job.customer_name || "N/A"}</TableCell>
                   <TableCell>{job.branch || "N/A"}</TableCell>
                   <TableCell>{job.salesman_name || 'Unassigned'}</TableCell>
@@ -387,14 +399,24 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
                       </div>
                     )}
                   </TableCell>
+                  <TableCell>{job.invoice_number || "N/A"}</TableCell>
                   <TableCell>
-                    <Button size="sm" variant="outline" onClick={() => {
-                      setSelectedJob(job);
-                      setIsJobDetailsOpen(true);
-                      setIsEditMode(true);
-                    }}>
-                      <Pencil className="w-4 h-4 mr-1" /> Edit
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedJob(job);
+                        setIsJobDetailsOpen(true);
+                        setIsEditMode(false);
+                      }}>
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedJob(job);
+                        setIsJobDetailsOpen(true);
+                        setIsEditMode(true);
+                      }}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
