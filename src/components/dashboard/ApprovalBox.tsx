@@ -163,21 +163,26 @@ export function ApprovalBox() {
       const transformedJob = {
         id: jobOrder.id,
         title: jobTitleData.data?.job_title_id || 'Unknown Job Title',
-        description: jobOrder.job_order_details || '',
         customer: customerData.data?.name || 'Unknown Customer',
         designer: designerData.data?.full_name || 'Unassigned',
         salesman: salesmanData.data?.full_name || 'Unassigned',
+        assignee: jobOrder.assignee,
         jobOrderNumber: jobOrder.job_order_number,
         priority: jobOrder.priority,
         status: jobOrder.status,
         dueDate: jobOrder.due_date,
-        estimatedHours: jobOrder.estimated_hours,
-        actualHours: jobOrder.actual_hours,
-        branch: jobOrder.branch,
-        invoiceNumber: jobOrder.invoice_number,
-        clientName: jobOrder.client_name,
+        estimatedHours: jobOrder.estimated_hours || 0,
         createdAt: jobOrder.created_at,
-        approvalStatus: jobOrder.approval_status
+        branch: jobOrder.branch,
+        jobOrderDetails: jobOrder.job_order_details,
+        invoiceNumber: jobOrder.invoice_number,
+        totalValue: jobOrder.total_value,
+        customer_id: jobOrder.customer_id,
+        job_title_id: jobOrder.job_title_id,
+        created_by: jobOrder.created_by,
+        approval_status: jobOrder.approval_status,
+        deliveredAt: jobOrder.delivered_at,
+        clientName: jobOrder.client_name
       };
 
       setSelectedJob(transformedJob);

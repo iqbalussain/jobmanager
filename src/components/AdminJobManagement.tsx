@@ -139,7 +139,30 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
           customer_name: customerName,
           salesman_name: salesmanName,
           designer_name: designerName,
-          job_title: jobTitle
+          job_title: jobTitle,
+          // Transform to Job interface format for JobDetails component
+          id: job.id,
+          jobOrderNumber: job.job_order_number,
+          title: jobTitle,
+          customer: customerName,
+          designer: designerName,
+          salesman: salesmanName,
+          assignee: job.assignee,
+          priority: job.priority,
+          status: job.status,
+          dueDate: job.due_date,
+          estimatedHours: job.estimated_hours || 0,
+          createdAt: job.created_at,
+          branch: job.branch,
+          jobOrderDetails: job.job_order_details,
+          invoiceNumber: job.invoice_number,
+          totalValue: job.total_value,
+          customer_id: job.customer_id,
+          job_title_id: job.job_title_id,
+          created_by: job.created_by,
+          approval_status: job.approval_status,
+          deliveredAt: job.delivered_at,
+          clientName: job.client_name
         };
       }));
 
