@@ -67,6 +67,12 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
     }
   };
 
+  const handleStatusChange = (newStatus: string) => {
+    if (onStatusUpdate && currentJob) {
+      onStatusUpdate(currentJob.id, newStatus);
+    }
+  };
+
   const handleViewDetails = (job: Job) => {
     setSelectedJob(job);
     setIsJobDetailsOpen(true);
@@ -177,7 +183,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
             {filteredJobs.map((job, index) => (
               <div
                 key={job.id}
-                onClick={() => setSelectedJobIndex(index)}
+                onClick={() => handleJobSelect(job.jobOrderNumber)}
                 className={`p-3 rounded-lg cursor-pointer transition-all duration-300 ${
                   index === selectedJobIndex
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
@@ -251,9 +257,20 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
                   <Badge className={`bg-gradient-to-r ${getPriorityColor(currentJob.priority)} border-0 text-white`}>
                     {currentJob.priority} Priority
                   </Badge>
-                  <Badge className="bg-white/20 text-white border-0">
-                    {currentJob.status}
-                  </Badge>
+                  <Select value={currentJob.status} onValueChange={handleStatusChange}>
+                    <SelectTrigger className="bg-white/20 text-white border-0 h-6 text-xs min-w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="in-progress">In Progress</SelectItem>
+                      <SelectItem value="designing">Designing</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="finished">Finished</SelectItem>
+                      <SelectItem value="invoiced">Invoiced</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <h2 className="text-xl font-bold mb-2">{currentJob.title}</h2>
@@ -267,6 +284,9 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
                   <div>
                     <div className="text-sm text-gray-600">Customer</div>
                     <div className="font-medium">{currentJob.customer}</div>
+                    {currentJob.clientName && (
+                      <div className="text-sm text-gray-500">Client: {currentJob.clientName}</div>
+                    )}
                   </div>
                 </div>
                 
