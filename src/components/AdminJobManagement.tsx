@@ -21,16 +21,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { JobDetails } from "@/components/JobDetails";
 
 interface AdminJobManagementProps {
-  jobs: Job;
-  onViewDetails: (job: Job) => void;
-  onStatusChange: (jobId: string, status: string) => void;
-  onStatusUpdate: (jobId: string, status: JobStatus) => void;
+  onViewDetails?: (job: Job) => void;
+  onStatusChange?: (jobId: string, status: string) => void;
+  onStatusUpdate?: (jobId: string, status: JobStatus) => void;
   onJobDataUpdate?: (jobData: { id: string; [key: string]: any }) => void;
 }
 
 const PAGE_SIZE = 50;
 
-export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobManagementProps) {
+export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJobManagementProps) {
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -74,9 +73,7 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
   const loadJobs = async () => {
     let query = supabase.from("job_orders").select("*", { count: "exact" });
 
-    if (salesmanFilter !== "all") query = query.ilike("salesman", `%${salesmanFilter}%`);
-    if (statusFilter !== "all") query = query.eq("status", statusFilter);
-    if (customerFilter !== "all") query = query.ilike("customer", `%${customerFilter}%`);
+    if (statusFilter !== "all") query = query.eq("status", statusFilter as any);
     if (branchFilter !== "all") query = query.ilike("branch", `%${branchFilter}%`);
 
     if (dateFilter?.from) query = query.gte("created_at", dateFilter.from.toISOString());
@@ -88,21 +85,110 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
     const { data, count, error } = await query.range(from, to).order("created_at", { ascending: false });
 
     if (error) {
-
       toast({ title: "Error loading jobs", description: error.message, variant: "destructive" });
     } else {
-      console.log("Jobs loaded from Supabase:", data); // 🔥 This is important!
-      setJobs(data || []);
+      // Enrich with customer, salesman and designer data
+      const enrichedData = await Promise.all((data || []).map(async (job) => {
+        let customerName = "Unknown Customer";
+        let salesmanName = "Unassigned";
+        let designerName = "Unassigned";
+        
+        // Get customer name
+        if (job.customer_id) {
+          const { data: customerData } = await supabase
+            .from("customers")
+            .select("name")
+            .eq("id", job.customer_id)
+            .single();
+          customerName = customerData?.name || "Unknown Customer";
+        }
+        
+        // Get salesman name
+        if (job.salesman_id) {
+          const { data: salesmanData } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", job.salesman_id)
+            .single();
+          salesmanName = salesmanData?.full_name || "Unassigned";
+        }
+        
+        // Get designer name
+        if (job.designer_id) {
+          const { data: designerData } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", job.designer_id)
+            .single();
+          designerName = designerData?.full_name || "Unassigned";
+        }
+        
+        return {
+          ...job,
+          customer_name: customerName,
+          salesman_name: salesmanName,
+          designer_name: designerName,
+          title: job.job_order_details || `Job Order ${job.job_order_number}`
+        };
+      }));
+
+      // Apply remaining filters after enrichment
+      let filteredData = enrichedData;
+      
+      if (salesmanFilter !== "all") {
+        filteredData = filteredData.filter(job => job.salesman_name === salesmanFilter);
+      }
+      
+      if (customerFilter !== "all") {
+        filteredData = filteredData.filter(job => job.customer_name === customerFilter);
+      }
+      
+      setJobs(filteredData);
       setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
     }
   };
 
   const loadFilterOptions = async () => {
-    const { data, error } = await supabase.from("job_orders").select("salesman, customer, branch");
-    if (!error && data) {
-      setUniqueSalesmen([...new Set(data.map((j) => j.salesman).filter(Boolean))]);
-      setUniqueCustomers([...new Set(data.map((j) => j.customer).filter(Boolean))]);
-      setUniqueBranches([...new Set(data.map((j) => j.branch).filter(Boolean))]);
+    // Load unique salesmen
+    const { data: jobsData } = await supabase
+      .from("job_orders")
+      .select("salesman_id")
+      .not("salesman_id", "is", null);
+    
+    const salesmanIds = [...new Set(jobsData?.map(j => j.salesman_id).filter(Boolean))];
+    if (salesmanIds.length > 0) {
+      const salesmenPromises = salesmanIds.map(id => 
+        supabase.from("profiles").select("full_name").eq("id", id).single()
+      );
+      const salesmenResults = await Promise.all(salesmenPromises);
+      const salesmenNames = salesmenResults.map(r => r.data?.full_name).filter(Boolean);
+      setUniqueSalesmen(salesmenNames);
+    }
+    
+    // Load unique customers
+    const { data: customerJobsData } = await supabase
+      .from("job_orders")
+      .select("customer_id")
+      .not("customer_id", "is", null);
+    
+    const customerIds = [...new Set(customerJobsData?.map(j => j.customer_id).filter(Boolean))];
+    if (customerIds.length > 0) {
+      const customersPromises = customerIds.map(id => 
+        supabase.from("customers").select("name").eq("id", id).single()
+      );
+      const customersResults = await Promise.all(customersPromises);
+      const customerNames = customersResults.map(r => r.data?.name).filter(Boolean);
+      setUniqueCustomers(customerNames);
+    }
+    
+    // Load unique branches
+    const { data: branchesData } = await supabase
+      .from("job_orders")
+      .select("branch")
+      .not("branch", "is", null);
+
+    if (branchesData) {
+      setUniqueBranches([...new Set(branchesData.map((j) => j.branch).filter(Boolean))]);
     }
   };
 
@@ -112,7 +198,7 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
   };
 
   const handleTotalValueUpdate = async (jobId, newValue) => {
-    const { error } = await supabase.from("job_orders").update({ totalValue: parseFloat(newValue) }).eq("id", jobId);
+    const { error } = await supabase.from("job_orders").update({ total_value: parseFloat(newValue) }).eq("id", jobId);
     if (!error) {
       toast({ title: "Updated" });
       setEditingTotalValue(prev => {
@@ -245,7 +331,6 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
                 <TableHead>Salesman</TableHead>
                 <TableHead>Created Date</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Invoice #</TableHead>
                 <TableHead>Total Value</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -259,8 +344,6 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
                   <TableCell>{job.branch || "N/A"}</TableCell>
                   <TableCell>{job.salesman_name || 'Unassigned'}</TableCell>
                   <TableCell>{job.created_at ? new Date(job.created_at).toLocaleDateString() : "N/A"}</TableCell>
-                  <TableCell>{job.invoice_number || "Not Assigned"}</TableCell>
-                  <TableCell>${job.total_value?.toFixed(2) || "0.00"}</TableCell>
                   <TableCell>
                     <Select value={job.status} onValueChange={(val) => handleStatusChange(job.id, val)}>
                       <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
@@ -273,7 +356,6 @@ export function AdminJobManagement({onStatusUpdate, onJobDataUpdate }: AdminJobM
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>{job.invoice_Number || "Not Assigned"}</TableCell>
                   <TableCell>
                     {editingTotalValue[job.id] !== undefined ? (
                       <div className="flex items-center gap-2">

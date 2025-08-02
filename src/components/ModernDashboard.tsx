@@ -47,8 +47,11 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   };
 
   const handleStatusClick = (status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', title: string) => {
-    setSelectedStatus({ status, title });
-    setStatusModalOpen(true);
+    // Only show popup for cancelled jobs to improve dashboard performance
+    if (status === 'cancelled') {
+      setSelectedStatus({ status, title });
+      setStatusModalOpen(true);
+    }
   };
 
   const notifications = [

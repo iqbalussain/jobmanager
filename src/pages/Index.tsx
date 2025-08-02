@@ -168,7 +168,7 @@ const Index = () => {
       case "settings":
         return <SettingsView />;
       case "admin":
-        return <AdminJobManagement jobs={transformedJobs} onStatusUpdate={handleStatusUpdate} />;
+        return <AdminJobManagement onStatusUpdate={handleStatusUpdate} />;
       case "admin-management":
         return <AdminManagement />;
       case "reports":
