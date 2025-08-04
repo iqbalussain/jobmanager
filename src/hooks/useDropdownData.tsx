@@ -25,17 +25,26 @@ export function useDropdownData() {
   const { data: designers = [], isLoading: designersLoading } = useQuery({
     queryKey: ['users-designers'],
     queryFn: async () => {
-      console.log('Fetching designers from user profiles...');
+      console.log('Fetching designers from user profiles and user_roles...');
+      
+      // Get users who have designer role in either profiles table or user_roles table
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, phone')
-        .eq('role', 'designer')
+        .select(`
+          id, 
+          full_name, 
+          phone,
+          role,
+          user_roles!inner(role)
+        `)
+        .or('role.eq.designer,user_roles.role.eq.designer')
         .order('full_name');
       
       if (error) {
         console.error('Error fetching designers:', error);
         throw error;
       }
+      
       console.log('Designers fetched:', data);
       return data.map(user => ({
         id: user.id,
@@ -48,17 +57,27 @@ export function useDropdownData() {
   const { data: salesmen = [], isLoading: salesmenLoading } = useQuery({
     queryKey: ['users-salesmen'],
     queryFn: async () => {
-      console.log('Fetching salesmen from user profiles...');
+      console.log('Fetching salesmen from user profiles and user_roles...');
+      
+      // Get users who have salesman role in either profiles table or user_roles table
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email, phone')
-        .eq('role', 'salesman')
+        .select(`
+          id, 
+          full_name, 
+          email, 
+          phone,
+          role,
+          user_roles!inner(role)
+        `)
+        .or('role.eq.salesman,user_roles.role.eq.salesman')
         .order('full_name');
       
       if (error) {
         console.error('Error fetching salesmen:', error);
         throw error;
       }
+      
       console.log('Salesmen fetched:', data);
       return data.map(user => ({
         id: user.id,
