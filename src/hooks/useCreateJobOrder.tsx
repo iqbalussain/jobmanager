@@ -110,11 +110,26 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
 
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: CreateJobOrderData) => {
-      if (!user) throw new Error('User must be authenticated to create job orders');
+      console.log('Starting job order creation for user:', user?.id, 'role:', user?.role);
+      console.log('Job order data:', data);
+      
+      if (!user) {
+        const error = 'User must be authenticated to create job orders';
+        console.error(error);
+        throw new Error(error);
+      }
+
+      // Validate required fields
+      if (!data.customer_id || !data.job_title_id || !data.designer_id || !data.salesman_id) {
+        const error = 'Missing required fields: customer, job title, designer, or salesman';
+        console.error(error, { customer_id: data.customer_id, job_title_id: data.job_title_id, designer_id: data.designer_id, salesman_id: data.salesman_id });
+        throw new Error(error);
+      }
 
       let salesmanId = data.salesman_id;
       if (user?.role === 'salesman') {
         salesmanId = user.id;
+        console.log('Override salesman ID with current user ID:', salesmanId);
       }
 
       let attempts = 0;
@@ -123,40 +138,49 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
 
       while (attempts < 5) {
         const jobOrderNumber = await generateJobOrderNumber(data.branch);
+        console.log('Generated job order number:', jobOrderNumber);
+
+        const insertData = {
+          job_order_number: jobOrderNumber,
+          customer_id: data.customer_id,
+          job_title_id: data.job_title_id,
+          designer_id: data.designer_id,
+          salesman_id: salesmanId,
+          assignee: data.assignee || null,
+          priority: data.priority,
+          status: data.status,
+          due_date: data.due_date,
+          estimated_hours: data.estimated_hours,
+          branch: data.branch,
+          job_order_details: data.job_order_details,
+          delivered_at: data.delivered_at || null,
+          client_name: data.client_name || null,
+          created_by: user.id
+        };
+        
+        console.log('Inserting job order with data:', insertData);
 
         const { data: inserted, error } = await supabase
           .from('job_orders')
-          .insert({
-            job_order_number: jobOrderNumber,
-            customer_id: data.customer_id,
-            job_title_id: data.job_title_id,
-            designer_id: data.designer_id,
-            salesman_id: salesmanId,
-            assignee: data.assignee || null,
-            priority: data.priority,
-            status: data.status,
-            due_date: data.due_date,
-            estimated_hours: data.estimated_hours,
-            branch: data.branch,
-            job_order_details: data.job_order_details,
-            delivered_at: data.delivered_at || null,
-            client_name: data.client_name || null,
-            created_by: user.id
-          })
+          .insert(insertData)
           .select()
           .single();
 
         if (!error) {
+          console.log('Job order created successfully:', inserted);
           newJobOrder = inserted;
-          // Send notification for approval if status is pending
+          // Send notification for approval if status is pending (non-blocking)
           if (inserted.status === 'pending') {
-            await sendNotification(inserted);
+            sendNotification(inserted).catch(err => {
+              console.warn('Failed to send notification, but job was created:', err);
+            });
           }
           break;
         }
 
+        console.error('Error inserting job order:', error);
         if (error.message.includes('duplicate key')) {
-          console.warn(`Duplicate job order number: ${jobOrderNumber}. Retrying...`);
+          console.warn(`Duplicate job order number: ${jobOrderNumber}. Retrying... (Attempt ${attempts + 1})`);
           attempts++;
           continue;
         }

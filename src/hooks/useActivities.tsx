@@ -67,9 +67,7 @@ export function useActivities() {
   });
 
   useEffect(() => {
-    if (initialActivities) {
-      setActivities(initialActivities);
-    }
+    setActivities(initialActivities);
   }, [initialActivities]);
 
   useEffect(() => {
