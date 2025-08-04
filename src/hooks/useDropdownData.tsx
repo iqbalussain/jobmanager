@@ -34,18 +34,29 @@ export function useDropdownData() {
         .eq('role', 'designer')
         .order('full_name');
       
-      // Then get users with designer in user_roles table
-      const { data: additionalDesigners, error: error2 } = await supabase
-        .from('profiles')
-        .select(`
-          id, 
-          full_name, 
-          phone,
-          user_roles!inner(role)
-        `)
-        .eq('user_roles.role', 'designer')
-        .neq('role', 'designer') // Exclude those already found in first query
-        .order('full_name');
+      console.log('Primary designers query result:', { primaryDesigners, error: error1 });
+      
+      // Then get additional users from user_roles table using a separate query
+      const { data: userRoleDesigners, error: error2 } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'designer');
+      
+      console.log('User roles designers query result:', { userRoleDesigners, error: error2 });
+      
+      let additionalDesigners = [];
+      if (userRoleDesigners && userRoleDesigners.length > 0) {
+        const userIds = userRoleDesigners.map(ur => ur.user_id);
+        const { data: additionalDesignersData, error: error3 } = await supabase
+          .from('profiles')
+          .select('id, full_name, phone')
+          .in('id', userIds)
+          .neq('role', 'designer') // Exclude those already found in first query
+          .order('full_name');
+        
+        console.log('Additional designers from profiles:', { additionalDesignersData, error: error3 });
+        additionalDesigners = additionalDesignersData || [];
+      }
       
       if (error1 || error2) {
         console.error('Error fetching designers:', error1 || error2);
@@ -53,7 +64,7 @@ export function useDropdownData() {
       }
       
       // Combine and deduplicate results
-      const allDesigners = [...(primaryDesigners || []), ...(additionalDesigners || [])];
+      const allDesigners = [...(primaryDesigners || []), ...additionalDesigners];
       const uniqueDesigners = allDesigners.reduce((acc, user) => {
         if (!acc.find(existing => existing.id === user.id)) {
           acc.push(user);
@@ -61,7 +72,7 @@ export function useDropdownData() {
         return acc;
       }, [] as any[]);
       
-      console.log('Designers fetched:', uniqueDesigners);
+      console.log('Final designers list:', uniqueDesigners);
       return uniqueDesigners.map(user => ({
         id: user.id,
         name: user.full_name || 'Unknown Designer',
@@ -82,19 +93,29 @@ export function useDropdownData() {
         .eq('role', 'salesman')
         .order('full_name');
       
-      // Then get users with salesman in user_roles table
-      const { data: additionalSalesmen, error: error2 } = await supabase
-        .from('profiles')
-        .select(`
-          id, 
-          full_name, 
-          email, 
-          phone,
-          user_roles!inner(role)
-        `)
-        .eq('user_roles.role', 'salesman')
-        .neq('role', 'salesman') // Exclude those already found in first query
-        .order('full_name');
+      console.log('Primary salesmen query result:', { primarySalesmen, error: error1 });
+      
+      // Then get additional users from user_roles table using a separate query
+      const { data: userRoleSalesmen, error: error2 } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'salesman');
+      
+      console.log('User roles salesmen query result:', { userRoleSalesmen, error: error2 });
+      
+      let additionalSalesmen = [];
+      if (userRoleSalesmen && userRoleSalesmen.length > 0) {
+        const userIds = userRoleSalesmen.map(ur => ur.user_id);
+        const { data: additionalSalesmenData, error: error3 } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, phone')
+          .in('id', userIds)
+          .neq('role', 'salesman') // Exclude those already found in first query
+          .order('full_name');
+        
+        console.log('Additional salesmen from profiles:', { additionalSalesmenData, error: error3 });
+        additionalSalesmen = additionalSalesmenData || [];
+      }
       
       if (error1 || error2) {
         console.error('Error fetching salesmen:', error1 || error2);
@@ -102,7 +123,7 @@ export function useDropdownData() {
       }
       
       // Combine and deduplicate results
-      const allSalesmen = [...(primarySalesmen || []), ...(additionalSalesmen || [])];
+      const allSalesmen = [...(primarySalesmen || []), ...additionalSalesmen];
       const uniqueSalesmen = allSalesmen.reduce((acc, user) => {
         if (!acc.find(existing => existing.id === user.id)) {
           acc.push(user);
@@ -110,7 +131,7 @@ export function useDropdownData() {
         return acc;
       }, [] as any[]);
       
-      console.log('Salesmen fetched:', uniqueSalesmen);
+      console.log('Final salesmen list:', uniqueSalesmen);
       return uniqueSalesmen.map(user => ({
         id: user.id,
         name: user.full_name || 'Unknown Salesman',
