@@ -3,9 +3,11 @@ import { fetchJobOrders, fetchJobOrdersOptimized } from '@/services/jobOrdersApi
 import { transformJobOrderData } from '@/utils/jobOrderTransforms';
 import { JobOrder } from '@/types/jobOrder';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 
 export function useJobOrdersQuery() {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
 
   const {
     data: jobOrders = [],
@@ -13,11 +15,13 @@ export function useJobOrdersQuery() {
     error,
     refetch
   } = useQuery({
-    queryKey: ['job-orders', user?.id],
+    queryKey: ['job-orders', user?.id, isAdmin],
     queryFn: async (): Promise<JobOrder[]> => {
       try {
         // Try optimized version first
-        const data = await fetchJobOrdersOptimized({ limit: 100 });
+        // Admin users get all jobs, others get limited to 100
+        const limit = isAdmin ? undefined : 100;
+        const data = await fetchJobOrdersOptimized({ limit });
         return transformJobOrderData(data);
       } catch (error) {
         console.warn('Optimized fetch failed, falling back to legacy:', error);

@@ -43,10 +43,13 @@ export async function fetchJobOrdersOptimized(options: FetchJobOrdersOptions = {
   // Apply pagination
   if (options.limit) {
     query = query.limit(options.limit);
-  }
-  
-  if (options.offset) {
-    query = query.range(options.offset, options.offset + (options.limit || 20) - 1);
+    
+    if (options.offset) {
+      query = query.range(options.offset, options.offset + options.limit - 1);
+    }
+  } else if (options.offset) {
+    // If no limit but offset is provided, use a default range
+    query = query.range(options.offset, options.offset + 19);
   }
 
   query = query.order('created_at', { ascending: false });
