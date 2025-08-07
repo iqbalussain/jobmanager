@@ -1,69 +1,117 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export async function fetchJobOrders() {
-  console.log('Fetching job orders...');
-  const { data, error } = await supabase
-    .from('job_orders')
-    .select(`
-      *,
+export interface JobOrdersQueryOptions {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+  branch?: string;
+  priority?: string;
+  fields?: 'minimal' | 'full';
+  search?: string;
+}
+
+export async function fetchJobOrders(options: JobOrdersQueryOptions = {}) {
+  const { 
+    page = 1, 
+    pageSize = 50, 
+    status, 
+    branch, 
+    priority, 
+    fields = 'full',
+    search 
+  } = options;
+
+  console.log('Fetching job orders with options:', options);
+
+  // Calculate offset for pagination
+  const offset = (page - 1) * pageSize;
+
+  // Build the select query based on requested fields
+  let selectFields = '';
+  if (fields === 'minimal') {
+    selectFields = `
+      id,
+      job_order_number,
+      status,
+      priority,
+      due_date,
+      created_at,
       customer:customers!fk_job_orders_customer(id, name),
       job_title:job_titles(id, job_title_id)
-    `)
-    .order('created_at', { ascending: false });
+    `;
+  } else {
+    selectFields = `
+      *,
+      customer:customers!fk_job_orders_customer(id, name),
+      job_title:job_titles(id, job_title_id),
+      designer:profiles!job_orders_designer_id_fkey(id, full_name, phone),
+      salesman:profiles!job_orders_salesman_id_fkey(id, full_name, email, phone)
+    `;
+  }
+
+  let query = supabase
+    .from('job_orders')
+    .select(selectFields, { count: 'exact' });
+
+  // Apply filters
+  if (status && status !== 'all') {
+    query = query.eq('status', status as any);
+  }
+  
+  if (branch) {
+    query = query.eq('branch', branch);
+  }
+  
+  if (priority) {
+    query = query.eq('priority', priority as any);
+  }
+
+  // Apply search filter
+  if (search && search.trim()) {
+    query = query.or(`job_order_number.ilike.%${search}%,job_order_details.ilike.%${search}%,client_name.ilike.%${search}%`);
+  }
+
+  // Apply pagination and ordering
+  const { data, error, count } = await query
+    .order('created_at', { ascending: false })
+    .range(offset, offset + pageSize - 1);
   
   if (error) {
     console.error('Error fetching job orders:', error);
     throw error;
   }
   
-  console.log('Job orders fetched:', data);
+  console.log(`Job orders fetched: ${data?.length || 0} of ${count || 0} total`);
   
-  // Manually fetch designer and salesman data from profiles
-  const enrichedData = await Promise.all(data.map(async (jobOrder) => {
-    let designer = null;
-    let salesman = null;
-    
-    if (jobOrder.designer_id) {
-      const { data: designerData } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone')
-        .eq('id', jobOrder.designer_id)
-        .single();
-      
-      if (designerData) {
-        designer = {
-          id: designerData.id,
-          name: designerData.full_name || 'Unknown Designer',
-          phone: designerData.phone
-        };
-      }
-    }
-    
-    if (jobOrder.salesman_id) {
-      const { data: salesmanData } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, phone')
-        .eq('id', jobOrder.salesman_id)
-        .single();
-      
-      if (salesmanData) {
-        salesman = {
-          id: salesmanData.id,
-          name: salesmanData.full_name || 'Unknown Salesman',
-          email: salesmanData.email,
-          phone: salesmanData.phone
-        };
-      }
-    }
-    
-    return {
-      ...jobOrder,
-      designer,
-      salesman
-    };
-  }));
+  // Transform the data to maintain backward compatibility
+  const transformedData = data?.map((jobOrder: any) => ({
+    ...jobOrder,
+    designer: jobOrder.designer ? {
+      id: jobOrder.designer.id,
+      name: jobOrder.designer.full_name || 'Unknown Designer',
+      phone: jobOrder.designer.phone
+    } : null,
+    salesman: jobOrder.salesman ? {
+      id: jobOrder.salesman.id,
+      name: jobOrder.salesman.full_name || 'Unknown Salesman',
+      email: jobOrder.salesman.email,
+      phone: jobOrder.salesman.phone
+    } : null
+  })) || [];
   
-  return enrichedData;
+  return {
+    data: transformedData,
+    count: count || 0,
+    page,
+    pageSize,
+    totalPages: Math.ceil((count || 0) / pageSize)
+  };
+}
+
+// Legacy function for backward compatibility
+export async function fetchAllJobOrders() {
+  const result = await fetchJobOrders({ pageSize: 1000 });
+  return result.data;
 }
 
 export async function updateJobOrderStatus(id: string, status: string) {
