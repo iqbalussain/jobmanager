@@ -36,16 +36,16 @@ export async function fetchJobOrders(options: JobOrdersQueryOptions = {}) {
       priority,
       due_date,
       created_at,
-      customer:customers!fk_job_orders_customer(id, name),
+      customer:customers(id, name),
       job_title:job_titles(id, job_title_id)
     `;
   } else {
     selectFields = `
       *,
-      customer:customers!fk_job_orders_customer(id, name),
+      customer:customers(id, name),
       job_title:job_titles(id, job_title_id),
-      designer:profiles!job_orders_designer_id_fkey(id, full_name, phone),
-      salesman:profiles!job_orders_salesman_id_fkey(id, full_name, email, phone)
+      designer:profiles!designer_id(id, full_name, phone),
+      salesman:profiles!salesman_id(id, full_name, email, phone)
     `;
   }
 
