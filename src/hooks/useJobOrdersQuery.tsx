@@ -17,7 +17,7 @@ export function useJobOrdersQuery() {
     queryFn: async (): Promise<JobOrder[]> => {
       try {
         // Try optimized version first
-        const data = await fetchJobOrdersOptimized({ limit: 100 });
+        const data = await fetchJobOrdersOptimized({ limit: 500 });
         return transformJobOrderData(data);
       } catch (error) {
         console.warn('Optimized fetch failed, falling back to legacy:', error);
