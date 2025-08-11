@@ -67,9 +67,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
             Dashboard
           </h1>
           <p className="text-gray-600 text-lg">Welcome back! Here's what's happening with your projects.</p>
-          <div className="mt-2 text-sm text-gray-500">
-            Total Jobs: {stats.total} | Active: {stats.inProgress + stats.designing} | Completed: {stats.completed}
-          </div>
         </div>
         <div className="flex items-center gap-4">
           <DashboardNotifications notifications={notifications} />

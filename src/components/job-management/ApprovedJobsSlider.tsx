@@ -6,11 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { JobDetails } from "@/components/JobDetails";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { 
   Building, 
   Calendar, 
@@ -20,8 +16,7 @@ import {
   ChevronDown,
   Eye,
   Edit,
-  Search,
-  CalendarIcon
+  Search
 } from "lucide-react";
 
 interface ApprovedJobsSliderProps {
@@ -33,8 +28,6 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
   const [selectedSalesman, setSelectedSalesman] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [dateFrom, setDateFrom] = useState<Date>();
-  const [dateTo, setDateTo] = useState<Date>();
   const [selectedJobIndex, setSelectedJobIndex] = useState(0);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -49,7 +42,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
   const salesmen = Array.from(new Set(jobs.map(job => job.salesman).filter(Boolean)));
   salesmen.unshift("all"); // Add "all" option
 
-  // Filter jobs by branch, salesman, search query, and date range
+  // Filter jobs by branch, salesman, and search query
   const filteredJobs = jobs.filter(job => {
     const branchMatch = selectedBranch === "all" || job.branch === selectedBranch;
     const salesmanMatch = selectedSalesman === "all" || job.salesman === selectedSalesman;
@@ -59,18 +52,13 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.customer.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Date filtering
-    const jobDate = new Date(job.dueDate);
-    const dateFromMatch = !dateFrom || jobDate >= dateFrom;
-    const dateToMatch = !dateTo || jobDate <= dateTo;
-    
-    return branchMatch && salesmanMatch && searchMatch && dateFromMatch && dateToMatch;
+    return branchMatch && salesmanMatch && searchMatch;
   });
 
   // Reset index when filters change
   useEffect(() => {
     setSelectedJobIndex(0);
-  }, [selectedBranch, selectedSalesman, searchQuery, dateFrom, dateTo]);
+  }, [selectedBranch, selectedSalesman, searchQuery]);
 
   const handleJobSelect = (jobNumber: string) => {
     const index = filteredJobs.findIndex(job => job.jobOrderNumber === jobNumber);
@@ -146,7 +134,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Approved Jobs</h1>
           <p className="text-gray-600">Interactive job order slider view</p>
         </div>
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
@@ -156,66 +144,6 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
               className="pl-10 w-64"
             />
           </div>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-[200px] justify-start text-left font-normal",
-                  !dateFrom && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateFrom ? format(dateFrom, "PPP") : <span>From date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <CalendarComponent
-                mode="single"
-                selected={dateFrom}
-                onSelect={setDateFrom}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-[200px] justify-start text-left font-normal",
-                  !dateTo && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateTo ? format(dateTo, "PPP") : <span>To date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <CalendarComponent
-                mode="single"
-                selected={dateTo}
-                onSelect={setDateTo}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-
-          <Button
-            variant="outline"
-            onClick={() => {
-              setDateFrom(undefined);
-              setDateTo(undefined);
-            }}
-            className="text-sm"
-          >
-            Clear Dates
-          </Button>
-          
           <Select value={selectedBranch} onValueChange={setSelectedBranch}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Select Branch" />

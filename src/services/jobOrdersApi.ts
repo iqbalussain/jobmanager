@@ -1,67 +1,90 @@
 import { supabase } from '@/integrations/supabase/client';
 
-interface FetchJobOrdersOptions {
-  limit?: number;
-  offset?: number;
+export interface JobOrdersQueryOptions {
+  page?: number;
+  pageSize?: number;
   status?: string;
+  branch?: string;
+  priority?: string;
+  fields?: 'minimal' | 'full';
   search?: string;
-  dateFrom?: string;
-  dateTo?: string;
 }
 
-// Optimized function that eliminates N+1 queries
-export async function fetchJobOrdersOptimized(options: FetchJobOrdersOptions = {}) {
-  console.log('Fetching job orders optimized...', options);
-  
-  let query = supabase
-    .from('job_orders')
-    .select(`
+export async function fetchJobOrders(options: JobOrdersQueryOptions = {}) {
+  const { 
+    page = 1, 
+    pageSize = 50, 
+    status, 
+    branch, 
+    priority, 
+    fields = 'full',
+    search 
+  } = options;
+
+  console.log('Fetching job orders with options:', options);
+
+  // Calculate offset for pagination
+  const offset = (page - 1) * pageSize;
+
+  // Build the select query based on requested fields
+  let selectFields = '';
+  if (fields === 'minimal') {
+    selectFields = `
+      id,
+      job_order_number,
+      status,
+      priority,
+      due_date,
+      created_at,
+      customer:customers(id, name),
+      job_title:job_titles(id, job_title_id)
+    `;
+  } else {
+    selectFields = `
       *,
-      customer:customers!fk_job_orders_customer(id, name),
+      customer:customers(id, name),
       job_title:job_titles(id, job_title_id),
       designer:profiles!designer_id(id, full_name, phone),
       salesman:profiles!salesman_id(id, full_name, email, phone)
-    `);
+    `;
+  }
+
+  let query = supabase
+    .from('job_orders')
+    .select(selectFields, { count: 'exact' });
 
   // Apply filters
-  if (options.status && options.status !== 'all') {
-    query = query.eq('status', options.status as any);
+  if (status && status !== 'all') {
+    query = query.eq('status', status as any);
   }
   
-  if (options.search) {
-    query = query.or(`job_order_number.ilike.%${options.search}%,job_order_details.ilike.%${options.search}%`);
+  if (branch) {
+    query = query.eq('branch', branch);
   }
   
-  if (options.dateFrom) {
-    query = query.gte('created_at', options.dateFrom);
-  }
-  
-  if (options.dateTo) {
-    query = query.lte('created_at', options.dateTo);
+  if (priority) {
+    query = query.eq('priority', priority as any);
   }
 
-  // Apply pagination
-  if (options.limit) {
-    query = query.limit(options.limit);
-  }
-  
-  if (options.offset) {
-    query = query.range(options.offset, options.offset + (options.limit || 20) - 1);
+  // Apply search filter
+  if (search && search.trim()) {
+    query = query.or(`job_order_number.ilike.%${search}%,job_order_details.ilike.%${search}%,client_name.ilike.%${search}%`);
   }
 
-  query = query.order('created_at', { ascending: false });
-  
-  const { data, error } = await query;
+  // Apply pagination and ordering
+  const { data, error, count } = await query
+    .order('created_at', { ascending: false })
+    .range(offset, offset + pageSize - 1);
   
   if (error) {
-    console.error('Error fetching job orders optimized:', error);
+    console.error('Error fetching job orders:', error);
     throw error;
   }
   
-  console.log('Job orders fetched optimized:', data?.length);
+  console.log(`Job orders fetched: ${data?.length || 0} of ${count || 0} total`);
   
-  // Transform the data to match expected format
-  const enrichedData = data?.map((jobOrder) => ({
+  // Transform the data to maintain backward compatibility
+  const transformedData = data?.map((jobOrder: any) => ({
     ...jobOrder,
     designer: jobOrder.designer ? {
       id: jobOrder.designer.id,
@@ -76,74 +99,19 @@ export async function fetchJobOrdersOptimized(options: FetchJobOrdersOptions = {
     } : null
   })) || [];
   
-  return enrichedData;
+  return {
+    data: transformedData,
+    count: count || 0,
+    page,
+    pageSize,
+    totalPages: Math.ceil((count || 0) / pageSize)
+  };
 }
 
-// Legacy function for backward compatibility (fallback)
-export async function fetchJobOrders() {
-  console.log('Fetching job orders (legacy fallback)...');
-  const { data, error } = await supabase
-    .from('job_orders')
-    .select(`
-      *,
-      customer:customers!fk_job_orders_customer(id, name),
-      job_title:job_titles(id, job_title_id)
-    `)
-    .order('created_at', { ascending: false });
-  
-  if (error) {
-    console.error('Error fetching job orders:', error);
-    throw error;
-  }
-  
-  console.log('Job orders fetched:', data);
-  
-  // Manually fetch designer and salesman data from profiles
-  const enrichedData = await Promise.all(data.map(async (jobOrder) => {
-    let designer = null;
-    let salesman = null;
-    
-    if (jobOrder.designer_id) {
-      const { data: designerData } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone')
-        .eq('id', jobOrder.designer_id)
-        .single();
-      
-      if (designerData) {
-        designer = {
-          id: designerData.id,
-          name: designerData.full_name || 'Unknown Designer',
-          phone: designerData.phone
-        };
-      }
-    }
-    
-    if (jobOrder.salesman_id) {
-      const { data: salesmanData } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, phone')
-        .eq('id', jobOrder.salesman_id)
-        .single();
-      
-      if (salesmanData) {
-        salesman = {
-          id: salesmanData.id,
-          name: salesmanData.full_name || 'Unknown Salesman',
-          email: salesmanData.email,
-          phone: salesmanData.phone
-        };
-      }
-    }
-    
-    return {
-      ...jobOrder,
-      designer,
-      salesman
-    };
-  }));
-  
-  return enrichedData;
+// Legacy function for backward compatibility
+export async function fetchAllJobOrders() {
+  const result = await fetchJobOrders({ pageSize: 1000 });
+  return result.data;
 }
 
 export async function updateJobOrderStatus(id: string, status: string) {
