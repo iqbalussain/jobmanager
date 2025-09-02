@@ -9,6 +9,7 @@ export async function fetchJobOrders() {
       customer:customers!fk_job_orders_customer(id, name),
       job_title:job_titles(id, job_title_id)
     `)
+    .limit(5000)
     .order('created_at', { ascending: false });
   
   if (error) {

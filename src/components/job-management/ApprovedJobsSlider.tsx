@@ -27,6 +27,7 @@ interface ApprovedJobsSliderProps {
 export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderProps) {
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
   const [selectedSalesman, setSelectedSalesman] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedJobIndex, setSelectedJobIndex] = useState(0);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -42,23 +43,44 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
   const salesmen = Array.from(new Set(jobs.map(job => job.salesman).filter(Boolean)));
   salesmen.unshift("all"); // Add "all" option
 
-  // Filter jobs by branch, salesman, and search query
+  // Get unique statuses
+  const uniqueStatuses = Array.from(new Set(jobs.map(job => job.status).filter(Boolean)));
+  const statuses = ["all", ...uniqueStatuses];
+
+  // Filter jobs by branch, salesman, status, and search query
   const filteredJobs = jobs.filter(job => {
     const branchMatch = selectedBranch === "all" || job.branch === selectedBranch;
     const salesmanMatch = selectedSalesman === "all" || job.salesman === selectedSalesman;
-    const searchMatch = searchQuery === "" || 
-      (job.jobOrderDetails && job.jobOrderDetails.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      job.jobOrderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.customer.toLowerCase().includes(searchQuery.toLowerCase());
+    const statusMatch = selectedStatus === "all" || job.status === selectedStatus;
     
-    return branchMatch && salesmanMatch && searchMatch;
+    // Enhanced search functionality - split search query into words and check for partial matches
+    const searchMatch = searchQuery === "" || (() => {
+      const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/);
+      const searchableText = [
+        job.jobOrderNumber,
+        job.title,
+        job.customer,
+        job.clientName,
+        job.jobOrderDetails,
+        job.assignee,
+        job.salesman,
+        job.designer
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      
+      // Check if any search term matches any part of the searchable text
+      return searchTerms.some(term => searchableText.includes(term));
+    })();
+    
+    return branchMatch && salesmanMatch && statusMatch && searchMatch;
   });
 
   // Reset index when filters change
   useEffect(() => {
     setSelectedJobIndex(0);
-  }, [selectedBranch, selectedSalesman, searchQuery]);
+  }, [selectedBranch, selectedSalesman, selectedStatus, searchQuery]);
 
   const handleJobSelect = (jobNumber: string) => {
     const index = filteredJobs.findIndex(job => job.jobOrderNumber === jobNumber);
@@ -166,6 +188,19 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
               {salesmen.slice(1).map((salesman) => (
                 <SelectItem key={salesman} value={salesman}>
                   {salesman}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Select Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {statuses.slice(1).map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
                 </SelectItem>
               ))}
             </SelectContent>
