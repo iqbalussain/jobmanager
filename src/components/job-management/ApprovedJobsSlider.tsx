@@ -154,7 +154,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Approved Jobs</h1>
-          <p className="text-gray-600">Interactive job order slider view</p>
+          <p className="text-gray-600">Interactive job order slider view - Total: {filteredJobs.length} jobs</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative">

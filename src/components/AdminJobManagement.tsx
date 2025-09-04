@@ -71,114 +71,58 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
   }, [user]);
 
   const loadJobs = async () => {
-    let query = supabase.from("job_orders").select("*", { count: "exact" });
+    try {
+      const filters = {
+        status: statusFilter,
+        branch: branchFilter,
+        salesman: salesmanFilter,
+        customer: customerFilter,
+        dateFrom: dateFilter?.from?.toISOString(),
+        dateTo: dateFilter?.to?.toISOString()
+      };
 
-    if (statusFilter !== "all") query = query.eq("status", statusFilter as any);
-    if (branchFilter !== "all") query = query.ilike("branch", `%${branchFilter}%`);
-
-    if (dateFilter?.from) query = query.gte("created_at", dateFilter.from.toISOString());
-    if (dateFilter?.to) query = query.lte("created_at", dateFilter.to.toISOString());
-
-    const from = (page - 1) * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
-
-    const { data, count, error } = await query.range(from, to).order("created_at", { ascending: false });
-
-    if (error) {
-      toast({ title: "Error loading jobs", description: error.message, variant: "destructive" });
-    } else {
-      // Enrich with customer, salesman, designer and job title data
-      const enrichedData = await Promise.all((data || []).map(async (job) => {
-        let customerName = "Unknown Customer";
-        let salesmanName = "Unassigned";
-        let designerName = "Unassigned";
-        let jobTitle = "No Title";
-        
-        // Get customer name
-        if (job.customer_id) {
-          const { data: customerData } = await supabase
-            .from("customers")
-            .select("name")
-            .eq("id", job.customer_id)
-            .single();
-          customerName = customerData?.name || "Unknown Customer";
-        }
-        
-        // Get salesman name
-        if (job.salesman_id) {
-          const { data: salesmanData } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("id", job.salesman_id)
-            .single();
-          salesmanName = salesmanData?.full_name || "Unassigned";
-        }
-        
-        // Get designer name
-        if (job.designer_id) {
-          const { data: designerData } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("id", job.designer_id)
-            .single();
-          designerName = designerData?.full_name || "Unassigned";
-        }
-        
-        // Get job title
-        if (job.job_title_id) {
-          const { data: jobTitleData } = await supabase
-            .from("job_titles")
-            .select("job_title_id")
-            .eq("id", job.job_title_id)
-            .single();
-          jobTitle = jobTitleData?.job_title_id || "No Title";
-        }
-        
-        return {
-          ...job,
-          customer_name: customerName,
-          salesman_name: salesmanName,
-          designer_name: designerName,
-          job_title: jobTitle,
-          // Transform to Job interface format for JobDetails component
-          id: job.id,
-          jobOrderNumber: job.job_order_number,
-          title: jobTitle,
-          customer: customerName,
-          designer: designerName,
-          salesman: salesmanName,
-          assignee: job.assignee,
-          priority: job.priority,
-          status: job.status,
-          dueDate: job.due_date,
-          estimatedHours: job.estimated_hours || 0,
-          createdAt: job.created_at,
-          branch: job.branch,
-          jobOrderDetails: job.job_order_details,
-          invoiceNumber: job.invoice_number,
-          totalValue: job.total_value,
-          customer_id: job.customer_id,
-          job_title_id: job.job_title_id,
-          created_by: job.created_by,
-          approval_status: job.approval_status,
-          deliveredAt: job.delivered_at,
-          clientName: job.client_name
-        };
+      const { fetchJobOrdersPaginated } = await import('@/services/jobOrdersApi');
+      const result = await fetchJobOrdersPaginated(page, PAGE_SIZE, filters);
+      
+      // Transform data to match component expectations
+      const transformedJobs = result.data.map(job => ({
+        ...job,
+        customer_name: job.customer?.name || "Unknown Customer",
+        salesman_name: job.salesman?.name || "Unassigned", 
+        designer_name: job.designer?.name || "Unassigned",
+        job_title: job.job_title?.job_title_id || "No Title",
+        // Transform to Job interface format for JobDetails component
+        id: job.id,
+        jobOrderNumber: job.job_order_number,
+        title: job.job_title?.job_title_id || "No Title",
+        customer: job.customer?.name || "Unknown Customer",
+        designer: job.designer?.name || "Unassigned",
+        salesman: job.salesman?.name || "Unassigned",
+        assignee: job.assignee,
+        priority: job.priority,
+        status: job.status,
+        dueDate: job.due_date,
+        estimatedHours: job.estimated_hours || 0,
+        createdAt: job.created_at,
+        branch: job.branch,
+        jobOrderDetails: job.job_order_details,
+        invoiceNumber: job.invoice_number,
+        totalValue: job.total_value,
+        customer_id: job.customer_id,
+        job_title_id: job.job_title_id,
+        created_by: job.created_by,
+        approval_status: job.approval_status,
+        deliveredAt: job.delivered_at,
+        clientName: job.client_name
       }));
 
-      // Apply remaining filters after enrichment
-      let filteredData = enrichedData;
+      setJobs(transformedJobs);
+      setTotalPages(result.totalPages);
       
-      if (salesmanFilter !== "all") {
-        filteredData = filteredData.filter(job => job.salesman_name === salesmanFilter);
-      }
-      
-      if (customerFilter !== "all") {
-        filteredData = filteredData.filter(job => job.customer_name === customerFilter);
-      }
-      
-      setJobs(filteredData);
-      setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
+      console.log(`Admin Job Management - Loaded ${transformedJobs.length} jobs of ${result.totalCount} total`);
+    } catch (error) {
+      console.error('Error loading jobs:', error);
+      toast({ title: "Error loading jobs", description: error.message, variant: "destructive" });
     }
   };
 
@@ -256,6 +200,15 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
   return (
     <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       <h1 className="text-3xl font-bold text-gray-900 mb-4">Admin Job Management</h1>
+      
+      {/* Jobs Count Info */}
+      <Card className="mb-4">
+        <CardContent className="py-4">
+          <div className="text-lg font-semibold text-gray-700">
+            Showing {jobs.length} jobs (Page {page} of {totalPages})
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filter Panel */}
       <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
@@ -314,7 +267,9 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
                   <SelectItem value="in-progress">In Progress</SelectItem>
                   <SelectItem value="designing">Designing</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="finished">Finished</SelectItem>
                   <SelectItem value="invoiced">Invoiced</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -387,7 +342,9 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
                         <SelectItem value="in-progress">In Progress</SelectItem>
                         <SelectItem value="designing">Designing</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="finished">Finished</SelectItem>
                         <SelectItem value="invoiced">Invoiced</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
