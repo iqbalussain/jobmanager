@@ -9,6 +9,7 @@ export async function fetchJobOrders() {
       customer:customers!fk_job_orders_customer(id, name),
       job_title:job_titles(id, job_title_id)
     `, { count: 'exact' })
+    .limit(10000) // Explicitly set high limit to remove 1000 default
     .order('created_at', { ascending: false });
   
   console.log(`Total job orders in database: ${count}`);
@@ -80,6 +81,7 @@ export async function fetchJobOrdersPaginated(
     customer?: string;
     dateFrom?: string;
     dateTo?: string;
+    search?: string;
   } = {}
 ) {
   console.log('Fetching paginated job orders with filters:', filters);
@@ -107,6 +109,12 @@ export async function fetchJobOrdersPaginated(
   
   if (filters.dateTo) {
     query = query.lte('created_at', filters.dateTo);
+  }
+
+  // Add search functionality for job details, job order number, and client name
+  if (filters.search && filters.search.trim() !== '') {
+    const searchTerm = filters.search.trim();
+    query = query.or(`job_order_number.ilike.%${searchTerm}%,job_order_details.ilike.%${searchTerm}%,client_name.ilike.%${searchTerm}%,assignee.ilike.%${searchTerm}%`);
   }
 
   // Apply pagination

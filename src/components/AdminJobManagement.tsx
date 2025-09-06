@@ -42,6 +42,7 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
   const [statusFilter, setStatusFilter] = useState("all");
   const [customerFilter, setCustomerFilter] = useState("all");
   const [branchFilter, setBranchFilter] = useState("all");
+  const [searchFilter, setSearchFilter] = useState("");
   const [dateFilter, setDateFilter] = useState<{ from: Date | undefined; to?: Date | undefined } | null>(null);
 
 
@@ -77,6 +78,7 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
         branch: branchFilter,
         salesman: salesmanFilter,
         customer: customerFilter,
+        search: searchFilter,
         dateFrom: dateFilter?.from?.toISOString(),
         dateTo: dateFilter?.to?.toISOString()
       };
@@ -193,7 +195,7 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
       loadJobs();
       loadFilterOptions();
     }
-  }, [isAdmin, page, salesmanFilter, customerFilter, branchFilter, statusFilter, dateFilter]);
+  }, [isAdmin, page, salesmanFilter, customerFilter, branchFilter, statusFilter, searchFilter, dateFilter]);
 
   if (!isAdmin) return <div className="p-6">Access Denied</div>;
 
@@ -219,6 +221,17 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Search Field */}
+          <div className="mb-4">
+            <Label>Search Job Orders</Label>
+            <Input
+              placeholder="Search by job number, details, client name, or assignee..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          
           <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Salesman Filter */}
             <div className="space-y-2">
