@@ -1,72 +1,99 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export async function fetchJobOrders() {
-  console.log('Fetching all job orders...');
-  const { data, error, count } = await supabase
+  console.log('Fetching ALL job orders using batching strategy...');
+  
+  // First, get the total count
+  const { count, error: countError } = await supabase
     .from('job_orders')
-    .select(`
-      *,
-      customer:customers!fk_job_orders_customer(id, name),
-      job_title:job_titles(id, job_title_id)
-    `, { count: 'exact' })
-    .limit(10000) // Explicitly set high limit to remove 1000 default
-    .order('created_at', { ascending: false });
+    .select('*', { count: 'exact', head: true });
   
-  console.log(`Total job orders in database: ${count}`);
-  console.log(`Fetched job orders count: ${data?.length || 0}`);
-  
-  if (error) {
-    console.error('Error fetching job orders:', error);
-    throw error;
+  if (countError) {
+    console.error('Error getting job orders count:', countError);
+    throw countError;
   }
   
-  console.log('Job orders fetched:', data);
+  console.log(`Total job orders in database: ${count}`);
   
-  // Manually fetch designer and salesman data from profiles
-  const enrichedData = await Promise.all(data.map(async (jobOrder) => {
-    let designer = null;
-    let salesman = null;
+  // Fetch all job orders in batches of 1000
+  const BATCH_SIZE = 1000;
+  const totalBatches = Math.ceil((count || 0) / BATCH_SIZE);
+  let allJobOrders: any[] = [];
+  
+  console.log(`Fetching ${totalBatches} batches of ${BATCH_SIZE} records each...`);
+  
+  for (let batch = 0; batch < totalBatches; batch++) {
+    const from = batch * BATCH_SIZE;
+    const to = from + BATCH_SIZE - 1;
     
-    if (jobOrder.designer_id) {
-      const { data: designerData } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone')
-        .eq('id', jobOrder.designer_id)
-        .single();
-      
-      if (designerData) {
-        designer = {
-          id: designerData.id,
-          name: designerData.full_name || 'Unknown Designer',
-          phone: designerData.phone
-        };
-      }
+    console.log(`Fetching batch ${batch + 1}/${totalBatches} (records ${from}-${to})...`);
+    
+    const { data, error } = await supabase
+      .from('job_orders')
+      .select(`
+        *,
+        customer:customers!fk_job_orders_customer(id, name),
+        job_title:job_titles(id, job_title_id)
+      `)
+      .range(from, to)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error(`Error fetching batch ${batch + 1}:`, error);
+      throw error;
     }
     
-    if (jobOrder.salesman_id) {
-      const { data: salesmanData } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, phone')
-        .eq('id', jobOrder.salesman_id)
-        .single();
-      
-      if (salesmanData) {
-        salesman = {
-          id: salesmanData.id,
-          name: salesmanData.full_name || 'Unknown Salesman',
-          email: salesmanData.email,
-          phone: salesmanData.phone
-        };
-      }
-    }
-    
-    return {
-      ...jobOrder,
-      designer,
-      salesman
-    };
+    console.log(`Batch ${batch + 1} fetched: ${data?.length || 0} records`);
+    allJobOrders = [...allJobOrders, ...(data || [])];
+  }
+  
+  console.log(`Total job orders fetched: ${allJobOrders.length}`);
+  
+  // Collect unique designer and salesman IDs for bulk fetching
+  const designerIds = [...new Set(allJobOrders.map(job => job.designer_id).filter(Boolean))];
+  const salesmanIds = [...new Set(allJobOrders.map(job => job.salesman_id).filter(Boolean))];
+  
+  console.log(`Fetching ${designerIds.length} unique designers and ${salesmanIds.length} unique salesmen...`);
+  
+  // Bulk fetch designers and salesmen
+  const [designersData, salesmenData] = await Promise.all([
+    designerIds.length > 0 
+      ? supabase.from('profiles').select('id, full_name, phone').in('id', designerIds)
+      : Promise.resolve({ data: [] }),
+    salesmanIds.length > 0
+      ? supabase.from('profiles').select('id, full_name, email, phone').in('id', salesmanIds)
+      : Promise.resolve({ data: [] })
+  ]);
+  
+  // Create maps for quick lookup
+  const designersMap = new Map();
+  const salesmenMap = new Map();
+  
+  (designersData.data || []).forEach(designer => {
+    designersMap.set(designer.id, {
+      id: designer.id,
+      name: designer.full_name || 'Unknown Designer',
+      phone: designer.phone
+    });
+  });
+  
+  (salesmenData.data || []).forEach(salesman => {
+    salesmenMap.set(salesman.id, {
+      id: salesman.id,
+      name: salesman.full_name || 'Unknown Salesman',
+      email: salesman.email,
+      phone: salesman.phone
+    });
+  });
+  
+  // Enrich job orders with designer and salesman data
+  const enrichedData = allJobOrders.map(jobOrder => ({
+    ...jobOrder,
+    designer: jobOrder.designer_id ? designersMap.get(jobOrder.designer_id) || null : null,
+    salesman: jobOrder.salesman_id ? salesmenMap.get(jobOrder.salesman_id) || null : null
   }));
   
+  console.log(`Successfully enriched ${enrichedData.length} job orders with profile data`);
   return enrichedData;
 }
 

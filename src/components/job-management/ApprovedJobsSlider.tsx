@@ -27,7 +27,7 @@ interface ApprovedJobsSliderProps {
 export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderProps) {
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
   const [selectedSalesman, setSelectedSalesman] = useState<string>("all");
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("approved");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedJobIndex, setSelectedJobIndex] = useState(0);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -43,15 +43,16 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
   const salesmen = Array.from(new Set(jobs.map(job => job.salesman).filter(Boolean)));
   salesmen.unshift("all"); // Add "all" option
 
-  // Get unique statuses
+  // Get unique statuses with approval status included
   const uniqueStatuses = Array.from(new Set(jobs.map(job => job.status).filter(Boolean)));
-  const statuses = ["all", ...uniqueStatuses];
+  const statuses = ["all", "approved", ...uniqueStatuses];
 
   // Filter jobs by branch, salesman, status, and search query
   const filteredJobs = jobs.filter(job => {
     const branchMatch = selectedBranch === "all" || job.branch === selectedBranch;
     const salesmanMatch = selectedSalesman === "all" || job.salesman === selectedSalesman;
-    const statusMatch = selectedStatus === "all" || job.status === selectedStatus;
+    const statusMatch = selectedStatus === "all" || 
+      (selectedStatus === "approved" ? job.approval_status === "approved" : job.status === selectedStatus);
     
     // Enhanced search functionality - split search query into words and check for partial matches
     const searchMatch = searchQuery === "" || (() => {
@@ -153,7 +154,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
     <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Approved Jobs</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Orders</h1>
           <p className="text-gray-600">Interactive job order slider view - Total: {filteredJobs.length} jobs</p>
         </div>
         <div className="flex items-center gap-4">
@@ -198,7 +199,8 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              {statuses.slice(1).map((status) => (
+              <SelectItem value="approved">Approved Jobs</SelectItem>
+              {statuses.slice(2).map((status) => (
                 <SelectItem key={status} value={status}>
                   {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
                 </SelectItem>

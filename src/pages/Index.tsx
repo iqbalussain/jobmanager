@@ -161,7 +161,7 @@ const Index = () => {
       case "approved-jobs":
         return (
           <ApprovedJobsList
-            jobs={transformedJobs.filter(job => job.approval_status === 'approved')}
+            jobs={transformedJobs}
             onStatusUpdate={handleStatusUpdate}
           />
         );
