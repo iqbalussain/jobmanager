@@ -27,6 +27,7 @@ interface ApprovedJobsSliderProps {
 export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderProps) {
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
   const [selectedSalesman, setSelectedSalesman] = useState<string>("all");
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("approved");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedJobIndex, setSelectedJobIndex] = useState(0);
@@ -43,14 +44,19 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
   const salesmen = Array.from(new Set(jobs.map(job => job.salesman).filter(Boolean)));
   salesmen.unshift("all"); // Add "all" option
 
+  // Get unique customers
+  const customers = Array.from(new Set(jobs.map(job => job.customer).filter(Boolean)));
+  customers.unshift("all"); // Add "all" option
+
   // Get unique statuses with approval status included
   const uniqueStatuses = Array.from(new Set(jobs.map(job => job.status).filter(Boolean)));
   const statuses = ["all", "approved", ...uniqueStatuses];
 
-  // Filter jobs by branch, salesman, status, and search query
+  // Filter jobs by branch, salesman, customer, status, and search query
   const filteredJobs = jobs.filter(job => {
     const branchMatch = selectedBranch === "all" || job.branch === selectedBranch;
     const salesmanMatch = selectedSalesman === "all" || job.salesman === selectedSalesman;
+    const customerMatch = selectedCustomer === "all" || job.customer === selectedCustomer;
     const statusMatch = selectedStatus === "all" || 
       (selectedStatus === "approved" ? job.approval_status === "approved" : job.status === selectedStatus);
     
@@ -75,13 +81,13 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
       return searchTerms.some(term => searchableText.includes(term));
     })();
     
-    return branchMatch && salesmanMatch && statusMatch && searchMatch;
+    return branchMatch && salesmanMatch && customerMatch && statusMatch && searchMatch;
   });
 
   // Reset index when filters change
   useEffect(() => {
     setSelectedJobIndex(0);
-  }, [selectedBranch, selectedSalesman, selectedStatus, searchQuery]);
+  }, [selectedBranch, selectedSalesman, selectedCustomer, selectedStatus, searchQuery]);
 
   const handleJobSelect = (jobNumber: string) => {
     const index = filteredJobs.findIndex(job => job.jobOrderNumber === jobNumber);
@@ -189,6 +195,19 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
               {salesmen.slice(1).map((salesman) => (
                 <SelectItem key={salesman} value={salesman}>
                   {salesman}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Select Customer" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Customers</SelectItem>
+              {customers.slice(1).map((customer) => (
+                <SelectItem key={customer} value={customer}>
+                  {customer}
                 </SelectItem>
               ))}
             </SelectContent>
