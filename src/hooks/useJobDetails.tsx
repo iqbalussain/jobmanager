@@ -41,10 +41,8 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
         deliveredAt: job.deliveredAt
       });
       
-      // Load existing invoice number if available
-      if (job.invoiceNumber) {
-        setInvoiceNumber(job.invoiceNumber);
-      }
+      // Always set invoice number - either the job's existing number or empty string
+      setInvoiceNumber(job.invoiceNumber || '');
     }
   }, [job]);
 
