@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Job, JobStatus } from "@/pages/Index";
 import { format } from "date-fns";
-import { Filter, Calendar as CalendarIcon, X, Pencil, Eye } from "lucide-react";
+import { Filter, Calendar as CalendarIcon, X, Pencil, Eye, RotateCcw } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -129,47 +129,120 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
   };
 
   const loadFilterOptions = async () => {
-    // Load unique salesmen
-    const { data: jobsData } = await supabase
-      .from("job_orders")
-      .select("salesman_id")
-      .not("salesman_id", "is", null);
-    
-    const salesmanIds = [...new Set(jobsData?.map(j => j.salesman_id).filter(Boolean))];
-    if (salesmanIds.length > 0) {
-      const salesmenPromises = salesmanIds.map(id => 
-        supabase.from("profiles").select("full_name").eq("id", id).single()
-      );
-      const salesmenResults = await Promise.all(salesmenPromises);
-      const salesmenNames = salesmenResults.map(r => r.data?.full_name).filter(Boolean);
-      setUniqueSalesmen(salesmenNames);
-    }
-    
-    // Load unique customers
-    const { data: customerJobsData } = await supabase
-      .from("job_orders")
-      .select("customer_id")
-      .not("customer_id", "is", null);
-    
-    const customerIds = [...new Set(customerJobsData?.map(j => j.customer_id).filter(Boolean))];
-    if (customerIds.length > 0) {
-      const customersPromises = customerIds.map(id => 
-        supabase.from("customers").select("name").eq("id", id).single()
-      );
-      const customersResults = await Promise.all(customersPromises);
-      const customerNames = customersResults.map(r => r.data?.name).filter(Boolean);
-      setUniqueCustomers(customerNames);
-    }
-    
-    // Load unique branches
-    const { data: branchesData } = await supabase
-      .from("job_orders")
-      .select("branch")
-      .not("branch", "is", null);
+    try {
+      // Get all job orders with their related data, applying current filters
+      let query = supabase.from("job_orders").select(`
+        id,
+        salesman_id,
+        customer_id,
+        branch,
+        status,
+        job_order_number,
+        job_order_details,
+        client_name,
+        assignee,
+        created_at
+      `);
 
-    if (branchesData) {
-      setUniqueBranches([...new Set(branchesData.map((j) => j.branch).filter(Boolean))]);
+      // Apply existing filters to get context-aware options
+      if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter as any);
+      }
+      if (branchFilter !== "all") {
+        query = query.eq("branch", branchFilter);
+      }
+      if (searchFilter) {
+        query = query.or(`job_order_number.ilike.%${searchFilter}%,job_order_details.ilike.%${searchFilter}%,client_name.ilike.%${searchFilter}%,assignee.ilike.%${searchFilter}%`);
+      }
+      if (dateFilter?.from) {
+        query = query.gte("created_at", dateFilter.from.toISOString());
+      }
+      if (dateFilter?.to) {
+        query = query.lte("created_at", dateFilter.to.toISOString());
+      }
+
+      const { data: filteredJobs, error } = await query;
+      
+      if (error) {
+        console.error("Error loading filter options:", error);
+        return;
+      }
+
+      if (!filteredJobs) return;
+
+      // Get unique IDs for batch fetching
+      const salesmanIds = [...new Set(filteredJobs.map(job => job.salesman_id).filter(Boolean))];
+      const customerIds = [...new Set(filteredJobs.map(job => job.customer_id).filter(Boolean))];
+      const branches = [...new Set(filteredJobs.map(job => job.branch).filter(Boolean))];
+
+      // Fetch salesman names
+      const salesmenSet = new Set();
+      if (salesmanIds.length > 0) {
+        const { data: salesmenData } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", salesmanIds);
+
+        if (salesmenData) {
+          salesmenData.forEach(salesman => {
+            if (salesman.full_name && (salesmanFilter === "all" || salesman.full_name === salesmanFilter)) {
+              salesmenSet.add(salesman.full_name);
+            }
+          });
+        }
+      }
+
+      // Fetch customer names
+      const customersSet = new Set();
+      if (customerIds.length > 0) {
+        const { data: customersData } = await supabase
+          .from("customers")
+          .select("id, name")
+          .in("id", customerIds);
+
+        if (customersData) {
+          customersData.forEach(customer => {
+            if (customer.name && (customerFilter === "all" || customer.name === customerFilter)) {
+              customersSet.add(customer.name);
+            }
+          });
+        }
+      }
+
+      // Set unique branches
+      const branchesSet = new Set();
+      branches.forEach(branch => {
+        if (branch && (branchFilter === "all" || branch === branchFilter)) {
+          branchesSet.add(branch);
+        }
+      });
+
+      setUniqueSalesmen(Array.from(salesmenSet).sort());
+      setUniqueCustomers(Array.from(customersSet).sort());
+      setUniqueBranches(Array.from(branchesSet).sort());
+      
+    } catch (error) {
+      console.error("Error loading filter options:", error);
     }
+  };
+
+  const clearAllFilters = () => {
+    setSalesmanFilter("all");
+    setCustomerFilter("all");
+    setBranchFilter("all");
+    setStatusFilter("all");
+    setSearchFilter("");
+    setDateFilter(null);
+    setPage(1);
+  };
+
+  const hasActiveFilters = () => {
+    return salesmanFilter !== "all" || 
+           customerFilter !== "all" || 
+           branchFilter !== "all" || 
+           statusFilter !== "all" || 
+           searchFilter !== "" || 
+           dateFilter !== null;
   };
 
   const handleStatusChange = async (jobId, newStatus) => {
@@ -193,9 +266,15 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
   useEffect(() => {
     if (isAdmin) {
       loadJobs();
-      loadFilterOptions();
     }
   }, [isAdmin, page, salesmanFilter, customerFilter, branchFilter, statusFilter, searchFilter, dateFilter]);
+
+  // Load filter options when admin status changes or when filters change (to get context-aware options)
+  useEffect(() => {
+    if (isAdmin) {
+      loadFilterOptions();
+    }
+  }, [isAdmin, salesmanFilter, customerFilter, branchFilter, statusFilter, searchFilter, dateFilter]);
 
   if (!isAdmin) return <div className="p-6">Access Denied</div>;
 
@@ -215,9 +294,27 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
       {/* Filter Panel */}
       <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-gray-900">
-            <Filter className="w-5 h-5 text-blue-600" />
-            Job Orders Management
+          <CardTitle className="flex items-center justify-between text-gray-900">
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-blue-600" />
+              Job Orders Management
+              {hasActiveFilters() && (
+                <span className="text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                  Filters Active
+                </span>
+              )}
+            </div>
+            {hasActiveFilters() && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={clearAllFilters}
+                className="flex items-center gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Clear All Filters
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
