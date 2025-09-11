@@ -8,6 +8,7 @@ import {
   CheckCircle,
   UserCheck,
   Truck,
+  FileText,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ interface MinimalistSidebarProps {
     view:
       | "dashboard"
       | "approved-jobs"
+      | "quotations"
       | "settings"
       | "admin"
       | "admin-management"
@@ -82,6 +84,12 @@ export function MinimalistSidebar({
       title: "Approved Jobs",
       icon: CheckCircle,
       view: "approved-jobs" as const,
+    },
+    {
+      title: "Quotations",
+      icon: FileText,
+      view: "quotations" as const,
+      roles: ["admin", "manager", "salesman"],
     },
     {
       title: "Delivery Record",
@@ -145,7 +153,7 @@ export function MinimalistSidebar({
 
         {/* Main Menu */}
         <div className="flex flex-col space-y-2 mt-10">
-          {mainMenuItems.map((item) => (
+          {mainMenuItems.filter(canAccessMenuItem).map((item) => (
             <Tooltip key={item.view}>
               <TooltipTrigger asChild>
                 <Button

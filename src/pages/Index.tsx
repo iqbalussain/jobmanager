@@ -16,6 +16,7 @@ const ReportsPage = lazy(() => import("@/components/ReportsPage").then(m => ({ d
 const ApprovedJobsList = lazy(() => import("@/components/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
 const UserAccessManagement = lazy(() => import("@/components/UserAccessManagement").then(m => ({ default: m.default })));
 const DeliveryRecord = lazy(() => import("@/components/DeliveryRecord").then(m => ({ default: m.DeliveryRecord })));
+const QuotationManagement = lazy(() => import("@/components/QuotationManagement").then(m => ({ default: m.QuotationManagement })));
 
 export type JobStatus =
   | "pending"
@@ -61,6 +62,7 @@ const Index = () => {
   const [currentView, setCurrentView] = useState<
     | "dashboard"
     | "approved-jobs"
+    | "quotations"
     | "settings"
     | "admin"
     | "admin-management"
@@ -165,6 +167,8 @@ const Index = () => {
             onStatusUpdate={handleStatusUpdate}
           />
         );
+      case "quotations":
+        return <QuotationManagement />;
       case "settings":
         return <SettingsView />;
       case "admin":
@@ -185,6 +189,7 @@ const Index = () => {
   const handleSidebarViewChange = (view: 
     | "dashboard"
     | "approved-jobs"
+    | "quotations"
     | "settings"
     | "admin"
     | "admin-management"

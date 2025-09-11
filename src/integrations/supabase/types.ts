@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -343,6 +343,81 @@ export type Database = {
         }
         Relationships: []
       }
+      quotation_items: {
+        Row: {
+          description: string
+          id: string
+          job_title_id: string
+          order_sequence: number
+          quantity: number
+          quotation_id: string
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          description: string
+          id?: string
+          job_title_id: string
+          order_sequence?: number
+          quantity?: number
+          quotation_id: string
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          description?: string
+          id?: string
+          job_title_id?: string
+          order_sequence?: number
+          quantity?: number
+          quotation_id?: string
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: []
+      }
+      quotations: {
+        Row: {
+          converted_to_job_order_id: string | null
+          created_at: string
+          created_by: string
+          customer_id: string
+          id: string
+          notes: string | null
+          quotation_number: string
+          salesman_id: string
+          status: Database["public"]["Enums"]["quotation_status"]
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          converted_to_job_order_id?: string | null
+          created_at?: string
+          created_by: string
+          customer_id: string
+          id?: string
+          notes?: string | null
+          quotation_number: string
+          salesman_id: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          converted_to_job_order_id?: string | null
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          id?: string
+          notes?: string | null
+          quotation_number?: string
+          salesman_id?: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -369,8 +444,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      convert_quotation_to_job_order: {
+        Args: { quotation_id_param: string }
+        Returns: string
+      }
       generate_job_order_number: {
         Args: { branch: string }
+        Returns: string
+      }
+      generate_quotation_number: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       get_current_user_role: {
@@ -383,8 +466,8 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
@@ -406,6 +489,7 @@ export type Database = {
         | "cancelled"
         | "invoiced"
       priority_level: "low" | "medium" | "high" | "urgent"
+      quotation_status: "draft" | "sent" | "accepted" | "rejected" | "converted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -551,6 +635,7 @@ export const Constants = {
         "invoiced",
       ],
       priority_level: ["low", "medium", "high", "urgent"],
+      quotation_status: ["draft", "sent", "accepted", "rejected", "converted"],
     },
   },
 } as const
