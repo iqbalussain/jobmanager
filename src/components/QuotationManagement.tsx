@@ -147,7 +147,7 @@ export function QuotationManagement() {
                           <Eye className="w-4 h-4 mr-1" />
                           View
                         </Button>
-                        {quotation.status === 'accepted' && !quotation.converted_to_job_order_id && (
+                        {!quotation.converted_to_job_order_id && (
                           <Button
                             variant="outline"
                             size="sm"
