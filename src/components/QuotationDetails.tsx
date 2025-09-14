@@ -68,11 +68,16 @@ export function QuotationDetails({ isOpen, onClose, quotation }: QuotationDetail
 
     setIsConverting(true);
     try {
-      await convertToJobOrderMutation.mutateAsync(quotation.id);
+      // Import and use the enhanced conversion function
+      const { convertQuotationToJobOrderWithItems } = await import('@/utils/enhancedQuotationConversion');
+      await convertQuotationToJobOrderWithItems(quotation, items);
+      
       toast({
-        title: "Success",
-        description: "Quotation converted to job order successfully",
+        title: "Quotation converted",
+        description: "Successfully converted quotation to job order with all items"
       });
+      
+      // Refresh the quotation data to show updated status
       onClose();
     } catch (error) {
       console.error('Error converting quotation:', error);

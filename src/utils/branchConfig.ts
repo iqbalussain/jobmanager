@@ -4,6 +4,7 @@ export interface BranchConfig {
   phone: string;
   email: string;
   website?: string;
+  logoPath?: string;
 }
 
 export const BRANCH_CONFIGS: Record<string, BranchConfig> = {

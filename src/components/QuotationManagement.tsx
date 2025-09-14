@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Eye, FileText, ArrowRight, Search } from 'lucide-react';
+import { Plus, Eye, FileText, ArrowRight, Search, Image } from 'lucide-react';
 import { useQuotations, type Quotation } from '@/hooks/useQuotations';
 import { CreateQuotationDialog } from './CreateQuotationDialog';
 import { QuotationDetails } from './QuotationDetails';
+import { BranchLogoUploader } from './BranchLogoUploader';
 import { format } from 'date-fns';
 
 export function QuotationManagement() {
@@ -16,6 +17,7 @@ export function QuotationManagement() {
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [showLogoUploader, setShowLogoUploader] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -57,13 +59,23 @@ export function QuotationManagement() {
           <h1 className="text-3xl font-bold text-foreground">Quotation Management</h1>
           <p className="text-muted-foreground">Create and manage quotations</p>
         </div>
-        <Button 
-          onClick={() => setIsCreateDialogOpen(true)}
-          className="bg-primary hover:bg-primary/90"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Quotation
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowLogoUploader(true)} 
+            className="flex items-center gap-2"
+          >
+            <Image className="h-4 w-4" />
+            Upload Logo
+          </Button>
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="bg-primary hover:bg-primary/90"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Quotation
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -185,6 +197,11 @@ export function QuotationManagement() {
       <CreateQuotationDialog
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
+      />
+      
+      <BranchLogoUploader
+        isOpen={showLogoUploader}
+        onClose={() => setShowLogoUploader(false)}
       />
 
       {selectedQuotation && (
