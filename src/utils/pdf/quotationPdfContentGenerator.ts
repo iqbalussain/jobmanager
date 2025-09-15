@@ -67,14 +67,6 @@ export const generateQuotationPDFContent = (
                     onerror="this.style.display='none'" 
                   />
                 </div>
-                <div style="color: #6b7280; font-size: 14px; line-height: 1.5; word-wrap: break-word;">
-                  ${branchConfig?.address.map(line => `<div>${line}</div>`).join('') || '<div>Company Address</div>'}
-                  <div style="margin-top: 8px;">
-                    <strong>Phone:</strong> ${branchConfig?.phone || 'N/A'} | 
-                    <strong>Email:</strong> ${branchConfig?.email || 'N/A'}
-                    ${branchConfig?.website ? ` | <strong>Web:</strong> ${branchConfig.website}` : ''}
-                  </div>
-                </div>
               </div>
 
               <!-- Right: Quotation Info -->
