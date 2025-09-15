@@ -18,7 +18,7 @@ export const generateQuotationPDFContent = (
   const itemsTableRows = items.map((item, index) => `
     <tr style="border-bottom: 1px solid #e5e7eb;">
       <td style="padding: 12px 8px; text-align: center; font-weight: 500;">${index + 1}</td>
-      <td style="padding: 12px 8px; font-weight: 500;">${item.job_titles?.job_title_id || 'N/A'}</td>
+      <td style="padding: 12px 8px; font-weight: 500;">${item.job_title?.job_title_id || 'N/A'}</td>
       <td style="padding: 12px 8px; color: #6b7280; line-height: 1.4;">${item.description}</td>
       <td style="padding: 12px 8px; text-align: center;">${item.quantity}</td>
       <td style="padding: 12px 8px; text-align: right;">$${item.unit_price?.toFixed(2) || '0.00'}</td>
