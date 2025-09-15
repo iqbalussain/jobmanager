@@ -9,6 +9,7 @@ export const generateQuotationPDFContent = (
 ): string => {
   const branchConfig = getBranchConfig(selectedBranch);
   const statusColor = getStatusColor(quotation.status);
+  const currentDate = new Date().toLocaleDateString();
   
   // Generate logo URL
   const logoUrl = supabase.storage
@@ -18,7 +19,7 @@ export const generateQuotationPDFContent = (
   const itemsTableRows = items.map((item, index) => `
     <tr style="border-bottom: 1px solid #e5e7eb;">
       <td style="padding: 12px 8px; text-align: center; font-weight: 500;">${index + 1}</td>
-      <td style="padding: 12px 8px; font-weight: 500;">${item.job_title?.job_title_id || 'N/A'}</td>
+      <td style="padding: 12px 8px; font-weight: 500;">${item.job_title || 'N/A'}</td>
       <td style="padding: 12px 8px; color: #6b7280; line-height: 1.4;">${item.description}</td>
       <td style="padding: 12px 8px; text-align: center;">${item.quantity}</td>
       <td style="padding: 12px 8px; text-align: right;">$${item.unit_price?.toFixed(2) || '0.00'}</td>
@@ -50,11 +51,11 @@ export const generateQuotationPDFContent = (
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 3px solid #2563eb;">
           <div style="flex: 1;">
             <div style="margin-bottom: 16px;">
-              <img src="${logoUrl}" alt="${branchConfig?.name} Logo" style="max-height: 80px; max-width: 200px; object-fit: contain;" onerror="this.style.display='none'" />
+              <img 
+                src="${logoUrl}" 
+                alt="${branchConfig?.name} 
+                Logo" style="max-height: 150px; max-width: 700px; object-fit: contain;" onerror="this.style.display='none'" />
             </div>
-            <h1 style="font-size: 32px; font-weight: bold; color: #1e40af; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 2px;">
-              ${branchConfig?.name || 'Company Name'}
-            </h1>
             <div style="color: #6b7280; font-size: 14px; line-height: 1.5;">
               ${branchConfig?.address.map(line => `<div>${line}</div>`).join('') || '<div>Company Address</div>'}
               <div style="margin-top: 8px;">
@@ -66,17 +67,37 @@ export const generateQuotationPDFContent = (
           </div>
           
           <div style="text-align: right;">
-            <h2 style="font-size: 28px; color: #1e40af; margin: 0 0 16px 0; font-weight: bold;">QUOTATION</h2>
-            <div style="background: ${statusColor.backgroundColor}; color: ${statusColor.textColor}; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; text-transform: uppercase; margin-bottom: 16px;">
-              ${quotation.status}
-            </div>
-            <div style="font-size: 14px; color: #374151;">
-              <div><strong>Quotation #:</strong> ${quotation.quotation_number}</div>
-              <div><strong>Date:</strong> ${new Date(quotation.created_at).toLocaleDateString()}</div>
-            </div>
-          </div>
-        </div>
+            <h2 style="
+              color: #2563eb; 
+              font-size: 24px; 
+              font-weight: bold; 
+              margin: 0 0 10px 0;
+            ">QUOTATION</h2>
 
+            <p style="margin: 5px 0; color: #374151;">
+              <strong>Quotation #:</strong> ${quotation.quotation_number}
+            </p>
+
+            <p style="margin: 5px 0; color: #374151;">
+              <strong>Date:</strong> ${currentDate}
+            </p>
+
+            <p style="margin: 5px 0; color: #374151;">
+              <strong>Status:</strong> 
+              <span style="
+                padding: 4px 8px; 
+                border-radius: 4px; 
+                font-size: 12px; 
+                background: ${statusColor.backgroundColor}; 
+                color: ${statusColor.backgroundColor};
+              ">
+                ${quotation.status.toUpperCase()}
+              </span>
+            </p>
+          </div>
+
+        </div>
+      </div>
         <!-- Customer Information -->
         <div class="quotation-details">
           <div style="display: flex; justify-content: space-between;">
@@ -98,29 +119,39 @@ export const generateQuotationPDFContent = (
         </div>
 
         <!-- Items Table -->
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th style="width: 50px; text-align: center;">#</th>
-              <th style="width: 150px;">Job Title</th>
-              <th>Description</th>
-              <th style="width: 80px; text-align: center;">Qty</th>
-              <th style="width: 100px; text-align: right;">Unit Price</th>
-              <th style="width: 120px; text-align: right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsTableRows}
-            <tr class="total-row">
-              <td colspan="5" style="padding: 16px 8px; text-align: right; font-size: 18px; font-weight: bold;">
-                Grand Total:
-              </td>
-              <td style="padding: 16px 8px; text-align: right; font-size: 18px; font-weight: bold; color: #059669;">
-                $${quotation.total_amount?.toFixed(2) || '0.00'}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              <div style="margin-bottom: 30px;">
+                <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Quotation Items</h3>
+                <table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb;">
+                  <thead>
+                    <tr style="background: #f9fafb;">
+                      <th style="border: 1px solid #e5e7eb; padding: 12px; text-align: left; color: #374151; font-weight: 600;">#</th>
+                      <th style="border: 1px solid #e5e7eb; padding: 12px; text-align: left; color: #374151; font-weight: 600;">Item Description</th>
+                      <th style="border: 1px solid #e5e7eb; padding: 12px; text-align: center; color: #374151; font-weight: 600;">Qty</th>
+                      <th style="border: 1px solid #e5e7eb; padding: 12px; text-align: right; color: #374151; font-weight: 600;">Unit Price</th>
+                      <th style="border: 1px solid #e5e7eb; padding: 12px; text-align: right; color: #374151; font-weight: 600;">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+        <${items.map((item, index) => `
+                      <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="border: 1px solid #e5e7eb; padding: 12px; color: #6b7280;">${index + 1}</td>
+                        <td style="border: 1px solid #e5e7eb; padding: 12px; color: #374151;">
+                          <div style="font-weight: 500;">${item.job_title || 'N/A'}</div>
+                          <div style="color: #6b7280; font-size: 14px; margin-top: 4px;">${item.description}</div>
+                        </td>
+                        <td style="border: 1px solid #e5e7eb; padding: 12px; text-align: center; color: #374151;">${item.quantity}</td>
+                        <td style="border: 1px solid #e5e7eb; padding: 12px; text-align: right; color: #374151;">OMR ${parseFloat(item.unit_price.toString()).toFixed(2)}</td>
+                        <td style="border: 1px solid #e5e7eb; padding: 12px; text-align: right; color: #374151; font-weight: 500;">OMR ${parseFloat(item.total_price.toString()).toFixed(2)}</td>
+                      </tr>
+                    `).join('')}
+                    <tr style="background: #f9fafb; font-weight: 600;">
+                      <td colspan="4" style="border: 1px solid #e5e7eb; padding: 12px; text-align: right; color: #374151;">Grand Total:</td>
+                      <td style="border: 1px solid #e5e7eb; padding: 12px; text-align: right; color: #2563eb; font-size: 18px;">OMR ${parseFloat(quotation.total_amount?.toString() || '0').toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
         <!-- Terms and Conditions -->
         <div style="margin-top: 40px; padding: 20px; background: #f8fafc; border-radius: 8px;">
@@ -128,15 +159,14 @@ export const generateQuotationPDFContent = (
           <ul style="margin: 0; padding-left: 20px; color: #6b7280; font-size: 14px;">
             <li style="margin-bottom: 8px;">This quotation is valid for 30 days from the date of issue.</li>
             <li style="margin-bottom: 8px;">Payment terms: 50% advance, 50% on completion.</li>
-            <li style="margin-bottom: 8px;">Prices are subject to change without prior notice.</li>
-            <li style="margin-bottom: 8px;">Delivery timeline will be confirmed upon order confirmation.</li>
+            <li style="margin-bottom: 8px;">Prices are subject to change without prior notice. The Price is exclusive of VAT, Which will be added 5% in invoice</li>
           </ul>
         </div>
 
         <!-- Footer -->
         <div class="footer">
           <div style="text-align: center; color: #9ca3af;">
-            <p>Thank you for your business! For any questions, please contact us at ${branchConfig?.email || 'info@company.com'}</p>
+            <p>Thank you for your business! For any questions, please contact us at ${branchConfig?.email || 'printwaves@printwavesoman.com'}</p>
             <p style="margin: 8px 0 0 0; font-size: 11px;">This is a computer-generated quotation and does not require a signature.</p>
           </div>
         </div>

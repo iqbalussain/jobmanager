@@ -11,12 +11,12 @@ export const BRANCH_CONFIGS: Record<string, BranchConfig> = {
   "Head Office": {
     name: "Head Office",
     address: [
-      "P.O. Box 123",
+      "P.O. Box 1817",
       "Muscat, Sultanate of Oman"
     ],
-    phone: "+968 2458 1234",
-    email: "info@company.com",
-    website: "www.company.com"
+    phone: "+968 9175 2973",
+    email: "print@printwavesoman.com",
+    website: "www.printwavesoman.com"
   },
   "Wadi Kabeer": {
     name: "Wadi Kabeer Branch",
