@@ -44,7 +44,7 @@ return `
     }
     .letterhead img { 
       max-height: 120px; 
-      max-width: 100%; 
+      max-width: 130%; 
       object-fit: contain; 
     }
     .quotation-header { 
