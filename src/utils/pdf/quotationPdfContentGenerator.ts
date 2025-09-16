@@ -75,12 +75,17 @@ return `
       <!-- Left: Company Info -->
       <div>
         <h1 style="color: #2563eb; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;">
-          ${branchConfig?.name || selectedBranch}
+          Customer Details
         </h1>
-        ${branchConfig?.address.map(line => `<p style="margin: 2px 0; color: #6b7280;">${line}</p>`).join('') || ''}
-        <p style="margin: 2px 0; color: #6b7280;">Phone: ${branchConfig?.phone || 'N/A'}</p>
-        <p style="margin: 2px 0; color: #6b7280;">Email: ${branchConfig?.email || 'N/A'}</p>
-        ${branchConfig?.website ? `<p style="margin: 2px 0; color: #6b7280;">Website: ${branchConfig.website}</p>` : ''}
+      <div style="display: flex; justify-content: space-between;">
+            <div>
+              <div style="font-size: 16px;"><strong>${quotation.customer_name || 'N/A'}</strong></div>
+            </div>
+            <div style="text-align: right;">
+              <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px;">Salesman</h3>
+              <div style="font-size: 16px;"><strong>${quotation.salesman_name || 'N/A'}</strong></div>
+            </div>
+          </div>
       </div>
 
       <!-- Right: Quotation Info -->
@@ -99,25 +104,6 @@ return `
         </p>
       </div>
     </div>
-        <!-- Customer Information -->
-        <div class="quotation-details">
-          <div style="display: flex; justify-content: space-between;">
-            <div>
-              <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px;">Customer Details</h3>
-              <div style="font-size: 16px;"><strong>${quotation.customer_name || 'N/A'}</strong></div>
-            </div>
-            <div style="text-align: right;">
-              <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px;">Salesman</h3>
-              <div style="font-size: 16px;"><strong>${quotation.salesman_name || 'N/A'}</strong></div>
-            </div>
-          </div>
-          ${quotation.notes ? `
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-              <h4 style="margin: 0 0 8px 0; color: #374151;">Notes:</h4>
-              <p style="margin: 0; color: #6b7280; font-style: italic;">${quotation.notes}</p>
-            </div>
-          ` : ''}
-        </div>
 
         <!-- Items Table -->
               <div style="margin-bottom: 30px;">
