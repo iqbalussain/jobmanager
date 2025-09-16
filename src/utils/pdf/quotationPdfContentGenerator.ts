@@ -27,7 +27,7 @@ export const generateQuotationPDFContent = (
     </tr>
   `).join('');
 
-  return `
+return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -36,6 +36,23 @@ export const generateQuotationPDFContent = (
   <style>
     body { font-family: 'Helvetica', 'Arial', sans-serif; margin: 0; padding: 20px; color: #374151; line-height: 1.6; }
     .container { max-width: 800px; margin: 0 auto; background: white; }
+    .letterhead { 
+      text-align: center; 
+      border-bottom: 4px solid #2563eb; 
+      padding-bottom: 15px; 
+      margin-bottom: 25px; 
+    }
+    .letterhead img { 
+      max-height: 120px; 
+      max-width: 100%; 
+      object-fit: contain; 
+    }
+    .quotation-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: flex-start; 
+      margin-bottom: 30px; 
+    }
     .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
     .items-table th { background: #f1f5f9; padding: 12px 8px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0; }
     .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }
@@ -44,28 +61,20 @@ export const generateQuotationPDFContent = (
 <body>
   <div class="container">
 
-    <!-- Logo full width (letterhead style) -->
-    <div style="text-align: center; margin-bottom: 20px;">
+    <!-- Full-width Letterhead -->
+    <div class="letterhead">
       <img 
         src="${logoUrl}" 
         alt="${branchConfig?.name} Logo" 
-        style="max-height: 120px; max-width: 100%; object-fit: contain;" 
         onerror="this.style.display='none'" 
       />
     </div>
 
-    <!-- Company Info (left) + Quotation Info (right) -->
-    <div style="
-      display: flex; 
-      justify-content: space-between; 
-      align-items: flex-start; 
-      margin-bottom: 30px; 
-      padding-bottom: 15px; 
-      border-bottom: 3px solid #2563eb;
-    ">
-      <!-- Company details -->
+    <!-- Company Info + Quotation Info -->
+    <div class="quotation-header">
+      <!-- Left: Company Info -->
       <div>
-        <h1 style="color: #2563eb; font-size: 24px; font-weight: bold; margin: 0 0 10px 0;">
+        <h1 style="color: #2563eb; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;">
           ${branchConfig?.name || selectedBranch}
         </h1>
         ${branchConfig?.address.map(line => `<p style="margin: 2px 0; color: #6b7280;">${line}</p>`).join('') || ''}
@@ -74,7 +83,7 @@ export const generateQuotationPDFContent = (
         ${branchConfig?.website ? `<p style="margin: 2px 0; color: #6b7280;">Website: ${branchConfig.website}</p>` : ''}
       </div>
 
-      <!-- Quotation details -->
+      <!-- Right: Quotation Info -->
       <div style="text-align: right;">
         <h2 style="color: #2563eb; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;">QUOTATION</h2>
         <p style="margin: 5px 0; color: #374151;"><strong>Quotation #:</strong> ${quotation.quotation_number}</p>
@@ -90,7 +99,6 @@ export const generateQuotationPDFContent = (
         </p>
       </div>
     </div>
-
         <!-- Customer Information -->
         <div class="quotation-details">
           <div style="display: flex; justify-content: space-between;">
