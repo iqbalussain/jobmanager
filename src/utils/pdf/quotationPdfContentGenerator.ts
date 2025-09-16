@@ -57,8 +57,8 @@ export const generateQuotationPDFContent = (
               border-bottom: 3px solid #2563eb;
               gap: 20px;
             ">
-              <!-- Left: Logo + Address -->
-              <div style="flex: 1; max-width: 55%;">
+              <!-- centre: Logo + Address -->
+              <div style="flex: 1; max-width: 100%;">
                 <div style="margin-bottom: 12px;">
                   <img 
                     src="${logoUrl}" 
@@ -69,43 +69,37 @@ export const generateQuotationPDFContent = (
                 </div>
               </div>
 
-              <!-- Right: Quotation Info -->
-              <div style="flex: 0 0 40%; text-align: right; word-wrap: break-word;">
-                <h2 style="
-                  color: #2563eb; 
-                  font-size: 24px; 
-                  font-weight: bold; 
-                  margin: 0 0 12px 0;
-                ">
-                  QUOTATION
-                </h2>
-
-                <p style="margin: 5px 0; color: #374151;">
-                  <strong>Quotation #:</strong> ${quotation.quotation_number}
-                </p>
-
-                <p style="margin: 5px 0; color: #374151;">
-                  <strong>Date:</strong> ${currentDate}
-                </p>
-
-                <p style="margin: 5px 0; color: #374151;">
-                  <strong>Salesman:</strong> ${quotation.salesman_name || 'N/A'}
-                </p>
-
-                <p style="margin: 5px 0; color: #374151;">
-                  <strong>Status:</strong> 
-                  <span style="
-                    padding: 4px 8px; 
-                    border-radius: 4px; 
-                    font-size: 12px; 
-                    background: ${statusColor.backgroundColor}; 
-                    color: ${statusColor.textColor};
-                  ">
-                    ${quotation.status.toUpperCase()}
-                  </span>
-                </p>
-              </div>
-            </div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h1 style="
+              color: #2563eb; 
+              font-size: 28px; 
+              font-weight: bold; 
+              margin: 0 0 10px 0;
+            ">${branchConfig?.name || selectedBranch}</h1>
+            ${branchConfig?.address.map(line => `<p style="margin: 2px 0; color: #6b7280;">${line}</p>`).join('') || ''}
+            <p style="margin: 2px 0; color: #6b7280;">Phone: ${branchConfig?.phone || 'N/A'}</p>
+            <p style="margin: 2px 0; color: #6b7280;">Email: ${branchConfig?.email || 'N/A'}</p>
+            ${branchConfig?.website ? `<p style="margin: 2px 0; color: #6b7280;">Website: ${branchConfig.website}</p>` : ''}
+          </div>
+          <div style="text-align: right;">
+            <h2 style="
+              color: #2563eb; 
+              font-size: 24px; 
+              font-weight: bold; 
+              margin: 0 0 10px 0;
+            ">QUOTATION</h2>
+            <p style="margin: 5px 0; color: #374151;"><strong>Quotation #:</strong> ${quotation.quotation_number}</p>
+            <p style="margin: 5px 0; color: #374151;"><strong>Date:</strong> ${currentDate}</p>
+            <p style="margin: 5px 0; color: #374151;"><strong>Status:</strong> 
+              <span style="
+                padding: 4px 8px; 
+                border-radius: 4px; 
+                font-size: 12px; 
+                background: ${getStatusColor(quotation.status).backgroundColor}; 
+                color: ${getStatusColor(quotation.status).textColor};
+              ">${quotation.status.toUpperCase()}</span>
+            </p>
           </div>
         </div>
       </div>
