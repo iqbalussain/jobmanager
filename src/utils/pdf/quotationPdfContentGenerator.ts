@@ -70,49 +70,39 @@ return `
       />
     </div>
 
-        <div className="space-y-6">
-          {/* Header Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  {quotation.quotation_number}
-                </div>
-                {quotation.status === 'converted' && quotation.converted_to_job_order_id && (
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
-                    <ExternalLink className="h-3 w-3" />
-                    View Job Order
-                  </Button>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="flex items-center gap-3">
-                  <Building className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Customer</div>
-                    <div className="font-medium">{quotation.customer_name}</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <User className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Salesman</div>
-                    <div className="font-medium">{quotation.salesman_name}</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Created</div>
-                    <div className="font-medium">{format(new Date(quotation.created_at), 'MMM dd, yyyy')}</div>
-                  </div>
-                </div>
-              </div>
+    <!-- Company Info + Quotation Info -->
+    <div class="quotation-header">
+      <!-- Left: Company Info -->
+      <div>
+        <h1 style="color: #2563eb; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;">
+          Customer Details</h1>
+      <div style="display: flex; justify-content: space-between;">
+            <div>
+              <div style="font-size: 16px;"><strong>${quotation.customer_name || 'N/A'}</strong></div>
+            </div>
+      <div style="text-align: right;">
+        <h3 style="color: #2563eb; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;">
+            Salesman</h3>
+      <p style="margin: 5px 0; color: #374151;"><strong>${quotation.salesman_name || 'N/A'}</strong></p>
+          </div>
+      </div>
+
+      <!-- Right: Quotation Info -->
+      <div style="text-align: right;">
+        <h2 style="color: #2563eb; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;">QUOTATION</h2>
+        <p style="margin: 5px 0; color: #374151;"><strong>Quotation #:</strong> ${quotation.quotation_number}</p>
+        <p style="margin: 5px 0; color: #374151;"><strong>Date:</strong> ${currentDate}</p>
+        <p style="margin: 5px 0; color: #374151;"><strong>Status:</strong> 
+          <span style="
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            background: ${getStatusColor(quotation.status).backgroundColor}; 
+            color: ${getStatusColor(quotation.status).textColor};
+          ">${quotation.status.toUpperCase()}</span>
+        </p>
+      </div>
+    </div>
 
         <!-- Items Table -->
               <div style="margin-bottom: 30px;">
