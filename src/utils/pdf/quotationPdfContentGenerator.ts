@@ -75,15 +75,16 @@ return `
       <!-- Left: Company Info -->
       <div>
         <h1 style="color: #2563eb; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;">
-          Customer Details</h1>
+          Customer Details
+        </h1>
       <div style="display: flex; justify-content: space-between;">
             <div>
               <div style="font-size: 16px;"><strong>${quotation.customer_name || 'N/A'}</strong></div>
             </div>
-      <div style="text-align: right;">
-        <h3 style="color: #2563eb; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;">
-            Salesman</h3>
-      <p style="margin: 5px 0; color: #374151;"><strong>${quotation.salesman_name || 'N/A'}</strong></p>
+            <div style="text-align: right;">
+              <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px;">Salesman</h3>
+              <div style="font-size: 16px;"><strong>${quotation.salesman_name || 'N/A'}</strong></div>
+            </div>
           </div>
       </div>
 
