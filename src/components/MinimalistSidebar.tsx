@@ -7,7 +7,6 @@ import {
   BarChart3,
   CheckCircle,
   UserCheck,
-  Truck,
   FileText,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -35,7 +34,6 @@ interface MinimalistSidebarProps {
       | "admin-management"
       | "reports"
       | "user-access"
-      | "delivery-record"
   ) => void;
 }
 
@@ -69,8 +67,7 @@ export function MinimalistSidebar({
           role: "employee",
         }
       );
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
+    } catch {
       setUserProfile({
         full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
         role: "employee",
@@ -90,11 +87,6 @@ export function MinimalistSidebar({
       icon: FileText,
       view: "quotations" as const,
       roles: ["admin", "manager", "salesman"],
-    },
-    {
-      title: "Delivery Record",
-      icon: Truck,
-      view: "delivery-record" as const,
     },
     { title: "Settings", icon: Settings, view: "settings" as const },
   ];

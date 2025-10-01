@@ -6,7 +6,7 @@ import { JobStatusModal } from "@/components/JobStatusModal";
 import { DashboardNotifications } from "@/components/dashboard/DashboardNotifications";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
 import { QuickSearch } from "@/components/dashboard/QuickSearch";
-import { ActivitiesSection } from "@/components/dashboard/ActivitiesSection";
+import { JobOrdersList } from "@/components/dashboard/JobOrdersList";
 import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
 
 interface ModernDashboardProps {
@@ -101,7 +101,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
 
         <div className="col-span-6">
           <div className="glass-effect rounded-xl p-1 h-full">
-            <ActivitiesSection />
+            <JobOrdersList jobs={jobs} onViewDetails={handleViewDetails} />
           </div>
         </div>
       </div>

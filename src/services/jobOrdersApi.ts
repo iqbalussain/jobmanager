@@ -1,32 +1,21 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export async function fetchJobOrders() {
-  console.log('Fetching ALL job orders using batching strategy...');
-  
   // First, get the total count
   const { count, error: countError } = await supabase
     .from('job_orders')
     .select('*', { count: 'exact', head: true });
   
-  if (countError) {
-    console.error('Error getting job orders count:', countError);
-    throw countError;
-  }
-  
-  console.log(`Total job orders in database: ${count}`);
+  if (countError) throw countError;
   
   // Fetch all job orders in batches of 1000
   const BATCH_SIZE = 1000;
   const totalBatches = Math.ceil((count || 0) / BATCH_SIZE);
   let allJobOrders: any[] = [];
   
-  console.log(`Fetching ${totalBatches} batches of ${BATCH_SIZE} records each...`);
-  
   for (let batch = 0; batch < totalBatches; batch++) {
     const from = batch * BATCH_SIZE;
     const to = from + BATCH_SIZE - 1;
-    
-    console.log(`Fetching batch ${batch + 1}/${totalBatches} (records ${from}-${to})...`);
     
     const { data, error } = await supabase
       .from('job_orders')
@@ -38,22 +27,13 @@ export async function fetchJobOrders() {
       .range(from, to)
       .order('created_at', { ascending: false });
     
-    if (error) {
-      console.error(`Error fetching batch ${batch + 1}:`, error);
-      throw error;
-    }
-    
-    console.log(`Batch ${batch + 1} fetched: ${data?.length || 0} records`);
+    if (error) throw error;
     allJobOrders = [...allJobOrders, ...(data || [])];
   }
-  
-  console.log(`Total job orders fetched: ${allJobOrders.length}`);
   
   // Collect unique designer and salesman IDs for bulk fetching
   const designerIds = [...new Set(allJobOrders.map(job => job.designer_id).filter(Boolean))];
   const salesmanIds = [...new Set(allJobOrders.map(job => job.salesman_id).filter(Boolean))];
-  
-  console.log(`Fetching ${designerIds.length} unique designers and ${salesmanIds.length} unique salesmen...`);
   
   // Bulk fetch designers and salesmen
   const [designersData, salesmenData] = await Promise.all([
@@ -93,7 +73,6 @@ export async function fetchJobOrders() {
     salesman: jobOrder.salesman_id ? salesmenMap.get(jobOrder.salesman_id) || null : null
   }));
   
-  console.log(`Successfully enriched ${enrichedData.length} job orders with profile data`);
   return enrichedData;
 }
 
@@ -111,8 +90,6 @@ export async function fetchJobOrdersPaginated(
     search?: string;
   } = {}
 ) {
-  console.log('Fetching paginated job orders with filters:', filters);
-  
   let query = supabase
     .from('job_orders')
     .select(`
@@ -152,12 +129,7 @@ export async function fetchJobOrdersPaginated(
     .range(from, to)
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching paginated job orders:', error);
-    throw error;
-  }
-
-  console.log(`Paginated query - Total count: ${count}, Fetched: ${data?.length || 0}`);
+  if (error) throw error;
 
   // Enrich with designer and salesman data
   const enrichedData = await Promise.all((data || []).map(async (jobOrder) => {
@@ -227,7 +199,6 @@ export async function fetchJobOrdersPaginated(
 }
 
 export async function updateJobOrderStatus(id: string, status: string) {
-  console.log('Updating job order status:', id, status);
   const { data, error } = await supabase
     .from('job_orders')
     .update({ 
@@ -238,11 +209,6 @@ export async function updateJobOrderStatus(id: string, status: string) {
     .select()
     .single();
   
-  if (error) {
-    console.error('Error updating job order status:', error);
-    throw error;
-  }
-  
-  console.log('Job order status updated:', data);
+  if (error) throw error;
   return data;
 }

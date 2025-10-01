@@ -37,15 +37,14 @@ return `
     body { font-family: 'Helvetica', 'Arial', sans-serif; margin: 0; padding: 20px; color: #374151; line-height: 1.6; }
     .container { max-width: 800px; margin: 0 auto; background: white; }
     .letterhead { 
-      text-align: center; 
-      border-bottom: 4px solid #2563eb; 
-      padding-bottom: 15px; 
-      margin-bottom: 25px; 
+      width: 100%;
+      margin-bottom: 20px; 
     }
     .letterhead img { 
-      max-height: 120px; 
-      max-width: 130%; 
-      object-fit: contain; 
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0;
     }
     .quotation-header { 
       display: flex; 
@@ -62,10 +61,11 @@ return `
   <div class="container">
 
     <!-- Full-width Letterhead -->
-    <div class="letterhead">
+    <div class="letterhead" style="width: 100%; margin-bottom: 20px;">
       <img 
         src="${logoUrl}" 
-        alt="${branchConfig?.name} Logo" 
+        alt="${branchConfig?.name} Letterhead" 
+        style="width: 100%; height: auto; display: block; margin: 0;"
         onerror="this.style.display='none'" 
       />
     </div>
@@ -77,13 +77,13 @@ return `
         <h1 style="color: #2563eb; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;">
           Customer Details
         </h1>
-      <div style="display: flex; justify-content: space-between;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
               <div style="font-size: 16px;"><strong>${quotation.customer_name || 'N/A'}</strong></div>
             </div>
-            <div style="text-align: right;">
-              <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px;">Salesman</h3>
-              <div style="font-size: 16px;"><strong>${quotation.salesman_name || 'N/A'}</strong></div>
+            <div>
+              <h3 style="margin: 0 0 8px 0; color: #1f2937; font-size: 18px; text-align: left;">Salesman</h3>
+              <div style="font-size: 16px; text-align: left;"><strong>${quotation.salesman_name || 'N/A'}</strong></div>
             </div>
           </div>
       </div>
@@ -142,11 +142,11 @@ return `
 
         <!-- Terms and Conditions -->
         <div style="margin-top: 40px; padding: 20px; background: #f8fafc; border-radius: 8px;">
-          <h3 style="margin: 0 0 16px 0; color: #1f2937;">Terms & Conditions</h3>
-          <ul style="margin: 0; padding-left: 20px; color: #6b7280; font-size: 14px;">
-            <li style="margin-bottom: 8px;">This quotation is valid for 30 days from the date of issue.</li>
-            <li style="margin-bottom: 8px;">Payment terms: 50% advance, 50% on completion.</li>
-            <li style="margin-bottom: 8px;">Prices are subject to change without prior notice. The Price is exclusive of VAT, Which will be added 5% in invoice</li>
+          <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px;">Terms & Conditions</h3>
+          <ul style="margin: 0; padding-left: 20px; color: #6b7280; font-size: 12px; line-height: 1.5;">
+            <li style="margin-bottom: 6px;">This quotation is valid for 30 days from the date of issue.</li>
+            <li style="margin-bottom: 6px;">Payment terms: 50% advance, 50% on completion.</li>
+            <li style="margin-bottom: 6px;">Prices are subject to change without prior notice. The Price is exclusive of VAT, Which will be added 5% in invoice</li>
           </ul>
         </div>
 

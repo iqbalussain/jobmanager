@@ -15,7 +15,6 @@ const AdminManagement = lazy(() => import("@/components/AdminManagement").then(m
 const ReportsPage = lazy(() => import("@/components/ReportsPage").then(m => ({ default: m.ReportsPage })));
 const ApprovedJobsList = lazy(() => import("@/components/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
 const UserAccessManagement = lazy(() => import("@/components/UserAccessManagement").then(m => ({ default: m.default })));
-const DeliveryRecord = lazy(() => import("@/components/DeliveryRecord").then(m => ({ default: m.DeliveryRecord })));
 const QuotationManagement = lazy(() => import("@/components/QuotationManagement").then(m => ({ default: m.QuotationManagement })));
 
 export type JobStatus =
@@ -68,7 +67,6 @@ const Index = () => {
     | "admin-management"
     | "reports"
     | "user-access"
-    | "delivery-record"
   >("dashboard");
 
   const [userRole, setUserRole] = useState<string>("employee");
@@ -90,8 +88,8 @@ const Index = () => {
           .single();
 
         if (data?.role) setUserRole(data.role);
-      } catch (error) {
-        console.error("Error fetching user role:", error);
+      } catch {
+        // Handle error silently
       }
     };
     fetchUserRole();
@@ -179,8 +177,6 @@ const Index = () => {
         return <ReportsPage />;
       case "user-access":
         return <UserAccessManagement />;
-      case "delivery-record":
-        return <DeliveryRecord />;
       default:
         return <ModernDashboard jobs={transformedJobs} onViewChange={handleViewChange} />;
     }
@@ -195,7 +191,6 @@ const Index = () => {
     | "admin-management"
     | "reports"
     | "user-access"
-    | "delivery-record"
   ) => {
     setCurrentView(view);
   };

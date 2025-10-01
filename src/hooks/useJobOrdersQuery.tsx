@@ -21,13 +21,6 @@ export function useJobOrdersQuery() {
     enabled: !!user
   });
 
-  console.log('Job orders hook state:', {
-    count: jobOrders.length,
-    isLoading,
-    error: error?.message,
-    userId: user?.id
-  });
-
   return {
     jobOrders: jobOrders || [],
     isLoading,
