@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateJobOrder } from "@/hooks/useCreateJobOrder";
@@ -13,8 +13,13 @@ import { ScheduleSection } from "./ScheduleSection";
 import { JobOrderDetailsSection } from "./JobOrderDetailsSection";
 import { FormActions } from "./FormActions";
 import { ImageUploader } from "@/components/image-upload/ImageUploader";
-import { ArrowLeft, Check, User, Briefcase, Users, Calendar, FileText } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Check, User, Briefcase, Users, Calendar, FileText, Plus, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { JobTitleDropdown } from "@/components/dropdowns/JobTitleDropdown";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 interface JobFormWithImageUploadProps {
   onCancel?: () => void;
@@ -43,6 +48,12 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
     clientName: ''
   });
 
+  const [jobItems, setJobItems] = useState<Array<{
+    job_title_id: string;
+    description: string;
+    quantity: number;
+  }>>([]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -62,9 +73,27 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
         client_name: formData.clientName
       });
 
+      // Create job order items if any
+      if (jobItems.length > 0) {
+        for (let i = 0; i < jobItems.length; i++) {
+          const item = jobItems[i];
+          if (item.job_title_id && item.description) {
+            await supabase.from('job_order_items').insert({
+              job_order_id: newJob.id,
+              job_title_id: item.job_title_id,
+              description: item.description,
+              quantity: item.quantity,
+              order_sequence: i
+            });
+          }
+        }
+      }
+
       toast({
         title: "Success",
-        description: "Job order created successfully! Now you can upload images.",
+        description: jobItems.length > 0 
+          ? `Job order created with ${jobItems.length} items! Now you can upload images.`
+          : "Job order created successfully! Now you can upload images.",
       });
 
       setCreatedJobId(newJob.id);
@@ -261,6 +290,94 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
                 onDueDateChange={(value) => setFormData(prev => ({ ...prev, dueDate: value }))}
                 onEstimatedHoursChange={(value) => setFormData(prev => ({ ...prev, estimatedHours: value }))}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Job Items Section */}
+        <Card className="border-l-4 border-l-teal-400 bg-gradient-to-r from-teal-50/50 to-teal-50/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-teal-600" />
+                <h3 className="text-lg font-semibold text-gray-800">Job Items (Optional)</h3>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setJobItems([...jobItems, { job_title_id: "", description: "", quantity: 1 }])}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              {jobItems.map((item, index) => (
+                <Card key={index} className="p-4 bg-white">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <span className="text-sm font-medium text-gray-600">Item #{index + 1}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setJobItems(jobItems.filter((_, i) => i !== index))}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div>
+                      <Label>Item Name *</Label>
+                      <JobTitleDropdown
+                        value={item.job_title_id}
+                        onValueChange={(value) => {
+                          const newItems = [...jobItems];
+                          newItems[index].job_title_id = value;
+                          setJobItems(newItems);
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Description *</Label>
+                      <Textarea
+                        value={item.description}
+                        onChange={(e) => {
+                          const newItems = [...jobItems];
+                          newItems[index].description = e.target.value;
+                          setJobItems(newItems);
+                        }}
+                        placeholder="Describe the work..."
+                        rows={2}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Quantity</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const newItems = [...jobItems];
+                          newItems[index].quantity = parseInt(e.target.value) || 1;
+                          setJobItems(newItems);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              
+              {jobItems.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  No items added yet. Click "Add Item" to get started.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

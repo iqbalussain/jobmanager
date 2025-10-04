@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { convertQuotationToJobOrderWithItems } from '@/utils/enhancedQuotationConversion';
 
 export interface Quotation {
   id: string;
@@ -142,18 +143,28 @@ export function useQuotations() {
 
   const convertToJobOrderMutation = useMutation({
     mutationFn: async (quotationId: string) => {
-      const { data, error } = await supabase
-        .rpc('convert_quotation_to_job_order', { quotation_id_param: quotationId });
+      // Get quotation and its items
+      const quotation = quotations.find(q => q.id === quotationId);
+      if (!quotation) throw new Error('Quotation not found');
 
-      if (error) throw error;
-      return data;
+      const { data: items, error: itemsError } = await supabase
+        .from('quotation_items')
+        .select('*')
+        .eq('quotation_id', quotationId)
+        .order('order_sequence');
+
+      if (itemsError) throw itemsError;
+
+      // Use enhanced conversion with items
+      const jobOrderId = await convertQuotationToJobOrderWithItems(quotation as any, items as any);
+      return jobOrderId;
     },
-    onSuccess: () => {
+    onSuccess: (_, quotationId) => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
       queryClient.invalidateQueries({ queryKey: ['job-orders'] });
       toast({
         title: "Success",
-        description: "Quotation converted to job order successfully",
+        description: "Quotation and all items converted to job order successfully",
       });
     },
     onError: (error) => {

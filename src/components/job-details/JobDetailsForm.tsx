@@ -5,6 +5,7 @@ import { CustomerTeamSection } from "./sections/CustomerTeamSection";
 import { ProjectDetailsSection } from "./sections/ProjectDetailsSection";
 import { JobOrderDetailsSection } from "./sections/JobOrderDetailsSection";
 import { ImageSection } from "./sections/ImageSection";
+import { JobOrderItemsForm } from "@/components/JobOrderItemsForm";
 
 interface JobDetailsFormProps {
   job: Job;
@@ -42,6 +43,14 @@ export function JobDetailsForm({ job, isEditMode, editData, onEditDataChange }: 
           isEditMode={isEditMode}
           editData={editData}
           onEditDataChange={onEditDataChange}
+        />
+      </div>
+
+      {/* Job Order Items Section */}
+      <div className="col-span-full">
+        <JobOrderItemsForm 
+          jobOrderId={job.id} 
+          readOnly={!isEditMode}
         />
       </div>
 

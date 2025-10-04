@@ -6,8 +6,9 @@ import { JobStatusModal } from "@/components/JobStatusModal";
 import { DashboardNotifications } from "@/components/dashboard/DashboardNotifications";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
 import { QuickSearch } from "@/components/dashboard/QuickSearch";
-import { JobOrdersList } from "@/components/dashboard/JobOrdersList";
 import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
+import { RecentQuotations } from "@/components/dashboard/RecentQuotations";
+import { QuotationConversionStats } from "@/components/dashboard/QuotationConversionStats";
 
 interface ModernDashboardProps {
   jobs: Job[];
@@ -88,7 +89,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
       </div>
 
       <div className="grid grid-cols-8 gap-4 h-[400px]">
-        <div className="col-span-2">
+        <div className="col-span-3">
           <div className="glass-effect rounded-xl p-1 h-full">
             <QuickSearch 
               searchQuery={searchQuery}
@@ -99,9 +100,15 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           </div>
         </div>
 
-        <div className="col-span-6">
+        <div className="col-span-3">
           <div className="glass-effect rounded-xl p-1 h-full">
-            <JobOrdersList jobs={jobs} onViewDetails={handleViewDetails} />
+            <RecentQuotations />
+          </div>
+        </div>
+
+        <div className="col-span-2">
+          <div className="glass-effect rounded-xl p-1 h-full">
+            <QuotationConversionStats />
           </div>
         </div>
       </div>
