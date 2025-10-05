@@ -15,16 +15,21 @@ import {
   Download,
   Upload,
   Trash2,
-  Save
+  Save,
+  Lock
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { ChangePasswordDialog } from "@/components/user-profile/ChangePasswordDialog";
+import { AdminPasswordReset } from "@/components/admin/AdminPasswordReset";
 
 export function SettingsView() {
   const [notifications, setNotifications] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
@@ -40,6 +45,22 @@ export function SettingsView() {
     if (user) {
       fetchProfile();
     }
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
+    setIsAdmin(data?.role === 'admin');
+  };
+
+  useEffect(() => {
+    checkAdminStatus();
   }, [user]);
 
   const fetchProfile = async () => {
@@ -320,14 +341,40 @@ export function SettingsView() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button variant="outline" disabled>Change Password (Coming Soon)</Button>
+              <Button 
+                variant="outline"
+                onClick={() => setPasswordDialogOpen(true)}
+              >
+                <Lock className="w-4 h-4 mr-2" />
+                Change Password
+              </Button>
               <Button variant="outline" disabled>Two-Factor Authentication (Coming Soon)</Button>
               <Button variant="outline" disabled>Login History (Coming Soon)</Button>
               <Button variant="outline" disabled>Privacy Settings (Coming Soon)</Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Admin Tools */}
+        {isAdmin && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-red-600" />
+                Admin Tools
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AdminPasswordReset />
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      <ChangePasswordDialog 
+        open={passwordDialogOpen} 
+        onOpenChange={setPasswordDialogOpen} 
+      />
     </div>
   );
 }

@@ -8,7 +8,7 @@ export const shareJobOrderViaWhatsApp = async (job: Job, invoiceNumber?: string)
   try {
     // Create a temporary div with the job order content
     const element = createStyledElement();
-    element.innerHTML = generatePDFContent(job, invoiceNumber);
+    element.innerHTML = await generatePDFContent(job, invoiceNumber);
     
     // Make the element visible but positioned off-screen
     element.style.position = 'absolute';

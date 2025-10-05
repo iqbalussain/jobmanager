@@ -12,6 +12,7 @@ export interface Profile {
   department: string | null;
   branch: string | null;
   phone: string | null;
+  is_active?: boolean;
 }
 
 const allowedRoles = ["admin", "manager", "employee", "designer", "salesman", "job_order_manager"] as const;
@@ -40,7 +41,7 @@ export function useUserManagement() {
       console.log('Fetching profiles...');
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email, role, department, branch, phone')
+        .select('id, full_name, email, role, department, branch, phone, is_active')
         .order('full_name');
       
       if (error) {

@@ -1,8 +1,26 @@
 
 import { Job } from '@/pages/Index';
 import { getPriorityColor, getStatusColor } from './pdfStyles';
+import { supabase } from '@/integrations/supabase/client';
 
-export const generatePDFContent = (job: Job, invoiceNumber?: string): string => {
+export const generatePDFContent = async (job: Job, invoiceNumber?: string): Promise<string> => {
+  // Fetch job order items with job title information
+  const { data: items } = await supabase
+    .from('job_order_items')
+    .select(`
+      id,
+      description,
+      quantity,
+      order_sequence,
+      job_title_id,
+      job_titles (
+        job_title_id
+      )
+    `)
+    .eq('job_order_id', job.id)
+    .order('order_sequence');
+
+  const hasItems = items && items.length > 0;
   const priorityColors = getPriorityColor(job.priority);
   const statusColors = getStatusColor(job.status);
 
@@ -138,6 +156,44 @@ export const generatePDFContent = (job: Job, invoiceNumber?: string): string => 
           </div>
         </div>
       </div>
+
+      ${hasItems ? `
+      <!-- Job Order Items Section -->
+      <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative;">
+        <div style="position: relative; z-index: 2;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #1e40af;">
+            <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 4px; display: flex; align-items: center; justify-content: center; border: 2px solid #3b82f6;">
+              <span style="font-size: 12px;">📦</span>
+            </div>
+            <h3 style="font-size: 14px; font-weight: 800; margin: 0; letter-spacing: 0.3px;">Job Order Items</h3>
+          </div>
+          <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 12px; border: 2px solid #bfdbfe; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+                  <th style="padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">#</th>
+                  <th style="padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">Item Name</th>
+                  <th style="padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">Description</th>
+                  <th style="padding: 10px 12px; text-align: center; font-size: 10px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">Quantity</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items.map((item, index) => `
+                  <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 10px 12px; font-size: 11px; color: #64748b; font-weight: 600;">${index + 1}</td>
+                    <td style="padding: 10px 12px; font-size: 11px; color: #1e293b; font-weight: 700;">${(item.job_titles as any)?.job_title_id || 'N/A'}</td>
+                    <td style="padding: 10px 12px; font-size: 11px; color: #475569; font-weight: 500; line-height: 1.4;">${item.description || 'No description'}</td>
+                    <td style="padding: 10px 12px; text-align: center; font-size: 11px; color: #1e293b; font-weight: 700;">
+                      <span style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 4px 10px; border-radius: 6px; border: 1px solid #3b82f6;">${item.quantity}</span>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      ` : ''}
 
       <!-- Job Order Details Section -->
       <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative;">

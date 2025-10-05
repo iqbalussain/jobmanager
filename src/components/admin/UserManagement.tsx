@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, User, Mail, Phone, Building, Shield } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, User, Mail, Phone, Building, Shield, UserX, UserCheck } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Profile } from "@/hooks/useUserManagement";
 
 interface UserManagementProps {
@@ -33,6 +38,41 @@ export function UserManagement({
   onAddUser,
   isAdding
 }: UserManagementProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [togglingStatus, setTogglingStatus] = useState<string | null>(null);
+
+  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    setTogglingStatus(userId);
+    
+    try {
+      const { error } = await supabase.functions.invoke('toggle-user-status', {
+        body: {
+          userId: userId,
+          isActive: !currentStatus
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: !currentStatus ? "User Activated" : "User Deactivated",
+        description: `User has been successfully ${!currentStatus ? 'activated' : 'deactivated'}`
+      });
+
+      // Refresh profiles
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user status",
+        variant: "destructive"
+      });
+    } finally {
+      setTogglingStatus(null);
+    }
+  };
+
   const getRoleBadgeStyle = (role: string) => {
     switch (role) {
       case "admin": return "bg-red-100 text-red-800 border-red-200";
@@ -210,6 +250,7 @@ export function UserManagement({
                     <TableHead className="font-semibold text-gray-900">Email</TableHead>
                     <TableHead className="font-semibold text-gray-900">Role</TableHead>
                     <TableHead className="font-semibold text-gray-900">Department</TableHead>
+                    <TableHead className="font-semibold text-gray-900">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -241,6 +282,33 @@ export function UserManagement({
                         <div className="flex items-center gap-2">
                           <Building className="w-4 h-4 text-gray-400" />
                           {profile.department || 'N/A'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={profile.is_active !== false}
+                            onCheckedChange={() => handleToggleUserStatus(profile.id, profile.is_active !== false)}
+                            disabled={togglingStatus === profile.id}
+                          />
+                          <Badge 
+                            variant="outline"
+                            className={profile.is_active !== false 
+                              ? "bg-green-100 text-green-800 border-green-200" 
+                              : "bg-gray-100 text-gray-800 border-gray-200"}
+                          >
+                            {profile.is_active !== false ? (
+                              <span className="flex items-center gap-1">
+                                <UserCheck className="w-3 h-3" />
+                                Active
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <UserX className="w-3 h-3" />
+                                Inactive
+                              </span>
+                            )}
+                          </Badge>
                         </div>
                       </TableCell>
                     </TableRow>

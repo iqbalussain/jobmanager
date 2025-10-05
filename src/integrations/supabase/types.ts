@@ -123,38 +123,6 @@ export type Database = {
           },
         ]
       }
-      job_order_comments: {
-        Row: {
-          comment: string
-          created_at: string
-          created_by: string
-          id: string
-          job_order_id: string
-        }
-        Insert: {
-          comment: string
-          created_at?: string
-          created_by: string
-          id?: string
-          job_order_id: string
-        }
-        Update: {
-          comment?: string
-          created_at?: string
-          created_by?: string
-          id?: string
-          job_order_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "job_order_comments_job_order_id_fkey"
-            columns: ["job_order_id"]
-            isOneToOne: false
-            referencedRelation: "job_orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       job_order_items: {
         Row: {
           created_at: string
@@ -354,6 +322,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          is_active: boolean
           phone: string | null
           role: Database["public"]["Enums"]["app_role"] | null
           updated_at: string
@@ -365,6 +334,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          is_active?: boolean
           phone?: string | null
           role?: Database["public"]["Enums"]["app_role"] | null
           updated_at?: string
@@ -376,6 +346,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          is_active?: boolean
           phone?: string | null
           role?: Database["public"]["Enums"]["app_role"] | null
           updated_at?: string

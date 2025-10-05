@@ -8,7 +8,7 @@ export const exportJobOrderToPDF = async (job: Job, invoiceNumber?: string) => {
   try {
     // Create a temporary div with the job order content
     const element = createStyledElement();
-    element.innerHTML = generatePDFContent(job, invoiceNumber);
+    element.innerHTML = await generatePDFContent(job, invoiceNumber);
 
     document.body.appendChild(element);
 
