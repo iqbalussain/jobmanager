@@ -34,15 +34,28 @@ export function useJobOrderItems(jobOrderId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('job_order_items')
-        .select(`
-          *,
-          job_titles!inner(job_title_id)
-        `)
+        .select('*')
         .eq('job_order_id', jobOrderId)
         .order('order_sequence');
 
       if (error) throw error;
-      return data as any;
+
+      // Fetch job titles separately for display
+      if (data && data.length > 0) {
+        const jobTitleIds = [...new Set(data.map(item => item.job_title_id))];
+        const { data: jobTitles } = await supabase
+          .from('job_titles')
+          .select('id, job_title_id')
+          .in('id', jobTitleIds);
+
+        // Map job titles to items
+        return data.map(item => ({
+          ...item,
+          job_titles: jobTitles?.find(jt => jt.id === item.job_title_id)
+        })) as JobOrderItem[];
+      }
+
+      return data as JobOrderItem[];
     },
     enabled: !!jobOrderId
   });

@@ -4,21 +4,27 @@ import { getPriorityColor, getStatusColor } from './pdfStyles';
 import { supabase } from '@/integrations/supabase/client';
 
 export const generatePDFContent = async (job: Job, invoiceNumber?: string): Promise<string> => {
-  // Fetch job order items with job title information
-  const { data: items } = await supabase
+  // Fetch job order items
+  const { data: itemsData } = await supabase
     .from('job_order_items')
-    .select(`
-      id,
-      description,
-      quantity,
-      order_sequence,
-      job_title_id,
-      job_titles (
-        job_title_id
-      )
-    `)
+    .select('*')
     .eq('job_order_id', job.id)
     .order('order_sequence');
+
+  // Fetch job titles separately for display
+  let items = itemsData || [];
+  if (items.length > 0) {
+    const jobTitleIds = [...new Set(items.map(item => item.job_title_id))];
+    const { data: jobTitles } = await supabase
+      .from('job_titles')
+      .select('id, job_title_id')
+      .in('id', jobTitleIds);
+
+    items = items.map(item => ({
+      ...item,
+      job_title_name: jobTitles?.find(jt => jt.id === item.job_title_id)?.job_title_id || 'N/A'
+    }));
+  }
 
   const hasItems = items && items.length > 0;
   const priorityColors = getPriorityColor(job.priority);
@@ -181,7 +187,7 @@ export const generatePDFContent = async (job: Job, invoiceNumber?: string): Prom
                 ${items.map((item, index) => `
                   <tr style="border-bottom: 1px solid #e2e8f0;">
                     <td style="padding: 10px 12px; font-size: 11px; color: #64748b; font-weight: 600;">${index + 1}</td>
-                    <td style="padding: 10px 12px; font-size: 11px; color: #1e293b; font-weight: 700;">${(item.job_titles as any)?.job_title_id || 'N/A'}</td>
+                    <td style="padding: 10px 12px; font-size: 11px; color: #1e293b; font-weight: 700;">${(item as any).job_title_name}</td>
                     <td style="padding: 10px 12px; font-size: 11px; color: #475569; font-weight: 500; line-height: 1.4;">${item.description || 'No description'}</td>
                     <td style="padding: 10px 12px; text-align: center; font-size: 11px; color: #1e293b; font-weight: 700;">
                       <span style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 4px 10px; border-radius: 6px; border: 1px solid #3b82f6;">${item.quantity}</span>

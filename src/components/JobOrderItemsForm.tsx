@@ -89,7 +89,7 @@ export function JobOrderItemsForm({ jobOrderId, readOnly = false }: JobOrderItem
                     <span className="text-sm font-medium text-muted-foreground">
                       #{index + 1}
                     </span>
-                    <span className="font-medium">{item.job_titles?.job_title_id}</span>
+                    <span className="font-medium">{item.job_titles?.job_title_id || 'Unknown Item'}</span>
                     {item.quantity > 1 && (
                       <span className="text-sm text-muted-foreground">
                         Qty: {item.quantity}
