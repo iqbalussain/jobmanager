@@ -123,6 +123,45 @@ export type Database = {
           },
         ]
       }
+      job_order_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          created_by: string
+          id: string
+          job_order_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          created_by: string
+          id?: string
+          job_order_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          job_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_order_comments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_order_comments_job_order_id_fkey"
+            columns: ["job_order_id"]
+            isOneToOne: false
+            referencedRelation: "job_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_order_items: {
         Row: {
           created_at: string
