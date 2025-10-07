@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { convertQuotationToJobOrderWithItems } from '@/utils/enhancedQuotationConversion';
 
 export interface Quotation {
   id: string;
@@ -143,35 +142,29 @@ export function useQuotations() {
 
   const convertToJobOrderMutation = useMutation({
     mutationFn: async (quotationId: string) => {
-      // Get quotation and its items
-      const quotation = quotations.find(q => q.id === quotationId);
-      if (!quotation) throw new Error('Quotation not found');
+      // Call the database function which now handles everything
+      const { data: jobOrderId, error } = await supabase
+        .rpc('convert_quotation_to_job_order', {
+          quotation_id_param: quotationId
+        });
 
-      const { data: items, error: itemsError } = await supabase
-        .from('quotation_items')
-        .select('*')
-        .eq('quotation_id', quotationId)
-        .order('order_sequence');
-
-      if (itemsError) throw itemsError;
-
-      // Use enhanced conversion with items
-      const jobOrderId = await convertQuotationToJobOrderWithItems(quotation as any, items as any);
+      if (error) throw error;
       return jobOrderId;
     },
-    onSuccess: (_, quotationId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
       queryClient.invalidateQueries({ queryKey: ['job-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['job_order_items'] });
       toast({
         title: "Success",
-        description: "Quotation and all items converted to job order successfully",
+        description: "Quotation converted to job order with all items",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error converting quotation:', error);
       toast({
-        title: "Error",
-        description: "Failed to convert quotation to job order",
+        title: "Conversion Failed",
+        description: error.message || "Failed to convert quotation to job order",
         variant: "destructive",
       });
     }
