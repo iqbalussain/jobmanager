@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { JobDetails } from "@/components/JobDetails";
 import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
+import { Job, JobStatus } from "@/types/jobOrder";
 
 // Lazy loaded components for performance
 const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
@@ -16,40 +17,6 @@ const ReportsPage = lazy(() => import("@/components/ReportsPage").then(m => ({ d
 const ApprovedJobsList = lazy(() => import("@/components/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
 const UserAccessManagement = lazy(() => import("@/components/UserAccessManagement").then(m => ({ default: m.default })));
 const QuotationManagement = lazy(() => import("@/components/QuotationManagement").then(m => ({ default: m.QuotationManagement })));
-
-export type JobStatus =
-  | "pending"
-  | "in-progress"
-  | "completed"
-  | "cancelled"
-  | "designing"
-  | "finished"
-  | "invoiced";
-
-export interface Job {
-  id: string;
-  jobOrderNumber: string;
-  title: string;
-  customer: string;
-  assignee?: string;
-  designer?: string;
-  salesman?: string;
-  priority: "low" | "medium" | "high";
-  status: JobStatus;
-  dueDate: string;
-  estimatedHours: number;
-  createdAt: string;
-  branch?: string;
-  jobOrderDetails?: string;
-  invoiceNumber?: string;
-  totalValue?: number;
-  customer_id?: string;
-  job_title_id?: string;
-  created_by?: string;
-  approval_status?: string;
-  deliveredAt?: string;
-  clientName?: string;
-}
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-64">

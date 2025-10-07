@@ -5,7 +5,7 @@ import { ImageUploader } from '@/components/image-upload/ImageUploader';
 import { JobImageGallery } from '@/components/image-upload/JobImageGallery';
 import { useAuth } from '@/hooks/useAuth';
 import { hasPermission } from '@/utils/roleValidation';
-import { Job } from '@/pages/Index';
+import { Job } from '@/types/jobOrder';
 
 interface ImageSectionProps {
   job: Job;

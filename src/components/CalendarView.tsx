@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Job } from "@/pages/Index";
+import { Job } from "@/types/jobOrder";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

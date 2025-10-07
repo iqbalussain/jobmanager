@@ -1,5 +1,5 @@
 
-import { Job } from '@/pages/Index';
+import { Job } from '@/types/jobOrder';
 import { getPriorityColor, getStatusColor } from './pdfStyles';
 import { supabase } from '@/integrations/supabase/client';
 

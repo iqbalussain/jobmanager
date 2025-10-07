@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Job } from "@/pages/Index";
+import { Job } from "@/types/jobOrder";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Clock, User } from "lucide-react";
