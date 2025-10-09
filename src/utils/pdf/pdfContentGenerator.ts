@@ -31,166 +31,161 @@ export const generatePDFContent = async (job: Job, invoiceNumber?: string): Prom
   const statusColors = getStatusColor(job.status);
 
   return `
-    <div style="max-width: 100%; font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 13px; line-height: 1.5; color: #1f2937; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; padding: 20px; box-sizing: border-box;">
-      <!-- Invoice Number at Top -->
+    <div style="max-width: 210mm; margin: 0 auto; font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 11pt; line-height: 1.6; color: #1a1a1a; background: #ffffff; padding: 0; box-sizing: border-box;">
+      
+      <!-- Company Letterhead -->
+      <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 32px 40px; margin: 0; border-bottom: 4px solid #1e40af;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h1 style="margin: 0; font-size: 28pt; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">Job Order</h1>
+            <p style="margin: 8px 0 0 0; font-size: 11pt; color: rgba(255, 255, 255, 0.9);">Professional Work Order Document</p>
+          </div>
+          <div style="text-align: right;">
+            <div style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); padding: 12px 20px; border-radius: 8px; border: 2px solid rgba(255, 255, 255, 0.3);">
+              <p style="margin: 0; font-size: 9pt; color: rgba(255, 255, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Order Number</p>
+              <p style="margin: 4px 0 0 0; font-size: 18pt; font-weight: 800; color: #ffffff;">${job.jobOrderNumber}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       ${invoiceNumber ? `
-      <div style="text-align: center; margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%); border-radius: 12px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25); border: 2px solid #3b82f6;">
-        <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); letter-spacing: 0.5px;">INVOICE #${invoiceNumber}</h2>
-        <p style="margin: 6px 0 0 0; font-size: 12px; color: rgba(255, 255, 255, 0.9); font-weight: 500;">Official Invoice Document</p>
+      <!-- Invoice Badge -->
+      <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 16px 40px; margin: 0; border-bottom: 3px solid #047857;">
+        <div style="text-align: center;">
+          <span style="display: inline-block; background: rgba(255, 255, 255, 0.2); padding: 8px 24px; border-radius: 20px; border: 2px solid rgba(255, 255, 255, 0.3);">
+            <span style="font-size: 10pt; color: rgba(255, 255, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;">Invoice Number: </span>
+            <span style="font-size: 14pt; font-weight: 800; color: #ffffff;">${invoiceNumber}</span>
+          </span>
+        </div>
       </div>
       ` : ''}
 
-      <!-- Header Banner -->
-      <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 30%, #60a5fa 70%, #93c5fd 100%); padding: 18px; border-radius: 16px; margin-bottom: 16px; color: white; box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3); border: 2px solid #3b82f6; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: -30%; right: -5%; width: 120px; height: 120px; background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
-        <div style="position: relative; z-index: 2;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
-            <div style="flex: 1;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255, 255, 255, 0.3);">
-                  <span style="font-size: 14px; font-weight: bold;">📋</span>
-                </div>
-                <h1 style="font-size: 20px; font-weight: 800; margin: 0; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); letter-spacing: 0.3px;">${job.jobOrderNumber}</h1>
-              </div>
-              <h2 style="font-size: 16px; margin: 0; opacity: 0.95; font-weight: 600; line-height: 1.3; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">${job.title}</h2>
+      <!-- Document Info Bar -->
+      <div style="padding: 24px 40px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; margin: 0;">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+          <div>
+            <p style="margin: 0; font-size: 9pt; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Status</p>
+            <div style="margin-top: 6px; display: inline-block; background: ${statusColors.bg}; color: ${statusColors.text}; padding: 6px 14px; border-radius: 16px; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 2px solid ${statusColors.border};">
+              ${job.status.replace('-', ' ')}
             </div>
-            <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end; min-width: 140px;">
-              <div style="background: ${statusColors.bg}; color: ${statusColors.text}; padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; border: 2px solid ${statusColors.border}; text-align: center; width: 100%; box-shadow: ${statusColors.shadow}; backdrop-filter: blur(10px);">
-                ${job.status.replace('-', ' ')}
-              </div>
-              <div style="background: ${priorityColors.bg}; color: ${priorityColors.text}; padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; border: 2px solid ${priorityColors.border}; text-align: center; width: 100%; box-shadow: ${priorityColors.shadow}; backdrop-filter: blur(10px);">
-                ${job.priority} PRIORITY
-              </div>
+          </div>
+          <div>
+            <p style="margin: 0; font-size: 9pt; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Priority</p>
+            <div style="margin-top: 6px; display: inline-block; background: ${priorityColors.bg}; color: ${priorityColors.text}; padding: 6px 14px; border-radius: 16px; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 2px solid ${priorityColors.border};">
+              ${job.priority}
             </div>
+          </div>
+          <div style="text-align: right;">
+            <p style="margin: 0; font-size: 9pt; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Date Issued</p>
+            <p style="margin: 6px 0 0 0; font-size: 11pt; font-weight: 700; color: #1e293b;">${new Date(job.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
           </div>
         </div>
       </div>
 
-      <!-- Main Content Grid -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+      <!-- Main Content -->
+      <div style="padding: 32px 40px;">
         
-        <!-- Customer & Team Section -->
-        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative; overflow: hidden;">
-          <div style="position: absolute; top: -20px; left: -20px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(30, 64, 175, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
-          <div style="position: relative; z-index: 2;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #1e40af;">
-              <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid #3b82f6;">
-                <span style="font-size: 12px;">👥</span>
+        <!-- Job Title Section -->
+        <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #e2e8f0;">
+          <h2 style="margin: 0 0 8px 0; font-size: 20pt; font-weight: 700; color: #1e293b; line-height: 1.3;">${job.title}</h2>
+          <p style="margin: 0; font-size: 10pt; color: #64748b;">Project Overview</p>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px;">
+          
+          <!-- Left Column: Customer & Contact -->
+          <div>
+            <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
+              <h3 style="margin: 0 0 16px 0; font-size: 11pt; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">Customer Information</h3>
+              <div style="space-y: 10px;">
+                <div style="margin-bottom: 12px;">
+                  <p style="margin: 0 0 4px 0; font-size: 8pt; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Customer Name</p>
+                  <p style="margin: 0; font-size: 11pt; font-weight: 700; color: #1e293b;">${job.customer}</p>
+                </div>
+                ${job.clientName ? `
+                <div style="margin-bottom: 12px;">
+                  <p style="margin: 0 0 4px 0; font-size: 8pt; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Client Contact</p>
+                  <p style="margin: 0; font-size: 10pt; color: #475569;">${job.clientName}</p>
+                </div>
+                ` : ''}
+                <div style="margin-bottom: 12px;">
+                  <p style="margin: 0 0 4px 0; font-size: 8pt; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Branch</p>
+                  <p style="margin: 0; font-size: 10pt; color: #475569;">${job.branch || 'Head Office'}</p>
+                </div>
+                ${job.deliveredAt ? `
+                <div>
+                  <p style="margin: 0 0 4px 0; font-size: 8pt; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Delivery Location</p>
+                  <p style="margin: 0; font-size: 10pt; color: #475569;">${job.deliveredAt}</p>
+                </div>
+                ` : ''}
               </div>
-              <h3 style="font-size: 14px; font-weight: 800; margin: 0; letter-spacing: 0.3px;">Customer & Team</h3>
             </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Customer:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="font-size: 12px; color: #1e293b; margin: 0; font-weight: 700;">${job.customer}</p>
+
+            <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+              <h3 style="margin: 0 0 16px 0; font-size: 11pt; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">Team Assignment</h3>
+              <div style="space-y: 10px;">
+                <div style="margin-bottom: 12px;">
+                  <p style="margin: 0 0 4px 0; font-size: 8pt; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Assignee</p>
+                  <p style="margin: 0; font-size: 10pt; color: #475569;">${job.assignee || 'Not assigned'}</p>
+                </div>
+                <div style="margin-bottom: 12px;">
+                  <p style="margin: 0 0 4px 0; font-size: 8pt; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Designer</p>
+                  <p style="margin: 0; font-size: 10pt; color: #475569;">${job.designer || 'Not assigned'}</p>
+                </div>
+                <div>
+                  <p style="margin: 0 0 4px 0; font-size: 8pt; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Salesman</p>
+                  <p style="margin: 0; font-size: 10pt; color: #475569;">${job.salesman || 'Not assigned'}</p>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Assignee:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.assignee || 'Unassigned'}</p>
+          <!-- Right Column: Timeline & Details -->
+          <div>
+            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 20px;">
+              <h3 style="margin: 0 0 16px 0; font-size: 11pt; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">Timeline</h3>
+              <div style="space-y: 10px;">
+                <div style="margin-bottom: 12px;">
+                  <p style="margin: 0 0 4px 0; font-size: 8pt; font-weight: 600; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px;">Created Date</p>
+                  <p style="margin: 0; font-size: 10pt; color: #78350f; font-weight: 600;">${new Date(job.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
                 </div>
-              </div>
-
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Designer:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.designer || 'Not assigned'}</p>
+                <div style="margin-bottom: 12px;">
+                  <p style="margin: 0 0 4px 0; font-size: 8pt; font-weight: 600; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px;">Due Date</p>
+                  <p style="margin: 0; font-size: 10pt; color: #78350f; font-weight: 600;">${new Date(job.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
                 </div>
-              </div>
-
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Salesman:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.salesman || 'Not assigned'}</p>
-                </div>
-              </div>
-
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Branch:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.branch || 'Head Office'}</p>
-                </div>
-              </div>
-
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Delivered At:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.deliveredAt || 'Not specified'}</p>
+                <div>
+                  <p style="margin: 0 0 4px 0; font-size: 8pt; font-weight: 600; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px;">Estimated Hours</p>
+                  <p style="margin: 0; font-size: 10pt; color: #78350f; font-weight: 600;">${job.estimatedHours} hours</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Timeline & Details Section -->
-        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative; overflow: hidden;">
-          <div style="position: absolute; top: -20px; right: -20px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(30, 64, 175, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
-          <div style="position: relative; z-index: 2;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #1e40af;">
-              <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid #3b82f6;">
-                <span style="font-size: 12px;">📅</span>
-              </div>
-              <h3 style="font-size: 14px; font-weight: 800; margin: 0; letter-spacing: 0.3px;">Timeline & Details</h3>
-            </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Created Date:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #bfdbfe; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${new Date(job.createdAt).toLocaleDateString()}</p>
-                </div>
-              </div>
-
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Due Date:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #bfdbfe; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${new Date(job.dueDate).toLocaleDateString()}</p>
-                </div>
-              </div>
-
-              <div>
-                <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Est. Hours:</label>
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #bfdbfe; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.estimatedHours} hours</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      ${hasItems ? `
-      <!-- Job Order Items Section -->
-      <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative;">
-        <div style="position: relative; z-index: 2;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #1e40af;">
-            <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 4px; display: flex; align-items: center; justify-content: center; border: 2px solid #3b82f6;">
-              <span style="font-size: 12px;">📦</span>
-            </div>
-            <h3 style="font-size: 14px; font-weight: 800; margin: 0; letter-spacing: 0.3px;">Job Order Items</h3>
-          </div>
-          <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 12px; border: 2px solid #bfdbfe; overflow: hidden;">
+        ${hasItems ? `
+        <!-- Job Order Items Section -->
+        <div style="margin-bottom: 32px;">
+          <h3 style="margin: 0 0 16px 0; font-size: 13pt; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0;">📦 Job Order Items</h3>
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
             <table style="width: 100%; border-collapse: collapse;">
               <thead>
-                <tr style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
-                  <th style="padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">#</th>
-                  <th style="padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">Item Name</th>
-                  <th style="padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">Description</th>
-                  <th style="padding: 10px 12px; text-align: center; font-size: 10px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">Quantity</th>
+                <tr style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);">
+                  <th style="padding: 14px 16px; text-align: left; font-size: 9pt; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #cbd5e1;">#</th>
+                  <th style="padding: 14px 16px; text-align: left; font-size: 9pt; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #cbd5e1;">Item Name</th>
+                  <th style="padding: 14px 16px; text-align: left; font-size: 9pt; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #cbd5e1;">Description</th>
+                  <th style="padding: 14px 16px; text-align: center; font-size: 9pt; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #cbd5e1;">Quantity</th>
                 </tr>
               </thead>
               <tbody>
                 ${items.map((item, index) => `
-                  <tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 10px 12px; font-size: 11px; color: #64748b; font-weight: 600;">${index + 1}</td>
-                    <td style="padding: 10px 12px; font-size: 11px; color: #1e293b; font-weight: 700;">${(item as any).job_title_name}</td>
-                    <td style="padding: 10px 12px; font-size: 11px; color: #475569; font-weight: 500; line-height: 1.4;">${item.description || 'No description'}</td>
-                    <td style="padding: 10px 12px; text-align: center; font-size: 11px; color: #1e293b; font-weight: 700;">
-                      <span style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 4px 10px; border-radius: 6px; border: 1px solid #3b82f6;">${item.quantity}</span>
+                  <tr style="border-bottom: 1px solid #f1f5f9; ${index % 2 === 0 ? 'background: #ffffff;' : 'background: #f8fafc;'}">
+                    <td style="padding: 14px 16px; font-size: 10pt; color: #64748b; font-weight: 600;">${index + 1}</td>
+                    <td style="padding: 14px 16px; font-size: 10pt; color: #1e293b; font-weight: 700;">${(item as any).job_title_name}</td>
+                    <td style="padding: 14px 16px; font-size: 10pt; color: #475569; line-height: 1.5;">${item.description || 'No description'}</td>
+                    <td style="padding: 14px 16px; text-align: center;">
+                      <span style="display: inline-block; background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 12px; font-size: 10pt; font-weight: 700; border: 1px solid #93c5fd;">${item.quantity}</span>
                     </td>
                   </tr>
                 `).join('')}
@@ -198,35 +193,24 @@ export const generatePDFContent = async (job: Job, invoiceNumber?: string): Prom
             </table>
           </div>
         </div>
-      </div>
-      ` : ''}
+        ` : ''}
 
-      <!-- Job Order Details Section -->
-      <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%); border: 2px solid #bfdbfe; border-radius: 16px; padding: 16px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(191, 219, 254, 0.3); position: relative;">
-        <div style="position: absolute; bottom: -30px; right: -30px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(30, 64, 175, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
-        <div style="position: relative; z-index: 2;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #1e40af;">
-            <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 4px; display: flex; align-items: center; justify-content: center; border: 2px solid #3b82f6;">
-              <span style="font-size: 12px;">📋</span>
-            </div>
-            <h3 style="font-size: 14px; font-weight: 800; margin: 0; letter-spacing: 0.3px;">Job Order Details</h3>
-          </div>
-          <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 14px; border-radius: 12px; border: 2px solid #bfdbfe; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);">
-            <p style="color: #374151; margin: 0; white-space: pre-wrap; line-height: 1.6; font-size: 12px; text-align: justify; font-weight: 500;">
-              ${job.jobOrderDetails || 'No additional details provided.'}
-            </p>
-          </div>
+        <!-- Job Order Details Section -->
+        ${job.jobOrderDetails ? `
+        <div style="background: #f1f5f9; padding: 24px; border-radius: 8px; border-left: 4px solid #6366f1; margin-bottom: 32px;">
+          <h3 style="margin: 0 0 16px 0; font-size: 11pt; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">Additional Details</h3>
+          <p style="margin: 0; font-size: 10pt; color: #475569; line-height: 1.8; white-space: pre-wrap; text-align: justify;">
+            ${job.jobOrderDetails}
+          </p>
         </div>
+        ` : ''}
+
       </div>
 
       <!-- Footer -->
-      <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 2px solid #cbd5e1;">
-        <div style="margin-bottom: 8px;">
-          <p style="margin: 0 0 8px 0; font-size: 10px; color: #64748b; font-weight: 600;">Professional Job Order Management & Tracking</p>
-          <div style="padding-top: 8px; border-top: 2px solid #cbd5e1;">
-            <p style="margin: 0; font-size: 9px; color: #94a3b8; font-weight: 500;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-          </div>
-        </div>
+      <div style="background: #f8fafc; padding: 24px 40px; margin: 0; border-top: 1px solid #e2e8f0; text-align: center;">
+        <p style="margin: 0 0 8px 0; font-size: 9pt; color: #64748b; font-weight: 600;">Professional Job Order Management System</p>
+        <p style="margin: 0; font-size: 8pt; color: #94a3b8;">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
       </div>
     </div>
   `;
