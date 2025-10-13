@@ -1,4 +1,5 @@
-import { Job } from "@/types/jobOrder";
+
+import { Job } from "@/pages/Index";
 import { useDropdownData } from "@/hooks/useDropdownData";
 import { CustomerTeamSection } from "./sections/CustomerTeamSection";
 import { ProjectDetailsSection } from "./sections/ProjectDetailsSection";

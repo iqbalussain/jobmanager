@@ -6,6 +6,7 @@ import {
   UsersRound,
   BarChart3,
   CheckCircle,
+  UserCheck,
   FileText,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -32,6 +33,7 @@ interface MinimalistSidebarProps {
       | "admin"
       | "admin-management"
       | "reports"
+      | "user-access"
   ) => void;
 }
 
@@ -101,6 +103,12 @@ export function MinimalistSidebar({
       icon: UsersRound,
       view: "admin-management" as const,
       roles: ["admin", "manager"],
+    },
+    {
+      title: "User Access Control",
+      icon: UserCheck,
+      view: "user-access" as const,
+      roles: ["admin"],
     },
     {
       title: "Reports & Analytics",

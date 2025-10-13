@@ -1,4 +1,5 @@
-import { Job } from "@/types/jobOrder";
+
+import { Job } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

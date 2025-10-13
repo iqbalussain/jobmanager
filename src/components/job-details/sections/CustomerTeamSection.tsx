@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Job } from "@/types/jobOrder";
+import { Job } from "@/pages/Index";
 import { Customer } from "@/types/jobOrder";
 import { Users, MapPin } from "lucide-react";
 

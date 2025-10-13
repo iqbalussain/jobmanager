@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Job, JobStatus } from "@/types/jobOrder";
+import { Job, JobStatus } from "@/pages/Index";
 import { format } from "date-fns";
 import { Filter, Calendar as CalendarIcon, X, Pencil, Eye, RotateCcw } from "lucide-react";
 
