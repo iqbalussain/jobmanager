@@ -75,47 +75,32 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
 
       // Create job order items if any
       if (jobItems.length > 0) {
-        const validItems = jobItems.filter(item => 
-          item.job_title_id && 
-          item.job_title_id.trim() !== "" && 
-          item.description && 
-          item.description.trim() !== ""
-        );
-
-        if (validItems.length > 0) {
-          const itemsToInsert = validItems.map((item, index) => ({
+        const itemsToInsert = jobItems
+          .filter(item => item.job_title_id && item.description)
+          .map((item, index) => ({
             job_order_id: newJob.id,
             job_title_id: item.job_title_id,
-            description: item.description.trim(),
-            quantity: item.quantity || 1,
+            description: item.description,
+            quantity: item.quantity,
             order_sequence: index
           }));
 
-          const { data: insertedItems, error: itemsError } = await supabase
+        if (itemsToInsert.length > 0) {
+          const { error: itemsError } = await supabase
             .from('job_order_items')
-            .insert(itemsToInsert)
-            .select();
+            .insert(itemsToInsert);
           
           if (itemsError) {
             console.error('Error creating job order items:', itemsError);
-            throw new Error(`Failed to save job items: ${itemsError.message}`);
+            throw new Error('Failed to create job order items');
           }
-
-          console.log(`Successfully created ${insertedItems?.length || 0} job order items`);
         }
       }
 
-      const itemCount = jobItems.filter(item => 
-        item.job_title_id && 
-        item.job_title_id.trim() !== "" && 
-        item.description && 
-        item.description.trim() !== ""
-      ).length;
-
       toast({
         title: "Success",
-        description: itemCount > 0 
-          ? `Job order created with ${itemCount} item${itemCount > 1 ? 's' : ''}! Now you can upload images.`
+        description: jobItems.length > 0 
+          ? `Job order created with ${jobItems.length} items! Now you can upload images.`
           : "Job order created successfully! Now you can upload images.",
       });
 
@@ -151,7 +136,6 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
       jobOrderDetails: '',
       clientName: ''
     });
-    setJobItems([]); // Clear job items
     setCurrentStep('form');
     setCreatedJobId(null);
     
