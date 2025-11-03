@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Job } from "@/pages/Index";
+import { Job } from "@/types/jobOrder";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";

@@ -76,7 +76,7 @@ export async function fetchJobOrders() {
   return enrichedData;
 }
 
-// New function for paginated admin queries with server-side filtering
+// Optimized function for paginated admin queries with proper server-side filtering
 export async function fetchJobOrdersPaginated(
   page: number = 1,
   pageSize: number = 50,
@@ -90,6 +90,28 @@ export async function fetchJobOrdersPaginated(
     search?: string;
   } = {}
 ) {
+  // First, get IDs for salesman and customer filters if provided
+  let salesmanId: string | null = null;
+  let customerId: string | null = null;
+
+  if (filters.salesman && filters.salesman !== 'all') {
+    const { data: salesmanData } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('full_name', filters.salesman)
+      .single();
+    salesmanId = salesmanData?.id || null;
+  }
+
+  if (filters.customer && filters.customer !== 'all') {
+    const { data: customerData } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('name', filters.customer)
+      .single();
+    customerId = customerData?.id || null;
+  }
+
   let query = supabase
     .from('job_orders')
     .select(`
@@ -98,13 +120,21 @@ export async function fetchJobOrdersPaginated(
       job_title:job_titles(id, job_title_id)
     `, { count: 'exact' });
 
-  // Apply server-side filters
+  // Apply all server-side filters
   if (filters.status && filters.status !== 'all') {
     query = query.eq('status', filters.status as any);
   }
   
   if (filters.branch && filters.branch !== 'all') {
-    query = query.ilike('branch', `%${filters.branch}%`);
+    query = query.eq('branch', filters.branch);
+  }
+
+  if (salesmanId) {
+    query = query.eq('salesman_id', salesmanId);
+  }
+
+  if (customerId) {
+    query = query.eq('customer_id', customerId);
   }
   
   if (filters.dateFrom) {
@@ -115,7 +145,7 @@ export async function fetchJobOrdersPaginated(
     query = query.lte('created_at', filters.dateTo);
   }
 
-  // Add search functionality for job details, job order number, and client name
+  // Add search functionality
   if (filters.search && filters.search.trim() !== '') {
     const searchTerm = filters.search.trim();
     query = query.or(`job_order_number.ilike.%${searchTerm}%,job_order_details.ilike.%${searchTerm}%,client_name.ilike.%${searchTerm}%,assignee.ilike.%${searchTerm}%`);
@@ -131,68 +161,49 @@ export async function fetchJobOrdersPaginated(
 
   if (error) throw error;
 
-  // Enrich with designer and salesman data
-  const enrichedData = await Promise.all((data || []).map(async (jobOrder) => {
-    let designer = null;
-    let salesman = null;
-    
-    if (jobOrder.designer_id) {
-      const { data: designerData } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone')
-        .eq('id', jobOrder.designer_id)
-        .single();
-      
-      if (designerData) {
-        designer = {
-          id: designerData.id,
-          name: designerData.full_name || 'Unknown Designer',
-          phone: designerData.phone
-        };
-      }
-    }
-    
-    if (jobOrder.salesman_id) {
-      const { data: salesmanData } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, phone')
-        .eq('id', jobOrder.salesman_id)
-        .single();
-      
-      if (salesmanData) {
-        salesman = {
-          id: salesmanData.id,
-          name: salesmanData.full_name || 'Unknown Salesman',
-          email: salesmanData.email,
-          phone: salesmanData.phone
-        };
-      }
-    }
-    
-    return {
-      ...jobOrder,
-      designer,
-      salesman
-    };
+  // Batch enrich with designer and salesman data
+  const designerIds = [...new Set((data || []).map(job => job.designer_id).filter(Boolean))];
+  const salesmanIds = [...new Set((data || []).map(job => job.salesman_id).filter(Boolean))];
+
+  const [designersData, salesmenData] = await Promise.all([
+    designerIds.length > 0 
+      ? supabase.from('profiles').select('id, full_name, phone').in('id', designerIds)
+      : Promise.resolve({ data: [] }),
+    salesmanIds.length > 0
+      ? supabase.from('profiles').select('id, full_name, email, phone').in('id', salesmanIds)
+      : Promise.resolve({ data: [] })
+  ]);
+
+  // Create maps for quick lookup
+  const designersMap = new Map();
+  const salesmenMap = new Map();
+  
+  (designersData.data || []).forEach(designer => {
+    designersMap.set(designer.id, {
+      id: designer.id,
+      name: designer.full_name || 'Unknown Designer',
+      phone: designer.phone
+    });
+  });
+  
+  (salesmenData.data || []).forEach(salesman => {
+    salesmenMap.set(salesman.id, {
+      id: salesman.id,
+      name: salesman.full_name || 'Unknown Salesman',
+      email: salesman.email,
+      phone: salesman.phone
+    });
+  });
+
+  // Enrich data with maps
+  const enrichedData = (data || []).map(jobOrder => ({
+    ...jobOrder,
+    designer: jobOrder.designer_id ? designersMap.get(jobOrder.designer_id) || null : null,
+    salesman: jobOrder.salesman_id ? salesmenMap.get(jobOrder.salesman_id) || null : null
   }));
 
-  // Apply remaining filters that need enriched data
-  let filteredData = enrichedData;
-  
-  if (filters.salesman && filters.salesman !== 'all') {
-    filteredData = filteredData.filter(job => 
-      job.salesman?.name === filters.salesman
-    );
-  }
-  
-  if (filters.customer && filters.customer !== 'all') {
-    filteredData = filteredData.filter(job => 
-      job.customer?.name === filters.customer
-    );
-  }
-
   return {
-    data: filteredData,
+    data: enrichedData,
     totalCount: count || 0,
     totalPages: Math.ceil((count || 0) / pageSize)
   };

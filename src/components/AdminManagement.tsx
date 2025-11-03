@@ -18,7 +18,7 @@ import { UserManagement } from "@/components/admin/UserManagement";
 import { AdvancedUserPermissions } from "@/components/admin/AdvancedUserPermissions";
 import { CommunicationsManagement } from "@/components/CommunicationsManagement";
 
-export function AdminManagement() {
+function AdminManagement() {
   const customerHook = useCustomerManagement();
   const jobTitleHook = useJobTitleManagement();
   const userHook = useUserManagement();
@@ -189,3 +189,5 @@ export function AdminManagement() {
     </div>
   );
 }
+
+export default AdminManagement;

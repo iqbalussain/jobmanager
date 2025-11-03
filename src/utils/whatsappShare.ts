@@ -1,6 +1,6 @@
 
 import html2canvas from 'html2canvas';
-import { Job } from '@/pages/Index';
+import { Job } from '@/types/jobOrder';
 import { createStyledElement } from './pdf/pdfStyles';
 import { generatePDFContent } from './pdf/pdfContentGenerator';
 

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Job, JobStatus } from "@/pages/Index";
+import { Job, JobStatus } from "@/types/jobOrder";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
