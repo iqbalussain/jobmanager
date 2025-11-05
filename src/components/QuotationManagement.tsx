@@ -5,11 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Eye, FileText, ArrowRight, Search, Image, Edit } from 'lucide-react';
+import { Plus, Eye, FileText, ArrowRight, Search, Image } from 'lucide-react';
 import { useQuotations, type Quotation } from '@/hooks/useQuotations';
 import { CreateQuotationDialog } from './CreateQuotationDialog';
 import { QuotationDetails } from './QuotationDetails';
-import { EditQuotationDialog } from './EditQuotationDialog';
 import { BranchLogoUploader } from './BranchLogoUploader';
 import { format } from 'date-fns';
 
@@ -18,7 +17,6 @@ export function QuotationManagement() {
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [showLogoUploader, setShowLogoUploader] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -48,11 +46,6 @@ export function QuotationManagement() {
   const handleViewDetails = (quotation: Quotation) => {
     setSelectedQuotation(quotation);
     setIsDetailsOpen(true);
-  };
-
-  const handleEditQuotation = (quotation: Quotation) => {
-    setSelectedQuotation(quotation);
-    setIsEditDialogOpen(true);
   };
 
   const handleConvertToJobOrder = async (quotationId: string) => {
@@ -167,27 +160,16 @@ export function QuotationManagement() {
                           View
                         </Button>
                         {!quotation.converted_to_job_order_id && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditQuotation(quotation)}
-                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                            >
-                              <Edit className="w-4 h-4 mr-1" />
-                              Edit
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleConvertToJobOrder(quotation.id)}
-                              disabled={convertToJobOrderMutation.isPending}
-                              className="text-green-600 border-green-200 hover:bg-green-50"
-                            >
-                              <ArrowRight className="w-4 h-4 mr-1" />
-                              Convert
-                            </Button>
-                          </>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleConvertToJobOrder(quotation.id)}
+                            disabled={convertToJobOrderMutation.isPending}
+                            className="text-green-600 border-green-200 hover:bg-green-50"
+                          >
+                            <ArrowRight className="w-4 h-4 mr-1" />
+                            Convert
+                          </Button>
                         )}
                         {quotation.converted_to_job_order_id && (
                           <Badge variant="secondary" className="text-xs">
@@ -223,24 +205,14 @@ export function QuotationManagement() {
       />
 
       {selectedQuotation && (
-        <>
-          <QuotationDetails
-            isOpen={isDetailsOpen}
-            onClose={() => {
-              setIsDetailsOpen(false);
-              setSelectedQuotation(null);
-            }}
-            quotation={selectedQuotation}
-          />
-          <EditQuotationDialog
-            isOpen={isEditDialogOpen}
-            onClose={() => {
-              setIsEditDialogOpen(false);
-              setSelectedQuotation(null);
-            }}
-            quotation={selectedQuotation}
-          />
-        </>
+        <QuotationDetails
+          isOpen={isDetailsOpen}
+          onClose={() => {
+            setIsDetailsOpen(false);
+            setSelectedQuotation(null);
+          }}
+          quotation={selectedQuotation}
+        />
       )}
     </div>
   );

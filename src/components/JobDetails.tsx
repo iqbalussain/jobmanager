@@ -1,4 +1,5 @@
-import { Job } from "@/types/jobOrder";
+
+import { Job } from "@/pages/Index";
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { JobDetailsHeader } from "./job-details/JobDetailsHeader";
 import { JobDetailsForm } from "./job-details/JobDetailsForm";

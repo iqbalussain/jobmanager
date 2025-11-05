@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
-import { Job } from "@/types/jobOrder";
+import { Job } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

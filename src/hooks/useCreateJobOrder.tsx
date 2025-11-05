@@ -44,33 +44,24 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
   const prefix = branchPrefixes[branch] || 'HO';
   const startNumber = branchStartNumbers[prefix] || 10001;
 
-  // Use ORDER BY with numeric extraction for more reliable ordering
-  const { data: latestOrder, error } = await supabase
-    .from('job_orders')
-    .select('job_order_number')
-    .like('job_order_number', `${prefix}%`)
-    .order('created_at', { ascending: false })
-    .limit(10); // Get last 10 to handle any ordering issues
+    const { data: latestOrder, error } = await supabase
+      .from('job_orders')
+      .select('job_order_number')
+      .like('job_order_number', `${prefix}%`)
+      .order('job_order_number', { ascending: false })
+      .limit(1);
 
-  if (error) {
-    console.error('Error fetching latest job order:', error);
-    throw error;
-  }
+    if (error) {
+      console.error('Error fetching latest job order:', error);
+      throw error;
+    }
 
-  let nextNumber = startNumber;
+ let nextNumber = startNumber;
 
   if (latestOrder && latestOrder.length > 0) {
-    // Extract all numbers and find the max
-    const numbers = latestOrder
-      .map(order => {
-        const match = order.job_order_number.match(/\d+$/);
-        return match ? parseInt(match[0], 10) : 0;
-      })
-      .filter(num => num >= startNumber);
-    
-    if (numbers.length > 0) {
-      nextNumber = Math.max(...numbers) + 1;
-    }
+    const match = latestOrder[0].job_order_number.match(/\d+$/);
+    const lastNumber = match ? parseInt(match[0], 10) : startNumber - 1;
+    nextNumber = Math.max(lastNumber + 1, startNumber);
   }
 
   return `${prefix}${nextNumber}`;

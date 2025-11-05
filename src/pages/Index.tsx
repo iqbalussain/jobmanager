@@ -1,21 +1,55 @@
 
-import { useState, lazy, Suspense, useEffect, useMemo } from "react";
+import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useJobOrders } from "@/hooks/useJobOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Job, JobStatus } from "@/types/jobOrder";
+import { JobDetails } from "@/components/JobDetails";
+import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 
 // Lazy loaded components for performance
 const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
 const SettingsView = lazy(() => import("@/components/SettingsView").then(m => ({ default: m.SettingsView })));
 const AdminJobManagement = lazy(() => import("@/components/AdminJobManagement").then(m => ({ default: m.AdminJobManagement })));
-const AdminManagement = lazy(() => import("@/components/AdminManagement"));
+const AdminManagement = lazy(() => import("@/components/AdminManagement").then(m => ({ default: m.AdminManagement })));
 const ReportsPage = lazy(() => import("@/components/ReportsPage").then(m => ({ default: m.ReportsPage })));
 const ApprovedJobsList = lazy(() => import("@/components/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
+const UserAccessManagement = lazy(() => import("@/components/UserAccessManagement").then(m => ({ default: m.default })));
 const QuotationManagement = lazy(() => import("@/components/QuotationManagement").then(m => ({ default: m.QuotationManagement })));
-const JobDetails = lazy(() => import("@/components/JobDetails").then(m => ({ default: m.JobDetails })));
-const CreateJobOrderDialog = lazy(() => import("@/components/CreateJobOrderDialog").then(m => ({ default: m.CreateJobOrderDialog })));
+
+export type JobStatus =
+  | "pending"
+  | "in-progress"
+  | "completed"
+  | "cancelled"
+  | "designing"
+  | "finished"
+  | "invoiced";
+
+export interface Job {
+  id: string;
+  jobOrderNumber: string;
+  title: string;
+  customer: string;
+  assignee?: string;
+  designer?: string;
+  salesman?: string;
+  priority: "low" | "medium" | "high";
+  status: JobStatus;
+  dueDate: string;
+  estimatedHours: number;
+  createdAt: string;
+  branch?: string;
+  jobOrderDetails?: string;
+  invoiceNumber?: string;
+  totalValue?: number;
+  customer_id?: string;
+  job_title_id?: string;
+  created_by?: string;
+  approval_status?: string;
+  deliveredAt?: string;
+  clientName?: string;
+}
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-64">
@@ -32,6 +66,7 @@ const Index = () => {
     | "admin"
     | "admin-management"
     | "reports"
+    | "user-access"
   >("dashboard");
 
   const [userRole, setUserRole] = useState<string>("employee");
@@ -60,32 +95,28 @@ const Index = () => {
     fetchUserRole();
   }, [user]);
 
-  // Memoize transformed jobs for performance
-  const transformedJobs: Job[] = useMemo(() => 
-    jobOrders.map((order) => ({
-      id: order.id,
-      jobOrderNumber: order.job_order_number,
-      title: order.title || order.job_order_details || `Job Order ${order.job_order_number}`,
-      customer: order.customer?.name || "Unknown Customer",
-      assignee: order.assignee || "Unassigned",
-      priority: order.priority as Job["priority"],
-      status: order.status as JobStatus,
-      dueDate: order.due_date || new Date().toISOString().split("T")[0],
-      createdAt: order.created_at.split("T")[0],
-      estimatedHours: order.estimated_hours || 0,
-      branch: order.branch || "",
-      designer: order.designer?.name || "Unassigned",
-      salesman: order.salesman?.name || "Unassigned",
-      jobOrderDetails: order.job_order_details || "",
-      totalValue: order.total_value || 0,
-      created_by: order.created_by,
-      invoiceNumber: order.invoice_number || "",
-      approval_status: order.approval_status,
-      deliveredAt: order.delivered_at || "",
-      clientName: order.client_name || "",
-    })),
-    [jobOrders]
-  );
+  const transformedJobs: Job[] = jobOrders.map((order) => ({
+    id: order.id,
+    jobOrderNumber: order.job_order_number,
+    title: order.title || order.job_order_details || `Job Order ${order.job_order_number}`,
+    customer: order.customer?.name || "Unknown Customer",
+    assignee: order.assignee || "Unassigned",
+    priority: order.priority as Job["priority"],
+    status: order.status as JobStatus,
+    dueDate: order.due_date || new Date().toISOString().split("T")[0],
+    createdAt: order.created_at.split("T")[0],
+    estimatedHours: order.estimated_hours || 0,
+    branch: order.branch || "",
+    designer: order.designer?.name || "Unassigned",
+    salesman: order.salesman?.name || "Unassigned",
+    jobOrderDetails: order.job_order_details || "",
+    totalValue: order.total_value || 0,
+    created_by: order.created_by,
+    invoiceNumber: order.invoice_number || "",
+    approval_status: order.approval_status,
+    deliveredAt: order.delivered_at || "",
+    clientName: order.client_name || "",
+  }));
 
   const handleStatusUpdate = (jobId: string, status: JobStatus) => {
     updateStatus({ id: jobId, status });
@@ -144,6 +175,8 @@ const Index = () => {
         return <AdminManagement />;
       case "reports":
         return <ReportsPage />;
+      case "user-access":
+        return <UserAccessManagement />;
       default:
         return <ModernDashboard jobs={transformedJobs} onViewChange={handleViewChange} />;
     }
@@ -157,6 +190,7 @@ const Index = () => {
     | "admin"
     | "admin-management"
     | "reports"
+    | "user-access"
   ) => {
     setCurrentView(view);
   };
@@ -173,27 +207,19 @@ const Index = () => {
         </Suspense>
       </div>
 
-      {/* Job Details Modal - Lazy Loaded */}
-      {isJobDetailsOpen && (
-        <Suspense fallback={null}>
-          <JobDetails
-            isOpen={isJobDetailsOpen}
-            onClose={() => setIsJobDetailsOpen(false)}
-            job={selectedJob}
-            onJobUpdated={handleJobDataUpdate}
-          />
-        </Suspense>
-      )}
+      {/* Job Details Modal */}
+      <JobDetails
+        isOpen={isJobDetailsOpen}
+        onClose={() => setIsJobDetailsOpen(false)}
+        job={selectedJob}
+        onJobUpdated={handleJobDataUpdate}
+      />
 
-      {/* Create Job Order Dialog - Lazy Loaded */}
-      {isCreateJobOpen && (
-        <Suspense fallback={null}>
-          <CreateJobOrderDialog
-            open={isCreateJobOpen}
-            onOpenChange={setIsCreateJobOpen}
-          />
-        </Suspense>
-      )}
+      {/* Create Job Order Dialog */}
+      <CreateJobOrderDialog
+        open={isCreateJobOpen}
+        onOpenChange={setIsCreateJobOpen}
+      />
     </div>
   );
 };

@@ -66,30 +66,24 @@ export function QuotationDetails({ isOpen, onClose, quotation }: QuotationDetail
       return;
     }
 
-    if (!items || items.length === 0) {
-      toast({
-        title: "Cannot Convert",
-        description: "Quotation must have at least one item to convert",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsConverting(true);
     try {
-      const jobOrderId = await convertToJobOrderMutation.mutateAsync(quotation.id);
+      // Import and use the enhanced conversion function
+      const { convertQuotationToJobOrderWithItems } = await import('@/utils/enhancedQuotationConversion');
+      await convertQuotationToJobOrderWithItems(quotation, items);
       
       toast({
-        title: "Quotation Converted",
-        description: `Successfully converted to job order with ${items.length} item(s)`,
+        title: "Quotation converted",
+        description: "Successfully converted quotation to job order with all items"
       });
       
+      // Refresh the quotation data to show updated status
       onClose();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error converting quotation:', error);
       toast({
-        title: "Conversion Failed",
-        description: error.message || "Failed to convert quotation to job order",
+        title: "Error",
+        description: "Failed to convert quotation to job order",
         variant: "destructive",
       });
     } finally {

@@ -75,24 +75,16 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
 
       // Create job order items if any
       if (jobItems.length > 0) {
-        const itemsToInsert = jobItems
-          .filter(item => item.job_title_id && item.description)
-          .map((item, index) => ({
-            job_order_id: newJob.id,
-            job_title_id: item.job_title_id,
-            description: item.description,
-            quantity: item.quantity,
-            order_sequence: index
-          }));
-
-        if (itemsToInsert.length > 0) {
-          const { error: itemsError } = await supabase
-            .from('job_order_items')
-            .insert(itemsToInsert);
-          
-          if (itemsError) {
-            console.error('Error creating job order items:', itemsError);
-            throw new Error('Failed to create job order items');
+        for (let i = 0; i < jobItems.length; i++) {
+          const item = jobItems[i];
+          if (item.job_title_id && item.description) {
+            await supabase.from('job_order_items').insert({
+              job_order_id: newJob.id,
+              job_title_id: item.job_title_id,
+              description: item.description,
+              quantity: item.quantity,
+              order_sequence: i
+            });
           }
         }
       }

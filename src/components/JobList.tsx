@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Job } from "@/types/jobOrder";
+import { Job } from "@/pages/Index";
 import { Card, CardContent } from "@/components/ui/card";
 import { JobDetails } from "@/components/JobDetails";
 import { JobListHeader } from "@/components/job-list/JobListHeader";

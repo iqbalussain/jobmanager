@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Job } from "@/types/jobOrder";
+import { Job } from "@/pages/Index";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { JobDetails } from "@/components/JobDetails";

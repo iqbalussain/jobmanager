@@ -48,15 +48,7 @@ serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Log the email attempt
-    const logData: {
-      recipient_email: string;
-      subject: string;
-      content: string;
-      email_type: string;
-      sent_at: string;
-      status: string;
-      error_message?: string;
-    } = {
+    const logData = {
       recipient_email: recipientEmail || 'unknown',
       subject: `New Job Order Approval Required - ${jobOrderNumber}`,
       content: `Job Order: ${jobOrderNumber}, Customer: ${customerName}, Priority: ${priority}`,
@@ -106,7 +98,7 @@ serve(async (req: Request) => {
           console.log("Email notification sent successfully");
         } catch (emailError) {
           logData.status = 'failed';
-          logData.error_message = emailError instanceof Error ? emailError.message : String(emailError);
+          logData.error_message = emailError.message;
           console.error("Email sending failed:", emailError);
         }
 
@@ -114,7 +106,7 @@ serve(async (req: Request) => {
         try {
           await supabase.from('email_logs').insert(logData);
         } catch (dbError) {
-          console.log("Database logging skipped (table may not exist):", dbError instanceof Error ? dbError.message : String(dbError));
+          console.log("Database logging skipped (table may not exist):", dbError.message);
         }
       }
     }
