@@ -427,6 +427,7 @@ export type Database = {
       }
       quotations: {
         Row: {
+          content: Json | null
           converted_to_job_order_id: string | null
           created_at: string
           created_by: string
@@ -440,6 +441,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          content?: Json | null
           converted_to_job_order_id?: string | null
           created_at?: string
           created_by: string
@@ -453,6 +455,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          content?: Json | null
           converted_to_job_order_id?: string | null
           created_at?: string
           created_by?: string
@@ -497,16 +500,10 @@ export type Database = {
         Args: { quotation_id_param: string }
         Returns: string
       }
-      generate_job_order_number: {
-        Args: { branch: string }
-        Returns: string
-      }
-      generate_quotation_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_job_order_number: { Args: { branch: string }; Returns: string }
+      generate_quotation_number: { Args: never; Returns: string }
       get_current_user_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_user_role: {

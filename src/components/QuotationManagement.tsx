@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Eye, FileText, ArrowRight, Search, Image } from 'lucide-react';
 import { useQuotations, type Quotation } from '@/hooks/useQuotations';
 import { CreateQuotationDialog } from './CreateQuotationDialog';
-import { QuotationDetails } from './QuotationDetails';
+import { QuotationView } from './QuotationView';
 import { BranchLogoUploader } from './BranchLogoUploader';
 import { format } from 'date-fns';
 
@@ -205,13 +205,13 @@ export function QuotationManagement() {
       />
 
       {selectedQuotation && (
-        <QuotationDetails
+        <QuotationView
           isOpen={isDetailsOpen}
           onClose={() => {
             setIsDetailsOpen(false);
             setSelectedQuotation(null);
           }}
-          quotation={selectedQuotation}
+          quotation={selectedQuotation as any}
         />
       )}
     </div>
