@@ -4,8 +4,10 @@ import { QuotationPDF } from '@/utils/pdf/quotation';
 
 export interface QuotationContent {
   company: {
+    id?: string;
     name: string;
     logo?: string;
+    letterhead_url?: string;
     address?: string;
     phone?: string;
     email?: string;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import AsyncSelect from 'react-select/async';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,11 +13,16 @@ import { Plus, Trash2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveQuotation, type QuotationContent } from '@/services/quotations';
 import { useQueryClient } from '@tanstack/react-query';
+import { searchCompanies, getCompanyById } from '@/services/companies';
+import { searchCustomers } from '@/services/customers';
+import { searchJobTitles } from '@/services/jobTitles';
 
 const quotationSchema = z.object({
   company: z.object({
+    id: z.string().optional(),
     name: z.string().min(1, 'Company name required'),
     logo: z.string().optional(),
+    letterhead_url: z.string().optional(),
     address: z.string().optional(),
     phone: z.string().optional(),
     email: z.string().email().optional().or(z.literal('')),
@@ -75,6 +81,9 @@ export function QuotationEditor({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<{ value: string; label: string } | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<{ value: string; label: string } | null>(null);
+  const [selectedJobTitle, setSelectedJobTitle] = useState<{ value: string; label: string } | null>(null);
 
   const defaultValues: QuotationFormData = {
     company: {
@@ -141,6 +150,77 @@ export function QuotationEditor({
     });
   };
 
+  // AsyncSelect load options with debounce
+  const loadCompanies = (inputValue: string, callback: (options: any[]) => void) => {
+    if (inputValue.length < 2) {
+      callback([]);
+      return;
+    }
+    setTimeout(async () => {
+      const results = await searchCompanies(inputValue);
+      callback(results.map(c => ({ value: c.id, label: c.name })));
+    }, 300);
+  };
+
+  const loadCustomers = (inputValue: string, callback: (options: any[]) => void) => {
+    if (inputValue.length < 2) {
+      callback([]);
+      return;
+    }
+    setTimeout(async () => {
+      const results = await searchCustomers(inputValue);
+      callback(results.map(c => ({ value: c.id, label: c.name })));
+    }, 300);
+  };
+
+  const loadJobTitles = (inputValue: string, callback: (options: any[]) => void) => {
+    if (inputValue.length < 2) {
+      callback([]);
+      return;
+    }
+    setTimeout(async () => {
+      const results = await searchJobTitles(inputValue);
+      callback(results.map(jt => ({ value: jt.id, label: jt.job_title_id })));
+    }, 300);
+  };
+
+  const handleCompanySelect = async (option: { value: string; label: string } | null) => {
+    if (!option) return;
+    
+    setSelectedCompany(option);
+    const company = await getCompanyById(option.value);
+    if (company) {
+      form.setValue('company.id', company.id);
+      form.setValue('company.name', company.name);
+      form.setValue('company.letterhead_url', company.letterhead_url || '');
+      form.setValue('company.logo', company.letterhead_url || '');
+      form.setValue('company.address', company.address || '');
+      form.setValue('company.phone', company.phone || '');
+      form.setValue('company.email', company.email || '');
+    }
+  };
+
+  const customStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      borderColor: 'hsl(var(--input))',
+      backgroundColor: 'hsl(var(--background))',
+      borderRadius: '0.375rem',
+      minHeight: '2.5rem',
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: 'hsl(var(--popover))',
+      border: '1px solid hsl(var(--border))',
+      zIndex: 50,
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isFocused ? 'hsl(var(--accent))' : 'transparent',
+      color: 'hsl(var(--foreground))',
+    }),
+  };
+
   const onSubmit = async (data: QuotationFormData) => {
     setIsSaving(true);
     try {
@@ -184,50 +264,63 @@ export function QuotationEditor({
             {/* Company Info */}
             <div className="space-y-4">
               <h3 className="font-semibold text-sm">Company Information</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="company.name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="company.email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="email" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <div>
+                <Label>Company</Label>
+                <AsyncSelect
+                  styles={customStyles}
+                  value={selectedCompany}
+                  loadOptions={loadCompanies}
+                  onChange={handleCompanySelect}
+                  placeholder="Type to search company (2+ chars)..."
+                  isClearable
                 />
               </div>
+              
+              {selectedCompany && (
+                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-3 rounded">
+                  <div>
+                    <span className="text-muted-foreground">Email:</span> {form.watch('company.email')}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Phone:</span> {form.watch('company.phone')}
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Address:</span> {form.watch('company.address')}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Client Info */}
             <div className="space-y-4">
               <h3 className="font-semibold text-sm">Client Information</h3>
+              <div>
+                <Label>Customer</Label>
+                <AsyncSelect
+                  styles={customStyles}
+                  value={selectedCustomer}
+                  loadOptions={loadCustomers}
+                  onChange={(option) => {
+                    setSelectedCustomer(option);
+                    if (option) {
+                      form.setValue('client.name', option.label);
+                    }
+                  }}
+                  placeholder="Type to search customer (2+ chars)..."
+                  isClearable
+                />
+              </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="client.name"
+                  name="client.phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Client Name</FormLabel>
+                      <FormLabel>Phone</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -240,9 +333,24 @@ export function QuotationEditor({
                       <FormControl>
                         <Input {...field} type="email" />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
+                />
+              </div>
+            </div>
+
+            {/* Job Title Reference */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-sm">Job Details (Optional)</h3>
+              <div>
+                <Label>Job Title Reference</Label>
+                <AsyncSelect
+                  styles={customStyles}
+                  value={selectedJobTitle}
+                  loadOptions={loadJobTitles}
+                  onChange={setSelectedJobTitle}
+                  placeholder="Type to search job title (2+ chars)..."
+                  isClearable
                 />
               </div>
             </div>
