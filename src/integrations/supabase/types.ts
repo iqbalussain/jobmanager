@@ -77,6 +77,44 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_contacts: {
+        Row: {
+          contact_name: string
+          created_at: string | null
+          customer_id: string
+          email: string | null
+          id: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contact_name: string
+          created_at?: string | null
+          customer_id: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contact_name?: string
+          created_at?: string | null
+          customer_id?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_by: string | null
@@ -460,6 +498,8 @@ export type Database = {
       }
       quotations: {
         Row: {
+          client_contact_id: string | null
+          company_id: string | null
           content: Json | null
           converted_to_job_order_id: string | null
           created_at: string
@@ -474,6 +514,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          client_contact_id?: string | null
+          company_id?: string | null
           content?: Json | null
           converted_to_job_order_id?: string | null
           created_at?: string
@@ -488,6 +530,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          client_contact_id?: string | null
+          company_id?: string | null
           content?: Json | null
           converted_to_job_order_id?: string | null
           created_at?: string
@@ -501,7 +545,22 @@ export type Database = {
           total_amount?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quotations_client_contact_id_fkey"
+            columns: ["client_contact_id"]
+            isOneToOne: false
+            referencedRelation: "customer_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

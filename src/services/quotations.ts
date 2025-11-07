@@ -62,6 +62,8 @@ export interface QuotationPayload {
   salesman_id: string;
   content: QuotationContent;
   notes?: string;
+  company_id?: string;
+  client_name?: string;
 }
 
 export const getQuotation = async (id: string): Promise<Quotation> => {
@@ -82,7 +84,35 @@ export const saveQuotation = async (payload: QuotationPayload): Promise<Quotatio
   const user = await supabase.auth.getUser();
   if (!user.data.user) throw new Error('User not authenticated');
 
+  const CASH_CUSTOMER_ID = "00000000-0000-0000-0000-000000000001";
   const totalAmount = payload.content.taxes.total;
+  let clientContactId: string | null = null;
+
+  // Handle client contact for Cash Customer
+  if (payload.customer_id === CASH_CUSTOMER_ID && payload.client_name) {
+    const { data: existingContact } = await supabase
+      .from('customer_contacts')
+      .select('id')
+      .eq('customer_id', CASH_CUSTOMER_ID)
+      .eq('contact_name', payload.client_name)
+      .single();
+
+    if (existingContact) {
+      clientContactId = existingContact.id;
+    } else {
+      const { data: newContact, error: contactError } = await supabase
+        .from('customer_contacts')
+        .insert({
+          customer_id: CASH_CUSTOMER_ID,
+          contact_name: payload.client_name,
+        })
+        .select('id')
+        .single();
+
+      if (contactError) throw contactError;
+      clientContactId = newContact.id;
+    }
+  }
 
   if (payload.id) {
     // Update existing quotation
@@ -94,6 +124,8 @@ export const saveQuotation = async (payload: QuotationPayload): Promise<Quotatio
         content: payload.content as any,
         total_amount: totalAmount,
         notes: payload.notes,
+        company_id: payload.company_id || null,
+        client_contact_id: clientContactId,
         updated_at: new Date().toISOString(),
       })
       .eq('id', payload.id)
@@ -121,6 +153,8 @@ export const saveQuotation = async (payload: QuotationPayload): Promise<Quotatio
         content: payload.content as any,
         total_amount: totalAmount,
         notes: payload.notes,
+        company_id: payload.company_id || null,
+        client_contact_id: clientContactId,
         created_by: user.data.user.id,
       })
       .select()

@@ -222,6 +222,18 @@ export function QuotationEditor({
   };
 
   const onSubmit = async (data: QuotationFormData) => {
+    const CASH_CUSTOMER_ID = "00000000-0000-0000-0000-000000000001";
+    
+    // Validate Cash Customer client name
+    if (customerId === CASH_CUSTOMER_ID && !data.client.name?.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Client name is required for Cash Customer',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       await saveQuotation({
@@ -230,6 +242,8 @@ export function QuotationEditor({
         salesman_id: salesmanId,
         content: data as QuotationContent,
         notes: data.notes,
+        company_id: data.company.id,
+        client_name: customerId === CASH_CUSTOMER_ID ? data.client.name : undefined,
       });
 
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
@@ -310,6 +324,28 @@ export function QuotationEditor({
                   isClearable
                 />
               </div>
+              
+              <FormField
+                control={form.control}
+                name="client.name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Client Name
+                      {customerId === "00000000-0000-0000-0000-000000000001" && (
+                        <span className="text-destructive ml-1">*</span>
+                      )}
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter client name" />
+                    </FormControl>
+                    {customerId === "00000000-0000-0000-0000-000000000001" && !field.value?.trim() && (
+                      <p className="text-sm text-destructive">Required for Cash Customer</p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <div className="grid grid-cols-2 gap-4">
                 <FormField
