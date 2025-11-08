@@ -152,19 +152,29 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
     }
 
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
       // First create the quotation
       const quotation = await createQuotationMutation.mutateAsync(formData);
       
       // Then add the items
-      const { supabase } = await import('@/integrations/supabase/client');
-      
+      let totalAmount = 0;
       for (const item of validItems) {
+        const itemTotal = item.quantity * item.unit_price;
+        totalAmount += itemTotal;
+        
         await supabase.from('quotation_items').insert({
           quotation_id: quotation.id,
           ...item,
-          total_price: item.quantity * item.unit_price
+          total_price: itemTotal
         });
       }
+
+      // Update quotation with total amount
+      await supabase
+        .from('quotations')
+        .update({ total_amount: totalAmount })
+        .eq('id', quotation.id);
 
       // Reset form
       setFormData({ company_id: '', customer_id: '', salesman_id: '', notes: '' });
