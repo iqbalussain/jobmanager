@@ -13,9 +13,10 @@ import { Plus, Trash2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveQuotation, type QuotationContent } from '@/services/quotations';
 import { useQueryClient } from '@tanstack/react-query';
-import { searchCompanies, getCompanyById } from '@/services/companies';
+import { searchCompanies, getCompanyById, type Company } from '@/services/companies';
 import { searchCustomers } from '@/services/customers';
 import { searchJobTitles } from '@/services/jobTitles';
+import { InlineLogoUploader } from '@/components/quotation/InlineLogoUploader';
 
 const quotationSchema = z.object({
   company: z.object({
@@ -84,6 +85,7 @@ export function QuotationEditor({
   const [selectedCompany, setSelectedCompany] = useState<{ value: string; label: string } | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<{ value: string; label: string } | null>(null);
   const [selectedJobTitle, setSelectedJobTitle] = useState<{ value: string; label: string } | null>(null);
+  const [companyDetails, setCompanyDetails] = useState<Company | null>(null);
 
   const defaultValues: QuotationFormData = {
     company: {
@@ -185,11 +187,16 @@ export function QuotationEditor({
   };
 
   const handleCompanySelect = async (option: { value: string; label: string } | null) => {
-    if (!option) return;
+    if (!option) {
+      setSelectedCompany(null);
+      setCompanyDetails(null);
+      return;
+    }
     
     setSelectedCompany(option);
     const company = await getCompanyById(option.value);
     if (company) {
+      setCompanyDetails(company);
       form.setValue('company.id', company.id);
       form.setValue('company.name', company.name);
       form.setValue('company.letterhead_url', company.letterhead_url || '');
@@ -197,6 +204,14 @@ export function QuotationEditor({
       form.setValue('company.address', company.address || '');
       form.setValue('company.phone', company.phone || '');
       form.setValue('company.email', company.email || '');
+    }
+  };
+
+  const handleLogoUploadSuccess = async (url: string) => {
+    if (companyDetails) {
+      setCompanyDetails({ ...companyDetails, letterhead_url: url });
+      form.setValue('company.letterhead_url', url);
+      form.setValue('company.logo', url);
     }
   };
 
@@ -290,18 +305,36 @@ export function QuotationEditor({
                 />
               </div>
               
-              {selectedCompany && (
-                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-3 rounded">
-                  <div>
-                    <span className="text-muted-foreground">Email:</span> {form.watch('company.email')}
+              {selectedCompany && companyDetails && (
+                <>
+                  <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-3 rounded">
+                    {companyDetails.letterhead_url && (
+                      <div className="col-span-2">
+                        <img 
+                          src={companyDetails.letterhead_url} 
+                          alt={`${companyDetails.name} logo`}
+                          className="h-16 object-contain"
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-muted-foreground">Email:</span> {form.watch('company.email') || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Phone:</span> {form.watch('company.phone') || 'N/A'}
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-muted-foreground">Address:</span> {form.watch('company.address') || 'N/A'}
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">Phone:</span> {form.watch('company.phone')}
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-muted-foreground">Address:</span> {form.watch('company.address')}
-                  </div>
-                </div>
+                  
+                  <InlineLogoUploader
+                    companyId={companyDetails.id}
+                    companyName={companyDetails.name}
+                    currentLogoUrl={companyDetails.letterhead_url}
+                    onUploadSuccess={handleLogoUploadSuccess}
+                  />
+                </>
               )}
             </div>
 

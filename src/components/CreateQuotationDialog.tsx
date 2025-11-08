@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import AsyncSelect from 'react-select/async';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Trash2 } from 'lucide-react';
 import { useQuotations } from '@/hooks/useQuotations';
 import { useDropdownData } from '@/hooks/useDropdownData';
+import { searchCompanies, getCompanyById, type Company } from '@/services/companies';
+import { InlineLogoUploader } from '@/components/quotation/InlineLogoUploader';
 
 interface QuotationItem {
   job_title_id: string;
@@ -28,10 +31,14 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
   const { customers, salesmen, jobTitles, isLoading } = useDropdownData();
   
   const [formData, setFormData] = useState({
+    company_id: '',
     customer_id: '',
     salesman_id: '',
     notes: ''
   });
+  
+  const [selectedCompany, setSelectedCompany] = useState<{ value: string; label: string } | null>(null);
+  const [companyDetails, setCompanyDetails] = useState<Company | null>(null);
   
   const [items, setItems] = useState<QuotationItem[]>([
     {
@@ -71,14 +78,68 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
     setItems(updatedItems);
   };
 
+  const loadCompanies = (inputValue: string, callback: (options: any[]) => void) => {
+    if (inputValue.length < 2) {
+      callback([]);
+      return;
+    }
+    setTimeout(async () => {
+      const results = await searchCompanies(inputValue);
+      callback(results.map(c => ({ value: c.id, label: c.name })));
+    }, 300);
+  };
+
+  const handleCompanySelect = async (option: { value: string; label: string } | null) => {
+    if (!option) {
+      setSelectedCompany(null);
+      setCompanyDetails(null);
+      setFormData({ ...formData, company_id: '' });
+      return;
+    }
+    
+    setSelectedCompany(option);
+    const company = await getCompanyById(option.value);
+    if (company) {
+      setCompanyDetails(company);
+      setFormData({ ...formData, company_id: company.id });
+    }
+  };
+
+  const handleLogoUploadSuccess = async (url: string) => {
+    if (companyDetails) {
+      setCompanyDetails({ ...companyDetails, letterhead_url: url });
+    }
+  };
+
   const calculateTotal = () => {
     return items.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
+  };
+
+  const customStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      borderColor: 'hsl(var(--input))',
+      backgroundColor: 'hsl(var(--background))',
+      borderRadius: '0.375rem',
+      minHeight: '2.5rem',
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: 'hsl(var(--popover))',
+      border: '1px solid hsl(var(--border))',
+      zIndex: 50,
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isFocused ? 'hsl(var(--accent))' : 'transparent',
+      color: 'hsl(var(--foreground))',
+    }),
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.customer_id || !formData.salesman_id) {
+    if (!formData.company_id || !formData.customer_id || !formData.salesman_id) {
       return;
     }
 
@@ -106,7 +167,9 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
       }
 
       // Reset form
-      setFormData({ customer_id: '', salesman_id: '', notes: '' });
+      setFormData({ company_id: '', customer_id: '', salesman_id: '', notes: '' });
+      setSelectedCompany(null);
+      setCompanyDetails(null);
       setItems([{
         job_title_id: '',
         description: '',
@@ -129,7 +192,55 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
+          {/* Company Information */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-sm">Company Information</h3>
+            <div>
+              <Label>Company *</Label>
+              <AsyncSelect
+                styles={customStyles}
+                value={selectedCompany}
+                loadOptions={loadCompanies}
+                onChange={handleCompanySelect}
+                placeholder="Type to search company (2+ chars)..."
+                isClearable
+              />
+            </div>
+            
+            {companyDetails && (
+              <>
+                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-3 rounded">
+                  {companyDetails.letterhead_url && (
+                    <div className="col-span-2">
+                      <img 
+                        src={companyDetails.letterhead_url} 
+                        alt={`${companyDetails.name} logo`}
+                        className="h-16 object-contain"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-muted-foreground">Email:</span> {companyDetails.email || 'N/A'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Phone:</span> {companyDetails.phone || 'N/A'}
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Address:</span> {companyDetails.address || 'N/A'}
+                  </div>
+                </div>
+                
+                <InlineLogoUploader
+                  companyId={companyDetails.id}
+                  companyName={companyDetails.name}
+                  currentLogoUrl={companyDetails.letterhead_url}
+                  onUploadSuccess={handleLogoUploadSuccess}
+                />
+              </>
+            )}
+          </div>
+
+          {/* Customer & Salesman Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="customer">Customer *</Label>
@@ -283,7 +394,7 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
             </Button>
             <Button 
               type="submit"
-              disabled={createQuotationMutation.isPending || !formData.customer_id || !formData.salesman_id}
+              disabled={createQuotationMutation.isPending || !formData.company_id || !formData.customer_id || !formData.salesman_id}
             >
               {createQuotationMutation.isPending ? 'Creating...' : 'Create Quotation'}
             </Button>
