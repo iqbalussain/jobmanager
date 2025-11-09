@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AsyncSelect from 'react-select/async';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -28,18 +28,18 @@ interface CreateQuotationDialogProps {
 
 export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialogProps) {
   const { createQuotationMutation } = useQuotations();
-  const { customers, salesmen, jobTitles, isLoading } = useDropdownData();
-  
+  const { customers = [], salesmen = [], jobTitles = [], isLoading } = useDropdownData();
+
   const [formData, setFormData] = useState({
     company_id: '',
     customer_id: '',
     salesman_id: '',
     notes: ''
   });
-  
+
   const [selectedCompany, setSelectedCompany] = useState<{ value: string; label: string } | null>(null);
   const [companyDetails, setCompanyDetails] = useState<Company | null>(null);
-  
+
   const [items, setItems] = useState<QuotationItem[]>([
     {
       job_title_id: '',
@@ -50,58 +50,102 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
     }
   ]);
 
+  // Keep selectedCompany/companyDetails synced if formData.company_id is changed externally
+  useEffect(() => {
+    let mounted = true;
+    const init = async () => {
+      if (formData.company_id) {
+        try {
+          const company = await getCompanyById(formData.company_id);
+          if (!mounted) return;
+          if (company) {
+            setCompanyDetails(company);
+            setSelectedCompany({ value: company.id, label: company.name });
+          } else {
+            setCompanyDetails(null);
+            setSelectedCompany(null);
+          }
+        } catch (err) {
+          console.error('Error fetching company by id:', err);
+        }
+      } else {
+        setCompanyDetails(null);
+        setSelectedCompany(null);
+      }
+    };
+    init();
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.company_id]);
+
   const handleAddItem = () => {
-    setItems([
-      ...items,
+    setItems((prev) => [
+      ...prev,
       {
         job_title_id: '',
         description: '',
         quantity: 1,
         unit_price: 0,
-        order_sequence: items.length
+        order_sequence: prev.length
       }
     ]);
   };
 
   const handleRemoveItem = (index: number) => {
-    if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index));
-    }
+    setItems((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== index) : prev));
   };
 
   const handleItemChange = (index: number, field: keyof QuotationItem, value: any) => {
-    const updatedItems = [...items];
-    updatedItems[index] = {
-      ...updatedItems[index],
-      [field]: value
-    };
-    setItems(updatedItems);
+    setItems((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]:
+          field === 'quantity'
+            ? Math.max(1, Number(value) || 1)
+            : field === 'unit_price'
+            ? Number(value) || 0
+            : value
+      };
+      return updated;
+    });
   };
 
-  const loadCompanies = (inputValue: string, callback: (options: any[]) => void) => {
-    if (inputValue.length < 2) {
-      callback([]);
-      return;
-    }
-    setTimeout(async () => {
+  // react-select/async supports returning a Promise of options
+  const loadCompanies = async (inputValue: string) => {
+    if (!inputValue || inputValue.length < 2) return [];
+    try {
       const results = await searchCompanies(inputValue);
-      callback(results.map(c => ({ value: c.id, label: c.name })));
-    }, 300);
+      return results.map((c) => ({ value: c.id, label: c.name }));
+    } catch (err) {
+      console.error('Error searching companies:', err);
+      return [];
+    }
   };
 
   const handleCompanySelect = async (option: { value: string; label: string } | null) => {
     if (!option) {
       setSelectedCompany(null);
       setCompanyDetails(null);
-      setFormData({ ...formData, company_id: '' });
+      setFormData((prev) => ({ ...prev, company_id: '' }));
       return;
     }
-    
+
     setSelectedCompany(option);
-    const company = await getCompanyById(option.value);
-    if (company) {
-      setCompanyDetails(company);
-      setFormData({ ...formData, company_id: company.id });
+    setFormData((prev) => ({ ...prev, company_id: option.value }));
+
+    try {
+      const company = await getCompanyById(option.value);
+      if (company) {
+        setCompanyDetails(company);
+      } else {
+        setCompanyDetails(null);
+      }
+    } catch (err) {
+      console.error('Error fetching company details:', err);
+      setCompanyDetails(null);
     }
   };
 
@@ -112,7 +156,7 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
   };
 
   const calculateTotal = () => {
-    return items.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
+    return items.reduce((total, item) => total + item.quantity * item.unit_price, 0);
   };
 
   const customStyles = {
@@ -121,76 +165,97 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
       borderColor: 'hsl(var(--input))',
       backgroundColor: 'hsl(var(--background))',
       borderRadius: '0.375rem',
-      minHeight: '2.5rem',
+      minHeight: '2.5rem'
     }),
     menu: (provided: any) => ({
       ...provided,
       backgroundColor: 'hsl(var(--popover))',
       border: '1px solid hsl(var(--border))',
-      zIndex: 50,
+      zIndex: 50
     }),
     option: (provided: any, state: any) => ({
       ...provided,
       backgroundColor: state.isFocused ? 'hsl(var(--accent))' : 'transparent',
-      color: 'hsl(var(--foreground))',
-    }),
+      color: 'hsl(var(--foreground))'
+    })
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // client-side validation — give a hint rather than silently return
     if (!formData.company_id || !formData.customer_id || !formData.salesman_id) {
+      // You can replace with a nicer UI toast
+      alert('Please select company, customer, and salesman before creating quotation.');
       return;
     }
 
-    const validItems = items.filter(item => 
-      item.job_title_id && item.description && item.quantity > 0 && item.unit_price > 0
+    const validItems = items.filter(
+      (item) => item.job_title_id && item.description && item.quantity > 0 && item.unit_price > 0
     );
 
     if (validItems.length === 0) {
+      alert('Add at least one valid item with quantity > 0 and unit price > 0.');
       return;
     }
 
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      
-      // First create the quotation
+      // createQuotationMutation should return created quotation (id)
       const quotation = await createQuotationMutation.mutateAsync(formData);
-      
-      // Then add the items
+
+      // Defensive: if create didn't return id, try to get it or abort
+      if (!quotation || !quotation.id) {
+        throw new Error('Quotation creation failed: missing id.');
+      }
+
+      const { supabase } = await import('@/integrations/supabase/client');
+
       let totalAmount = 0;
-      for (const item of validItems) {
+      // insert items in batch to save calls if supabase supports batch insert
+      const itemsToInsert = validItems.map((item) => {
         const itemTotal = item.quantity * item.unit_price;
         totalAmount += itemTotal;
-        
-        await supabase.from('quotation_items').insert({
+        return {
           quotation_id: quotation.id,
           ...item,
           total_price: itemTotal
-        });
+        };
+      });
+
+      // batch insert
+      const { error: insertError } = await supabase.from('quotation_items').insert(itemsToInsert);
+      if (insertError) {
+        console.error('Error inserting quotation items:', insertError);
+        // optionally rollback quotation here depending on your policy
       }
 
       // Update quotation with total amount
-      await supabase
+      const { error: updateError } = await supabase
         .from('quotations')
         .update({ total_amount: totalAmount })
         .eq('id', quotation.id);
+      if (updateError) {
+        console.error('Error updating quotation total:', updateError);
+      }
 
       // Reset form
       setFormData({ company_id: '', customer_id: '', salesman_id: '', notes: '' });
       setSelectedCompany(null);
       setCompanyDetails(null);
-      setItems([{
-        job_title_id: '',
-        description: '',
-        quantity: 1,
-        unit_price: 0,
-        order_sequence: 0
-      }]);
-      
+      setItems([
+        {
+          job_title_id: '',
+          description: '',
+          quantity: 1,
+          unit_price: 0,
+          order_sequence: 0
+        }
+      ]);
+
       onClose();
     } catch (error) {
       console.error('Error creating quotation:', error);
+      alert('Failed to create quotation. Check console for details.');
     }
   };
 
@@ -200,7 +265,7 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
         <DialogHeader>
           <DialogTitle>Create New Quotation</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Company Information */}
           <div className="space-y-4">
@@ -214,16 +279,19 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
                 onChange={handleCompanySelect}
                 placeholder="Type to search company (2+ chars)..."
                 isClearable
+                cacheOptions
+                defaultOptions={false}
+                aria-label="Search company"
               />
             </div>
-            
+
             {companyDetails && (
               <>
                 <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-3 rounded">
                   {companyDetails.letterhead_url && (
                     <div className="col-span-2">
-                      <img 
-                        src={companyDetails.letterhead_url} 
+                      <img
+                        src={companyDetails.letterhead_url}
                         alt={`${companyDetails.name} logo`}
                         className="h-16 object-contain"
                       />
@@ -239,7 +307,7 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
                     <span className="text-muted-foreground">Address:</span> {companyDetails.address || 'N/A'}
                   </div>
                 </div>
-                
+
                 <InlineLogoUploader
                   companyId={companyDetails.id}
                   companyName={companyDetails.name}
@@ -257,17 +325,21 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
               <Select
                 value={formData.customer_id}
                 onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
-                disabled={isLoading}
+                disabled={isLoading || customers.length === 0}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
                 <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </SelectItem>
-                  ))}
+                  {customers.length === 0 ? (
+                    <SelectItem value="">{isLoading ? 'Loading...' : 'No customers'}</SelectItem>
+                  ) : (
+                    customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -277,17 +349,21 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
               <Select
                 value={formData.salesman_id}
                 onValueChange={(value) => setFormData({ ...formData, salesman_id: value })}
-                disabled={isLoading}
+                disabled={isLoading || salesmen.length === 0}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select salesman" />
                 </SelectTrigger>
                 <SelectContent>
-                  {salesmen.map((salesman) => (
-                    <SelectItem key={salesman.id} value={salesman.id}>
-                      {salesman.name}
-                    </SelectItem>
-                  ))}
+                  {salesmen.length === 0 ? (
+                    <SelectItem value="">{isLoading ? 'Loading...' : 'No salesmen'}</SelectItem>
+                  ) : (
+                    salesmen.map((salesman) => (
+                      <SelectItem key={salesman.id} value={salesman.id}>
+                        {salesman.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -329,11 +405,16 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
                             <SelectValue placeholder="Select job title" />
                           </SelectTrigger>
                           <SelectContent>
-                            {jobTitles.map((jobTitle) => (
-                              <SelectItem key={jobTitle.id} value={jobTitle.id}>
-                                {jobTitle.job_title_id}
-                              </SelectItem>
-                            ))}
+                            {jobTitles.length === 0 ? (
+                              <SelectItem value="">No job titles</SelectItem>
+                            ) : (
+                              jobTitles.map((jobTitle) => (
+                                <SelectItem key={jobTitle.id} value={jobTitle.id}>
+                                  {/* show readable title */}
+                                  {jobTitle.title || jobTitle.job_title_id || jobTitle.id}
+                                </SelectItem>
+                              ))
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
@@ -351,9 +432,9 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
                         <Label>Quantity *</Label>
                         <Input
                           type="number"
-                          min="1"
+                          min={1}
                           value={item.quantity}
-                          onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
+                          onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value || '1', 10))}
                         />
                       </div>
 
@@ -361,17 +442,15 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
                         <Label>Unit Price *</Label>
                         <Input
                           type="number"
-                          min="0"
+                          min={0}
                           step="0.01"
                           value={item.unit_price}
-                          onChange={(e) => handleItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                          onChange={(e) => handleItemChange(index, 'unit_price', parseFloat(e.target.value || '0'))}
                         />
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <div className="text-sm font-medium">
-                          Total: ${(item.quantity * item.unit_price).toFixed(2)}
-                        </div>
+                        <div className="text-sm font-medium">Total: ${(item.quantity * item.unit_price).toFixed(2)}</div>
                         {items.length > 1 && (
                           <Button
                             type="button"
@@ -392,9 +471,7 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
 
             {/* Total */}
             <div className="flex justify-end mt-4">
-              <div className="text-lg font-semibold">
-                Grand Total: ${calculateTotal().toFixed(2)}
-              </div>
+              <div className="text-lg font-semibold">Grand Total: ${calculateTotal().toFixed(2)}</div>
             </div>
           </div>
 
@@ -402,11 +479,16 @@ export function CreateQuotationDialog({ isOpen, onClose }: CreateQuotationDialog
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button 
+            <Button
               type="submit"
-              disabled={createQuotationMutation.isPending || !formData.company_id || !formData.customer_id || !formData.salesman_id}
+              disabled={
+                (createQuotationMutation as any)?.isPending ||
+                !formData.company_id ||
+                !formData.customer_id ||
+                !formData.salesman_id
+              }
             >
-              {createQuotationMutation.isPending ? 'Creating...' : 'Create Quotation'}
+              {(createQuotationMutation as any)?.isPending ? 'Creating...' : 'Create Quotation'}
             </Button>
           </div>
         </form>
