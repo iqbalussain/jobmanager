@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.0";
-import { Resend } from "npm:resend@2.0.0";
+// import { Resend } from "npm:resend@2.0.0"; // Commented out - add RESEND_API_KEY secret to enable
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,7 +20,7 @@ interface NotificationRequest {
   recipientPhone?: string;
 }
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// const resend = new Resend(Deno.env.get("RESEND_API_KEY")); // Commented out - add RESEND_API_KEY secret to enable
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -87,15 +87,16 @@ serve(async (req: Request) => {
             </div>
           `;
 
-          await resend.emails.send({
-            from: "Job Manager <notifications@resend.dev>",
-            to: [recipientEmail],
-            subject: logData.subject,
-            html: emailHtml,
-          });
+          // Email sending disabled - add RESEND_API_KEY secret to enable
+          // await resend.emails.send({
+          //   from: "Job Manager <notifications@resend.dev>",
+          //   to: [recipientEmail],
+          //   subject: logData.subject,
+          //   html: emailHtml,
+          // });
 
-          logData.status = 'sent';
-          console.log("Email notification sent successfully");
+          logData.status = 'disabled';
+          console.log("Email notification disabled - configure RESEND_API_KEY to enable");
         } catch (emailError) {
           logData.status = 'failed';
           logData.error_message = emailError.message;

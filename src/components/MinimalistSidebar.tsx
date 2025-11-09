@@ -7,7 +7,6 @@ import {
   BarChart3,
   CheckCircle,
   UserCheck,
-  FileText,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,6 @@ interface MinimalistSidebarProps {
     view:
       | "dashboard"
       | "approved-jobs"
-      | "quotations"
       | "settings"
       | "admin"
       | "admin-management"
@@ -81,12 +79,6 @@ export function MinimalistSidebar({
       title: "Approved Jobs",
       icon: CheckCircle,
       view: "approved-jobs" as const,
-    },
-    {
-      title: "Quotations",
-      icon: FileText,
-      view: "quotations" as const,
-      roles: ["admin", "manager", "salesman"],
     },
     { title: "Settings", icon: Settings, view: "settings" as const },
   ];

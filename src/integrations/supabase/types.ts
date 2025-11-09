@@ -77,44 +77,6 @@ export type Database = {
         }
         Relationships: []
       }
-      customer_contacts: {
-        Row: {
-          contact_name: string
-          created_at: string | null
-          customer_id: string
-          email: string | null
-          id: string
-          phone: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          contact_name: string
-          created_at?: string | null
-          customer_id: string
-          email?: string | null
-          id?: string
-          phone?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          contact_name?: string
-          created_at?: string | null
-          customer_id?: string
-          email?: string | null
-          id?: string
-          phone?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_contacts_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       customers: {
         Row: {
           created_by: string | null
@@ -137,6 +99,57 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_advances: {
+        Row: {
+          amount: number
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          description: string | null
+          employee_id: string
+          id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          description?: string | null
+          employee_id: string
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          description?: string | null
+          employee_id?: string
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_advances_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_advances_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -463,7 +476,40 @@ export type Database = {
         }
         Relationships: []
       }
-      quotation_items: {
+      quotation_items_archive: {
+        Row: {
+          description: string | null
+          id: string | null
+          job_title_id: string | null
+          order_sequence: number | null
+          quantity: number | null
+          quotation_id: string | null
+          total_price: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string | null
+          job_title_id?: string | null
+          order_sequence?: number | null
+          quantity?: number | null
+          quotation_id?: string | null
+          total_price?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          description?: string | null
+          id?: string | null
+          job_title_id?: string | null
+          order_sequence?: number | null
+          quantity?: number | null
+          quotation_id?: string | null
+          total_price?: number | null
+          unit_price?: number | null
+        }
+        Relationships: []
+      }
+      quotation_items_deprecated: {
         Row: {
           description: string
           id: string
@@ -496,7 +542,58 @@ export type Database = {
         }
         Relationships: []
       }
-      quotations: {
+      quotations_archive: {
+        Row: {
+          client_contact_id: string | null
+          company_id: string | null
+          content: Json | null
+          converted_to_job_order_id: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_id: string | null
+          id: string | null
+          notes: string | null
+          quotation_number: string | null
+          salesman_id: string | null
+          status: Database["public"]["Enums"]["quotation_status"] | null
+          total_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_contact_id?: string | null
+          company_id?: string | null
+          content?: Json | null
+          converted_to_job_order_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          id?: string | null
+          notes?: string | null
+          quotation_number?: string | null
+          salesman_id?: string | null
+          status?: Database["public"]["Enums"]["quotation_status"] | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_contact_id?: string | null
+          company_id?: string | null
+          content?: Json | null
+          converted_to_job_order_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          id?: string | null
+          notes?: string | null
+          quotation_number?: string | null
+          salesman_id?: string | null
+          status?: Database["public"]["Enums"]["quotation_status"] | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      quotations_deprecated: {
         Row: {
           client_contact_id: string | null
           company_id: string | null
@@ -546,13 +643,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "quotations_client_contact_id_fkey"
-            columns: ["client_contact_id"]
-            isOneToOne: false
-            referencedRelation: "customer_contacts"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "quotations_company_id_fkey"
             columns: ["company_id"]
