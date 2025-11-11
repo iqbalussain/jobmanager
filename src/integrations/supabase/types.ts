@@ -14,36 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      activities: {
-        Row: {
-          action: string
-          created_at: string
-          description: string
-          entity_id: string | null
-          entity_type: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          description: string
-          entity_id?: string | null
-          entity_type: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          description?: string
-          entity_id?: string | null
-          entity_type?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       companies: {
         Row: {
           address: string | null
@@ -285,6 +255,47 @@ export type Database = {
         }
         Relationships: []
       }
+      job_order_logs: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string
+          changed_fields: Json | null
+          created_at: string
+          id: string
+          job_order_id: string
+          snapshot: Json | null
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by: string
+          changed_fields?: Json | null
+          created_at?: string
+          id?: string
+          job_order_id: string
+          snapshot?: Json | null
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string
+          changed_fields?: Json | null
+          created_at?: string
+          id?: string
+          job_order_id?: string
+          snapshot?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_order_logs_job_order_id_fkey"
+            columns: ["job_order_id"]
+            isOneToOne: false
+            referencedRelation: "job_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_orders: {
         Row: {
           actual_hours: number | null
@@ -520,6 +531,13 @@ export type Database = {
       }
     }
     Enums: {
+      activity_type:
+        | "created"
+        | "edited"
+        | "status_changed"
+        | "completed"
+        | "invoice_generated"
+        | "note_added"
       app_role:
         | "admin"
         | "manager"
@@ -664,6 +682,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_type: [
+        "created",
+        "edited",
+        "status_changed",
+        "completed",
+        "invoice_generated",
+        "note_added",
+      ],
       app_role: [
         "admin",
         "manager",

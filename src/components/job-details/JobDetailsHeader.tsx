@@ -1,11 +1,12 @@
-
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, MessageCircle, History } from "lucide-react";
 import { Job } from "@/pages/Index";
-
-// Import WhatsApp icon from lucide-react
-import { MessageCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { JobEditLog } from "./JobEditLog";
 
 interface JobDetailsHeaderProps {
   job: Job;
@@ -20,10 +21,28 @@ export function JobDetailsHeader({
   job, 
   isEditMode, 
   isExporting, 
-  isSharing,
+  isSharing, 
   onExportPDF, 
   onShareWhatsApp 
 }: JobDetailsHeaderProps) {
+  const [showEditLog, setShowEditLog] = useState(false);
+  const { user } = useAuth();
+
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      return data?.role;
+    },
+    enabled: !!user?.id
+  });
+
+  const isAdmin = userRole === "admin";
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high": return "bg-red-100 text-red-800 border-red-200";
@@ -67,6 +86,17 @@ export function JobDetailsHeader({
             </div>
           </div>
           <div className="flex gap-2">
+            {isAdmin && !isEditMode && (
+              <Button
+                onClick={() => setShowEditLog(true)}
+                variant="outline"
+                size="sm"
+                className="bg-white hover:bg-gray-50"
+              >
+                <History className="w-4 h-4 mr-2" />
+                Log
+              </Button>
+            )}
             <Button
               onClick={onShareWhatsApp}
               disabled={isSharing}
@@ -88,6 +118,13 @@ export function JobDetailsHeader({
           </div>
         </div>
       </div>
+
+      <JobEditLog
+        jobOrderId={job.id}
+        jobOrderNumber={job.jobOrderNumber}
+        isOpen={showEditLog}
+        onClose={() => setShowEditLog(false)}
+      />
     </>
   );
 }
