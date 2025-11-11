@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ChangePasswordDialog } from "@/components/user-profile/ChangePasswordDialog";
 import { AdminPasswordReset } from "@/components/admin/AdminPasswordReset";
+import { DataManagement } from "@/components/settings/DataManagement";
 
 export function SettingsView() {
   const [notifications, setNotifications] = useState(true);
@@ -128,38 +129,6 @@ export function SettingsView() {
     }
   };
 
-  const handleExportData = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('job_orders')
-        .select('*')
-        .csv();
-
-      if (error) throw error;
-
-      const blob = new Blob([data], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = 'job_orders_export.csv';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-
-      toast({
-        title: "Success",
-        description: "Data exported successfully",
-      });
-    } catch (error) {
-      console.error('Error exporting data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to export data",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -307,27 +276,15 @@ export function SettingsView() {
         </Card>
 
         {/* Data Management */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="w-5 h-5" />
               Data Management
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Button variant="outline" className="w-full" onClick={handleExportData}>
-              <Download className="w-4 h-4 mr-2" />
-              Export Data
-            </Button>
-            <Button variant="outline" className="w-full" disabled>
-              <Upload className="w-4 h-4 mr-2" />
-              Import Data (Coming Soon)
-            </Button>
-            <Separator />
-            <Button variant="destructive" className="w-full" disabled>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Clear All Data (Admin Only)
-            </Button>
+          <CardContent>
+            <DataManagement />
           </CardContent>
         </Card>
 
