@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronDown, ChevronRight, Download, History } from "lucide-react";
+import { ChevronDown, ChevronRight, Download, History, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 interface JobEditLogProps {
@@ -29,6 +29,7 @@ interface LogEntry {
 
 export function JobEditLog({ jobOrderId, jobOrderNumber, isOpen, onClose }: JobEditLogProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
   const [userFilter, setUserFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -36,22 +37,55 @@ export function JobEditLog({ jobOrderId, jobOrderNumber, isOpen, onClose }: JobE
 
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ["job-order-logs", jobOrderId],
-    queryFn: async () => {
-      const { data, error } = await supabase
+    queryFn: async (): Promise<LogEntry[]> => {
+      // Step 1: Fetch logs
+      const { data: logsData, error: logsError } = await supabase
         .from("job_order_logs")
-        .select(`
-          *,
-          profiles!job_order_logs_changed_by_fkey(full_name)
-        `)
+        .select("*")
         .eq("job_order_id", jobOrderId)
         .order("changed_at", { ascending: true });
 
-      if (error) throw error;
+      if (logsError) {
+        console.error("Error fetching logs:", logsError);
+        throw logsError;
+      }
 
-      return (data || []).map((log: any) => ({
-        ...log,
-        user_name: log.profiles?.full_name || "Unknown User"
-      })) as LogEntry[];
+      if (!logsData || logsData.length === 0) {
+        return [];
+      }
+
+      // Step 2: Get unique user IDs from logs
+      const userIds = [...new Set(logsData.map(log => log.changed_by))];
+
+      // Step 3: Fetch user profiles separately
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        // Continue without user names if profiles fetch fails
+      }
+
+      // Step 4: Create a map of user_id to full_name
+      const userNamesMap = new Map();
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          userNamesMap.set(profile.id, profile.full_name);
+        });
+      }
+
+      // Step 5: Combine logs with user names
+      return logsData.map(log => ({
+        id: log.id,
+        changed_at: log.changed_at,
+        changed_by: log.changed_by,
+        action: log.action,
+        changed_fields: log.changed_fields as Record<string, { old: string; new: string }> | null,
+        snapshot: log.snapshot,
+        user_name: userNamesMap.get(log.changed_by) || "Unknown User"
+      }));
     },
     enabled: isOpen
   });
@@ -118,6 +152,54 @@ export function JobEditLog({ jobOrderId, jobOrderNumber, isOpen, onClose }: JobE
       .split("_")
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
+  };
+
+  const handleRevert = async (log: LogEntry) => {
+    if (!log.snapshot) {
+      toast({
+        title: "Error",
+        description: "No snapshot available for this entry",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Revert job order to state from ${format(new Date(log.changed_at), "MMM dd, yyyy HH:mm")}?\n\nThis will overwrite current data with the selected snapshot.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      // Remove metadata fields that shouldn't be reverted
+      const { id, created_at, updated_at, ...revertData } = log.snapshot;
+
+      // Update job order with snapshot data
+      const { error } = await supabase
+        .from("job_orders")
+        .update(revertData)
+        .eq("id", jobOrderId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Reverted Successfully",
+        description: `Job order restored to state from ${format(new Date(log.changed_at), "MMM dd, yyyy HH:mm")}`
+      });
+
+      // Refresh queries
+      queryClient.invalidateQueries({ queryKey: ["job-order-logs", jobOrderId] });
+      queryClient.invalidateQueries({ queryKey: ["job-orders"] });
+
+      onClose();
+    } catch (error: any) {
+      console.error("Revert error:", error);
+      toast({
+        title: "Revert Failed",
+        description: error.message || "Failed to revert job order",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -248,14 +330,29 @@ export function JobEditLog({ jobOrderId, jobOrderNumber, isOpen, onClose }: JobE
                               )}
                               
                               {log.snapshot && (
-                                <details className="mt-2">
-                                  <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                                    View full snapshot
-                                  </summary>
-                                  <pre className="text-xs mt-2 p-2 bg-muted rounded overflow-x-auto">
-                                    {JSON.stringify(log.snapshot, null, 2)}
-                                  </pre>
-                                </details>
+                                <>
+                                  <details className="mt-2">
+                                    <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                                      View full snapshot
+                                    </summary>
+                                    <pre className="text-xs mt-2 p-2 bg-muted rounded overflow-x-auto">
+                                      {JSON.stringify(log.snapshot, null, 2)}
+                                    </pre>
+                                  </details>
+                                  
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRevert(log);
+                                    }}
+                                    className="mt-2 text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400"
+                                  >
+                                    <RotateCcw className="w-4 h-4 mr-2" />
+                                    Revert to this version
+                                  </Button>
+                                </>
                               )}
                             </div>
                           )}
