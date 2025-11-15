@@ -97,6 +97,8 @@ export function ProjectDetailsSection({
                   <SelectItem value="Wajihat Ruwi">Wajihat Ruwi</SelectItem>
                   <SelectItem value="Ruwi Branch">Ruwi Branch</SelectItem>
                   <SelectItem value="Ghubra Branch">Ghubra Branch</SelectItem>
+                  <SelectItem value="Nizwa Branch">Nizwa Branch</SelectItem>
+                  <SelectItem value="Al Khoud Branch">Al Khoud Branch Branch</SelectItem>
                 </SelectContent>
               </Select>
             ) : (

@@ -55,7 +55,14 @@ export const BRANCH_CONFIGS: Record<string, BranchConfig> = {
     email: "ghubra@company.com"
   }
 };
-
+"Al Khoud Branch": {
+    name: "Al Khoud Branch",
+    address: [
+      "Al Khoud",
+      "Muscat, Sultanate of Oman"
+    ],
+    phone: "+968 2458 7890",
+    email: "AlKhoud@company.com"
 export const getBranchConfig = (branchName: string): BranchConfig | null => {
   return BRANCH_CONFIGS[branchName] || null;
 };

@@ -31,6 +31,8 @@ export function useCreateJobOrder() {
     'Head Office': 'HO',
     'Ruwi Branch': 'RB',
     'Ghubra Branch': 'GB',
+    'Nizwa Branch': 'NZ',
+    'Al Khoud Branch': 'AK',
   };
   const branchStartNumbers: Record<string, number> = {
   'WK': 20001,
@@ -38,6 +40,8 @@ export function useCreateJobOrder() {
   'HO': 10001,
   'RB': 40001,
   'GB': 50001,
+  'NZ': 60001,
+  'AK': 70001,
   };
 
 const generateJobOrderNumber = async (branch: string): Promise<string> => {
