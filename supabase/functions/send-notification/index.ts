@@ -1,7 +1,5 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.0";
-// import { Resend } from "npm:resend@2.0.0"; // Commented out - add RESEND_API_KEY secret to enable
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,7 +18,15 @@ interface NotificationRequest {
   recipientPhone?: string;
 }
 
-// const resend = new Resend(Deno.env.get("RESEND_API_KEY")); // Commented out - add RESEND_API_KEY secret to enable
+interface EmailLogData {
+  recipient_email: string;
+  subject: string;
+  content: string;
+  email_type: string;
+  sent_at: string;
+  status: string;
+  error_message?: string;
+}
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -42,13 +48,11 @@ serve(async (req: Request) => {
 
     console.log("Sending notification for job order:", jobOrderNumber);
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Log the email attempt
-    const logData = {
+    const logData: EmailLogData = {
       recipient_email: recipientEmail || 'unknown',
       subject: `New Job Order Approval Required - ${jobOrderNumber}`,
       content: `Job Order: ${jobOrderNumber}, Customer: ${customerName}, Priority: ${priority}`,
@@ -57,7 +61,6 @@ serve(async (req: Request) => {
       status: 'pending'
     };
 
-    // Send email notification
     if (notificationType === 'email' || notificationType === 'both') {
       if (recipientEmail) {
         try {
@@ -88,31 +91,22 @@ serve(async (req: Request) => {
           `;
 
           // Email sending disabled - add RESEND_API_KEY secret to enable
-          // await resend.emails.send({
-          //   from: "Job Manager <notifications@resend.dev>",
-          //   to: [recipientEmail],
-          //   subject: logData.subject,
-          //   html: emailHtml,
-          // });
-
           logData.status = 'disabled';
           console.log("Email notification disabled - configure RESEND_API_KEY to enable");
-        } catch (emailError) {
+        } catch (emailError: unknown) {
           logData.status = 'failed';
-          logData.error_message = emailError.message;
+          logData.error_message = emailError instanceof Error ? emailError.message : 'Unknown error';
           console.error("Email sending failed:", emailError);
         }
 
-        // Try to log to database (will fail gracefully if tables don't exist)
         try {
           await supabase.from('email_logs').insert(logData);
-        } catch (dbError) {
-          console.log("Database logging skipped (table may not exist):", dbError.message);
+        } catch (dbError: unknown) {
+          console.log("Database logging skipped (table may not exist):", dbError instanceof Error ? dbError.message : 'Unknown error');
         }
       }
     }
 
-    // WhatsApp notification (placeholder for future implementation)
     if (notificationType === 'whatsapp' || notificationType === 'both') {
       if (recipientPhone) {
         const whatsappMessage = `🚀 *New Job Order Approval Required*
@@ -126,7 +120,6 @@ serve(async (req: Request) => {
 
 Please review and approve this job order in the system.`;
 
-        // For now, just log the message. In production, integrate with WhatsApp Business API
         console.log("WhatsApp message would be sent:", whatsappMessage);
         console.log("To phone number:", recipientPhone);
       }
@@ -142,10 +135,10 @@ Please review and approve this job order in the system.`;
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error sending notifications:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

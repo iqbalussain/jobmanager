@@ -53,9 +53,8 @@ export const BRANCH_CONFIGS: Record<string, BranchConfig> = {
     ],
     phone: "+968 2458 7890",
     email: "ghubra@company.com"
-  }
-};
-"Al Khoud Branch": {
+  },
+  "Al Khoud Branch": {
     name: "Al Khoud Branch",
     address: [
       "Al Khoud",
@@ -63,6 +62,18 @@ export const BRANCH_CONFIGS: Record<string, BranchConfig> = {
     ],
     phone: "+968 2458 7890",
     email: "AlKhoud@company.com"
+  },
+  "Nizwa Branch": {
+    name: "Nizwa Branch",
+    address: [
+      "Nizwa",
+      "Sultanate of Oman"
+    ],
+    phone: "+968 2558 1234",
+    email: "nizwa@company.com"
+  }
+};
+
 export const getBranchConfig = (branchName: string): BranchConfig | null => {
   return BRANCH_CONFIGS[branchName] || null;
 };
