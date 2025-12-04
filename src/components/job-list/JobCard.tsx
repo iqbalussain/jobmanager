@@ -1,4 +1,3 @@
-
 import { Job } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +11,7 @@ import {
   Building,
   Briefcase
 } from "lucide-react";
+import { HighPriorityBadge } from "@/components/ui/HighPriorityBadge";
 
 interface JobCardProps {
   job: Job;
@@ -41,12 +41,30 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
     { value: "cancelled", label: "Cancelled" }
   ];
 
+  const isOverdue = new Date(job.dueDate) < new Date() && 
+    job.status !== "completed" && 
+    job.status !== "invoiced" && 
+    job.status !== "cancelled";
+
+  const isHighPriority = job.priority === "high";
+
   return (
-    <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+    <Card className={`bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 ${
+      isHighPriority && isOverdue ? "ring-2 ring-red-500 animate-pulse" : 
+      isHighPriority ? "ring-2 ring-orange-400" : ""
+    }`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg font-bold text-gray-900 mb-2">{job.title}</CardTitle>
+            <div className="flex items-center gap-2 mb-2">
+              <CardTitle className="text-lg font-bold text-gray-900">{job.title}</CardTitle>
+              <HighPriorityBadge priority={job.priority} />
+              {isOverdue && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white animate-bounce">
+                  OVERDUE
+                </span>
+              )}
+            </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Briefcase className="w-4 h-4" />
@@ -60,7 +78,7 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
                 <User className="w-4 h-4" />
                 <span>{job.salesman}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className={`flex items-center gap-2 text-sm ${isOverdue ? "text-red-600 font-semibold" : "text-gray-600"}`}>
                 <Calendar className="w-4 h-4" />
                 <span>{new Date(job.dueDate).toLocaleDateString()}</span>
               </div>

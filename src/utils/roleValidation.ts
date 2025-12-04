@@ -1,6 +1,5 @@
-
 // Define allowed roles with strict validation
-const allowedRoles = ["admin", "manager", "employee", "designer", "salesman"] as const;
+const allowedRoles = ["admin", "manager", "job_order_manager", "employee", "designer", "salesman"] as const;
 export type Role = typeof allowedRoles[number];
 
 export function isValidRole(role: string): role is Role {
@@ -9,12 +8,12 @@ export function isValidRole(role: string): role is Role {
 
 // Define role permissions for job order management
 export const rolePermissions = {
-  canCreateJobOrders: ["admin", "manager", "salesman"],
-  canViewAllJobOrders: ["admin", "manager"],
-  canEditJobOrders: ["admin", "manager"],
+  canCreateJobOrders: ["admin", "manager", "job_order_manager", "salesman"],
+  canViewAllJobOrders: ["admin", "manager", "job_order_manager"],
+  canEditJobOrders: ["admin", "manager", "job_order_manager"],
   canDeleteJobOrders: ["admin", "manager"],
-  canViewOwnJobOrders: ["admin", "manager", "salesman", "designer"],
-  canManageCustomers: ["admin", "manager", "salesman"]
+  canViewOwnJobOrders: ["admin", "manager", "job_order_manager", "salesman", "designer"],
+  canManageCustomers: ["admin", "manager", "job_order_manager", "salesman"]
 } as const;
 
 export function hasPermission(userRole: Role, permission: keyof typeof rolePermissions): boolean {

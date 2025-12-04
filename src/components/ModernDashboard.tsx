@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { JobDetails } from "@/components/JobDetails";
@@ -7,6 +6,7 @@ import { DashboardNotifications } from "@/components/dashboard/DashboardNotifica
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
 import { QuickSearch } from "@/components/dashboard/QuickSearch";
 import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
+import { HighPriorityReminder } from "@/components/dashboard/HighPriorityReminder";
 
 interface ModernDashboardProps {
   jobs: Job[];
@@ -46,7 +46,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   };
 
   const handleStatusClick = (status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled', title: string) => {
-    // Only show popup for cancelled jobs to improve dashboard performance
     if (status === 'cancelled') {
       setSelectedStatus({ status, title });
       setStatusModalOpen(true);
@@ -59,7 +58,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
   ];
 
   return (
-    <div className="space-y-8 p-6 min-h-screen">
+    <div className="space-y-6 p-6 min-h-screen">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent mb-2">
@@ -71,6 +70,9 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           <DashboardNotifications notifications={notifications} />
         </div>
       </div>
+
+      {/* High Priority Reminder Banner */}
+      <HighPriorityReminder jobs={jobs} onViewJob={handleViewDetails} />
 
       <div className="grid grid-cols-10 gap-6 h-[400px]">
         <div className="col-span-6">
