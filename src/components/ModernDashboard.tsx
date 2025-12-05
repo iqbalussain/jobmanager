@@ -52,11 +52,6 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     }
   };
 
-  const notifications = [
-    {id: '1', type: 'job_created', message: 'New job created', time: '2 hours ago', read: false},
-    {id: '2', type: 'status_change', message: 'Job status updated', time: '3 hours ago', read: false},
-  ];
-
   return (
     <div className="space-y-6 p-6 min-h-screen">
       <div className="flex items-center justify-between">
@@ -67,7 +62,7 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
           <p className="text-gray-600 text-lg">Welcome back! Here's what's happening with your projects.</p>
         </div>
         <div className="flex items-center gap-4">
-          <DashboardNotifications notifications={notifications} />
+          <DashboardNotifications />
         </div>
       </div>
 

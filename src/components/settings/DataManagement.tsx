@@ -30,41 +30,160 @@ export function DataManagement() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const { toast } = useToast();
 
+  const formatPriority = (priority: string): string => {
+    const map: Record<string, string> = {
+      low: 'Low',
+      medium: 'Medium',
+      high: 'High',
+      urgent: 'Urgent'
+    };
+    return map[priority] || priority;
+  };
+
+  const formatStatus = (status: string): string => {
+    const map: Record<string, string> = {
+      pending: 'Pending',
+      'in-progress': 'In Progress',
+      designing: 'Designing',
+      completed: 'Completed',
+      finished: 'Finished',
+      cancelled: 'Cancelled',
+      invoiced: 'Invoiced'
+    };
+    return map[status] || status;
+  };
+
+  const formatApprovalStatus = (status: string): string => {
+    const map: Record<string, string> = {
+      pending_approval: 'Pending Approval',
+      approved: 'Approved',
+      rejected: 'Rejected'
+    };
+    return map[status] || status;
+  };
+
+  const formatDate = (dateStr: string | null): string => {
+    if (!dateStr) return '';
+    try {
+      return new Date(dateStr).toLocaleDateString();
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const generateCSV = (data: Record<string, any>[], headers: string[]): string => {
+    const headerRow = headers.join(',');
+    const rows = data.map(row => 
+      headers.map(header => {
+        const value = row[header];
+        if (value === null || value === undefined) return '';
+        const stringValue = String(value);
+        // Escape quotes and wrap in quotes if contains comma or quote
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      }).join(',')
+    );
+    return [headerRow, ...rows].join('\n');
+  };
+
   const handleExportData = async () => {
     setIsExporting(true);
     try {
-      let data, error;
+      let csvData: string;
       
-      // Handle different table exports
-      if (exportType === 'designers') {
-        const result = await supabase.from('profiles').select('*').eq('role', 'designer').csv();
-        data = result.data;
-        error = result.error;
+      if (exportType === 'job_orders') {
+        // Fetch job orders with related data for human-readable export
+        const { data: jobOrders, error } = await supabase
+          .from('job_orders')
+          .select(`
+            job_order_number,
+            customer_id,
+            job_title_id,
+            designer_id,
+            salesman_id,
+            priority,
+            status,
+            approval_status,
+            branch,
+            due_date,
+            estimated_hours,
+            actual_hours,
+            job_order_details,
+            invoice_number,
+            delivered_at,
+            client_name,
+            created_at,
+            updated_at
+          `);
+
+        if (error) throw error;
+
+        // Fetch related data
+        const [customersRes, jobTitlesRes, profilesRes] = await Promise.all([
+          supabase.from('customers').select('id, name'),
+          supabase.from('job_titles').select('id, job_title_id'),
+          supabase.from('profiles').select('id, full_name')
+        ]);
+
+        const customersMap = new Map(customersRes.data?.map(c => [c.id, c.name]) || []);
+        const jobTitlesMap = new Map(jobTitlesRes.data?.map(j => [j.id, j.job_title_id]) || []);
+        const profilesMap = new Map(profilesRes.data?.map(p => [p.id, p.full_name]) || []);
+
+        // Transform data to human-readable format
+        const transformedData = jobOrders?.map(order => ({
+          job_order_number: order.job_order_number,
+          customer_name: customersMap.get(order.customer_id) || '',
+          job_title: jobTitlesMap.get(order.job_title_id || '') || '',
+          designer_name: profilesMap.get(order.designer_id || '') || '',
+          salesman_name: profilesMap.get(order.salesman_id || '') || '',
+          priority: formatPriority(order.priority),
+          status: formatStatus(order.status),
+          approval_status: formatApprovalStatus(order.approval_status),
+          branch: order.branch || '',
+          due_date: formatDate(order.due_date),
+          estimated_hours: order.estimated_hours || '',
+          actual_hours: order.actual_hours || '',
+          job_order_details: order.job_order_details || '',
+          invoice_number: order.invoice_number || '',
+          delivered_at: order.delivered_at || '',
+          client_name: order.client_name || '',
+          created_at: formatDate(order.created_at),
+          updated_at: formatDate(order.updated_at)
+        })) || [];
+
+        const headers = [
+          'job_order_number', 'customer_name', 'job_title', 'designer_name', 'salesman_name',
+          'priority', 'status', 'approval_status', 'branch', 'due_date', 'estimated_hours',
+          'actual_hours', 'job_order_details', 'invoice_number', 'delivered_at', 'client_name',
+          'created_at', 'updated_at'
+        ];
+
+        csvData = generateCSV(transformedData, headers);
+      } else if (exportType === 'designers') {
+        const { data, error } = await supabase.from('profiles').select('*').eq('role', 'designer');
+        if (error) throw error;
+        csvData = generateCSV(data || [], ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
       } else if (exportType === 'salesmen') {
-        const result = await supabase.from('profiles').select('*').eq('role', 'salesman').csv();
-        data = result.data;
-        error = result.error;
-      } else if (exportType === 'job_orders') {
-        const result = await supabase.from('job_orders').select('*').csv();
-        data = result.data;
-        error = result.error;
+        const { data, error } = await supabase.from('profiles').select('*').eq('role', 'salesman');
+        if (error) throw error;
+        csvData = generateCSV(data || [], ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
       } else if (exportType === 'customers') {
-        const result = await supabase.from('customers').select('*').csv();
-        data = result.data;
-        error = result.error;
+        const { data, error } = await supabase.from('customers').select('*');
+        if (error) throw error;
+        csvData = generateCSV(data || [], ['id', 'name']);
       } else if (exportType === 'job_titles') {
-        const result = await supabase.from('job_titles').select('*').csv();
-        data = result.data;
-        error = result.error;
-      } else if (exportType === 'profiles') {
-        const result = await supabase.from('profiles').select('*').csv();
-        data = result.data;
-        error = result.error;
+        const { data, error } = await supabase.from('job_titles').select('*');
+        if (error) throw error;
+        csvData = generateCSV(data || [], ['id', 'job_title_id', 'created_at']);
+      } else {
+        const { data, error } = await supabase.from('profiles').select('*');
+        if (error) throw error;
+        csvData = generateCSV(data || [], ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
       }
 
-      if (error) throw error;
-
-      const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
