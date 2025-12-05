@@ -1,8 +1,8 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 export interface CreateJobOrderData {
   customer_id: string;
@@ -24,6 +24,7 @@ export function useCreateJobOrder() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { addNotification, showHighPriorityAlert } = useNotifications();
 
   const branchPrefixes: Record<string, string> = {
     'Wadi Kabeer': 'WK',
@@ -205,8 +206,20 @@ const generateJobOrderNumber = async (branch: string): Promise<string> => {
       return newJobOrder;
     },
 
-    onSuccess: () => {
+    onSuccess: (newJobOrder) => {
       queryClient.invalidateQueries({ queryKey: ['job-orders'] });
+      
+      // High Priority Alert - trigger notification and popup
+      if (newJobOrder.priority === 'high') {
+        addNotification({
+          type: 'high_priority',
+          message: `⚠ Job ${newJobOrder.job_order_number} has been marked as HIGH PRIORITY.`,
+          jobOrderNumber: newJobOrder.job_order_number,
+          read: false
+        });
+        showHighPriorityAlert(newJobOrder.job_order_number);
+      }
+      
       toast({
         title: 'Success',
         description: 'Job order created successfully. Notification sent for approval.',

@@ -3,11 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { JobOrder, JobStatus } from '@/types/jobOrder';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 export function useJobOrderMutations() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { addNotification, showHighPriorityAlert } = useNotifications();
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: JobStatus }) => {
@@ -121,14 +123,29 @@ export function useJobOrderMutations() {
   });
 
   const updateJobData = useMutation({
-    mutationFn: async (jobData: { id: string; [key: string]: any }) => {
+    mutationFn: async (jobData: { id: string; priority?: 'low' | 'medium' | 'high' | 'urgent'; [key: string]: any }) => {
       const { id, ...updateData } = jobData;
+      
+      // First get the current job to check if priority changed
+      const { data: currentJob } = await supabase
+        .from('job_orders')
+        .select('priority, job_order_number')
+        .eq('id', id)
+        .single();
+      
       const { error } = await supabase
         .from('job_orders')
-        .update(updateData)
+        .update(updateData as any)
         .eq('id', id);
       if (error) throw error;
-      return { id, ...updateData };
+      
+      return { 
+        id, 
+        priority: updateData.priority,
+        previousPriority: currentJob?.priority,
+        job_order_number: currentJob?.job_order_number,
+        ...updateData
+      };
     },
     
     onSuccess: (updatedData) => {
@@ -140,6 +157,17 @@ export function useJobOrderMutations() {
             : job
         );
       });
+      
+      // High Priority Alert - trigger if priority changed to high
+      if (updatedData.priority === 'high' && updatedData.previousPriority !== 'high') {
+        addNotification({
+          type: 'high_priority',
+          message: `⚠ Job ${updatedData.job_order_number || ''} has been marked as HIGH PRIORITY.`,
+          jobOrderNumber: updatedData.job_order_number || undefined,
+          read: false
+        });
+        showHighPriorityAlert(updatedData.job_order_number || '');
+      }
       
       toast({
         title: "Job updated",
