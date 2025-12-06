@@ -4,26 +4,32 @@ import { getPriorityColor, getStatusColor } from './pdfStyles';
 import { supabase } from '@/integrations/supabase/client';
 
 export const generatePDFContent = async (job: Job, invoiceNumber?: string): Promise<string> => {
-  // Fetch job order items
-  const { data: itemsData } = await supabase
-    .from('job_order_items')
-    .select('*')
-    .eq('job_order_id', job.id)
-    .order('order_sequence');
+  // Fetch job order items - use type assertion since table may not be in types
+  let items: any[] = [];
+  try {
+    const { data: itemsData } = await (supabase as any)
+      .from('job_order_items')
+      .select('*')
+      .eq('job_order_id', job.id)
+      .order('order_sequence');
+    
+    items = itemsData || [];
+    
+    // Fetch job titles separately for display
+    if (items.length > 0) {
+      const jobTitleIds = [...new Set(items.map(item => item.job_title_id))];
+      const { data: jobTitles } = await supabase
+        .from('job_titles')
+        .select('id, job_title_id')
+        .in('id', jobTitleIds);
 
-  // Fetch job titles separately for display
-  let items = itemsData || [];
-  if (items.length > 0) {
-    const jobTitleIds = [...new Set(items.map(item => item.job_title_id))];
-    const { data: jobTitles } = await supabase
-      .from('job_titles')
-      .select('id, job_title_id')
-      .in('id', jobTitleIds);
-
-    items = items.map(item => ({
-      ...item,
-      job_title_name: jobTitles?.find(jt => jt.id === item.job_title_id)?.job_title_id || 'N/A'
-    }));
+      items = items.map(item => ({
+        ...item,
+        job_title_name: jobTitles?.find(jt => jt.id === item.job_title_id)?.job_title_id || 'N/A'
+      }));
+    }
+  } catch (e) {
+    console.log('Job order items not available:', e);
   }
 
   const hasItems = items && items.length > 0;

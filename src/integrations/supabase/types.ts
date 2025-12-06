@@ -195,45 +195,6 @@ export type Database = {
           },
         ]
       }
-      job_order_items: {
-        Row: {
-          created_at: string
-          description: string
-          id: string
-          job_order_id: string
-          job_title_id: string
-          order_sequence: number
-          quantity: number
-          total_price: number | null
-          unit_price: number | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          id?: string
-          job_order_id: string
-          job_title_id: string
-          order_sequence?: number
-          quantity?: number
-          total_price?: number | null
-          unit_price?: number | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          id?: string
-          job_order_id?: string
-          job_title_id?: string
-          order_sequence?: number
-          quantity?: number
-          total_price?: number | null
-          unit_price?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       job_order_logs: {
         Row: {
           action: string
