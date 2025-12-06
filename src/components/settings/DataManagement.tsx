@@ -94,31 +94,51 @@ export function DataManagement() {
       let csvData: string;
       
       if (exportType === 'job_orders') {
-        // Fetch job orders with related data for human-readable export
-        const { data: jobOrders, error } = await supabase
-          .from('job_orders')
-          .select(`
-            job_order_number,
-            customer_id,
-            job_title_id,
-            designer_id,
-            salesman_id,
-            priority,
-            status,
-            approval_status,
-            branch,
-            due_date,
-            estimated_hours,
-            actual_hours,
-            job_order_details,
-            invoice_number,
-            delivered_at,
-            client_name,
-            created_at,
-            updated_at
-          `);
+        // Fetch ALL job orders with related data for human-readable export
+        // Use pagination to bypass Supabase's default 1000 row limit
+        let allJobOrders: any[] = [];
+        let from = 0;
+        const batchSize = 1000;
+        let hasMore = true;
 
-        if (error) throw error;
+        while (hasMore) {
+          const { data: batch, error } = await supabase
+            .from('job_orders')
+            .select(`
+              job_order_number,
+              customer_id,
+              job_title_id,
+              designer_id,
+              salesman_id,
+              priority,
+              status,
+              approval_status,
+              branch,
+              due_date,
+              estimated_hours,
+              actual_hours,
+              job_order_details,
+              invoice_number,
+              delivered_at,
+              client_name,
+              created_at,
+              updated_at
+            `)
+            .range(from, from + batchSize - 1)
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+
+          if (batch && batch.length > 0) {
+            allJobOrders = [...allJobOrders, ...batch];
+            from += batchSize;
+            hasMore = batch.length === batchSize;
+          } else {
+            hasMore = false;
+          }
+        }
+
+        const jobOrders = allJobOrders;
 
         // Fetch related data
         const [customersRes, jobTitlesRes, profilesRes] = await Promise.all([
