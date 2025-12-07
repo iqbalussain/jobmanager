@@ -30,6 +30,7 @@ export interface DexieJobOrder {
   created_by: string;
   created_at: string;
   updated_at: string;
+  is_synced?: boolean; // Track sync status
 }
 
 export interface DexieCustomer {
@@ -61,6 +62,17 @@ export interface DexieSyncMeta {
   syncInProgress: boolean;
 }
 
+export interface DexieJobEditAudit {
+  id: string;
+  job_id: string;
+  job_order_number: string;
+  edited_by: string;
+  edited_by_name?: string;
+  edited_role?: string;
+  diff: Record<string, unknown>;
+  created_at: string;
+}
+
 class JobOrderDatabase extends Dexie {
   jobs!: Table<DexieJobOrder>;
   customers!: Table<DexieCustomer>;
@@ -68,17 +80,19 @@ class JobOrderDatabase extends Dexie {
   designers!: Table<DexieDesigner>;
   jobTitles!: Table<DexieJobTitle>;
   syncMeta!: Table<DexieSyncMeta>;
+  jobEditAudit!: Table<DexieJobEditAudit>;
 
   constructor() {
     super('JobOrderDB');
     
-    this.version(1).stores({
-      jobs: 'id, job_order_number, customer_id, customer_name, salesman_id, salesman_name, designer_id, status, branch, priority, created_at, updated_at',
+    this.version(2).stores({
+      jobs: 'id, job_order_number, customer_id, customer_name, salesman_id, salesman_name, designer_id, status, branch, priority, created_at, updated_at, is_synced',
       customers: 'id, name',
       salesmen: 'id, name',
       designers: 'id, name',
       jobTitles: 'id, job_title_id',
-      syncMeta: 'id'
+      syncMeta: 'id',
+      jobEditAudit: 'id, job_id, created_at'
     });
   }
 }

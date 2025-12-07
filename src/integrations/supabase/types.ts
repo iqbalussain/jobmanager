@@ -103,6 +103,47 @@ export type Database = {
           },
         ]
       }
+      job_edit_audit: {
+        Row: {
+          created_at: string | null
+          diff: Json | null
+          edited_by: string
+          edited_by_name: string | null
+          edited_role: string | null
+          id: string
+          job_id: string
+          job_order_number: string
+        }
+        Insert: {
+          created_at?: string | null
+          diff?: Json | null
+          edited_by: string
+          edited_by_name?: string | null
+          edited_role?: string | null
+          id?: string
+          job_id: string
+          job_order_number: string
+        }
+        Update: {
+          created_at?: string | null
+          diff?: Json | null
+          edited_by?: string
+          edited_by_name?: string | null
+          edited_role?: string | null
+          id?: string
+          job_id?: string
+          job_order_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_edit_audit_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_order_attachments: {
         Row: {
           alt_text: string | null
@@ -469,6 +510,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_job_status: {
+        Args: { p_job_id: string; p_new_status: string }
+        Returns: Json
+      }
     }
     Enums: {
       activity_type:
@@ -493,6 +538,8 @@ export type Database = {
         | "finished"
         | "cancelled"
         | "invoiced"
+        | "out"
+        | "foc_sample"
       priority_level: "low" | "medium" | "high" | "urgent"
       quotation_status: "draft" | "sent" | "accepted" | "rejected" | "converted"
     }
@@ -646,6 +693,8 @@ export const Constants = {
         "finished",
         "cancelled",
         "invoiced",
+        "out",
+        "foc_sample",
       ],
       priority_level: ["low", "medium", "high", "urgent"],
       quotation_status: ["draft", "sent", "accepted", "rejected", "converted"],

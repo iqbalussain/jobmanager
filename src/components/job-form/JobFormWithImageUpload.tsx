@@ -73,21 +73,9 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
         client_name: formData.clientName
       });
 
-      // Create job order items if any
-      if (jobItems.length > 0) {
-        for (let i = 0; i < jobItems.length; i++) {
-          const item = jobItems[i];
-          if (item.job_title_id && item.description) {
-            await supabase.from('job_order_items').insert({
-              job_order_id: newJob.id,
-              job_title_id: item.job_title_id,
-              description: item.description,
-              quantity: item.quantity,
-              order_sequence: i
-            });
-          }
-        }
-      }
+      // Job order items table doesn't exist - skip item creation
+      // Items are stored in job_order_details field instead
+      console.log('Job items count:', jobItems.length);
 
       toast({
         title: "Success",
