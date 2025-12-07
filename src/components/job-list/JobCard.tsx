@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   Eye, 
   MessageSquare,
   Calendar,
   User,
   Building,
-  Briefcase
+  Briefcase,
+  Lock
 } from "lucide-react";
 import { HighPriorityBadge } from "@/components/ui/HighPriorityBadge";
 
@@ -20,14 +22,18 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
+  const isLocked = job.status === "invoiced";
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-300";
       case "in-progress": return "bg-blue-100 text-blue-800 border-blue-300";
-      case "designing": return "bg-purple-100 text-purple-800 border-purple-300";
+      case "out": return "bg-purple-100 text-purple-800 border-purple-300";
       case "completed": return "bg-green-100 text-green-800 border-green-300";
       case "invoiced": return "bg-emerald-100 text-emerald-800 border-emerald-300";
       case "cancelled": return "bg-red-100 text-red-800 border-red-300";
+      case "foc_sample": return "bg-pink-100 text-pink-800 border-pink-300";
+      case "finished": return "bg-teal-100 text-teal-800 border-teal-300";
       default: return "bg-gray-100 text-gray-800 border-gray-300";
     }
   };
@@ -35,8 +41,10 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   const getStatusOptions = () => [
     { value: "pending", label: "Pending" },
     { value: "in-progress", label: "In Progress" },
-    { value: "designing", label: "Designing" },
+    { value: "out", label: "Out" },
     { value: "completed", label: "Completed" },
+    { value: "finished", label: "Finished" },
+    { value: "foc_sample", label: "FOC/Sample" },
     { value: "invoiced", label: "Invoiced" },
     { value: "cancelled", label: "Cancelled" }
   ];
