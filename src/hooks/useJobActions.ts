@@ -15,12 +15,7 @@ export function useJobActions() {
       const editorName = audit.edited_by_name || 'Someone';
       toast({
         title: `Job #${audit.job_order_number} updated`,
-        description: `${editorName} made changes to this job.`,
-        action: (
-          <a href={`/?job=${audit.job_id}`} className="underline text-primary">
-            View
-          </a>
-        ) as any,
+        description: `${editorName} made changes to this job. Click to view.`,
       });
     };
 
@@ -56,7 +51,7 @@ export function useJobActions() {
     }
 
     // Update Dexie cache
-    await updateJobInCache(jobId, { status });
+    await updateJobInCache(jobId);
 
     toast({
       title: 'Status Updated',
