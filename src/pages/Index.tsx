@@ -1,11 +1,14 @@
 
 import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
-import { useJobOrders } from "@/hooks/useJobOrders";
+import { useDexieJobs } from "@/hooks/useDexieJobs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { JobDetails } from "@/components/JobDetails";
 import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
+import { useJobActions } from "@/hooks/useJobActions";
+import { updateJobInCache } from "@/services/syncService";
+import { HighPriorityModal } from "@/components/HighPriorityModal";
 
 // Lazy loaded components for performance
 const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
@@ -72,7 +75,10 @@ const Index = () => {
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
   const { user } = useAuth();
-  const { jobOrders, isLoading, updateStatus, updateJobData, refetch } = useJobOrders();
+  
+  // Use Dexie for offline-first job data
+  const { jobs: dexieJobs, isLoading, isSyncing, refresh } = useDexieJobs();
+  const { setJobStatus } = useJobActions();
 
   // Fetch role on load
   useEffect(() => {
@@ -93,20 +99,21 @@ const Index = () => {
     fetchUserRole();
   }, [user]);
 
-  const transformedJobs: Job[] = jobOrders.map((order) => ({
+  // Transform Dexie jobs to the Job interface
+  const transformedJobs: Job[] = (dexieJobs || []).map((order) => ({
     id: order.id,
     jobOrderNumber: order.job_order_number,
-    title: order.title || order.job_order_details || `Job Order ${order.job_order_number}`,
-    customer: order.customer?.name || "Unknown Customer",
+    title: order.job_order_details || `Job Order ${order.job_order_number}`,
+    customer: order.customer_name || "Unknown Customer",
     assignee: order.assignee || "Unassigned",
     priority: order.priority as Job["priority"],
     status: order.status as JobStatus,
     dueDate: order.due_date || new Date().toISOString().split("T")[0],
-    createdAt: order.created_at.split("T")[0],
+    createdAt: order.created_at?.split("T")[0] || new Date().toISOString().split("T")[0],
     estimatedHours: order.estimated_hours || 0,
     branch: order.branch || "",
-    designer: order.designer?.name || "Unassigned",
-    salesman: order.salesman?.name || "Unassigned",
+    designer: order.designer_name || "Unassigned",
+    salesman: order.salesman_name || "Unassigned",
     jobOrderDetails: order.job_order_details || "",
     totalValue: order.total_value || 0,
     created_by: order.created_by,
@@ -116,16 +123,22 @@ const Index = () => {
     clientName: order.client_name || "",
   }));
 
-  const handleStatusUpdate = (jobId: string, status: JobStatus) => {
-    updateStatus({ id: jobId, status });
+  const handleStatusUpdate = async (jobId: string, status: JobStatus) => {
+    await setJobStatus(jobId, status);
   };
 
-  const handleJobDataUpdate = (jobData: { id: string; [key: string]: any }) => {
-    updateJobData(jobData);
+  const handleJobDataUpdate = async (jobData: { id: string; [key: string]: any }) => {
+    // Update job in Supabase then sync to Dexie
+    try {
+      await supabase.from("job_orders").update(jobData).eq("id", jobData.id);
+      await updateJobInCache(jobData.id);
+    } catch (error) {
+      console.error("Failed to update job:", error);
+    }
   };
 
   const handleJobApproved = () => {
-    refetch(); // Refresh job orders after approval
+    refresh(); // Refresh job orders after approval
   };
 
   const handleViewJob = (job: Job) => {
@@ -215,6 +228,9 @@ const Index = () => {
         open={isCreateJobOpen}
         onOpenChange={setIsCreateJobOpen}
       />
+
+      {/* High Priority Notifications Modal */}
+      <HighPriorityModal />
     </div>
   );
 };
