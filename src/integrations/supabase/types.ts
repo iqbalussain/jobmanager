@@ -429,50 +429,6 @@ export type Database = {
         }
         Relationships: []
       }
-      notifications: {
-        Row: {
-          created_at: string | null
-          id: string
-          job_id: string | null
-          message: string
-          payload: Json | null
-          read: boolean | null
-          snoozed_until: string | null
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          job_id?: string | null
-          message: string
-          payload?: Json | null
-          read?: boolean | null
-          snoozed_until?: string | null
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          job_id?: string | null
-          message?: string
-          payload?: Json | null
-          read?: boolean | null
-          snoozed_until?: string | null
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "job_orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           branch: string | null

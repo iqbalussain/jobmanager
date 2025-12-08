@@ -73,18 +73,6 @@ export interface DexieJobEditAudit {
   created_at: string;
 }
 
-export interface DexieNotification {
-  id: string;
-  user_id: string;
-  job_id: string | null;
-  type: string;
-  message: string;
-  payload: Record<string, unknown>;
-  read: boolean;
-  snoozed_until: string | null;
-  created_at: string;
-}
-
 class JobOrderDatabase extends Dexie {
   jobs!: Table<DexieJobOrder>;
   customers!: Table<DexieCustomer>;
@@ -93,20 +81,18 @@ class JobOrderDatabase extends Dexie {
   jobTitles!: Table<DexieJobTitle>;
   syncMeta!: Table<DexieSyncMeta>;
   jobEditAudit!: Table<DexieJobEditAudit>;
-  notifications!: Table<DexieNotification>;
 
   constructor() {
     super('JobOrderDB');
     
-    this.version(3).stores({
+    this.version(2).stores({
       jobs: 'id, job_order_number, customer_id, customer_name, salesman_id, salesman_name, designer_id, status, branch, priority, created_at, updated_at, is_synced',
       customers: 'id, name',
       salesmen: 'id, name',
       designers: 'id, name',
       jobTitles: 'id, job_title_id',
       syncMeta: 'id',
-      jobEditAudit: 'id, job_id, created_at',
-      notifications: 'id, user_id, job_id, type, read, created_at'
+      jobEditAudit: 'id, job_id, created_at'
     });
   }
 }
