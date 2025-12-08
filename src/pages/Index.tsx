@@ -8,6 +8,7 @@ import { JobDetails } from "@/components/JobDetails";
 import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 import { useJobActions } from "@/hooks/useJobActions";
 import { updateJobInCache } from "@/services/syncService";
+import { HighPriorityModal } from "@/components/HighPriorityModal";
 
 // Lazy loaded components for performance
 const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
@@ -227,6 +228,9 @@ const Index = () => {
         open={isCreateJobOpen}
         onOpenChange={setIsCreateJobOpen}
       />
+
+      {/* High Priority Notifications Modal */}
+      <HighPriorityModal />
     </div>
   );
 };

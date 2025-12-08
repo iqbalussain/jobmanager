@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.toggle-user-status]
 verify_jwt = true
+
+[functions.check-high-priority]
+verify_jwt = false
