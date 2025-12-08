@@ -24,6 +24,11 @@ interface JobCardProps {
 export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   const isLocked = job.status === "invoiced";
   
+  const handleStatusChange = (value: string) => {
+    if (isLocked) return;
+    onStatusChange(job.id, value);
+  };
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-300";
@@ -64,9 +69,21 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2">
               <CardTitle className="text-lg font-bold text-gray-900">{job.title}</CardTitle>
               <HighPriorityBadge priority={job.priority} />
+              {isLocked && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Lock className="w-4 h-4 text-amber-600" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>This job is invoiced and locked for editing</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {isOverdue && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white animate-bounce">
                   OVERDUE
@@ -93,23 +110,39 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
             </div>
           </div>
           <div className="ml-4">
-            <Select 
-              value={job.status} 
-              onValueChange={(value) => onStatusChange(job.id, value)}
-            >
-              <SelectTrigger className={`w-32 border-2 ${getStatusColor(job.status)}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {getStatusOptions().map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <Badge variant="outline" className={getStatusColor(option.value)}>
-                      {option.label}
+            {isLocked ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge className={`${getStatusColor(job.status)} cursor-not-allowed`}>
+                      <Lock className="w-3 h-3 mr-1" />
+                      Invoiced
                     </Badge>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Status locked - job has been invoiced</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <Select 
+                value={job.status} 
+                onValueChange={handleStatusChange}
+              >
+                <SelectTrigger className={`w-32 border-2 ${getStatusColor(job.status)}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {getStatusOptions().map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <Badge variant="outline" className={getStatusColor(option.value)}>
+                        {option.label}
+                      </Badge>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
       </CardHeader>
