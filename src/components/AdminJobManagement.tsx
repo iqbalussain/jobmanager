@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { SyncStatusIndicator } from "@/components/ui/SyncStatusIndicator";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -176,10 +175,7 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
 
   return (
     <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Admin Job Management</h1>
-        <SyncStatusIndicator />
-      </div>
+      <h1 className="text-3xl font-bold text-gray-900 mb-4">Admin Job Management</h1>
       
       {/* Sync Status & Jobs Count */}
       <Card className="mb-4">

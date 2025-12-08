@@ -1,6 +1,6 @@
+
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { SyncStatusIndicator } from "@/components/ui/SyncStatusIndicator";
 
 interface DashboardHeaderProps {
   searchQuery: string;
@@ -15,7 +15,6 @@ export function DashboardHeader({ searchQuery, setSearchQuery }: DashboardHeader
         <p className="text-gray-600">Overview of your job orders and performance metrics</p>
       </div>
       <div className="flex items-center gap-4">
-        <SyncStatusIndicator />
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input

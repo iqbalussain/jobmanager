@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Search, Filter, Calendar as CalendarIcon, X } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { SyncStatusIndicator } from "@/components/ui/SyncStatusIndicator";
 
 interface JobListHeaderProps {
   searchQuery: string;
@@ -28,10 +28,8 @@ export function JobListHeader({
   const getStatusOptions = () => [
     { value: "pending", label: "Pending" },
     { value: "in-progress", label: "In Progress" },
-    { value: "out", label: "Out" },
+    { value: "designing", label: "Designing" },
     { value: "completed", label: "Completed" },
-    { value: "finished", label: "Finished" },
-    { value: "foc_sample", label: "FOC/Sample" },
     { value: "invoiced", label: "Invoiced" },
     { value: "cancelled", label: "Cancelled" }
   ];
@@ -47,7 +45,6 @@ export function JobListHeader({
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Management</h1>
           <p className="text-gray-600">Manage and track all your job orders</p>
         </div>
-        <SyncStatusIndicator />
       </div>
 
       <div className="flex flex-col gap-4">
