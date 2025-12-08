@@ -1,4 +1,3 @@
-
 import { useState, lazy, Suspense, useEffect } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useDexieJobs } from "@/hooks/useDexieJobs";
@@ -103,8 +102,10 @@ const Index = () => {
   const transformedJobs: Job[] = (dexieJobs || []).map((order) => ({
     id: order.id,
     jobOrderNumber: order.job_order_number,
-    title: order.job_order_details || `Job Order ${order.job_order_number}`,
-    customer: order.customer_name || "Unknown Customer",
+    title: (order.job_title ?? order.job_title_id ?? `Job Order ${order.job_order_number}`) as string,
+  // DESCRIPTION / DETAILS come from job_order_details
+    jobOrderDetails: order.job_order_details || "",
+    customer: order.customer?.name ?? "Unknown Customer",
     assignee: order.assignee || "Unassigned",
     priority: order.priority as Job["priority"],
     status: order.status as JobStatus,
@@ -114,7 +115,6 @@ const Index = () => {
     branch: order.branch || "",
     designer: order.designer_name || "Unassigned",
     salesman: order.salesman_name || "Unassigned",
-    jobOrderDetails: order.job_order_details || "",
     totalValue: order.total_value || 0,
     created_by: order.created_by,
     invoiceNumber: order.invoice_number || "",

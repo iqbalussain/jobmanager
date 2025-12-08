@@ -1,6 +1,7 @@
 import Dexie, { Table } from 'dexie';
 
 export interface DexieJobOrder {
+  customer: any;
   id: string;
   job_order_number: string;
   customer_id: string;

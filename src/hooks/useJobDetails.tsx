@@ -134,6 +134,7 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
           due_date: job.dueDate,
           estimated_hours: job.estimatedHours,
           branch: job.branch,
+          job_titles: job.title,
           job_order_details: job.jobOrderDetails,
           delivered_at: job.deliveredAt,
           invoice_number: job.invoiceNumber
