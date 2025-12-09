@@ -105,7 +105,7 @@ const Index = () => {
     title: (order.job_title ?? order.job_title_id ?? `Job Order ${order.job_order_number}`) as string,
   // DESCRIPTION / DETAILS come from job_order_details
     jobOrderDetails: order.job_order_details || "",
-    customer: order.customer?.name ?? "Unknown Customer",
+    customer: order.customer_name || "Unknown Customer",
     assignee: order.assignee || "Unassigned",
     priority: order.priority as Job["priority"],
     status: order.status as JobStatus,

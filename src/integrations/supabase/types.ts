@@ -103,6 +103,27 @@ export type Database = {
           },
         ]
       }
+      daily_checklists: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          items: Json
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+          items: Json
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          items?: Json
+        }
+        Relationships: []
+      }
       job_edit_audit: {
         Row: {
           created_at: string | null
@@ -291,6 +312,8 @@ export type Database = {
           created_by: string
           customer_id: string
           delivered_at: string | null
+          description: string | null
+          description_plain: string | null
           designer_id: string | null
           due_date: string | null
           estimated_hours: number | null
@@ -318,6 +341,8 @@ export type Database = {
           created_by: string
           customer_id: string
           delivered_at?: string | null
+          description?: string | null
+          description_plain?: string | null
           designer_id?: string | null
           due_date?: string | null
           estimated_hours?: number | null
@@ -345,6 +370,8 @@ export type Database = {
           created_by?: string
           customer_id?: string
           delivered_at?: string | null
+          description?: string | null
+          description_plain?: string | null
           designer_id?: string | null
           due_date?: string | null
           estimated_hours?: number | null
