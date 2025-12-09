@@ -8,3 +8,9 @@ verify_jwt = true
 
 [functions.check-high-priority]
 verify_jwt = false
+
+[functions.daily-gemini-analyze]
+verify_jwt = false
+
+[functions.send-notification]
+verify_jwt = false

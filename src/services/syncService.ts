@@ -121,11 +121,14 @@ async function enrichJobOrders(jobOrders: any[]): Promise<DexieJobOrder[]> {
   const jobTitleMap = new Map<string, string>();
   jobTitles.forEach(j => jobTitleMap.set(j.id, j.job_title_id));
   
+  const customerObjects = new Map<string, { id: string; name: string }>();
+  customers.forEach(c => customerObjects.set(c.id, { id: c.id, name: c.name }));
+
   return jobOrders.map(job => ({
     id: job.id,
     job_order_number: job.job_order_number,
     customer_id: job.customer_id,
-    customer_name: customerMap.get(job.customer_id) || 'Unknown Customer',
+    customer_name: customerObjects.get(job.customer_id)?.name || 'Unknown Customer',
     job_title_id: job.job_title_id,
     job_title: jobTitleMap.get(job.job_title_id) || 'No Title',
     designer_id: job.designer_id,
@@ -150,7 +153,9 @@ async function enrichJobOrders(jobOrders: any[]): Promise<DexieJobOrder[]> {
     approved_at: job.approved_at,
     created_by: job.created_by,
     created_at: job.created_at,
-    updated_at: job.updated_at
+    updated_at: job.updated_at,
+    description: job.description,
+    description_plain: job.description_plain
   }));
 }
 

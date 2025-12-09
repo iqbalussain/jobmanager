@@ -1,7 +1,6 @@
 import Dexie, { Table } from 'dexie';
 
 export interface DexieJobOrder {
-  customer: any;
   id: string;
   job_order_number: string;
   customer_id: string;
@@ -86,6 +85,18 @@ export interface DexieNotification {
   created_at: string;
 }
 
+export interface DexieDailyChecklist {
+  id: string;
+  date: string;
+  items: {
+    stuck_jobs: Array<{ job_id: string; reason: string }>;
+    clusters: Array<{ name: string; count: number }>;
+    checklist: Array<{ id: string; text: string; actionable: boolean; done?: boolean }>;
+    clients: Array<{ client_name: string; note: string }>;
+  };
+  created_at: string;
+}
+
 class JobOrderDatabase extends Dexie {
   jobs!: Table<DexieJobOrder>;
   customers!: Table<DexieCustomer>;
@@ -95,11 +106,12 @@ class JobOrderDatabase extends Dexie {
   syncMeta!: Table<DexieSyncMeta>;
   jobEditAudit!: Table<DexieJobEditAudit>;
   notifications!: Table<DexieNotification>;
+  dailyChecklists!: Table<DexieDailyChecklist>;
 
   constructor() {
     super('JobOrderDB');
     
-    this.version(3).stores({
+    this.version(4).stores({
       jobs: 'id, job_order_number, customer_id, customer_name, salesman_id, salesman_name, designer_id, status, branch, priority, created_at, updated_at, is_synced',
       customers: 'id, name',
       salesmen: 'id, name',
@@ -107,7 +119,8 @@ class JobOrderDatabase extends Dexie {
       jobTitles: 'id, job_title_id',
       syncMeta: 'id',
       jobEditAudit: 'id, job_id, created_at',
-      notifications: 'id, user_id, job_id, type, read, created_at'
+      notifications: 'id, user_id, job_id, type, read, created_at',
+      dailyChecklists: 'id, date, created_at'
     });
   }
 }
