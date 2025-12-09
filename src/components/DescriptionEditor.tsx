@@ -11,6 +11,7 @@ import {
   Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import DOMPurify from 'dompurify';
 
 interface DescriptionEditorProps {
   value?: string;
@@ -42,10 +43,14 @@ export function DescriptionEditor({
   const [isUnderline, setIsUnderline] = useState(false);
   const [fontSize, setFontSize] = useState<FontSize>('normal');
 
-  // Initialize content
+  // Initialize content with sanitization to prevent XSS
   useEffect(() => {
     if (editorRef.current && value !== editorRef.current.innerHTML) {
-      editorRef.current.innerHTML = value;
+      const sanitizedValue = DOMPurify.sanitize(value, {
+        ALLOWED_TAGS: ['b', 'i', 'u', 'ul', 'li', 'span', 'br', 'p', 'div'],
+        ALLOWED_ATTR: ['style'],
+      });
+      editorRef.current.innerHTML = sanitizedValue;
     }
   }, [value]);
 
