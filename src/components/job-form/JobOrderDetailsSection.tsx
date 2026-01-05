@@ -1,6 +1,5 @@
-
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { DescriptionEditor } from "@/components/DescriptionEditor";
 
 interface JobOrderDetailsSectionProps {
   value: string;
@@ -11,11 +10,10 @@ export function JobOrderDetailsSection({ value, onChange }: JobOrderDetailsSecti
   return (
     <div>
       <Label htmlFor="jobOrderDetails">Job Order Details</Label>
-      <Textarea
-        id="jobOrderDetails"
-        placeholder="Enter job order details"
+      <DescriptionEditor
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
+        placeholder="Enter job order details (use toolbar for formatting, saved as plain text)"
       />
     </div>
   );

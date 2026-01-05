@@ -88,6 +88,23 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
 
+    // Check for cron secret header (for scheduled invocations)
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    const authHeader = req.headers.get("authorization");
+    const cronHeader = req.headers.get("x-cron-secret");
+    
+    // Allow if: has valid JWT auth OR has valid cron secret
+    const hasCronAuth = cronSecret && cronHeader === cronSecret;
+    const hasJwtAuth = authHeader?.startsWith("Bearer ");
+    
+    if (!hasCronAuth && !hasJwtAuth) {
+      console.error("Unauthorized: Missing valid authentication");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!geminiApiKey) {
       throw new Error("GEMINI_API_KEY not configured. Set it in Supabase secrets.");
     }
