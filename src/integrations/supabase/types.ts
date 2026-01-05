@@ -612,7 +612,6 @@ export type Database = {
         | "out"
         | "foc_sample"
       priority_level: "low" | "medium" | "high" | "urgent"
-      quotation_status: "draft" | "sent" | "accepted" | "rejected" | "converted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -768,7 +767,6 @@ export const Constants = {
         "foc_sample",
       ],
       priority_level: ["low", "medium", "high", "urgent"],
-      quotation_status: ["draft", "sent", "accepted", "rejected", "converted"],
     },
   },
 } as const
