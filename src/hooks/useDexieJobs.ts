@@ -19,7 +19,12 @@ export interface JobFilters {
   dateTo?: Date;
 }
 
-export function useDexieJobs(filters: JobFilters = {}, page: number = 1, pageSize: number = 50) {
+export function useDexieJobs(
+  filters: JobFilters = {}, 
+  page: number = 1, 
+  pageSize: number = 50,
+  returnAllJobs: boolean = false
+) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -124,10 +129,13 @@ export function useDexieJobs(filters: JobFilters = {}, page: number = 1, pageSiz
   const safeCurrentPage = Math.min(page, totalPages);
   
   const paginatedJobs = useMemo(() => {
+    if (returnAllJobs) {
+      return filteredJobs; // Return all filtered jobs without slicing
+    }
     const startIndex = (safeCurrentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return filteredJobs.slice(startIndex, endIndex);
-  }, [filteredJobs, safeCurrentPage, pageSize]);
+  }, [filteredJobs, safeCurrentPage, pageSize, returnAllJobs]);
 
   // Get unique filter options from all jobs
   const filterOptions = useMemo(() => {
