@@ -11,6 +11,18 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Authenticate: require CRON_SECRET for scheduled invocations
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    const providedSecret = req.headers.get("x-cron-secret");
+    
+    if (!cronSecret || providedSecret !== cronSecret) {
+      console.log("Unauthorized access attempt to check-high-priority function");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
