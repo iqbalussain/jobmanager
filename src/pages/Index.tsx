@@ -76,7 +76,8 @@ const Index = () => {
   const { user } = useAuth();
   
   // Use Dexie for offline-first job data
-  const { jobs: dexieJobs, isLoading, isSyncing, refresh } = useDexieJobs();
+  // Pass true for returnAllJobs to get all jobs for dashboard stats
+  const { jobs: dexieJobs, isLoading, isSyncing, refresh } = useDexieJobs({}, 1, 50, true);
   const { setJobStatus } = useJobActions();
 
   // Fetch role on load

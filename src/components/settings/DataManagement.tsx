@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Upload, FileText, AlertCircle } from "lucide-react";
+import { Download, Upload, FileText, AlertCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { forceFullResync } from "@/services/syncService";
 import {
   Select,
   SelectContent,
@@ -27,8 +28,29 @@ export function DataManagement() {
   const [importType, setImportType] = useState<DataType>('customers');
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isResyncing, setIsResyncing] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const { toast } = useToast();
+
+  const handleForceResync = async () => {
+    setIsResyncing(true);
+    try {
+      await forceFullResync();
+      toast({
+        title: "Sync Complete",
+        description: "All jobs have been re-synced from the server.",
+      });
+    } catch (error) {
+      console.error('Force resync error:', error);
+      toast({
+        title: "Sync Failed",
+        description: error instanceof Error ? error.message : "Failed to resync data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResyncing(false);
+    }
+  };
 
   const formatPriority = (priority: string): string => {
     const map: Record<string, string> = {
@@ -358,6 +380,28 @@ export function DataManagement() {
 
   return (
     <div className="space-y-6">
+      {/* Force Resync Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <RefreshCw className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold">Sync Data</h3>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Force a full resync to reload all jobs from the server. Use this if you notice missing or outdated data.
+        </p>
+        <Button 
+          onClick={handleForceResync} 
+          disabled={isResyncing}
+          variant="outline"
+          className="w-full"
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isResyncing ? 'animate-spin' : ''}`} />
+          {isResyncing ? 'Syncing all jobs...' : 'Force Full Resync'}
+        </Button>
+      </div>
+
+      <Separator />
+
       {/* Export Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
