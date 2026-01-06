@@ -3,6 +3,17 @@ import { Job } from '@/pages/Index';
 import { getPriorityColor, getStatusColor } from './pdfStyles';
 import { supabase } from '@/integrations/supabase/client';
 
+// HTML escape function to prevent XSS attacks
+const escapeHtml = (unsafe: string | null | undefined): string => {
+  if (!unsafe) return '';
+  return String(unsafe)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
 export const generatePDFContent = async (job: Job, invoiceNumber?: string): Promise<string> => {
   // Fetch job order items - use type assertion since table may not be in types
   let items: any[] = [];
@@ -41,7 +52,7 @@ export const generatePDFContent = async (job: Job, invoiceNumber?: string): Prom
       <!-- Invoice Number at Top -->
       ${invoiceNumber ? `
       <div style="text-align: center; margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%); border-radius: 12px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25); border: 2px solid #3b82f6;">
-        <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); letter-spacing: 0.5px;">INVOICE #${invoiceNumber}</h2>
+        <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); letter-spacing: 0.5px;">INVOICE #${escapeHtml(invoiceNumber)}</h2>
         <p style="margin: 6px 0 0 0; font-size: 12px; color: rgba(255, 255, 255, 0.9); font-weight: 500;">Official Invoice Document</p>
       </div>
       ` : ''}
@@ -56,9 +67,9 @@ export const generatePDFContent = async (job: Job, invoiceNumber?: string): Prom
                 <div style="width: 32px; height: 32px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255, 255, 255, 0.3);">
                   <span style="font-size: 14px; font-weight: bold;">📋</span>
                 </div>
-                <h1 style="font-size: 20px; font-weight: 800; margin: 0; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); letter-spacing: 0.3px;">${job.jobOrderNumber}</h1>
+                <h1 style="font-size: 20px; font-weight: 800; margin: 0; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); letter-spacing: 0.3px;">${escapeHtml(job.jobOrderNumber)}</h1>
               </div>
-              <h2 style="font-size: 16px; margin: 0; opacity: 0.95; font-weight: 600; line-height: 1.3; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">${job.title}</h2>
+              <h2 style="font-size: 16px; margin: 0; opacity: 0.95; font-weight: 600; line-height: 1.3; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">${escapeHtml(job.title)}</h2>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end; min-width: 140px;">
               <div style="background: ${statusColors.bg}; color: ${statusColors.text}; padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; border: 2px solid ${statusColors.border}; text-align: center; width: 100%; box-shadow: ${statusColors.shadow}; backdrop-filter: blur(10px);">
@@ -90,42 +101,42 @@ export const generatePDFContent = async (job: Job, invoiceNumber?: string): Prom
               <div>
                 <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Customer:</label>
                 <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="font-size: 12px; color: #1e293b; margin: 0; font-weight: 700;">${job.customer}</p>
+                  <p style="font-size: 12px; color: #1e293b; margin: 0; font-weight: 700;">${escapeHtml(job.customer)}</p>
                 </div>
               </div>
 
               <div>
                 <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Assignee:</label>
                 <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.assignee || 'Unassigned'}</p>
+                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${escapeHtml(job.assignee) || 'Unassigned'}</p>
                 </div>
               </div>
 
               <div>
                 <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Designer:</label>
                 <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.designer || 'Not assigned'}</p>
+                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${escapeHtml(job.designer) || 'Not assigned'}</p>
                 </div>
               </div>
 
               <div>
                 <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Salesman:</label>
                 <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.salesman || 'Not assigned'}</p>
+                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${escapeHtml(job.salesman) || 'Not assigned'}</p>
                 </div>
               </div>
 
               <div>
                 <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Branch:</label>
                 <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.branch || 'Head Office'}</p>
+                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${escapeHtml(job.branch) || 'Head Office'}</p>
                 </div>
               </div>
 
               <div>
                 <label style="font-weight: 700; color: #475569; font-size: 9px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Delivered At:</label>
                 <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
-                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${job.deliveredAt || 'Not specified'}</p>
+                  <p style="color: #64748b; margin: 0; font-size: 11px; font-weight: 600;">${escapeHtml(job.deliveredAt) || 'Not specified'}</p>
                 </div>
               </div>
             </div>
@@ -193,10 +204,10 @@ export const generatePDFContent = async (job: Job, invoiceNumber?: string): Prom
                 ${items.map((item, index) => `
                   <tr style="border-bottom: 1px solid #e2e8f0;">
                     <td style="padding: 10px 12px; font-size: 11px; color: #64748b; font-weight: 600;">${index + 1}</td>
-                    <td style="padding: 10px 12px; font-size: 11px; color: #1e293b; font-weight: 700;">${(item as any).job_title_name}</td>
-                    <td style="padding: 10px 12px; font-size: 11px; color: #475569; font-weight: 500; line-height: 1.4;">${item.description || 'No description'}</td>
+                    <td style="padding: 10px 12px; font-size: 11px; color: #1e293b; font-weight: 700;">${escapeHtml((item as any).job_title_name)}</td>
+                    <td style="padding: 10px 12px; font-size: 11px; color: #475569; font-weight: 500; line-height: 1.4;">${escapeHtml(item.description) || 'No description'}</td>
                     <td style="padding: 10px 12px; text-align: center; font-size: 11px; color: #1e293b; font-weight: 700;">
-                      <span style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 4px 10px; border-radius: 6px; border: 1px solid #3b82f6;">${item.quantity}</span>
+                      <span style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 4px 10px; border-radius: 6px; border: 1px solid #3b82f6;">${escapeHtml(String(item.quantity))}</span>
                     </td>
                   </tr>
                 `).join('')}
@@ -219,7 +230,7 @@ export const generatePDFContent = async (job: Job, invoiceNumber?: string): Prom
           </div>
           <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 14px; border-radius: 12px; border: 2px solid #bfdbfe; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);">
             <p style="color: #374151; margin: 0; white-space: pre-wrap; line-height: 1.6; font-size: 12px; text-align: justify; font-weight: 500;">
-              ${job.jobOrderDetails || 'No additional details provided.'}
+              ${escapeHtml(job.jobOrderDetails) || 'No additional details provided.'}
             </p>
           </div>
         </div>
