@@ -80,9 +80,23 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('Error toggling user status:', error);
+    // Map errors to safe user messages
+    let safeMessage = 'An error occurred. Please try again.';
+    let statusCode = 400;
+    
+    if (error.message?.includes('Unauthorized') || error.message?.includes('authorization')) {
+      safeMessage = 'You do not have permission to perform this action.';
+      statusCode = 401;
+    } else if (error.message?.includes('Admin access required')) {
+      safeMessage = 'Admin access is required for this action.';
+      statusCode = 403;
+    } else if (error.message?.includes('Missing required')) {
+      safeMessage = 'Please provide all required fields.';
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      JSON.stringify({ error: safeMessage }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: statusCode }
     );
   }
 });

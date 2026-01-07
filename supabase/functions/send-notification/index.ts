@@ -34,6 +34,43 @@ serve(async (req: Request) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify user authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.error('Auth error:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Check if user has permission to send notifications (admin, manager, or salesman)
+    const { data: userRole } = await supabase
+      .rpc('get_user_role', { _user_id: user.id });
+
+    const allowedRoles = ['admin', 'manager', 'salesman', 'job_order_manager'];
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      console.log(`User ${user.id} with role ${userRole} attempted to send notification without permission`);
+      return new Response(
+        JSON.stringify({ error: 'Insufficient permissions' }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const { 
       jobOrderNumber, 
       customerName, 
@@ -47,10 +84,6 @@ serve(async (req: Request) => {
     }: NotificationRequest = await req.json();
 
     console.log("Sending notification for job order:", jobOrderNumber);
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const logData: EmailLogData = {
       recipient_email: recipientEmail || 'unknown',
@@ -137,8 +170,9 @@ Please review and approve this job order in the system.`;
     );
   } catch (error: unknown) {
     console.error("Error sending notifications:", error);
+    // Return safe error message without exposing internal details
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'Failed to send notification. Please try again.' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
