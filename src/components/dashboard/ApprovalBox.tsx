@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { JobDetails } from "@/components/JobDetails";
 import { useState } from "react";
+import { updateJobInCache } from "@/services/syncService";
 
 interface PendingJob {
   id: string;
@@ -109,7 +110,14 @@ export function ApprovalBox() {
       return { previousPendingJobs };
     },
     
-    onSuccess: (_, { action }) => {
+    onSuccess: async ({ jobId }, { action }) => {
+      // Immediately update the Dexie cache so approved jobs list refreshes
+      try {
+        await updateJobInCache(jobId);
+      } catch (e) {
+        console.error('Failed to update Dexie cache:', e);
+      }
+      
       toast({
         title: action === 'approve' ? "Job Approved" : "Job Rejected",
         description: `Job order has been ${action}d successfully.`,
