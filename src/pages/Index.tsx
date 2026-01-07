@@ -175,6 +175,8 @@ const Index = () => {
           <ApprovedJobsList
             jobs={transformedJobs}
             onStatusUpdate={handleStatusUpdate}
+            isSyncing={isSyncing}
+            isLoading={isLoading}
           />
         );
       case "settings":
