@@ -290,9 +290,9 @@ Guidelines:
     );
   } catch (error: unknown) {
     console.error("Error in daily analysis:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    // Return safe error message without exposing internal details
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: "Analysis failed. Please try again later." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
