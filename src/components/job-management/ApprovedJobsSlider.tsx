@@ -16,15 +16,18 @@ import {
   ChevronDown,
   Eye,
   Edit,
-  Search
+  Search,
+  RefreshCw
 } from "lucide-react";
 
 interface ApprovedJobsSliderProps {
   jobs: Job[];
   onStatusUpdate?: (jobId: string, status: string) => void;
+  isSyncing?: boolean;
+  isLoading?: boolean;
 }
 
-export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderProps) {
+export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading }: ApprovedJobsSliderProps) {
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
   const [selectedSalesman, setSelectedSalesman] = useState<string>("all");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("all");
@@ -44,8 +47,9 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
   const salesmen = Array.from(new Set(jobs.map(job => job.salesman).filter(Boolean)));
   salesmen.unshift("all"); // Add "all" option
 
-  // Get unique customers
-  const customers = Array.from(new Set(jobs.map(job => job.customer).filter(Boolean)));
+  // Get unique customers - sorted alphabetically (case-insensitive)
+  const customers = Array.from(new Set(jobs.map(job => job.customer).filter(Boolean)))
+    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   customers.unshift("all"); // Add "all" option
 
   // Get unique statuses with approval status included
@@ -157,7 +161,19 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
   const currentJob = filteredJobs[selectedJobIndex];
 
   return (
-    <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen relative">
+      {/* Sync Loading Overlay */}
+      {(isSyncing || isLoading) && (
+        <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="flex items-center gap-3 bg-white px-5 py-4 rounded-xl shadow-lg border">
+            <RefreshCw className="w-5 h-5 animate-spin text-blue-500" />
+            <span className="text-sm font-medium text-gray-700">
+              {isLoading ? 'Loading jobs...' : 'Syncing jobs...'}
+            </span>
+          </div>
+        </div>
+      )}
+      
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Orders</h1>
@@ -378,9 +394,9 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate }: ApprovedJobsSliderP
             {currentJob.jobOrderDetails && (
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-medium text-gray-700 mb-2">Job Details</h3>
-                <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                <div className="text-sm text-gray-600 whitespace-pre-wrap break-words leading-relaxed">
                   {currentJob.jobOrderDetails}
-                </p>
+                </div>
               </div>
             )}
           </CardContent>
