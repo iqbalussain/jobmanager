@@ -250,3 +250,59 @@ export async function addJobToCache(job: any): Promise<void> {
   const [enriched] = await enrichJobOrders([job]);
   await db.jobs.put(enriched);
 }
+
+// Check and repair missing jobs in Dexie
+export async function repairMissingJobs(): Promise<number> {
+  console.log('[Sync] Checking for missing jobs...');
+  
+  try {
+    // Get all job IDs from Supabase
+    const { data: supabaseJobs, error } = await supabase
+      .from('job_orders')
+      .select('id')
+      .order('updated_at', { ascending: false });
+    
+    if (error) throw error;
+    if (!supabaseJobs) return 0;
+    
+    // Get all job IDs from Dexie
+    const dexieJobIds = new Set(
+      (await db.jobs.toArray()).map(j => j.id)
+    );
+    
+    // Find missing jobs
+    const missingJobIds = supabaseJobs
+      .filter(job => !dexieJobIds.has(job.id))
+      .map(job => job.id);
+    
+    if (missingJobIds.length === 0) {
+      console.log('[Sync] No missing jobs found.');
+      return 0;
+    }
+    
+    console.log(`[Sync] Found ${missingJobIds.length} missing jobs, syncing...`);
+    
+    // Fetch and sync missing jobs in batches of 100
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < missingJobIds.length; i += BATCH_SIZE) {
+      const batchIds = missingJobIds.slice(i, i + BATCH_SIZE);
+      const { data: jobs, error: batchError } = await supabase
+        .from('job_orders')
+        .select('*')
+        .in('id', batchIds);
+      
+      if (batchError) throw batchError;
+      
+      if (jobs && jobs.length > 0) {
+        const enrichedJobs = await enrichJobOrders(jobs);
+        await db.jobs.bulkPut(enrichedJobs);
+      }
+    }
+    
+    console.log(`[Sync] Repaired ${missingJobIds.length} missing jobs.`);
+    return missingJobIds.length;
+  } catch (error) {
+    console.error('[Sync] Repair missing jobs failed:', error);
+    return 0;
+  }
+}

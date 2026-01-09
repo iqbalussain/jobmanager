@@ -25,9 +25,10 @@ interface ApprovedJobsSliderProps {
   onStatusUpdate?: (jobId: string, status: string) => void;
   isSyncing?: boolean;
   isLoading?: boolean;
+  onRefresh?: () => void;
 }
 
-export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading }: ApprovedJobsSliderProps) {
+export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading, onRefresh }: ApprovedJobsSliderProps) {
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
   const [selectedSalesman, setSelectedSalesman] = useState<string>("all");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("all");
@@ -180,6 +181,18 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading 
           <p className="text-gray-600">Interactive job order slider view - Total: {filteredJobs.length} jobs</p>
         </div>
         <div className="flex items-center gap-4">
+          {onRefresh && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefresh}
+              disabled={isSyncing || isLoading}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          )}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
