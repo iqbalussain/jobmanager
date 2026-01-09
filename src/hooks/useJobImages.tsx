@@ -111,11 +111,16 @@ export function useJobImages(jobOrderId: string) {
     }
   });
 
-  const getImageUrl = (filePath: string) => {
-    const { data } = supabase.storage
+  const getImageUrl = async (filePath: string): Promise<string> => {
+    const { data, error } = await supabase.storage
       .from('job-order-images')
-      .getPublicUrl(filePath);
-    return data.publicUrl;
+      .createSignedUrl(filePath, 3600); // 1 hour expiry
+    
+    if (error || !data?.signedUrl) {
+      console.error('Error getting signed URL:', error);
+      return '';
+    }
+    return data.signedUrl;
   };
 
   return {

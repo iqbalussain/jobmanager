@@ -125,10 +125,11 @@ export function useImageUpload() {
 
       setUploadProgress(75);
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      // Get signed URL (bucket is private)
+      const { data: signedUrlData } = await supabase.storage
         .from('job-order-images')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 3600); // 1 hour expiry
+      const signedUrl = signedUrlData?.signedUrl || '';
 
       // Get image dimensions
       const img = new Image();
@@ -167,7 +168,7 @@ export function useImageUpload() {
 
       return {
         success: true,
-        url: publicUrl,
+        url: signedUrl,
         path: fileName
       };
 
