@@ -5,7 +5,8 @@ import {
   performInitialSync, 
   performDeltaSync, 
   startBackgroundSync, 
-  stopBackgroundSync 
+  stopBackgroundSync,
+  repairMissingJobs
 } from '@/services/syncService';
 import { useLiveQuery } from 'dexie-react-hooks';
 
@@ -44,6 +45,12 @@ export function useDexieJobs(
           // Quick delta sync on load
           setIsSyncing(true);
           await performDeltaSync();
+          
+          // Check for and repair any missing jobs
+          const repairedCount = await repairMissingJobs();
+          if (repairedCount > 0) {
+            console.log(`[Sync] Repaired ${repairedCount} missing jobs on startup`);
+          }
           setIsSyncing(false);
         }
         

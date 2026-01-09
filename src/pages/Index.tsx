@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useEffect } from "react";
+import { useState, lazy, Suspense, useEffect, useCallback } from "react";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useDexieJobs } from "@/hooks/useDexieJobs";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,7 @@ import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 import { useJobActions } from "@/hooks/useJobActions";
 import { updateJobInCache } from "@/services/syncService";
 import { HighPriorityModal } from "@/components/HighPriorityModal";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 // Lazy loaded components for performance
 const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
@@ -99,6 +100,38 @@ const Index = () => {
     fetchUserRole();
   }, [user]);
 
+  // Real-time subscription to job_orders for live updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('job-orders-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'job_orders'
+        },
+        async (payload: RealtimePostgresChangesPayload<{ [key: string]: any }>) => {
+          console.log('[Realtime] Job order changed:', payload.eventType);
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            try {
+              await updateJobInCache(payload.new.id);
+              refresh();
+            } catch (e) {
+              console.error('[Realtime] Failed to update cache:', e);
+            }
+          } else if (payload.eventType === 'DELETE') {
+            refresh();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refresh]);
+
   // Transform Dexie jobs to the Job interface
   const transformedJobs: Job[] = (dexieJobs || []).map((order) => ({
     id: order.id,
@@ -177,6 +210,7 @@ const Index = () => {
             onStatusUpdate={handleStatusUpdate}
             isSyncing={isSyncing}
             isLoading={isLoading}
+            onRefresh={refresh}
           />
         );
       case "settings":
