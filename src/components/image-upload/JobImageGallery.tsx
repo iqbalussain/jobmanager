@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Trash2, Edit3, Eye, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +32,23 @@ interface JobImageGalleryProps {
 export function JobImageGallery({ jobOrderId, canEdit = true }: JobImageGalleryProps) {
   const { images, isLoading, deleteImage, isDeletingImage, updateAltText, getImageUrl } = useJobImages(jobOrderId);
   const [editingAltText, setEditingAltText] = useState<{ id: string; text: string } | null>(null);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+
+  // Load signed URLs for all images
+  useEffect(() => {
+    const loadImageUrls = async () => {
+      const urls: Record<string, string> = {};
+      for (const image of images) {
+        const url = await getImageUrl(image.file_path);
+        urls[image.id] = url;
+      }
+      setImageUrls(urls);
+    };
+    
+    if (images.length > 0) {
+      loadImageUrls();
+    }
+  }, [images, getImageUrl]);
 
   if (isLoading) {
     return (
@@ -60,7 +77,9 @@ export function JobImageGallery({ jobOrderId, canEdit = true }: JobImageGalleryP
 
   const handleDownload = async (image: any) => {
     try {
-      const imageUrl = getImageUrl(image.file_path);
+      const imageUrl = imageUrls[image.id];
+      if (!imageUrl) return;
+      
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -82,11 +101,17 @@ export function JobImageGallery({ jobOrderId, canEdit = true }: JobImageGalleryP
         {images.map((image) => (
           <div key={image.id} className="group relative">
             <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
-              <img
-                src={getImageUrl(image.file_path)}
-                alt={image.alt_text || image.file_name}
-                className="h-full w-full object-cover transition-transform group-hover:scale-105"
-              />
+              {imageUrls[image.id] ? (
+                <img
+                  src={imageUrls[image.id]}
+                  alt={image.alt_text || image.file_name}
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                </div>
+              )}
             </div>
             
             {/* Overlay with actions */}
@@ -104,11 +129,15 @@ export function JobImageGallery({ jobOrderId, canEdit = true }: JobImageGalleryP
                       <DialogTitle>{image.file_name}</DialogTitle>
                     </DialogHeader>
                     <div className="flex justify-center">
-                      <img
-                        src={getImageUrl(image.file_path)}
-                        alt={image.alt_text || image.file_name}
-                        className="max-h-[70vh] object-contain"
-                      />
+                      {imageUrls[image.id] ? (
+                        <img
+                          src={imageUrls[image.id]}
+                          alt={image.alt_text || image.file_name}
+                          className="max-h-[70vh] object-contain"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                      )}
                     </div>
                   </DialogContent>
                 </Dialog>
