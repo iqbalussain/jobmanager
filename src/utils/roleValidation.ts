@@ -13,7 +13,9 @@ export const rolePermissions = {
   canEditJobOrders: ["admin", "manager", "job_order_manager"],
   canDeleteJobOrders: ["admin", "manager"],
   canViewOwnJobOrders: ["admin", "manager", "job_order_manager", "salesman", "designer"],
-  canManageCustomers: ["admin", "manager", "job_order_manager", "salesman"]
+  canManageCustomers: ["admin", "manager", "job_order_manager", "salesman"],
+  // Salesmen can view jobs where they are assigned as salesman OR jobs they created
+  canViewAssignedJobOrders: ["salesman", "designer"]
 } as const;
 
 export function hasPermission(userRole: Role, permission: keyof typeof rolePermissions): boolean {
