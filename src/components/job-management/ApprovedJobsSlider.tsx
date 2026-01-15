@@ -31,6 +31,7 @@ interface ApprovedJobsSliderProps {
 export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading, onRefresh }: ApprovedJobsSliderProps) {
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
   const [selectedSalesman, setSelectedSalesman] = useState<string>("all");
+  const [selectedDesigner, setSelectedDesigner] = useState<string>("all");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("approved");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -44,9 +45,15 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
   const branches = Array.from(new Set(jobs.map(job => job.branch).filter(Boolean)));
   branches.unshift("all"); // Add "all" option
 
-  // Get unique salesmen
-  const salesmen = Array.from(new Set(jobs.map(job => job.salesman).filter(Boolean)));
+  // Get unique salesmen - sorted alphabetically (case-insensitive)
+  const salesmen = Array.from(new Set(jobs.map(job => job.salesman).filter(Boolean)))
+    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   salesmen.unshift("all"); // Add "all" option
+
+  // Get unique designers - sorted alphabetically (case-insensitive)
+  const designers = Array.from(new Set(jobs.map(job => job.designer).filter(Boolean)))
+    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  designers.unshift("all"); // Add "all" option
 
   // Get unique customers - sorted alphabetically (case-insensitive)
   const customers = Array.from(new Set(jobs.map(job => job.customer).filter(Boolean)))
@@ -57,10 +64,11 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
   const uniqueStatuses = Array.from(new Set(jobs.map(job => job.status).filter(Boolean)));
   const statuses = ["all", "approved", ...uniqueStatuses];
 
-  // Filter jobs by branch, salesman, customer, status, and search query
+  // Filter jobs by branch, salesman, designer, customer, status, and search query
   const filteredJobs = jobs.filter(job => {
     const branchMatch = selectedBranch === "all" || job.branch === selectedBranch;
     const salesmanMatch = selectedSalesman === "all" || job.salesman === selectedSalesman;
+    const designerMatch = selectedDesigner === "all" || job.designer === selectedDesigner;
     const customerMatch = selectedCustomer === "all" || job.customer === selectedCustomer;
     const statusMatch = selectedStatus === "all" || 
       (selectedStatus === "approved" ? job.approval_status === "approved" : job.status === selectedStatus);
@@ -86,13 +94,13 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
       return searchTerms.some(term => searchableText.includes(term));
     })();
     
-    return branchMatch && salesmanMatch && customerMatch && statusMatch && searchMatch;
+    return branchMatch && salesmanMatch && designerMatch && customerMatch && statusMatch && searchMatch;
   });
 
   // Reset index when filters change
   useEffect(() => {
     setSelectedJobIndex(0);
-  }, [selectedBranch, selectedSalesman, selectedCustomer, selectedStatus, searchQuery]);
+  }, [selectedBranch, selectedSalesman, selectedDesigner, selectedCustomer, selectedStatus, searchQuery]);
 
   const handleJobSelect = (jobNumber: string) => {
     const index = filteredJobs.findIndex(job => job.jobOrderNumber === jobNumber);
@@ -216,14 +224,27 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
             </SelectContent>
           </Select>
           <Select value={selectedSalesman} onValueChange={setSelectedSalesman}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Select Salesman" />
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Salesman" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Salesmen</SelectItem>
               {salesmen.slice(1).map((salesman) => (
                 <SelectItem key={salesman} value={salesman}>
                   {salesman}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedDesigner} onValueChange={setSelectedDesigner}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Designer" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Designers</SelectItem>
+              {designers.slice(1).map((designer) => (
+                <SelectItem key={designer} value={designer}>
+                  {designer}
                 </SelectItem>
               ))}
             </SelectContent>
