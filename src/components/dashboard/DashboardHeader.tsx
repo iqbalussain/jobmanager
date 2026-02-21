@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { SyncStatusIndicator } from "@/components/ui/SyncStatusIndicator";
+import { useRamadanTheme } from "@/App";
 
 interface DashboardHeaderProps {
   searchQuery: string;
@@ -8,11 +9,24 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ searchQuery, setSearchQuery }: DashboardHeaderProps) {
+  const { isRamadan } = useRamadanTheme();
+
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-        <p className="text-gray-600">Overview of your job orders and performance metrics</p>
+        {isRamadan ? (
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-3xl">🌙</span>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Ramadan Kareem</h1>
+              <p className="text-muted-foreground text-sm">رمضان كريم — Wishing you a blessed month</p>
+            </div>
+            <span className="text-2xl">⭐</span>
+          </div>
+        ) : (
+          <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+        )}
+        <p className="text-muted-foreground">Overview of your job orders and performance metrics</p>
       </div>
       <div className="flex items-center gap-4">
         <SyncStatusIndicator />
