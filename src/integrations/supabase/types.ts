@@ -124,6 +124,36 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_tasbi: {
+        Row: {
+          count: number
+          date: string
+          dhikr: string
+          goal: number
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          date?: string
+          dhikr: string
+          goal?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          date?: string
+          dhikr?: string
+          goal?: number
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       job_edit_audit: {
         Row: {
           created_at: string | null

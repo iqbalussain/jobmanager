@@ -14,6 +14,7 @@ import {
   Lock
 } from "lucide-react";
 import { HighPriorityBadge } from "@/components/ui/HighPriorityBadge";
+import { useRamadanTheme } from "@/App";
 
 interface JobCardProps {
   job: Job;
@@ -22,6 +23,7 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
+  const { isRamadan } = useRamadanTheme();
   const isLocked = job.status === "invoiced";
   
   const handleStatusChange = (value: string) => {
@@ -62,10 +64,16 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   const isHighPriority = job.priority === "high";
 
   return (
-    <Card className={`bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 ${
+    <Card className={`bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 relative overflow-hidden ${
       isHighPriority && isOverdue ? "ring-2 ring-red-500 animate-pulse" : 
       isHighPriority ? "ring-2 ring-orange-400" : ""
     }`}>
+      {isRamadan && (
+        <>
+          <span className="absolute top-1 right-1 text-primary/15 text-sm pointer-events-none">☪</span>
+          <span className="absolute bottom-1 left-1 text-accent/15 text-xs pointer-events-none">✦</span>
+        </>
+      )}
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
