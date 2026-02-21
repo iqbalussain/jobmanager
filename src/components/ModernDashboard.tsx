@@ -7,6 +7,8 @@ import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
 import { QuickSearch } from "@/components/dashboard/QuickSearch";
 import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
 import { HighPriorityReminder } from "@/components/dashboard/HighPriorityReminder";
+import { TasbiCounter } from "@/components/dashboard/TasbiCounter";
+import { useRamadanTheme } from "@/App";
 
 interface ModernDashboardProps {
   jobs: Job[];
@@ -15,6 +17,7 @@ interface ModernDashboardProps {
 }
 
 export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
+  const { isRamadan } = useRamadanTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -83,8 +86,8 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 h-[400px]">
-        <div className="glass-effect rounded-xl p-1 h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="lg:col-span-3 glass-effect rounded-xl p-1 h-[400px]">
           <QuickSearch 
             searchQuery={searchQuery}
             filteredJobs={filteredJobs}
@@ -92,6 +95,11 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
             onSearchChange={setSearchQuery}
           />
         </div>
+        {isRamadan && (
+          <div className="lg:col-span-1">
+            <TasbiCounter />
+          </div>
+        )}
       </div>
 
       <JobDetails

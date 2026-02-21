@@ -11,6 +11,8 @@ import { HighPriorityAlertModal } from "@/components/dashboard/HighPriorityAlert
 import { useState, useEffect, createContext, useContext } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import { RamadanFrame } from "@/components/RamadanFrame";
+import { useAdhanNotifications } from "@/hooks/useAdhanNotifications";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,12 @@ function GlobalHighPriorityAlert() {
   );
 }
 
+function AdhanNotifier() {
+  const { isRamadan } = useRamadanTheme();
+  useAdhanNotifications(isRamadan);
+  return null;
+}
+
 function App() {
   const [isRamadan, setIsRamadan] = useState(() => localStorage.getItem('ramadan-theme') === 'true');
 
@@ -51,22 +59,25 @@ function App() {
         <NotificationProvider>
           <RamadanThemeContext.Provider value={{ isRamadan, toggleRamadan }}>
             <TooltipProvider>
-              <div className="min-h-screen" style={{ background: 'var(--gradient-background)' }}>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={
-                      <ProtectedRoute>
-                        <Index />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <FloatingCreateButton />
-                </BrowserRouter>
-                <GlobalHighPriorityAlert />
-              </div>
+              <RamadanFrame>
+                <div className="min-h-screen" style={{ background: 'var(--gradient-background)' }}>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/" element={
+                        <ProtectedRoute>
+                          <Index />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    <FloatingCreateButton />
+                  </BrowserRouter>
+                  <GlobalHighPriorityAlert />
+                  <AdhanNotifier />
+                </div>
+              </RamadanFrame>
             </TooltipProvider>
           </RamadanThemeContext.Provider>
         </NotificationProvider>
