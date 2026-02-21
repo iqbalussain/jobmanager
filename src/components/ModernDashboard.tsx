@@ -59,10 +59,22 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
     <div className="space-y-6 p-6 min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent mb-2">
-            Dashboard
-          </h1>
-          <p className="text-gray-600 text-lg">Welcome back! Here's what's happening with your projects.</p>
+          {isRamadan ? (
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-3xl">🌙</span>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Ramadan Kareem
+              </h1>
+              <span className="text-2xl">✦</span>
+            </div>
+          ) : (
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              Dashboard
+            </h1>
+          )}
+          <p className="text-muted-foreground text-lg">
+            {isRamadan ? "رمضان كريم — Wishing you a blessed month ☪" : "Welcome back! Here's what's happening with your projects."}
+          </p>
         </div>
         <div className="flex items-center gap-4">
           <DashboardNotifications />
@@ -73,13 +85,15 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
       <HighPriorityReminder jobs={jobs} onViewJob={handleViewDetails} />
 
       <div className="grid grid-cols-10 gap-6 h-[400px]">
-        <div className="col-span-6">
+        <div className="col-span-6 relative">
+          {isRamadan && <span className="absolute top-2 right-3 text-primary/10 text-2xl pointer-events-none z-10">☪</span>}
           <div className="glass-effect rounded-xl p-1">
             <ApprovalBox />
           </div>
         </div>
         
-        <div className="col-span-4">
+        <div className="col-span-4 relative">
+          {isRamadan && <span className="absolute top-2 left-3 text-accent/15 text-lg pointer-events-none z-10">✦</span>}
           <div className="glass-effect rounded-xl p-1">
             <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
           </div>
@@ -87,8 +101,9 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-3 glass-effect rounded-xl p-1 h-[400px]">
-          <QuickSearch 
+        <div className="lg:col-span-3 glass-effect rounded-xl p-1 h-[400px] relative">
+          {isRamadan && <span className="absolute top-2 right-3 text-accent/10 text-xl pointer-events-none z-10">☪</span>}
+          <QuickSearch
             searchQuery={searchQuery}
             filteredJobs={filteredJobs}
             onViewDetails={handleViewDetails}
