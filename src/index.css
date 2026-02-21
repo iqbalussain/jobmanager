@@ -188,4 +188,37 @@
     transform: translateY(-4px);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   }
+
+  /* Fairy Lights */
+  .fairy-light {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: hsl(43 89% 50%);
+    box-shadow: 0 0 6px 2px hsl(43 89% 50% / 0.6), 0 0 12px 4px hsl(152 69% 31% / 0.3);
+    animation: fairy-glow 2s ease-in-out infinite alternate;
+  }
+
+  .fairy-light:nth-child(odd) {
+    background: hsl(152 69% 45%);
+    box-shadow: 0 0 6px 2px hsl(152 69% 45% / 0.6), 0 0 12px 4px hsl(43 89% 50% / 0.3);
+  }
+
+  .fairy-corner-star {
+    font-size: 16px;
+    color: hsl(43 89% 50%);
+    text-shadow: 0 0 8px hsl(43 89% 50% / 0.8);
+    animation: fairy-glow 1.5s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes fairy-glow {
+  0% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
