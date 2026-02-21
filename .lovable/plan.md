@@ -1,63 +1,75 @@
 
 
-## Plan
+## Plan: Ramadan Fairy Lights Frame, Adhan Notifications, and Tasbi Counter
 
-### Issue 1: Rahul (and 12 other users) Can't See Jobs
-
-**Root Cause:** The RLS policy `job_orders_view_policy` checks the `user_roles` table for role-based access. However, 9 designers (including Rahul) and 4 salesmen only have roles in the `profiles` table -- they are completely missing from `user_roles`. This means the RLS policy denies them access to all jobs.
-
-**Affected users:**
-- Designers (9): Hamid, Mubashir, Shabeeb, Irshad, Rahul, Imran Jamil, Hamza, Bilal, Adnan
-- Salesmen (4): Ussain, Aqeeb, Mohsin, Razi
-
-**Fix (1 step):**
-
-1. **Insert missing `user_roles` rows** -- Sync all profiles that have a role in `profiles` but no matching entry in `user_roles`:
-
-```sql
-INSERT INTO user_roles (user_id, role)
-SELECT p.id, p.role
-FROM profiles p
-WHERE NOT EXISTS (
-  SELECT 1 FROM user_roles ur
-  WHERE ur.user_id = p.id AND ur.role = p.role
-)
-AND p.role IS NOT NULL;
-```
-
-This single query fixes Rahul and all 12 other affected users immediately. No code changes needed.
+This plan adds three Ramadan-themed features to your app when Ramadan mode is enabled.
 
 ---
 
-### Issue 2: Ramadan Theme
+### 1. Fairy Lights Border Frame (All Pages)
 
-Yes, a Ramadan theme is absolutely possible! Here's the plan:
+A decorative animated fairy lights border will appear around the entire app when Ramadan theme is active. This will be implemented as a CSS animation with small glowing dots along the page edges.
 
-1. **Add a Ramadan CSS theme** in `src/index.css` with warm gold/green/deep purple color palette:
-   - Primary: Deep emerald green
-   - Accent: Rich gold
-   - Background: Warm dark tones with subtle crescent/star decorative elements
+**How it works:**
+- A new `RamadanFrame` component wraps the main app content
+- Animated glowing dots (green and gold colors) run along all four edges
+- Only visible when Ramadan theme is toggled ON
+- Pure CSS animation -- no performance impact
 
-2. **Add a theme toggle** in `src/components/SettingsView.tsx` or the sidebar to switch to "Ramadan Mode"
+**Files to create/modify:**
+- `src/components/RamadanFrame.tsx` -- New component with fairy light dots
+- `src/index.css` -- Add fairy light keyframe animations
+- `src/App.tsx` -- Wrap content with `RamadanFrame`
 
-3. **Add decorative elements:**
-   - A crescent moon and stars SVG in the sidebar/header
-   - "Ramadan Kareem" greeting in the dashboard header
-   - Gold/green gradient accents replacing the current red/blue gradients
+---
 
-4. **Store preference** in localStorage so it persists across sessions
+### 2. Oman Adhan Time Notifications
+
+Browser notifications will alert users at Adhan times based on Muscat, Oman prayer schedule. Uses the Aladhan API (free, no key needed) to fetch accurate daily prayer times.
+
+**How it works:**
+- Fetches daily prayer times from `api.aladhan.com` for Muscat, Oman (lat: 23.588, lng: 58.3829)
+- A background timer checks every minute if current time matches any prayer time
+- Shows a browser notification (with sound if permitted) and an in-app toast
+- Requests browser notification permission on first load
+- Only active when Ramadan theme is ON
+- Prayer times: Fajr, Dhuhr, Asr, Maghrib, Isha
+
+**Files to create/modify:**
+- `src/hooks/useAdhanNotifications.ts` -- New hook that fetches prayer times and schedules alerts
+- `src/App.tsx` -- Activate the hook when Ramadan mode is ON
+
+---
+
+### 3. Tasbi Counter with Goals (Dashboard)
+
+A small, elegant tasbi (prayer bead) counter widget on the dashboard that lets users track dhikr with daily goals. Data is stored per-user in localStorage.
+
+**How it works:**
+- Compact card on the dashboard with a large tap/click counter button
+- Shows current count, daily goal (default 100, customizable), and progress bar
+- Three preset dhikr options: SubhanAllah, Alhamdulillah, Allahu Akbar
+- Reset button and goal setter
+- Progress persists in localStorage (per user, per day)
+- Only visible when Ramadan theme is ON
+
+**Files to create/modify:**
+- `src/components/dashboard/TasbiCounter.tsx` -- New tasbi counter widget
+- `src/components/ModernDashboard.tsx` -- Add TasbiCounter to the dashboard layout
+
+---
 
 ### Technical Details
 
-**Files to modify:**
-- `src/index.css` -- Add `.ramadan` theme CSS variables (green/gold palette)
-- `src/components/MinimalistSidebar.tsx` -- Add Ramadan theme toggle button
-- `src/components/dashboard/DashboardHeader.tsx` -- Show Ramadan greeting when theme is active
-- `src/App.tsx` -- Add theme state management and apply class to root element
+**New files (3):**
+- `src/components/RamadanFrame.tsx`
+- `src/hooks/useAdhanNotifications.ts`
+- `src/components/dashboard/TasbiCounter.tsx`
 
-**Color palette:**
-- Primary: `hsl(152, 69%, 31%)` (Emerald green)
-- Accent: `hsl(43, 89%, 50%)` (Gold)
-- Background gradient: Deep navy to dark green
-- Card backgrounds: Warm dark tones with subtle gold borders
+**Modified files (3):**
+- `src/index.css` -- Fairy light CSS animations
+- `src/App.tsx` -- Add RamadanFrame wrapper and Adhan hook
+- `src/components/ModernDashboard.tsx` -- Add TasbiCounter widget
+
+**No database changes needed** -- tasbi counter uses localStorage, prayer times come from a free external API.
 
