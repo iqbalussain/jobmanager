@@ -8,7 +8,7 @@ export function isValidRole(role: string): role is Role {
 
 // Define role permissions for job order management
 export const rolePermissions = {
-  canCreateJobOrders: ["admin", "manager", "job_order_manager", "salesman"],
+  canCreateJobOrders: ["admin", "manager", "job_order_manager", "salesman", "designer"],
   canViewAllJobOrders: ["admin", "manager", "job_order_manager"],
   canEditJobOrders: ["admin", "manager", "job_order_manager"],
   canDeleteJobOrders: ["admin", "manager"],

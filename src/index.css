@@ -213,12 +213,39 @@
 }
 
 @keyframes fairy-glow {
-  0% {
-    opacity: 0.4;
-    transform: scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
+  0% { opacity: 0.4; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes falling-star {
+  0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(110vh) translateX(30px) rotate(360deg); opacity: 0; }
+}
+
+@keyframes lantern-float {
+  0% { transform: translateY(110vh) translateX(0) rotate(-3deg); opacity: 0; }
+  10% { opacity: 0.7; }
+  50% { transform: translateY(50vh) translateX(15px) rotate(3deg); opacity: 0.9; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(-10vh) translateX(-10px) rotate(-3deg); opacity: 0; }
+}
+
+.falling-star {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1;
+  animation: falling-star linear infinite;
+  color: hsl(43 89% 50%);
+  text-shadow: 0 0 6px hsl(43 89% 50% / 0.6);
+}
+
+.floating-lantern {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1;
+  animation: lantern-float ease-in-out infinite;
+  color: hsl(25 90% 55%);
+  text-shadow: 0 0 10px hsl(25 90% 55% / 0.5), 0 0 20px hsl(43 89% 50% / 0.3);
 }
