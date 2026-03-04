@@ -1,52 +1,74 @@
 
 
-## Plan: Animated Falling Stars + Designer Job Creation (1 credit)
+## Plan: Fix Job Order Number Generation Race Condition
 
-### 1. Animated Falling Stars/Lanterns Background
+### Root Cause
 
-Add floating/falling star and lantern particles behind the content when Ramadan theme is active.
+The `generateJobOrderNumber` function in `useCreateJobOrder.tsx` queries `job_orders` client-side to find the latest number. But due to RLS policies, non-admin users (designers, salesmen) can only see **their own** jobs. So when a designer queries for the latest `HO%` number, they miss higher numbers created by other users, generating a duplicate -- which then fails on the unique constraint and exhausts all 5 retry attempts.
 
-**Changes:**
+### Fix (2 steps)
 
-- **`src/index.css`** -- Add CSS keyframe animations:
-  - `@keyframes falling-star` -- Slow vertical drift with slight horizontal sway and fade
-  - `@keyframes lantern-float` -- Gentle floating upward motion with slight swing
-  - `.falling-star` and `.floating-lantern` utility classes
+**1. Create a SECURITY DEFINER database function** that generates the next job order number, bypassing RLS so it sees ALL job orders:
 
-- **`src/components/RamadanFrame.tsx`** -- Add a particle layer behind the content:
-  - 15-20 falling star elements (using star unicode characters) scattered randomly with varying sizes, delays, and durations
-  - 8-10 floating lantern elements (using lantern unicode) drifting gently
-  - All particles are `pointer-events-none` and low `z-index` so they stay behind content
-  - Uses `useMemo` to generate random positions only once (no re-renders)
+```sql
+CREATE OR REPLACE FUNCTION public.generate_next_job_order_number(p_branch text)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  prefix text;
+  start_num int;
+  next_num int;
+BEGIN
+  -- Map branch to prefix
+  prefix := CASE p_branch
+    WHEN 'Wadi Kabeer' THEN 'WK'
+    WHEN 'Wajihat Ruwi' THEN 'WR'
+    WHEN 'Ruwi Branch' THEN 'RB'
+    WHEN 'Ghubra Branch' THEN 'GB'
+    WHEN 'Nizwa Branch' THEN 'NZ'
+    WHEN 'Al Khoud Branch' THEN 'AK'
+    ELSE 'HO'
+  END;
 
-### 2. Enable Designers to Create Job Orders
+  start_num := CASE prefix
+    WHEN 'WK' THEN 20001
+    WHEN 'WR' THEN 30001
+    WHEN 'RB' THEN 40001
+    WHEN 'GB' THEN 50001
+    WHEN 'NZ' THEN 60001
+    WHEN 'AK' THEN 70001
+    ELSE 10001
+  END;
 
-Two changes needed -- one in the database RLS policy and one in the frontend permissions config.
+  SELECT COALESCE(
+    MAX(CAST(SUBSTRING(job_order_number FROM LENGTH(prefix)+1) AS int)) + 1,
+    start_num
+  ) INTO next_num
+  FROM job_orders
+  WHERE job_order_number LIKE prefix || '%';
 
-**Changes:**
+  RETURN prefix || next_num;
+END;
+$$;
+```
 
-- **SQL Migration** -- Update the `job_orders_insert_policy` to include `designer` role:
-  ```sql
-  DROP POLICY "job_orders_insert_policy" ON job_orders;
-  CREATE POLICY "job_orders_insert_policy" ON job_orders
-    FOR INSERT WITH CHECK (
-      (EXISTS (
-        SELECT 1 FROM user_roles ur
-        WHERE ur.user_id = auth.uid()
-        AND ur.role IN ('admin','manager','job_order_manager','salesman','designer')
-      ))
-      AND created_by = auth.uid()
-    );
-  ```
+**2. Update `useCreateJobOrder.tsx`** -- Replace the client-side `generateJobOrderNumber` function with a simple RPC call:
 
-- **`src/utils/roleValidation.ts`** -- Add `"designer"` to the `canCreateJobOrders` array so the UI doesn't hide the create button from designers.
+```typescript
+const jobOrderNumber = await supabase.rpc('generate_next_job_order_number', {
+  p_branch: data.branch
+});
+```
 
-### Summary of Files
+This eliminates the race condition entirely since the DB function sees all rows regardless of the user's role. The existing retry loop for duplicate keys is kept as a safety net for concurrent inserts.
+
+### Files Changed
 
 | File | Action |
 |------|--------|
-| `src/index.css` | Add falling-star and lantern keyframes + classes |
-| `src/components/RamadanFrame.tsx` | Add particle layer with stars and lanterns |
-| `src/utils/roleValidation.ts` | Add "designer" to canCreateJobOrders |
-| SQL migration | Update insert policy to include designer role |
+| SQL migration | Create `generate_next_job_order_number` SECURITY DEFINER function |
+| `src/hooks/useCreateJobOrder.tsx` | Replace client-side number generation with RPC call |
 
