@@ -26,51 +26,16 @@ export function useCreateJobOrder() {
   const { user } = useAuth();
   const { addNotification, showHighPriorityAlert } = useNotifications();
 
-  const branchPrefixes: Record<string, string> = {
-    'Wadi Kabeer': 'WK',
-    'Wajihat Ruwi': 'WR',
-    'Head Office': 'HO',
-    'Ruwi Branch': 'RB',
-    'Ghubra Branch': 'GB',
-    'Nizwa Branch': 'NZ',
-    'Al Khoud Branch': 'AK',
-  };
-  const branchStartNumbers: Record<string, number> = {
-  'WK': 20001,
-  'WR': 30001,
-  'HO': 10001,
-  'RB': 40001,
-  'GB': 50001,
-  'NZ': 60001,
-  'AK': 70001,
-  };
-
-const generateJobOrderNumber = async (branch: string): Promise<string> => {
-  const prefix = branchPrefixes[branch] || 'HO';
-  const startNumber = branchStartNumbers[prefix] || 10001;
-
-    const { data: latestOrder, error } = await supabase
-      .from('job_orders')
-      .select('job_order_number')
-      .like('job_order_number', `${prefix}%`)
-      .order('job_order_number', { ascending: false })
-      .limit(1);
-
+  const generateJobOrderNumber = async (branch: string): Promise<string> => {
+    const { data, error } = await supabase.rpc('generate_next_job_order_number', {
+      p_branch: branch
+    });
     if (error) {
-      console.error('Error fetching latest job order:', error);
+      console.error('Error generating job order number:', error);
       throw error;
     }
-
- let nextNumber = startNumber;
-
-  if (latestOrder && latestOrder.length > 0) {
-    const match = latestOrder[0].job_order_number.match(/\d+$/);
-    const lastNumber = match ? parseInt(match[0], 10) : startNumber - 1;
-    nextNumber = Math.max(lastNumber + 1, startNumber);
-  }
-
-  return `${prefix}${nextNumber}`;
-};
+    return data as string;
+  };
 
   const sendNotification = async (jobData: any) => {
     try {
