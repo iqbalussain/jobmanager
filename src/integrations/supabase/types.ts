@@ -596,6 +596,10 @@ export type Database = {
     }
     Functions: {
       generate_job_order_number: { Args: { branch: string }; Returns: string }
+      generate_next_job_order_number: {
+        Args: { p_branch: string }
+        Returns: string
+      }
       get_current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
