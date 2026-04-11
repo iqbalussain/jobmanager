@@ -245,6 +245,13 @@ export function ModernDashboard({ jobs, onViewChange }: ModernDashboardProps) {
         </div>
       </div>
 
+      {/* Gaming Leaderboard */}
+      {gamingMode && (
+        <div className="relative z-10">
+          <GamingLeaderboard />
+        </div>
+      )}
+
       <JobDetails
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
