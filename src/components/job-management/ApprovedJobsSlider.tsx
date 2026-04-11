@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useGamingMode } from "@/App";
 import { Job } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +29,27 @@ interface ApprovedJobsSliderProps {
   onRefresh?: () => void;
 }
 
+const getStatusColor = (status: string) => {
+  const colors = {
+    "pending": "from-yellow-400 to-yellow-600",
+    "in-progress": "from-blue-400 to-blue-600",
+    "designing": "from-purple-400 to-purple-600",
+    "completed": "from-green-400 to-green-600",
+    "invoiced": "from-emerald-400 to-emerald-600",
+    "cancelled": "from-red-400 to-red-600"
+  };
+  return colors[status as keyof typeof colors] || "from-gray-400 to-gray-600";
+};
+
+const getPriorityColor = (priority: string) => {
+  const colors = {
+    "high": "from-red-400 to-red-600",
+    "medium": "from-orange-400 to-orange-600",
+    "low": "from-green-400 to-green-600"
+  };
+  return colors[priority as keyof typeof colors] || "from-gray-400 to-gray-600";
+};
+
 export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading, onRefresh }: ApprovedJobsSliderProps) {
   const { gamingMode } = useGamingMode();
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
@@ -41,7 +62,6 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const sliderRef = useRef<HTMLDivElement>(null);
 
   // Get unique branches
   const branches = Array.from(new Set(jobs.map(job => job.branch).filter(Boolean)));
@@ -67,37 +87,39 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
   const statuses = ["all", "approved", ...uniqueStatuses];
 
   // Filter jobs by branch, salesman, designer, customer, status, and search query
-  const filteredJobs = jobs.filter(job => {
-    const branchMatch = selectedBranch === "all" || job.branch === selectedBranch;
-    const salesmanMatch = selectedSalesman === "all" || job.salesman === selectedSalesman;
-    const designerMatch = selectedDesigner === "all" || job.designer === selectedDesigner;
-    const customerMatch = selectedCustomer === "all" || job.customer === selectedCustomer;
-    const statusMatch = selectedStatus === "all" || 
-      (selectedStatus === "approved" ? job.approval_status === "approved" : job.status === selectedStatus);
-    
-    // Enhanced search functionality - split search query into words and check for partial matches
-    const searchMatch = searchQuery === "" || (() => {
-      const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/);
-      const searchableText = [
-        job.jobOrderNumber,
-        job.title,
-        job.customer,
-        job.clientName,
-        job.jobOrderDetails,
-        job.assignee,
-        job.salesman,
-        job.designer
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+  const filteredJobs = useMemo(() => {
+    return jobs.filter(job => {
+      const branchMatch = selectedBranch === "all" || job.branch === selectedBranch;
+      const salesmanMatch = selectedSalesman === "all" || job.salesman === selectedSalesman;
+      const designerMatch = selectedDesigner === "all" || job.designer === selectedDesigner;
+      const customerMatch = selectedCustomer === "all" || job.customer === selectedCustomer;
+      const statusMatch = selectedStatus === "all" || 
+        (selectedStatus === "approved" ? job.approval_status === "approved" : job.status === selectedStatus);
       
-      // Check if any search term matches any part of the searchable text
-      return searchTerms.some(term => searchableText.includes(term));
-    })();
-    
-    return branchMatch && salesmanMatch && designerMatch && customerMatch && statusMatch && searchMatch;
-  });
+      const searchMatch = searchQuery === "" || (() => {
+        const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/);
+        const searchableText = [
+          job.jobOrderNumber,
+          job.title,
+          job.customer,
+          job.clientName,
+          job.jobOrderDetails,
+          job.assignee,
+          job.salesman,
+          job.designer
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        
+        return searchTerms.some(term => searchableText.includes(term));
+      })();
+      
+      return branchMatch && salesmanMatch && designerMatch && customerMatch && statusMatch && searchMatch;
+    });
+  }, [jobs, selectedBranch, selectedSalesman, selectedDesigner, selectedCustomer, selectedStatus, searchQuery]);
+
+  const currentJob = useMemo(() => filteredJobs[selectedJobIndex] ?? null, [filteredJobs, selectedJobIndex]);
 
   // Reset index when filters change
   useEffect(() => {
@@ -129,34 +151,30 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
     setIsEditMode(true);
   };
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      "pending": "from-yellow-400 to-yellow-600",
-      "in-progress": "from-blue-400 to-blue-600", 
-      "designing": "from-purple-400 to-purple-600",
-      "completed": "from-green-400 to-green-600",
-      "invoiced": "from-emerald-400 to-emerald-600",
-      "cancelled": "from-red-400 to-red-600"
-    };
-    return colors[status as keyof typeof colors] || "from-gray-400 to-gray-600";
-  };
 
-  const getPriorityColor = (priority: string) => {
-    const colors = {
-      "high": "from-red-400 to-red-600",
-      "medium": "from-orange-400 to-orange-600",
-      "low": "from-green-400 to-green-600"
-    };
-    return colors[priority as keyof typeof colors] || "from-gray-400 to-gray-600";
-  };
-
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     setSelectedJobIndex(prev => prev > 0 ? prev - 1 : filteredJobs.length - 1);
-  };
+  }, [filteredJobs.length]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setSelectedJobIndex(prev => prev < filteredJobs.length - 1 ? prev + 1 : 0);
-  };
+  }, [filteredJobs.length]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        handlePrevious();
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        handleNext();
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [handleNext, handlePrevious]);
 
   if (filteredJobs.length === 0) {
     return (
@@ -168,8 +186,6 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
       </div>
     );
   }
-
-  const currentJob = filteredJobs[selectedJobIndex];
 
   return (
     <div className={`p-6 min-h-screen relative ${gamingMode ? 'bg-[#020a12] text-cyan-100' : 'bg-gradient-to-br from-slate-50 to-blue-50 text-slate-900'}`}>
@@ -287,21 +303,26 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
           <CardHeader>
             <CardTitle className={`text-lg ${gamingMode ? 'text-cyan-200' : ''}`}>Job Orders ({filteredJobs.length})</CardTitle>
           </CardHeader>
-          <CardContent className={`space-y-2 max-h-96 overflow-y-auto ${gamingMode ? 'text-cyan-100' : ''}`}>
+          <CardContent className={`space-y-2 max-h-[500px] overflow-y-auto scroll-smooth snap-y snap-mandatory ${gamingMode ? 'text-cyan-100' : ''}`}>
             {filteredJobs.map((job, index) => (
               <div
                 key={job.id}
                 onClick={() => handleJobSelect(job.jobOrderNumber)}
-                className={`p-3 rounded-lg cursor-pointer transition-all duration-300 ${
+                className={`relative snap-start p-3 rounded-lg cursor-pointer transition-all duration-300 transform ${
                   index === selectedJobIndex
                     ? gamingMode
-                      ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 shadow-[0_0_30px_rgba(0,255,204,0.25)]'
-                      : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 shadow-[0_0_30px_rgba(0,255,204,0.4)] scale-[1.05] cyber-active'
+                      : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-[1.02]'
                     : gamingMode
-                      ? 'bg-slate-900/70 hover:bg-slate-800/80 text-cyan-100'
+                      ? 'bg-slate-900/70 hover:bg-slate-800/80 text-cyan-100 hover:scale-[1.02]'
                       : 'bg-gray-50 hover:bg-gray-100'
                 }`}
               >
+                {index === selectedJobIndex && gamingMode && (
+                  <div className="absolute right-2 top-2 text-xs uppercase opacity-75 tracking-[0.15em] text-cyan-200">
+                    ▶ ACTIVE
+                  </div>
+                )}
                 <div className="font-medium text-sm">{job.jobOrderNumber}</div>
                 <div className="text-xs opacity-80 truncate">{job.title}</div>
               </div>
