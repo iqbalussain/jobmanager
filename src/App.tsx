@@ -105,6 +105,7 @@ function App() {
                   </BrowserRouter>
                   <GlobalHighPriorityAlert />
                 </div>
+              </div>
               </TooltipProvider>
             </RamadanThemeContext.Provider>
           </GamingModeContext.Provider>
