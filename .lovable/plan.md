@@ -1,74 +1,75 @@
 
 
-## Plan: Fix Job Order Number Generation Race Condition
+## Plan: Gaming Mode Leaderboard + Full Cyberpunk Dashboard Styling
 
-### Root Cause
+### 1. Gaming Leaderboard Widget (New Component)
 
-The `generateJobOrderNumber` function in `useCreateJobOrder.tsx` queries `job_orders` client-side to find the latest number. But due to RLS policies, non-admin users (designers, salesmen) can only see **their own** jobs. So when a designer queries for the latest `HO%` number, they miss higher numbers created by other users, generating a duplicate -- which then fails on the unique constraint and exhausts all 5 retry attempts.
+**`src/components/dashboard/GamingLeaderboard.tsx`** (new)
+- Query `job_orders` grouped by `created_by` to rank users by jobs completed/created
+- Show top 5 performers with neon rank badges (#1 gold glow, #2 silver, #3 bronze, rest cyan)
+- Glassmorphism card with `.cyber-card` styling, hexagonal rank indicators
+- Animated progress bars with neon fill
+- Only renders when gaming mode is active
 
-### Fix (2 steps)
+### 2. ApprovalBox Gaming Mode Styling
 
-**1. Create a SECURITY DEFINER database function** that generates the next job order number, bypassing RLS so it sees ALL job orders:
+**`src/components/dashboard/ApprovalBox.tsx`**
+- Detect `gamingMode` via `useGamingMode()`
+- Card: swap white gradients for `cyber-card` dark glassmorphism
+- Header: neon green/cyan gradient instead of blue/purple
+- Pending job items: dark bg with neon yellow border instead of yellow-50
+- Buttons: neon-styled approve (green glow), reject (red glow), view (cyan glow)
+- Badge: neon yellow pulse instead of static yellow
+- Text colors: green-400/cyan-400 instead of gray-900/gray-600
 
-```sql
-CREATE OR REPLACE FUNCTION public.generate_next_job_order_number(p_branch text)
-RETURNS text
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-DECLARE
-  prefix text;
-  start_num int;
-  next_num int;
-BEGIN
-  -- Map branch to prefix
-  prefix := CASE p_branch
-    WHEN 'Wadi Kabeer' THEN 'WK'
-    WHEN 'Wajihat Ruwi' THEN 'WR'
-    WHEN 'Ruwi Branch' THEN 'RB'
-    WHEN 'Ghubra Branch' THEN 'GB'
-    WHEN 'Nizwa Branch' THEN 'NZ'
-    WHEN 'Al Khoud Branch' THEN 'AK'
-    ELSE 'HO'
-  END;
+### 3. JobStatusOverview Gaming Mode Styling
 
-  start_num := CASE prefix
-    WHEN 'WK' THEN 20001
-    WHEN 'WR' THEN 30001
-    WHEN 'RB' THEN 40001
-    WHEN 'GB' THEN 50001
-    WHEN 'NZ' THEN 60001
-    WHEN 'AK' THEN 70001
-    ELSE 10001
-  END;
+**`src/components/dashboard/JobStatusOverview.tsx`**
+- Detect `gamingMode` via `useGamingMode()`
+- Outer container: dark glassmorphism with grid background overlay
+- Status cards: replace solid color gradients with dark cards + neon-colored borders and glow matching each status (blue=total, orange=active, purple=pending, yellow=in-progress, indigo=designing, green=completed, emerald=invoiced, red=cancelled)
+- Hover: neon glow intensifies + scale
+- Text: neon-colored with text-shadow glow
+- Icons: matching neon color with drop-shadow
 
-  SELECT COALESCE(
-    MAX(CAST(SUBSTRING(job_order_number FROM LENGTH(prefix)+1) AS int)) + 1,
-    start_num
-  ) INTO next_num
-  FROM job_orders
-  WHERE job_order_number LIKE prefix || '%';
+### 4. HighPriorityReminder Gaming Mode Styling
 
-  RETURN prefix || next_num;
-END;
-$$;
-```
+**`src/components/dashboard/HighPriorityReminder.tsx`**
+- Detect `gamingMode`
+- Background: dark with red neon border and scanline overlay
+- Text: neon red/orange with glow
+- OVERDUE badge: red neon pulse
 
-**2. Update `useCreateJobOrder.tsx`** -- Replace the client-side `generateJobOrderNumber` function with a simple RPC call:
+### 5. DashboardNotifications Gaming Mode Styling
 
-```typescript
-const jobOrderNumber = await supabase.rpc('generate_next_job_order_number', {
-  p_branch: data.branch
-});
-```
+**`src/components/dashboard/DashboardNotifications.tsx`**
+- Detect `gamingMode`
+- Dropdown panel: dark glassmorphism background
+- Items: dark hover states with neon accents
+- Bell icon: neon green glow when gaming mode active
 
-This eliminates the race condition entirely since the DB function sees all rows regardless of the user's role. The existing retry loop for duplicate keys is kept as a safety net for concurrent inserts.
+### 6. Additional CSS
 
-### Files Changed
+**`src/index.css`**
+- Add `.gaming-mode .cyber-card-header` for neon gradient headers
+- Add `.hex-badge` for hexagonal rank indicators (clip-path)
+- Add `@keyframes rank-glow` for leaderboard rank animation
+- Add `.gaming-mode .scanline-overlay` pseudo-element
+
+### 7. ModernDashboard Integration
+
+**`src/components/ModernDashboard.tsx`**
+- Import and render `GamingLeaderboard` below the existing grid when gaming mode is active
+
+### Summary of Files
 
 | File | Action |
 |------|--------|
-| SQL migration | Create `generate_next_job_order_number` SECURITY DEFINER function |
-| `src/hooks/useCreateJobOrder.tsx` | Replace client-side number generation with RPC call |
+| `src/components/dashboard/GamingLeaderboard.tsx` | New -- leaderboard widget |
+| `src/components/dashboard/ApprovalBox.tsx` | Add gaming mode conditional styling |
+| `src/components/dashboard/JobStatusOverview.tsx` | Add gaming mode conditional styling |
+| `src/components/dashboard/HighPriorityReminder.tsx` | Add gaming mode conditional styling |
+| `src/components/dashboard/DashboardNotifications.tsx` | Add gaming mode conditional styling |
+| `src/components/ModernDashboard.tsx` | Add GamingLeaderboard |
+| `src/index.css` | Add hex-badge, rank-glow, scanline CSS |
 

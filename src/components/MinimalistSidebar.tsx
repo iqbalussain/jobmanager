@@ -7,6 +7,8 @@ import {
   BarChart3,
   CheckCircle,
   UserCheck,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -155,7 +157,7 @@ export function MinimalistSidebar({
         </div>
 
         {/* Gaming Mode Toggle */}
-        <div className="p-3 border-b border-gray-100">
+        <div className={cn("p-3 border-b", gamingMode ? "border-green-400/30" : "border-gray-100")}>
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex flex-col items-center space-y-2">
@@ -180,6 +182,35 @@ export function MinimalistSidebar({
             </TooltipContent>
           </Tooltip>
         </div>
+
+        {/* Sound Toggle (only when gaming mode is on) */}
+        {gamingMode && (
+          <div className="p-3 border-b border-green-400/30">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    const current = localStorage.getItem('gaming-sound') !== 'false';
+                    localStorage.setItem('gaming-sound', String(!current));
+                    window.dispatchEvent(new Event('gaming-sound-changed'));
+                  }}
+                  className="w-10 h-10 mx-auto rounded-xl text-green-400 hover:bg-green-900/30 hover:text-green-300 transition-all duration-300"
+                >
+                  {localStorage.getItem('gaming-sound') !== 'false' ? (
+                    <Volume2 className="w-4 h-4" />
+                  ) : (
+                    <VolumeX className="w-4 h-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-gray-900 text-green-400 border border-green-400/30">
+                <p>Sound Effects</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
 
         {/* Main Menu */}
         <div className="flex flex-col space-y-2 mt-10">
