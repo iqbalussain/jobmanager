@@ -45,17 +45,15 @@ const getStatusColor = (status: string) => {
   return colors[status] || "from-gray-400 to-gray-600";
 };
 
-const getNeonStatusColor = (status: string) => {
-  const colors: Record<string, { border: string; glow: string; text: string }> = {
-    "pending": { border: "border-yellow-400/60", glow: "shadow-[0_0_20px_rgba(250,204,21,0.4)]", text: "text-yellow-300" },
-    "in-progress": { border: "border-blue-400/60", glow: "shadow-[0_0_20px_rgba(96,165,250,0.4)]", text: "text-blue-300" },
-    "designing": { border: "border-purple-400/60", glow: "shadow-[0_0_20px_rgba(192,132,252,0.4)]", text: "text-purple-300" },
-    "completed": { border: "border-green-400/60", glow: "shadow-[0_0_20px_rgba(74,222,128,0.4)]", text: "text-green-300" },
-    "invoiced": { border: "border-emerald-400/60", glow: "shadow-[0_0_20px_rgba(52,211,153,0.4)]", text: "text-emerald-300" },
-    "cancelled": { border: "border-red-400/60", glow: "shadow-[0_0_20px_rgba(248,113,113,0.4)]", text: "text-red-300" },
-  };
-  return colors[status] || { border: "border-cyan-400/40", glow: "shadow-[0_0_20px_rgba(0,255,204,0.3)]", text: "text-cyan-300" };
-};
+const getStatusOptions = () => [
+  { value: "pending", label: "Pending" },
+  { value: "in-progress", label: "In Progress" },
+  { value: "designing", label: "Designing" },
+  { value: "completed", label: "Completed" },
+  { value: "finished", label: "Finished" },
+  { value: "invoiced", label: "Invoiced" },
+  { value: "cancelled", label: "Cancelled" }
+];
 
 function HoloDetailCard({ icon: Icon, label, value, sub, gamingMode }: {
   icon: any;
@@ -452,12 +450,24 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    {/* Status badge with ring */}
+                    {/* Status select with ring */}
                     <div className="relative">
                       <div className={`absolute inset-0 rounded-full animate-ping opacity-20 ${statusNeon.glow}`} />
-                      <Badge className={`relative px-4 py-1.5 font-mono text-xs tracking-wider border ${statusNeon.border} ${statusNeon.text} bg-transparent ${statusNeon.glow}`}>
-                        {currentJob?.status?.toUpperCase().replace('-', ' ')}
-                      </Badge>
+                      <Select 
+                        value={currentJob?.status || ''} 
+                        onValueChange={handleStatusChange}
+                      >
+                        <SelectTrigger className={`relative w-40 bg-slate-950/80 border ${statusNeon.border} ${statusNeon.text} font-mono text-xs tracking-wider ${statusNeon.glow}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-950 border-cyan-400/20 text-cyan-200">
+                          {getStatusOptions().map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <Button variant="outline" size="sm" onClick={() => currentJob && handleViewDetails(currentJob)}
                       className="bg-cyan-400/10 border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/20 hover:shadow-[0_0_20px_rgba(0,255,204,0.3)] font-mono text-xs transition-all">
@@ -613,6 +623,21 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
                 </Button>
               </div>
               <div className="flex gap-2">
+                <Select 
+                  value={currentJob?.status || ''} 
+                  onValueChange={handleStatusChange}
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getStatusOptions().map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button variant="outline" size="sm" onClick={() => currentJob && handleViewDetails(currentJob)}>
                   <Eye className="w-4 h-4 mr-2" /> View Details
                 </Button>

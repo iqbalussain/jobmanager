@@ -196,11 +196,31 @@ export function ProjectDetailsSection({
           </div>
           <div>
             <Label className="text-sm font-medium text-gray-600">Status</Label>
-            <div className="mt-1">
-              <Badge className={getStatusColor(job.status)}>
-                {job.status.replace('-', ' ')}
-              </Badge>
-            </div>
+            {isEditMode ? (
+              <Select 
+                value={editData.status || job.status || ''} 
+                onValueChange={(value) => onEditDataChange({ ...editData, status: value })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="designing">Designing</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="finished">Finished</SelectItem>
+                  <SelectItem value="invoiced">Invoiced</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="mt-1">
+                <Badge className={getStatusColor(job.status)}>
+                  {job.status.replace('-', ' ')}
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
 
