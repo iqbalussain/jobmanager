@@ -8,11 +8,19 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { FloatingCreateButton } from "@/components/FloatingCreateButton";
 import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
 import { HighPriorityAlertModal } from "@/components/dashboard/HighPriorityAlertModal";
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+// Gaming Mode Context
+interface GamingModeContextType {
+  gamingMode: boolean;
+  toggleGamingMode: () => void;
+}
+const GamingModeContext = createContext<GamingModeContextType>({ gamingMode: false, toggleGamingMode: () => {} });
+export const useGamingMode = () => useContext(GamingModeContext);
 
 function GlobalHighPriorityAlert() {
   const { highPriorityAlert, closeHighPriorityAlert } = useNotifications();
@@ -28,28 +36,43 @@ function GlobalHighPriorityAlert() {
 }
 
 function App() {
+  const [gamingMode, setGamingMode] = useState(() => localStorage.getItem('gaming-mode') === 'true');
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('gaming-mode', gamingMode);
+    localStorage.setItem('gaming-mode', String(gamingMode));
+  }, [gamingMode]);
+
+  const toggleGamingMode = () => setGamingMode(prev => !prev);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <NotificationProvider>
-          <TooltipProvider>
-            <div className="min-h-screen" style={{ background: 'var(--gradient-background)' }}>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <Index />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <FloatingCreateButton />
-              </BrowserRouter>
-              <GlobalHighPriorityAlert />
-            </div>
-          </TooltipProvider>
+          <GamingModeContext.Provider value={{ gamingMode, toggleGamingMode }}>
+            <TooltipProvider>
+              <div className={`min-h-screen transition-all duration-500 ${
+                gamingMode 
+                  ? 'bg-gradient-to-br from-gray-900 via-black to-gray-900' 
+                  : ''
+              }`} style={{ background: gamingMode ? '' : 'var(--gradient-background)' }}>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <Index />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <FloatingCreateButton />
+                </BrowserRouter>
+                <GlobalHighPriorityAlert />
+              </div>
+            </TooltipProvider>
+          </GamingModeContext.Provider>
         </NotificationProvider>
       </AuthProvider>
     </QueryClientProvider>
