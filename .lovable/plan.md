@@ -1,57 +1,75 @@
 
 
-## Plan: Cyberpunk Gaming Mode UI Transformation
+## Plan: Gaming Mode Leaderboard + Full Cyberpunk Dashboard Styling
 
-### Priority 0: Fix Build Error
-The `tsconfig.json` is missing `"baseUrl": "."` which breaks all `@/` path imports. This must be restored first.
+### 1. Gaming Leaderboard Widget (New Component)
 
-### 1. Add Orbitron Font
-- **`index.html`** -- Add Google Fonts link for Orbitron
-- **`src/index.css`** -- Update `.gaming-mode` to use `'Orbitron', sans-serif` with letter-spacing
+**`src/components/dashboard/GamingLeaderboard.tsx`** (new)
+- Query `job_orders` grouped by `created_by` to rank users by jobs completed/created
+- Show top 5 performers with neon rank badges (#1 gold glow, #2 silver, #3 bronze, rest cyan)
+- Glassmorphism card with `.cyber-card` styling, hexagonal rank indicators
+- Animated progress bars with neon fill
+- Only renders when gaming mode is active
 
-### 2. Gaming Mode CSS Variables and Theme
-- **`src/index.css`** -- Add a `.gaming-mode` CSS variable set (like `.ramadan`) overriding all design tokens:
-  - Dark backgrounds: `hsl(220 20% 4%)` 
-  - Neon green primary: `hsl(150 100% 50%)`
-  - Cyan accent: `hsl(180 100% 50%)`
-  - Glassmorphism card styles, neon glow borders
-  - Scanline overlay CSS (subtle repeating-linear-gradient)
-  - Grid background pattern
-  - Status-specific glow classes (pending=yellow, in-progress=blue, completed=green, urgent=red pulse)
-  - Animated neon border pulse keyframe
-  - Button hover glow + scale effects
+### 2. ApprovalBox Gaming Mode Styling
 
-### 3. Canvas Particle Background
-- **`src/components/GamingParticles.tsx`** (new) -- Lightweight canvas component rendering floating particles (dots/lines) in neon green/cyan. Only renders when gaming mode is active. Uses `requestAnimationFrame` with ~50 particles.
+**`src/components/dashboard/ApprovalBox.tsx`**
+- Detect `gamingMode` via `useGamingMode()`
+- Card: swap white gradients for `cyber-card` dark glassmorphism
+- Header: neon green/cyan gradient instead of blue/purple
+- Pending job items: dark bg with neon yellow border instead of yellow-50
+- Buttons: neon-styled approve (green glow), reject (red glow), view (cyan glow)
+- Badge: neon yellow pulse instead of static yellow
+- Text colors: green-400/cyan-400 instead of gray-900/gray-600
 
-### 4. System Boot Loading Animation
-- **`src/components/GamingBootScreen.tsx`** (new) -- When gaming mode is first toggled ON, show a 2-second "SYSTEM INITIALIZING..." boot sequence overlay with typed text effect, then fade out. Uses localStorage to only show once per session.
+### 3. JobStatusOverview Gaming Mode Styling
 
-### 5. Update App.tsx
-- **`src/App.tsx`** -- Apply `.gaming-mode` class to root `<html>` element (already partially done). Add `<GamingParticles />` and `<GamingBootScreen />` conditionally when `gamingMode` is true.
+**`src/components/dashboard/JobStatusOverview.tsx`**
+- Detect `gamingMode` via `useGamingMode()`
+- Outer container: dark glassmorphism with grid background overlay
+- Status cards: replace solid color gradients with dark cards + neon-colored borders and glow matching each status (blue=total, orange=active, purple=pending, yellow=in-progress, indigo=designing, green=completed, emerald=invoiced, red=cancelled)
+- Hover: neon glow intensifies + scale
+- Text: neon-colored with text-shadow glow
+- Icons: matching neon color with drop-shadow
 
-### 6. Enhanced Component Styling
-- **`src/components/job-list/JobCard.tsx`** -- When gaming mode active, apply glassmorphism card style, neon border based on status, hover glow + scale animation
-- **`src/components/ModernDashboard.tsx`** -- Apply cyber-card styling to dashboard panels, neon text headers
-- **`src/components/CardStackSlider.tsx`** -- Apply neon selected-card border highlight
+### 4. HighPriorityReminder Gaming Mode Styling
 
-### 7. Sound Feedback Toggle (Bonus)
-- **`src/hooks/useGamingSound.ts`** (new) -- Simple hook using Web Audio API to generate short synth beeps on button clicks and card selections. Controlled by a sub-toggle in the sidebar under gaming mode. No external sound files needed -- uses `OscillatorNode` for cyberpunk-style bleeps.
-- **`src/components/MinimalistSidebar.tsx`** -- Add sound toggle icon below gaming mode switch (only visible when gaming mode is on)
+**`src/components/dashboard/HighPriorityReminder.tsx`**
+- Detect `gamingMode`
+- Background: dark with red neon border and scanline overlay
+- Text: neon red/orange with glow
+- OVERDUE badge: red neon pulse
+
+### 5. DashboardNotifications Gaming Mode Styling
+
+**`src/components/dashboard/DashboardNotifications.tsx`**
+- Detect `gamingMode`
+- Dropdown panel: dark glassmorphism background
+- Items: dark hover states with neon accents
+- Bell icon: neon green glow when gaming mode active
+
+### 6. Additional CSS
+
+**`src/index.css`**
+- Add `.gaming-mode .cyber-card-header` for neon gradient headers
+- Add `.hex-badge` for hexagonal rank indicators (clip-path)
+- Add `@keyframes rank-glow` for leaderboard rank animation
+- Add `.gaming-mode .scanline-overlay` pseudo-element
+
+### 7. ModernDashboard Integration
+
+**`src/components/ModernDashboard.tsx`**
+- Import and render `GamingLeaderboard` below the existing grid when gaming mode is active
 
 ### Summary of Files
 
 | File | Action |
 |------|--------|
-| `tsconfig.json` | Restore `baseUrl: "."` |
-| `index.html` | Add Orbitron font |
-| `src/index.css` | Gaming mode CSS variables, glassmorphism, scanlines, glow effects |
-| `src/components/GamingParticles.tsx` | New -- canvas particle background |
-| `src/components/GamingBootScreen.tsx` | New -- boot animation overlay |
-| `src/hooks/useGamingSound.ts` | New -- synth sound feedback |
-| `src/App.tsx` | Add particles + boot screen components |
-| `src/components/job-list/JobCard.tsx` | Gaming mode card styling |
-| `src/components/ModernDashboard.tsx` | Gaming mode dashboard styling |
-| `src/components/MinimalistSidebar.tsx` | Sound toggle |
-| `src/components/CardStackSlider.tsx` | Neon selection highlight |
+| `src/components/dashboard/GamingLeaderboard.tsx` | New -- leaderboard widget |
+| `src/components/dashboard/ApprovalBox.tsx` | Add gaming mode conditional styling |
+| `src/components/dashboard/JobStatusOverview.tsx` | Add gaming mode conditional styling |
+| `src/components/dashboard/HighPriorityReminder.tsx` | Add gaming mode conditional styling |
+| `src/components/dashboard/DashboardNotifications.tsx` | Add gaming mode conditional styling |
+| `src/components/ModernDashboard.tsx` | Add GamingLeaderboard |
+| `src/index.css` | Add hex-badge, rank-glow, scanline CSS |
 
