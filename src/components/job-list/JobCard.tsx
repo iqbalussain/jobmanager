@@ -72,7 +72,7 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
     }
   };
 
-  const isUrgentGaming = gamingMode && job.priority === "urgent";
+  const isUrgentGaming = gamingMode && (job.priority as string) === "urgent";
 
   return (
     <Card className={cn(
