@@ -259,6 +259,52 @@
   text-shadow: 0 0 10px rgba(0, 255, 150, 0.8), 0 0 20px rgba(0, 255, 150, 0.4);
 }
 
+/* Global gaming/normal mode theme switch */
+.normal {
+  background: #f9fafb;
+  color: #111;
+}
+
+.gaming {
+  background: radial-gradient(circle at top, #000000, #001a1a);
+  color: #00ffcc;
+}
+
+.gaming .card {
+  background: rgba(0, 255, 150, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 150, 0.3);
+  box-shadow: 0 0 20px rgba(0, 255, 150, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.gaming .card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 30px rgba(0, 255, 150, 0.5);
+}
+
+.gaming a,
+.gaming button,
+.gaming input,
+.gaming select,
+.gaming textarea,
+.gaming label,
+.gaming p,
+.gaming span,
+.gaming h1,
+.gaming h2,
+.gaming h3,
+.gaming h4,
+.gaming h5,
+.gaming h6 {
+  color: #00ffcc;
+}
+
+.gaming ::placeholder {
+  color: rgba(0, 255, 204, 0.5);
+}
+
+
 .gaming-mode .cyber-card {
   background: rgba(0, 20, 40, 0.8);
   backdrop-filter: blur(20px);

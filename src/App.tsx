@@ -51,11 +51,7 @@ function App() {
         <NotificationProvider>
           <GamingModeContext.Provider value={{ gamingMode, toggleGamingMode }}>
             <TooltipProvider>
-              <div className={`min-h-screen transition-all duration-500 ${
-                gamingMode 
-                  ? 'bg-gradient-to-br from-gray-900 via-black to-gray-900' 
-                  : ''
-              }`} style={{ background: gamingMode ? '' : 'var(--gradient-background)' }}>
+              <div className={`${gamingMode ? 'gaming' : 'normal'} min-h-screen transition-all duration-500`}>
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
