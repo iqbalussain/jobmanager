@@ -8,6 +8,8 @@ import { JobDetails } from "@/components/JobDetails";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useGamingMode } from "@/App";
+import { cn } from "@/lib/utils";
 import { 
   Calendar,
   User,
@@ -31,6 +33,8 @@ export function CardStackSlider({ jobs, onStatusUpdate }: CardStackSliderProps) 
   const [userRole, setUserRole] = useState<string>("employee");
   const containerRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const { toast } = useToast();
+  const { gamingMode } = useGamingMode();
   const { toast } = useToast();
 
   // Fetch user role
@@ -140,7 +144,13 @@ export function CardStackSlider({ jobs, onStatusUpdate }: CardStackSliderProps) 
         {pendingJobs.map((job, index) => (
           <Card
             key={job.id}
-            className="absolute inset-0 w-full h-full bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 border-0 shadow-2xl transition-all duration-500 ease-out cursor-pointer"
+            className={cn(
+              "absolute inset-0 w-full h-full border-0 shadow-2xl transition-all duration-500 ease-out cursor-pointer",
+              gamingMode 
+                ? "cyber-card neon-pulse-border" 
+                : "bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30",
+              index === currentIndex && gamingMode && "ring-1 ring-green-400/60"
+            )}
             style={getCardTransform(index)}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-black/5 rounded-lg" />
