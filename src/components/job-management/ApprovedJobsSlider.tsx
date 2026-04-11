@@ -55,6 +55,18 @@ const getStatusOptions = () => [
   { value: "cancelled", label: "Cancelled" }
 ];
 
+const getNeonStatusColor = (status: string) => {
+  const colors: Record<string, { border: string; glow: string; text: string }> = {
+    "pending": { border: "border-yellow-400/60", glow: "shadow-[0_0_20px_rgba(250,204,21,0.4)]", text: "text-yellow-300" },
+    "in-progress": { border: "border-blue-400/60", glow: "shadow-[0_0_20px_rgba(96,165,250,0.4)]", text: "text-blue-300" },
+    "designing": { border: "border-purple-400/60", glow: "shadow-[0_0_20px_rgba(192,132,252,0.4)]", text: "text-purple-300" },
+    "completed": { border: "border-green-400/60", glow: "shadow-[0_0_20px_rgba(74,222,128,0.4)]", text: "text-green-300" },
+    "invoiced": { border: "border-emerald-400/60", glow: "shadow-[0_0_20px_rgba(52,211,153,0.4)]", text: "text-emerald-300" },
+    "cancelled": { border: "border-red-400/60", glow: "shadow-[0_0_20px_rgba(248,113,113,0.4)]", text: "text-red-300" },
+  };
+  return colors[status] || { border: "border-cyan-400/40", glow: "shadow-[0_0_20px_rgba(0,255,204,0.3)]", text: "text-cyan-300" };
+};
+
 function HoloDetailCard({ icon: Icon, label, value, sub, gamingMode }: {
   icon: any;
   label: string;
@@ -648,7 +660,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="relative p-6 rounded-xl overflow-hidden bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+            <div className={`relative p-6 rounded-xl overflow-hidden bg-gradient-to-r ${getStatusColor(currentJob?.status || 'pending')} text-white`}>
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-sm opacity-70">JOB ID</p>
