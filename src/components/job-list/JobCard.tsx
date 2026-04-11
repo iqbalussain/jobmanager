@@ -1,6 +1,8 @@
 import { Job } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useGamingMode } from "@/App";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -23,7 +25,7 @@ interface JobCardProps {
 
 export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   const isLocked = job.status === "invoiced";
-  
+  const { gamingMode } = useGamingMode();
   const handleStatusChange = (value: string) => {
     if (isLocked) return;
     onStatusChange(job.id, value);
@@ -61,11 +63,26 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
 
   const isHighPriority = job.priority === "high";
 
+  const getGamingStatusClass = (status: string) => {
+    switch (status) {
+      case "pending": return "status-pending";
+      case "in-progress": return "status-in-progress";
+      case "completed": case "finished": return "status-completed";
+      default: return "";
+    }
+  };
+
+  const isUrgentGaming = gamingMode && (job.priority as string) === "urgent";
+
   return (
-    <Card className={`bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 relative overflow-hidden ${
+    <Card className={cn(
+      "border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 relative overflow-hidden",
+      gamingMode 
+        ? `cyber-card ${getGamingStatusClass(job.status)} ${isUrgentGaming ? "status-urgent" : ""}`
+        : "bg-white/90 backdrop-blur-sm",
       isHighPriority && isOverdue ? "ring-2 ring-red-500 animate-pulse" : 
-      isHighPriority ? "ring-2 ring-orange-400" : ""
-    }`}>
+      isHighPriority && !gamingMode ? "ring-2 ring-orange-400" : ""
+    )}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
