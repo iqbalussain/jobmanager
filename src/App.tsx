@@ -24,6 +24,14 @@ interface GamingModeContextType {
 const GamingModeContext = createContext<GamingModeContextType>({ gamingMode: false, toggleGamingMode: () => {} });
 export const useGamingMode = () => useContext(GamingModeContext);
 
+// Ramadan Theme Context
+interface RamadanThemeContextType {
+  isRamadan: boolean;
+  toggleRamadan: () => void;
+}
+const RamadanThemeContext = createContext<RamadanThemeContextType>({ isRamadan: false, toggleRamadan: () => {} });
+export const useRamadanTheme = () => useContext(RamadanThemeContext);
+
 function GlobalHighPriorityAlert() {
   const { highPriorityAlert, closeHighPriorityAlert } = useNotifications();
   
