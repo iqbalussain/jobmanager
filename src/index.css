@@ -350,3 +350,36 @@
 .gaming-mode .neon-pulse-border {
   animation: neon-border-pulse 3s ease-in-out infinite;
 }
+
+.hex-badge {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: linear-gradient(135deg, hsl(220 25% 15%) 0%, hsl(220 25% 10%) 100%);
+  border: 1px solid hsl(150 100% 50% / 0.3);
+}
+
+@keyframes rank-glow {
+  0% { box-shadow: 0 0 10px hsl(45 100% 50% / 0.3); }
+  50% { box-shadow: 0 0 25px hsl(45 100% 50% / 0.6); }
+  100% { box-shadow: 0 0 10px hsl(45 100% 50% / 0.3); }
+}
+
+.gaming-mode .cyber-card-header {
+  background: linear-gradient(135deg, hsl(150 100% 30%) 0%, hsl(180 80% 25%) 100%);
+}
+
+.gaming-mode .scanline-overlay {
+  position: relative;
+}
+.gaming-mode .scanline-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    hsl(150 100% 50% / 0.03) 2px,
+    hsl(150 100% 50% / 0.03) 4px
+  );
+  pointer-events: none;
+}
