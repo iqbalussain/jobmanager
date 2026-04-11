@@ -47,41 +47,65 @@ function GlobalHighPriorityAlert() {
 
 function App() {
   const [gamingMode, setGamingMode] = useState(() => localStorage.getItem('gaming-mode') === 'true');
+  const [showBoot, setShowBoot] = useState(false);
+  const [isRamadan, setIsRamadan] = useState(() => localStorage.getItem('ramadan-theme') === 'true');
 
   useEffect(() => {
     document.documentElement.classList.toggle('gaming-mode', gamingMode);
     localStorage.setItem('gaming-mode', String(gamingMode));
   }, [gamingMode]);
 
-  const toggleGamingMode = () => setGamingMode(prev => !prev);
+  useEffect(() => {
+    document.documentElement.classList.toggle('ramadan', isRamadan);
+    localStorage.setItem('ramadan-theme', String(isRamadan));
+  }, [isRamadan]);
+
+  const toggleGamingMode = useCallback(() => {
+    setGamingMode(prev => {
+      if (!prev) {
+        const bootShown = sessionStorage.getItem('gaming-boot-shown');
+        if (!bootShown) {
+          setShowBoot(true);
+          sessionStorage.setItem('gaming-boot-shown', 'true');
+        }
+      }
+      return !prev;
+    });
+  }, []);
+
+  const toggleRamadan = useCallback(() => setIsRamadan(prev => !prev), []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <NotificationProvider>
           <GamingModeContext.Provider value={{ gamingMode, toggleGamingMode }}>
-            <TooltipProvider>
-              <div className={`min-h-screen transition-all duration-500 ${
-                gamingMode 
-                  ? 'bg-gradient-to-br from-gray-900 via-black to-gray-900' 
-                  : ''
-              }`} style={{ background: gamingMode ? '' : 'var(--gradient-background)' }}>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={
-                      <ProtectedRoute>
-                        <Index />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <FloatingCreateButton />
-                </BrowserRouter>
-                <GlobalHighPriorityAlert />
-              </div>
-            </TooltipProvider>
+            <RamadanThemeContext.Provider value={{ isRamadan, toggleRamadan }}>
+              <TooltipProvider>
+                <div className={`min-h-screen transition-all duration-500 ${
+                  gamingMode 
+                    ? 'bg-gradient-to-br from-gray-900 via-black to-gray-900' 
+                    : ''
+                }`} style={{ background: gamingMode ? '' : 'var(--gradient-background)' }}>
+                  {gamingMode && <GamingParticles />}
+                  {showBoot && <GamingBootScreen onComplete={() => setShowBoot(false)} />}
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/" element={
+                        <ProtectedRoute>
+                          <Index />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    <FloatingCreateButton />
+                  </BrowserRouter>
+                  <GlobalHighPriorityAlert />
+                </div>
+              </TooltipProvider>
+            </RamadanThemeContext.Provider>
           </GamingModeContext.Provider>
         </NotificationProvider>
       </AuthProvider>
