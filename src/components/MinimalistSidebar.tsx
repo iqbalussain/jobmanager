@@ -7,10 +7,7 @@ import {
   BarChart3,
   CheckCircle,
   UserCheck,
-  Moon,
-  Sun,
 } from "lucide-react";
-import { useRamadanTheme } from "@/App";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,32 +38,6 @@ interface MinimalistSidebarProps {
 interface UserProfile {
   full_name: string;
   role: string;
-}
-
-function RamadanToggle() {
-  const { isRamadan, toggleRamadan } = useRamadanTheme();
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleRamadan}
-          className={cn(
-            "w-10 h-10 rounded-xl transition-all duration-200",
-            isRamadan
-              ? "bg-gradient-to-r from-emerald-500 to-yellow-500 text-white shadow-lg"
-              : "hover:bg-gray-100 text-gray-600"
-          )}
-        >
-          {isRamadan ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="right" className="bg-white text-gray-900 border">
-        <p>{isRamadan ? "Default Theme" : "Ramadan Theme 🌙"}</p>
-      </TooltipContent>
-    </Tooltip>
-  );
 }
 
 export function MinimalistSidebar({
@@ -216,9 +187,8 @@ export function MinimalistSidebar({
           ))}
         </div>
 
-        {/* Ramadan Theme Toggle & Profile */}
+        {/* Profile */}
         <div className="flex flex-col items-center gap-2 p-3 border-t border-gray-100 mt-auto">
-          <RamadanToggle />
           <UserProfileDropdown userProfile={userProfile} />
         </div>
       </div>

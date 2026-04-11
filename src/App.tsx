@@ -8,21 +8,11 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { FloatingCreateButton } from "@/components/FloatingCreateButton";
 import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
 import { HighPriorityAlertModal } from "@/components/dashboard/HighPriorityAlertModal";
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import { RamadanFrame } from "@/components/RamadanFrame";
-import { useAdhanNotifications } from "@/hooks/useAdhanNotifications";
 
 const queryClient = new QueryClient();
-
-// Ramadan theme context
-interface RamadanThemeContextType {
-  isRamadan: boolean;
-  toggleRamadan: () => void;
-}
-const RamadanThemeContext = createContext<RamadanThemeContextType>({ isRamadan: false, toggleRamadan: () => {} });
-export const useRamadanTheme = () => useContext(RamadanThemeContext);
 
 function GlobalHighPriorityAlert() {
   const { highPriorityAlert, closeHighPriorityAlert } = useNotifications();
@@ -37,49 +27,29 @@ function GlobalHighPriorityAlert() {
   );
 }
 
-function AdhanNotifier() {
-  const { isRamadan } = useRamadanTheme();
-  useAdhanNotifications(isRamadan);
-  return null;
-}
-
 function App() {
-  const [isRamadan, setIsRamadan] = useState(() => localStorage.getItem('ramadan-theme') === 'true');
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('ramadan', isRamadan);
-    localStorage.setItem('ramadan-theme', String(isRamadan));
-  }, [isRamadan]);
-
-  const toggleRamadan = () => setIsRamadan(prev => !prev);
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <NotificationProvider>
-          <RamadanThemeContext.Provider value={{ isRamadan, toggleRamadan }}>
-            <TooltipProvider>
-              <RamadanFrame>
-                <div className="min-h-screen" style={{ background: 'var(--gradient-background)' }}>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
-                    <Routes>
-                      <Route path="/" element={
-                        <ProtectedRoute>
-                          <Index />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <FloatingCreateButton />
-                  </BrowserRouter>
-                  <GlobalHighPriorityAlert />
-                  <AdhanNotifier />
-                </div>
-              </RamadanFrame>
-            </TooltipProvider>
-          </RamadanThemeContext.Provider>
+          <TooltipProvider>
+            <div className="min-h-screen" style={{ background: 'var(--gradient-background)' }}>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <FloatingCreateButton />
+              </BrowserRouter>
+              <GlobalHighPriorityAlert />
+            </div>
+          </TooltipProvider>
         </NotificationProvider>
       </AuthProvider>
     </QueryClientProvider>
