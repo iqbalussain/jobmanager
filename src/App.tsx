@@ -11,6 +11,8 @@ import { HighPriorityAlertModal } from "@/components/dashboard/HighPriorityAlert
 import { GamingParticles } from "@/components/GamingParticles";
 import { GamingBootScreen } from "@/components/GamingBootScreen";
 import { useState, useEffect, createContext, useContext, useCallback } from "react";
+import ParticleBackground from "./components/ParticleBackground";
+import CursorGlow from "./components/CursorGlow";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -82,11 +84,14 @@ function App() {
           <GamingModeContext.Provider value={{ gamingMode, toggleGamingMode }}>
             <RamadanThemeContext.Provider value={{ isRamadan, toggleRamadan }}>
               <TooltipProvider>
-                <div className={`${gamingMode ? 'gaming gaming-mode' : 'normal'} min-h-screen transition-all duration-500`}>
-                  {gamingMode && <GamingParticles />}
-                  {showBoot && <GamingBootScreen onComplete={() => setShowBoot(false)} />}
-                  <Toaster />
-                  <Sonner />
+                <div className={gamingMode ? "scanlines" : ""}>
+                  <div className={`${gamingMode ? 'gaming gaming-mode' : 'normal'} min-h-screen transition-all duration-500`}>
+                    {gamingMode && <ParticleBackground />}
+                    {gamingMode && <CursorGlow />}
+                    {gamingMode && <GamingParticles />}
+                    {showBoot && <GamingBootScreen onComplete={() => setShowBoot(false)} />}
+                    <Toaster />
+                    <Sonner />
                   <BrowserRouter>
                     <Routes>
                       <Route path="/" element={

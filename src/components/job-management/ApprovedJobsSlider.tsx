@@ -50,6 +50,32 @@ const getPriorityColor = (priority: string) => {
   return colors[priority as keyof typeof colors] || "from-gray-400 to-gray-600";
 };
 
+function CyberCard({ icon: Icon, title, value, sub, gamingMode }: {
+  icon: any;
+  title: string;
+  value: string;
+  sub?: string;
+  gamingMode: boolean;
+}) {
+  return (
+    <div className={
+      `cyber-card p-4 rounded-xl transition-all duration-300 ${gamingMode
+        ? 'bg-slate-950/70 border border-cyan-400/20 shadow-[0_0_20px_rgba(0,255,204,0.1)] hover:shadow-[0_0_25px_rgba(0,255,204,0.3)]'
+        : 'bg-gray-50'
+      }`
+    }>
+      <div className="flex items-center gap-3">
+        <Icon className="w-5 h-5 text-cyan-300" />
+        <div>
+          <p className="text-xs opacity-70">{title}</p>
+          <p className="font-semibold">{value}</p>
+          {sub && <p className="text-xs opacity-60">{sub}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading, onRefresh }: ApprovedJobsSliderProps) {
   const { gamingMode } = useGamingMode();
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
@@ -362,6 +388,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
                   variant="outline"
                   size="sm"
                   onClick={() => handleViewDetails(currentJob)}
+                  className={gamingMode ? 'bg-cyan-400 text-black hover:bg-cyan-300 shadow-[0_0_15px_rgba(0,255,204,0.5)]' : ''}
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   View Details
@@ -370,6 +397,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
                   variant="outline"
                   size="sm"
                   onClick={() => handleEditJob(currentJob)}
+                  className={gamingMode ? 'bg-cyan-400 text-black hover:bg-cyan-300 shadow-[0_0_15px_rgba(0,255,204,0.5)]' : ''}
                 >
                   <Edit className="w-4 h-4 mr-2" />
                   Edit
@@ -379,85 +407,70 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
           </CardHeader>
           
           <CardContent className="space-y-6">
-            {/* Job Header */}
-            <div className={`p-6 rounded-xl bg-gradient-to-r ${getStatusColor(currentJob.status)} text-white`}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Briefcase className="w-6 h-6" />
-                  <span className="font-bold text-lg">{currentJob.jobOrderNumber}</span>
+            {/* Cyber Header */}
+            <div className={
+              `relative p-6 rounded-xl overflow-hidden ${gamingMode 
+                ? 'bg-gradient-to-r from-cyan-500/20 to-teal-400/10 border border-cyan-400/30 shadow-[0_0_40px_rgba(0,255,204,0.2)]'
+                : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
+              }`
+            }>
+              {gamingMode && (
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(0,255,204,0.2),transparent)] pointer-events-none" />
+              )}
+              <div className="flex justify-between items-center relative z-10">
+                <div>
+                  <p className="text-sm opacity-70">JOB ID</p>
+                  <h2 className="text-2xl font-bold">{currentJob.jobOrderNumber}</h2>
+                  <p className="opacity-80">{currentJob.title}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Badge className={`bg-gradient-to-r ${getPriorityColor(currentJob.priority)} border-0 text-white`}>
-                    {currentJob.priority} Priority
+                  <Badge className={gamingMode ? 'bg-cyan-400 text-black' : 'bg-gradient-to-r from-red-500 to-pink-500 text-white'}>
+                    {currentJob.priority}
                   </Badge>
-                  <Select value={currentJob.status} onValueChange={handleStatusChange}>
-                    <SelectTrigger className="bg-white/20 text-white border-0 h-6 text-xs min-w-24">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="designing">Designing</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="finished">Finished</SelectItem>
-                      <SelectItem value="invoiced">Invoiced</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <h2 className="text-xl font-bold mb-2">{currentJob.title}</h2>
-            </div>
-
-            {/* Job Information Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className={`flex items-center gap-3 p-4 rounded-lg ${gamingMode ? 'bg-cyan-950/40 border border-cyan-500/20' : 'bg-blue-50'}`}>
-                  <Building className={`w-5 h-5 ${gamingMode ? 'text-cyan-300' : 'text-blue-600'}`} />
-                  <div>
-                    <div className={`text-sm ${gamingMode ? 'text-cyan-200' : 'text-gray-600'}`}>Customer</div>
-                    <div className="font-medium">{currentJob.customer}</div>
-                    {currentJob.clientName && (
-                      <div className={`text-sm ${gamingMode ? 'text-cyan-300' : 'text-gray-500'}`}>Client: {currentJob.clientName}</div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className={`flex items-center gap-3 p-4 rounded-lg ${gamingMode ? 'bg-cyan-950/40 border border-cyan-500/20' : 'bg-green-50'}`}>
-                  <User className={`w-5 h-5 ${gamingMode ? 'text-cyan-300' : 'text-green-600'}`} />
-                  <div>
-                    <div className={`text-sm ${gamingMode ? 'text-cyan-200' : 'text-gray-600'}`}>Salesman</div>
-                    <div className="font-medium">{currentJob.salesman}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className={`flex items-center gap-3 p-4 rounded-lg ${gamingMode ? 'bg-cyan-950/40 border border-cyan-500/20' : 'bg-purple-50'}`}>
-                  <Calendar className={`w-5 h-5 ${gamingMode ? 'text-cyan-300' : 'text-purple-600'}`} />
-                  <div>
-                    <div className={`text-sm ${gamingMode ? 'text-cyan-200' : 'text-gray-600'}`}>Due Date</div>
-                    <div className="font-medium">{new Date(currentJob.dueDate).toLocaleDateString()}</div>
-                  </div>
-                </div>
-                
-                <div className={`flex items-center gap-3 p-4 rounded-lg ${gamingMode ? 'bg-cyan-950/40 border border-cyan-500/20' : 'bg-orange-50'}`}>
-                  <Briefcase className={`w-5 h-5 ${gamingMode ? 'text-cyan-300' : 'text-orange-600'}`} />
-                  <div>
-                    <div className={`text-sm ${gamingMode ? 'text-cyan-200' : 'text-gray-600'}`}>Estimated Hours</div>
-                    <div className="font-medium">{currentJob.estimatedHours}h</div>
-                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Job Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CyberCard
+                icon={Building}
+                title="Customer"
+                value={currentJob.customer}
+                sub={currentJob.clientName}
+                gamingMode={gamingMode}
+              />
+
+              <CyberCard
+                icon={User}
+                title="Salesman"
+                value={currentJob.salesman}
+                gamingMode={gamingMode}
+              />
+
+              <CyberCard
+                icon={Calendar}
+                title="Due Date"
+                value={new Date(currentJob.dueDate).toLocaleDateString()}
+                gamingMode={gamingMode}
+              />
+
+              <CyberCard
+                icon={Briefcase}
+                title="Estimated Hours"
+                value={`${currentJob.estimatedHours}h`}
+                gamingMode={gamingMode}
+              />
+            </div>
+
             {currentJob.jobOrderDetails && (
-              <div className={`p-4 rounded-lg ${gamingMode ? 'bg-slate-950/70 border border-cyan-500/20' : 'bg-gray-50'}`}>
-                <h3 className={`font-medium mb-2 ${gamingMode ? 'text-cyan-200' : 'text-gray-700'}`}>Job Details</h3>
-                <div className={`text-sm ${gamingMode ? 'text-cyan-100' : 'text-gray-600'} whitespace-pre-wrap break-words leading-relaxed`}>
-                  {currentJob.jobOrderDetails}
-                </div>
+              <div className={
+                `p-4 rounded-xl font-mono text-sm ${gamingMode
+                  ? 'bg-black/80 border border-cyan-400/20 text-cyan-200 shadow-inner'
+                  : 'bg-gray-50 text-gray-800'
+                }`
+              }>
+                <p className="mb-2 text-xs opacity-60">SYSTEM LOG</p>
+                <pre className="whitespace-pre-wrap leading-relaxed">{currentJob.jobOrderDetails}</pre>
               </div>
             )}
           </CardContent>
