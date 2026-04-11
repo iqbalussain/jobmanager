@@ -206,7 +206,10 @@ export function MinimalistSidebar({
                   <item.icon className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white text-gray-900 border">
+              <TooltipContent side="right" className={cn(
+                "border",
+                gamingMode ? "bg-gray-900 text-green-400 border-green-400/30" : "bg-white text-gray-900"
+              )}>
                 <p>{item.title}</p>
               </TooltipContent>
             </Tooltip>
@@ -238,7 +241,10 @@ export function MinimalistSidebar({
                   <item.icon className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white text-gray-900 border">
+              <TooltipContent side="right" className={cn(
+                "border",
+                gamingMode ? "bg-gray-900 text-green-400 border-green-400/30" : "bg-white text-gray-900"
+              )}>
                 <p>{item.title}</p>
               </TooltipContent>
             </Tooltip>
@@ -246,7 +252,10 @@ export function MinimalistSidebar({
         </div>
 
         {/* Profile */}
-        <div className="flex flex-col items-center gap-2 p-3 border-t border-gray-100 mt-auto">
+        <div className={cn(
+          "flex flex-col items-center gap-2 p-3 border-t mt-auto",
+          gamingMode ? "border-green-400/30" : "border-gray-100"
+        )}>
           <UserProfileDropdown userProfile={userProfile} />
         </div>
       </div>

@@ -249,3 +249,45 @@
   color: hsl(25 90% 55%);
   text-shadow: 0 0 10px hsl(25 90% 55% / 0.5), 0 0 20px hsl(43 89% 50% / 0.3);
 }
+
+/* Gaming Mode Styles */
+.gaming-mode {
+  font-family: 'Courier New', monospace;
+}
+
+.gaming-mode .glow-text {
+  text-shadow: 0 0 10px rgba(0, 255, 150, 0.8), 0 0 20px rgba(0, 255, 150, 0.4);
+}
+
+.gaming-mode .cyber-card {
+  background: rgba(0, 20, 40, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 255, 150, 0.3);
+  box-shadow: 0 0 30px rgba(0, 255, 150, 0.1);
+}
+
+.gaming-mode .status-pending {
+  border-color: rgba(255, 193, 7, 0.5);
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
+}
+
+.gaming-mode .status-in-progress {
+  border-color: rgba(0, 123, 255, 0.5);
+  box-shadow: 0 0 15px rgba(0, 123, 255, 0.3);
+}
+
+.gaming-mode .status-completed {
+  border-color: rgba(40, 167, 69, 0.5);
+  box-shadow: 0 0 15px rgba(40, 167, 69, 0.3);
+}
+
+.gaming-mode .status-urgent {
+  border-color: rgba(220, 53, 69, 0.5);
+  box-shadow: 0 0 20px rgba(220, 53, 69, 0.5);
+  animation: urgent-pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes urgent-pulse {
+  0% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); }
+  100% { box-shadow: 0 0 30px rgba(220, 53, 69, 0.8); }
+}
