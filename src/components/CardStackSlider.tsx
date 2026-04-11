@@ -35,7 +35,6 @@ export function CardStackSlider({ jobs, onStatusUpdate }: CardStackSliderProps) 
   const { user } = useAuth();
   const { toast } = useToast();
   const { gamingMode } = useGamingMode();
-  const { toast } = useToast();
 
   // Fetch user role
   useEffect(() => {
