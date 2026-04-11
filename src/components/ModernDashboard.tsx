@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { JobDetails } from "@/components/JobDetails";
+import { GamingLeaderboard } from "@/components/dashboard/GamingLeaderboard";
 import { JobStatusModal } from "@/components/JobStatusModal";
 import { DashboardNotifications } from "@/components/dashboard/DashboardNotifications";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
