@@ -82,7 +82,7 @@ function App() {
           <GamingModeContext.Provider value={{ gamingMode, toggleGamingMode }}>
             <RamadanThemeContext.Provider value={{ isRamadan, toggleRamadan }}>
               <TooltipProvider>
-                <div className={`${gamingMode ? 'gaming' : 'normal'} min-h-screen transition-all duration-500`}>
+                <div className={`${gamingMode ? 'gaming gaming-mode' : 'normal'} min-h-screen transition-all duration-500`}>
                   {gamingMode && <GamingParticles />}
                   {showBoot && <GamingBootScreen onComplete={() => setShowBoot(false)} />}
                   <Toaster />

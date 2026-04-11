@@ -1,5 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
+import { useGamingMode } from "@/App";
 import { Job } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ interface ApprovedJobsSliderProps {
 }
 
 export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading, onRefresh }: ApprovedJobsSliderProps) {
+  const { gamingMode } = useGamingMode();
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
   const [selectedSalesman, setSelectedSalesman] = useState<string>("all");
   const [selectedDesigner, setSelectedDesigner] = useState<string>("all");
@@ -158,10 +160,10 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
 
   if (filteredJobs.length === 0) {
     return (
-      <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Approved Jobs</h1>
-        <Card className="text-center p-12">
-          <p className="text-gray-500">No approved jobs found for the selected filters.</p>
+      <div className={`p-6 min-h-screen ${gamingMode ? 'bg-[#020a12] text-cyan-100' : 'bg-gradient-to-br from-slate-50 to-blue-50 text-slate-900'}`}>
+        <h1 className={`text-3xl font-bold mb-6 ${gamingMode ? 'text-cyan-300' : 'text-gray-900'}`}>Approved Jobs</h1>
+        <Card className={`${gamingMode ? 'bg-slate-950/80 border border-cyan-500/20 shadow-[0_0_40px_rgba(0,255,204,0.15)]' : 'text-center p-12'}`}>
+          <p className={`${gamingMode ? 'text-cyan-200' : 'text-gray-500'}`}>No approved jobs found for the selected filters.</p>
         </Card>
       </div>
     );
@@ -170,7 +172,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
   const currentJob = filteredJobs[selectedJobIndex];
 
   return (
-    <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen relative">
+    <div className={`p-6 min-h-screen relative ${gamingMode ? 'bg-[#020a12] text-cyan-100' : 'bg-gradient-to-br from-slate-50 to-blue-50 text-slate-900'}`}>
       {/* Sync Loading Overlay */}
       {(isSyncing || isLoading) && (
         <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -185,8 +187,8 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
       
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Orders</h1>
-          <p className="text-gray-600">Interactive job order slider view - Total: {filteredJobs.length} jobs</p>
+          <h1 className={`text-3xl font-bold mb-2 ${gamingMode ? 'text-cyan-300' : 'text-gray-900'}`}>Job Orders</h1>
+          <p className={`${gamingMode ? 'text-cyan-200' : 'text-gray-600'}`}>Interactive job order slider view - Total: {filteredJobs.length} jobs</p>
         </div>
         <div className="flex items-center gap-4">
           {onRefresh && (
@@ -202,12 +204,12 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
             </Button>
           )}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${gamingMode ? 'text-cyan-300' : 'text-gray-400'}`} />
             <Input
               placeholder="Search job orders..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-64"
+              className={`pl-10 w-64 ${gamingMode ? 'bg-slate-900/80 text-cyan-100 border-cyan-500/20' : ''}`}
             />
           </div>
           <Select value={selectedBranch} onValueChange={setSelectedBranch}>
@@ -281,19 +283,23 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Job Selection Panel */}
-        <Card className="bg-white/90 backdrop-blur-sm shadow-xl">
+        <Card className={` ${gamingMode ? 'bg-slate-950/80 border border-cyan-500/20 shadow-[0_0_40px_rgba(0,255,204,0.15)]' : 'bg-white/90 backdrop-blur-sm shadow-xl'}`}>
           <CardHeader>
-            <CardTitle className="text-lg">Job Orders ({filteredJobs.length})</CardTitle>
+            <CardTitle className={`text-lg ${gamingMode ? 'text-cyan-200' : ''}`}>Job Orders ({filteredJobs.length})</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+          <CardContent className={`space-y-2 max-h-96 overflow-y-auto ${gamingMode ? 'text-cyan-100' : ''}`}>
             {filteredJobs.map((job, index) => (
               <div
                 key={job.id}
                 onClick={() => handleJobSelect(job.jobOrderNumber)}
                 className={`p-3 rounded-lg cursor-pointer transition-all duration-300 ${
                   index === selectedJobIndex
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                    : 'bg-gray-50 hover:bg-gray-100'
+                    ? gamingMode
+                      ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 shadow-[0_0_30px_rgba(0,255,204,0.25)]'
+                      : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                    : gamingMode
+                      ? 'bg-slate-900/70 hover:bg-slate-800/80 text-cyan-100'
+                      : 'bg-gray-50 hover:bg-gray-100'
                 }`}
               >
                 <div className="font-medium text-sm">{job.jobOrderNumber}</div>
@@ -304,7 +310,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
         </Card>
 
         {/* Job Details Panel */}
-        <Card className="lg:col-span-2 bg-white/90 backdrop-blur-sm shadow-xl min-h-[600px]">
+        <Card className={`lg:col-span-2 min-h-[600px] ${gamingMode ? 'bg-slate-950/80 border border-cyan-500/20 shadow-[0_0_40px_rgba(0,255,204,0.15)]' : 'bg-white/90 backdrop-blur-sm shadow-xl'}`}>
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -317,7 +323,7 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
                   <ChevronUp className="w-4 h-4" />
                 </Button>
                 <div className="text-center">
-                  <div className="text-sm text-gray-500">
+                  <div className={`text-sm ${gamingMode ? 'text-cyan-200' : 'text-gray-500'}`}>
                     {selectedJobIndex + 1} of {filteredJobs.length}
                   </div>
                 </div>
@@ -385,39 +391,39 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
             {/* Job Information Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                  <Building className="w-5 h-5 text-blue-600" />
+                <div className={`flex items-center gap-3 p-4 rounded-lg ${gamingMode ? 'bg-cyan-950/40 border border-cyan-500/20' : 'bg-blue-50'}`}>
+                  <Building className={`w-5 h-5 ${gamingMode ? 'text-cyan-300' : 'text-blue-600'}`} />
                   <div>
-                    <div className="text-sm text-gray-600">Customer</div>
+                    <div className={`text-sm ${gamingMode ? 'text-cyan-200' : 'text-gray-600'}`}>Customer</div>
                     <div className="font-medium">{currentJob.customer}</div>
                     {currentJob.clientName && (
-                      <div className="text-sm text-gray-500">Client: {currentJob.clientName}</div>
+                      <div className={`text-sm ${gamingMode ? 'text-cyan-300' : 'text-gray-500'}`}>Client: {currentJob.clientName}</div>
                     )}
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                  <User className="w-5 h-5 text-green-600" />
+                <div className={`flex items-center gap-3 p-4 rounded-lg ${gamingMode ? 'bg-cyan-950/40 border border-cyan-500/20' : 'bg-green-50'}`}>
+                  <User className={`w-5 h-5 ${gamingMode ? 'text-cyan-300' : 'text-green-600'}`} />
                   <div>
-                    <div className="text-sm text-gray-600">Salesman</div>
+                    <div className={`text-sm ${gamingMode ? 'text-cyan-200' : 'text-gray-600'}`}>Salesman</div>
                     <div className="font-medium">{currentJob.salesman}</div>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg">
-                  <Calendar className="w-5 h-5 text-purple-600" />
+                <div className={`flex items-center gap-3 p-4 rounded-lg ${gamingMode ? 'bg-cyan-950/40 border border-cyan-500/20' : 'bg-purple-50'}`}>
+                  <Calendar className={`w-5 h-5 ${gamingMode ? 'text-cyan-300' : 'text-purple-600'}`} />
                   <div>
-                    <div className="text-sm text-gray-600">Due Date</div>
+                    <div className={`text-sm ${gamingMode ? 'text-cyan-200' : 'text-gray-600'}`}>Due Date</div>
                     <div className="font-medium">{new Date(currentJob.dueDate).toLocaleDateString()}</div>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg">
-                  <Briefcase className="w-5 h-5 text-orange-600" />
+                <div className={`flex items-center gap-3 p-4 rounded-lg ${gamingMode ? 'bg-cyan-950/40 border border-cyan-500/20' : 'bg-orange-50'}`}>
+                  <Briefcase className={`w-5 h-5 ${gamingMode ? 'text-cyan-300' : 'text-orange-600'}`} />
                   <div>
-                    <div className="text-sm text-gray-600">Estimated Hours</div>
+                    <div className={`text-sm ${gamingMode ? 'text-cyan-200' : 'text-gray-600'}`}>Estimated Hours</div>
                     <div className="font-medium">{currentJob.estimatedHours}h</div>
                   </div>
                 </div>
@@ -426,9 +432,9 @@ export function ApprovedJobsSlider({ jobs, onStatusUpdate, isSyncing, isLoading,
 
             {/* Job Details */}
             {currentJob.jobOrderDetails && (
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-700 mb-2">Job Details</h3>
-                <div className="text-sm text-gray-600 whitespace-pre-wrap break-words leading-relaxed">
+              <div className={`p-4 rounded-lg ${gamingMode ? 'bg-slate-950/70 border border-cyan-500/20' : 'bg-gray-50'}`}>
+                <h3 className={`font-medium mb-2 ${gamingMode ? 'text-cyan-200' : 'text-gray-700'}`}>Job Details</h3>
+                <div className={`text-sm ${gamingMode ? 'text-cyan-100' : 'text-gray-600'} whitespace-pre-wrap break-words leading-relaxed`}>
                   {currentJob.jobOrderDetails}
                 </div>
               </div>
