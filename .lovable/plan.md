@@ -1,75 +1,61 @@
 
 
-## Plan: Gaming Mode Leaderboard + Full Cyberpunk Dashboard Styling
+## Plan: Futuristic Approved Jobs Page with Dialer-Style Job Selector
 
-### 1. Gaming Leaderboard Widget (New Component)
+### Concept
+Transform the Approved Jobs page (`ApprovedJobsSlider.tsx`) into a high-tech command center with two key elements:
+1. **Left panel**: A "dialer" -- a vertical scroll wheel where job numbers roll up/down with 3D perspective, the selected item is centered and glowing
+2. **Right panel**: A holographic job detail card with animated borders, data-stream effects, and a futuristic background
 
-**`src/components/dashboard/GamingLeaderboard.tsx`** (new)
-- Query `job_orders` grouped by `created_by` to rank users by jobs completed/created
-- Show top 5 performers with neon rank badges (#1 gold glow, #2 silver, #3 bronze, rest cyan)
-- Glassmorphism card with `.cyber-card` styling, hexagonal rank indicators
-- Animated progress bars with neon fill
-- Only renders when gaming mode is active
+### 1. Dialer-Style Job Number Selector (Left Panel)
 
-### 2. ApprovalBox Gaming Mode Styling
+Replace the current flat list with a **3D rotating dial**:
+- Show ~7 visible job numbers at a time in a vertical column
+- The center item is large, bright, neon-glowing (selected)
+- Items above/below progressively shrink, fade, and rotate away (CSS `perspective` + `rotateX` transforms)
+- Mouse wheel / arrow keys / swipe scrolls through jobs with smooth CSS transitions
+- Each item shows job number + mini status dot
+- Up/Down chevron buttons at top and bottom with pulse animation
 
-**`src/components/dashboard/ApprovalBox.tsx`**
-- Detect `gamingMode` via `useGamingMode()`
-- Card: swap white gradients for `cyber-card` dark glassmorphism
-- Header: neon green/cyan gradient instead of blue/purple
-- Pending job items: dark bg with neon yellow border instead of yellow-50
-- Buttons: neon-styled approve (green glow), reject (red glow), view (cyan glow)
-- Badge: neon yellow pulse instead of static yellow
-- Text colors: green-400/cyan-400 instead of gray-900/gray-600
+**Implementation**: Pure CSS transforms + React state. Each visible item gets a `rotateX` and `scale` based on distance from center. Wrap in a fixed-height container with `overflow: hidden`.
 
-### 3. JobStatusOverview Gaming Mode Styling
+### 2. Futuristic Job Details Panel (Right Panel)
 
-**`src/components/dashboard/JobStatusOverview.tsx`**
-- Detect `gamingMode` via `useGamingMode()`
-- Outer container: dark glassmorphism with grid background overlay
-- Status cards: replace solid color gradients with dark cards + neon-colored borders and glow matching each status (blue=total, orange=active, purple=pending, yellow=in-progress, indigo=designing, green=completed, emerald=invoiced, red=cancelled)
-- Hover: neon glow intensifies + scale
-- Text: neon-colored with text-shadow glow
-- Icons: matching neon color with drop-shadow
+Redesign the right detail panel:
+- **Background**: Animated radial gradient with slow-moving energy lines (CSS keyframes, no canvas)
+- **Header**: Large holographic job number with text-shadow glow, pulsing hexagonal priority badge
+- **Detail cards**: Glassmorphism with animated neon borders (`@keyframes border-travel`)
+- **Data stream effect**: Subtle scrolling binary/hex text in the background (CSS animation on a pseudo-element)
+- **Status badge**: Large, glowing, with animated ring around it
 
-### 4. HighPriorityReminder Gaming Mode Styling
+### 3. CSS Additions (`src/index.css`)
 
-**`src/components/dashboard/HighPriorityReminder.tsx`**
-- Detect `gamingMode`
-- Background: dark with red neon border and scanline overlay
-- Text: neon red/orange with glow
-- OVERDUE badge: red neon pulse
+Add these gaming-mode specific classes:
+- `.dialer-container` -- perspective container for 3D wheel
+- `.dialer-item` -- base item with transition
+- `.dialer-item-active` -- center glow + scale
+- `.holographic-panel` -- animated gradient background with scanlines
+- `.data-stream` -- scrolling pseudo-element with matrix-style text
+- `@keyframes border-travel` -- animated border that moves around the card
+- `.hex-priority` -- hexagonal priority indicator with pulse
 
-### 5. DashboardNotifications Gaming Mode Styling
+### 4. File Changes
 
-**`src/components/dashboard/DashboardNotifications.tsx`**
-- Detect `gamingMode`
-- Dropdown panel: dark glassmorphism background
-- Items: dark hover states with neon accents
-- Bell icon: neon green glow when gaming mode active
+**`src/components/job-management/ApprovedJobsSlider.tsx`** -- Major rewrite of the layout:
+- Left panel: Replace flat list with dialer component (inline, ~80 lines)
+  - Calculate visible window of 7 items centered on `selectedJobIndex`
+  - Apply `transform: perspective(800px) rotateX(Ndeg) scale(S)` per item based on offset
+  - Mouse wheel handler for scrolling
+- Right panel: Add holographic styling classes, animated background div, hex priority badge
+- Keep all existing filter/search logic untouched
+- Both panels adapt: normal mode stays clean, gaming mode gets the full futuristic treatment
 
-### 6. Additional CSS
+**`src/index.css`** -- Add ~60 lines of gaming-mode CSS for dialer and holographic effects
 
-**`src/index.css`**
-- Add `.gaming-mode .cyber-card-header` for neon gradient headers
-- Add `.hex-badge` for hexagonal rank indicators (clip-path)
-- Add `@keyframes rank-glow` for leaderboard rank animation
-- Add `.gaming-mode .scanline-overlay` pseudo-element
-
-### 7. ModernDashboard Integration
-
-**`src/components/ModernDashboard.tsx`**
-- Import and render `GamingLeaderboard` below the existing grid when gaming mode is active
-
-### Summary of Files
+### Summary
 
 | File | Action |
 |------|--------|
-| `src/components/dashboard/GamingLeaderboard.tsx` | New -- leaderboard widget |
-| `src/components/dashboard/ApprovalBox.tsx` | Add gaming mode conditional styling |
-| `src/components/dashboard/JobStatusOverview.tsx` | Add gaming mode conditional styling |
-| `src/components/dashboard/HighPriorityReminder.tsx` | Add gaming mode conditional styling |
-| `src/components/dashboard/DashboardNotifications.tsx` | Add gaming mode conditional styling |
-| `src/components/ModernDashboard.tsx` | Add GamingLeaderboard |
-| `src/index.css` | Add hex-badge, rank-glow, scanline CSS |
+| `src/components/job-management/ApprovedJobsSlider.tsx` | Rewrite left panel as 3D dialer, restyle right panel as holographic display |
+| `src/index.css` | Add dialer, holographic, data-stream, border-travel CSS |
 
