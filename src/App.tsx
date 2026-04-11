@@ -8,7 +8,9 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { FloatingCreateButton } from "@/components/FloatingCreateButton";
 import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
 import { HighPriorityAlertModal } from "@/components/dashboard/HighPriorityAlertModal";
-import { useState, useEffect, createContext, useContext } from "react";
+import { GamingParticles } from "@/components/GamingParticles";
+import { GamingBootScreen } from "@/components/GamingBootScreen";
+import { useState, useEffect, createContext, useContext, useCallback } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
