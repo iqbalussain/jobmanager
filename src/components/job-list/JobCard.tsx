@@ -1,21 +1,20 @@
 import { Job } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useGamingMode } from "@/App";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { 
-  Eye, 
+import {
+  Eye,
   MessageSquare,
   Calendar,
   User,
   Building,
   Briefcase,
-  Lock
+  Lock,
 } from "lucide-react";
 import { HighPriorityBadge } from "@/components/ui/HighPriorityBadge";
+import { cn } from "@/lib/utils";
 
 interface JobCardProps {
   job: Job;
@@ -23,77 +22,61 @@ interface JobCardProps {
   onStatusChange: (jobId: string, status: string) => void;
 }
 
+const STATUS_OPTIONS = [
+  { value: "pending", label: "Pending" },
+  { value: "in-progress", label: "In Progress" },
+  { value: "out", label: "Out" },
+  { value: "completed", label: "Completed" },
+  { value: "finished", label: "Finished" },
+  { value: "foc_sample", label: "FOC/Sample" },
+  { value: "invoiced", label: "Invoiced" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+  switch (status) {
+    case "completed":
+    case "finished":
+    case "invoiced":
+      return "default";
+    case "cancelled":
+      return "destructive";
+    case "pending":
+    case "in-progress":
+    case "designing":
+      return "secondary";
+    default:
+      return "outline";
+  }
+};
+
 export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   const isLocked = job.status === "invoiced";
-  const { gamingMode } = useGamingMode();
+
   const handleStatusChange = (value: string) => {
     if (isLocked) return;
     onStatusChange(job.id, value);
   };
-  
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "in-progress": return "bg-blue-100 text-blue-800 border-blue-300";
-      case "out": return "bg-purple-100 text-purple-800 border-purple-300";
-      case "completed": return "bg-green-100 text-green-800 border-green-300";
-      case "invoiced": return "bg-emerald-100 text-emerald-800 border-emerald-300";
-      case "cancelled": return "bg-red-100 text-red-800 border-red-300";
-      case "foc_sample": return "bg-pink-100 text-pink-800 border-pink-300";
-      case "finished": return "bg-teal-100 text-teal-800 border-teal-300";
-      default: return "bg-gray-100 text-gray-800 border-gray-300";
-    }
-  };
 
-  const getStatusOptions = () => [
-    { value: "pending", label: "Pending" },
-    { value: "in-progress", label: "In Progress" },
-    { value: "out", label: "Out" },
-    { value: "completed", label: "Completed" },
-    { value: "finished", label: "Finished" },
-    { value: "foc_sample", label: "FOC/Sample" },
-    { value: "invoiced", label: "Invoiced" },
-    { value: "cancelled", label: "Cancelled" }
-  ];
-
-  const isOverdue = new Date(job.dueDate) < new Date() && 
-    job.status !== "completed" && 
-    job.status !== "invoiced" && 
+  const isOverdue =
+    new Date(job.dueDate) < new Date() &&
+    job.status !== "completed" &&
+    job.status !== "invoiced" &&
     job.status !== "cancelled";
 
-  const isHighPriority = job.priority === "high";
-
-  const getGamingStatusClass = (status: string) => {
-    switch (status) {
-      case "pending": return "status-pending";
-      case "in-progress": return "status-in-progress";
-      case "completed": case "finished": return "status-completed";
-      default: return "";
-    }
-  };
-
-  const isUrgentGaming = gamingMode && (job.priority as string) === "urgent";
-
   return (
-    <Card className={cn(
-      "border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 relative overflow-hidden",
-      gamingMode 
-        ? `cyber-card ${getGamingStatusClass(job.status)} ${isUrgentGaming ? "status-urgent" : ""}`
-        : "bg-white/90 backdrop-blur-sm",
-      isHighPriority && isOverdue ? "ring-2 ring-red-500 animate-pulse" : 
-      isHighPriority && !gamingMode ? "ring-2 ring-orange-400" : ""
-    )}>
+    <Card className={cn("transition-shadow hover:shadow-md", isOverdue && "border-destructive/40")}>
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-              <CardTitle className="text-lg font-bold text-gray-900">{job.title}</CardTitle>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <CardTitle className="text-base font-semibold text-foreground">{job.title}</CardTitle>
               <HighPriorityBadge priority={job.priority} />
               {isLocked && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
-                      <Lock className="w-4 h-4 text-amber-600" />
+                      <Lock className="w-4 h-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>This job is invoiced and locked for editing</p>
@@ -102,36 +85,34 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
                 </TooltipProvider>
               )}
               {isOverdue && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white animate-bounce">
-                  OVERDUE
-                </span>
+                <Badge variant="destructive" className="text-[10px]">OVERDUE</Badge>
               )}
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
                 <Briefcase className="w-4 h-4" />
-                <span className="font-medium">{job.jobOrderNumber}</span>
+                <span className="font-medium text-foreground">{job.jobOrderNumber}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
                 <Building className="w-4 h-4" />
                 <span>{job.customer}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
                 <span>{job.salesman}</span>
               </div>
-              <div className={`flex items-center gap-2 text-sm ${isOverdue ? "text-red-600 font-semibold" : "text-gray-600"}`}>
+              <div className={cn("flex items-center gap-2", isOverdue && "text-destructive font-medium")}>
                 <Calendar className="w-4 h-4" />
                 <span>{new Date(job.dueDate).toLocaleDateString()}</span>
               </div>
             </div>
           </div>
-          <div className="ml-4">
+          <div>
             {isLocked ? (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge className={`${getStatusColor(job.status)} cursor-not-allowed`}>
+                    <Badge variant="default" className="cursor-not-allowed">
                       <Lock className="w-3 h-3 mr-1" />
                       Invoiced
                     </Badge>
@@ -142,19 +123,14 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
                 </Tooltip>
               </TooltipProvider>
             ) : (
-              <Select 
-                value={job.status} 
-                onValueChange={handleStatusChange}
-              >
-                <SelectTrigger className={`w-32 border-2 ${getStatusColor(job.status)}`}>
+              <Select value={job.status} onValueChange={handleStatusChange}>
+                <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {getStatusOptions().map((option) => (
+                  {STATUS_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      <Badge variant="outline" className={getStatusColor(option.value)}>
-                        {option.label}
-                      </Badge>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -164,24 +140,20 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onViewDetails(job)}
-            className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-          >
-            <Eye className="w-4 h-4 mr-2" />
-            View Details
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-          >
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Chat
-          </Button>
+        <div className="flex items-center justify-between gap-2">
+          <Badge variant={getStatusBadgeVariant(job.status)}>
+            {job.status.replace("-", " ")}
+          </Badge>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => onViewDetails(job)}>
+              <Eye className="w-4 h-4 mr-1" />
+              View
+            </Button>
+            <Button size="sm" variant="outline">
+              <MessageSquare className="w-4 h-4 mr-1" />
+              Chat
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
