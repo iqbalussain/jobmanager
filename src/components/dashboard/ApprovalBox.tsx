@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,8 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { JobDetails } from "@/components/JobDetails";
 import { useState } from "react";
 import { updateJobInCache } from "@/services/syncService";
-import { useGamingMode } from "@/App";
-import { cn } from "@/lib/utils";
 
 interface PendingJob {
   id: string;
@@ -26,7 +23,6 @@ export function ApprovalBox() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { gamingMode } = useGamingMode();
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
@@ -97,7 +93,7 @@ export function ApprovalBox() {
       return { previousPendingJobs };
     },
     onSuccess: async ({ jobId }, { action }) => {
-      try { await updateJobInCache(jobId); } catch (e) { console.error('Failed to update Dexie cache:', e); }
+      try { await updateJobInCache(jobId); } catch (e) { console.error('Failed to update cache:', e); }
       toast({
         title: action === 'approve' ? "Job Approved" : "Job Rejected",
         description: `Job order has been ${action}d successfully.`,
@@ -146,94 +142,67 @@ export function ApprovalBox() {
     }
   };
 
-  const g = gamingMode;
-
   if (isLoading) {
     return (
-      <Card className={cn(
-        "shadow-xl border-0 h-full flex flex-col rounded-2xl",
-        g ? "bg-gray-900/80 backdrop-blur-xl border border-green-400/30" : "bg-gradient-to-br from-white to-gray-50"
-      )}>
-        <CardHeader className={cn("pb-3", g ? "cyber-card-header" : "bg-gradient-to-r from-blue-500 to-purple-600 text-white")}>
-          <CardTitle className={cn("flex items-center gap-1 text-sm", g ? "text-green-400 font-mono tracking-wider" : "text-white")}>
-            <AlertCircle className="w-6 h-5" />
-            {g ? "PENDING APPROVALS" : "Pending Approvals"}
+      <Card className="h-full flex flex-col">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <AlertCircle className="w-5 h-5" />
+            Pending Approvals
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-3">
-          <div className={cn("text-center", g ? "text-green-400/60 font-mono" : "text-gray-500")}>
-            {g ? "SCANNING..." : "Loading approvals..."}
-          </div>
+        <CardContent>
+          <div className="text-center text-sm text-muted-foreground">Loading approvals...</div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className={cn(
-      "shadow-xl border-0 h-full flex flex-col rounded-2xl transition-all duration-500",
-      g ? "bg-gray-900/80 backdrop-blur-xl border border-green-400/30 shadow-[0_0_30px_rgba(0,255,150,0.1)]" : "bg-gradient-to-br from-white to-gray-50"
-    )}>
-      <CardHeader className={cn(
-        "pb-3 rounded-t-2xl",
-        g ? "bg-gradient-to-r from-green-900/80 to-cyan-900/80 border-b border-green-400/20" : "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-      )}>
-        <CardTitle className={cn("flex items-center gap-1 text-sm", g ? "text-green-400 font-mono tracking-wider drop-shadow-[0_0_10px_rgba(0,255,150,0.5)]" : "text-white")}>
-          <AlertCircle className="w-5 h-6" />
-          {g ? `PENDING APPROVALS [${pendingJobs.length}]` : `Pending Approvals (${pendingJobs.length})`}
+    <Card className="h-full flex flex-col">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <AlertCircle className="w-5 h-5" />
+          Pending Approvals ({pendingJobs.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent>
         {pendingJobs.length === 0 ? (
-          <div className={cn("text-center py-4", g ? "text-green-400/60" : "text-gray-500")}>
-            <CheckCircle className={cn("w-10 h-8 mx-auto mb-1", g ? "text-green-400 drop-shadow-[0_0_10px_rgba(0,255,150,0.5)]" : "text-green-500")} />
-            <p className={cn("text-sm", g && "font-mono")}>{g ? "ALL CLEAR // NO PENDING ITEMS" : "No pending approvals"}</p>
+          <div className="text-center py-6 text-muted-foreground">
+            <CheckCircle className="w-10 h-10 mx-auto mb-2 text-primary/70" />
+            <p className="text-sm">No pending approvals</p>
           </div>
         ) : (
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {pendingJobs.map((job) => (
-              <div key={job.id} className={cn(
-                "p-3 rounded-lg transition-all duration-300",
-                g
-                  ? "bg-gray-800/60 border border-yellow-400/30 shadow-[0_0_10px_rgba(250,204,21,0.1)] hover:border-yellow-400/60 hover:shadow-[0_0_20px_rgba(250,204,21,0.2)]"
-                  : "bg-yellow-50 border border-yellow-200"
-              )}>
+              <div key={job.id} className="p-3 rounded-md border bg-muted/30">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h4 className={cn("font-medium text-sm", g ? "text-green-300 font-mono" : "text-gray-900")}>{job.job_order_number}</h4>
-                    <p className={cn("text-xs", g ? "text-cyan-400/70" : "text-gray-600")}>{job.customer_name}</p>
-                    <p className={cn("text-xs truncate", g ? "text-green-400/50" : "text-gray-500")}>{job.job_order_details}</p>
+                    <h4 className="font-medium text-sm text-foreground">{job.job_order_number}</h4>
+                    <p className="text-xs text-muted-foreground">{job.customer_name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{job.job_order_details}</p>
                   </div>
-                  <Badge variant="outline" className={cn(
-                    g
-                      ? "bg-yellow-400/10 text-yellow-400 border-yellow-400/50 shadow-[0_0_8px_rgba(250,204,21,0.3)] animate-pulse"
-                      : "bg-yellow-100 text-yellow-800 border-yellow-300"
-                  )}>
-                    {g ? "PENDING" : "Pending"}
-                  </Badge>
+                  <Badge variant="secondary">Pending</Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className={cn("flex items-center gap-1 text-xs", g ? "text-green-400/50" : "text-gray-500")}>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="w-3 h-3" />
                     <span>{new Date(job.created_at).toLocaleDateString()}</span>
                   </div>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="outline" onClick={() => handleViewJob(job.id)}
-                      className={cn("h-6 px-2 text-xs", g ? "border-cyan-400/50 text-cyan-400 hover:bg-cyan-400/20 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)]" : "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200")}>
+                    <Button size="sm" variant="outline" onClick={() => handleViewJob(job.id)} className="h-7 px-2 text-xs">
                       <Eye className="w-3 h-3 mr-1" />View
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleApproval(job.id, 'approve')} disabled={approvalMutation.isPending}
-                      className={cn("h-6 px-2 text-xs", g ? "border-green-400/50 text-green-400 hover:bg-green-400/20 hover:shadow-[0_0_10px_rgba(0,255,150,0.3)]" : "bg-green-50 hover:bg-green-100 text-green-700 border-green-200")}>
+                    <Button size="sm" variant="outline" onClick={() => handleApproval(job.id, 'approve')} disabled={approvalMutation.isPending} className="h-7 px-2 text-xs">
                       <CheckCircle className="w-3 h-3 mr-1" />Approve
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleApproval(job.id, 'reject')} disabled={approvalMutation.isPending}
-                      className={cn("h-6 px-2 text-xs", g ? "border-red-400/50 text-red-400 hover:bg-red-400/20 hover:shadow-[0_0_10px_rgba(239,68,68,0.3)]" : "bg-red-50 hover:bg-red-100 text-red-700 border-red-200")}>
+                    <Button size="sm" variant="outline" onClick={() => handleApproval(job.id, 'reject')} disabled={approvalMutation.isPending} className="h-7 px-2 text-xs text-destructive">
                       <XCircle className="w-3 h-3 mr-1" />Reject
                     </Button>
                   </div>
                 </div>
-                <div className={cn("mt-2 text-xs", g ? "text-green-400/40 font-mono" : "text-gray-500")}>
-                  {g ? `OPERATOR: ${job.created_by_name}` : `Created by: ${job.created_by_name}`}
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Created by: {job.created_by_name}
                 </div>
               </div>
             ))}
