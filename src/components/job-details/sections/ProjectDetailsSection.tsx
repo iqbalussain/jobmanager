@@ -199,7 +199,7 @@ export function ProjectDetailsSection({
             {isEditMode ? (
               <Select 
                 value={editData.status || job.status || ''} 
-                onValueChange={(value) => onEditDataChange({ ...editData, status: value })}
+                onValueChange={(value) => onEditDataChange({ ...editData, status: value as Job['status'] })}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select status" />
