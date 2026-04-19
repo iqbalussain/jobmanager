@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Job } from "@/pages/Index";
-import { JobDetails } from "@/components/JobDetails";
-import { JobStatusModal } from "@/components/JobStatusModal";
+import { JobDetails } from "@/components/jobs/JobDetails";
+import { JobStatusModal } from "@/components/jobs/JobStatusModal";
 import { DashboardNotifications } from "@/components/dashboard/DashboardNotifications";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
 import { ApprovalBox } from "@/components/dashboard/ApprovalBox";

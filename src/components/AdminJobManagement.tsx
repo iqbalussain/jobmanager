@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { JobDetails } from "@/components/JobDetails";
+import { JobDetails } from "@/components/jobs/JobDetails";
 import { useDexieJobs, JobFilters } from "@/hooks/useDexieJobs";
 import { updateJobInCache } from "@/services/syncService";
 

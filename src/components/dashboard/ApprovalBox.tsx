@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { JobDetails } from "@/components/JobDetails";
+import { JobDetails } from "@/components/jobs/JobDetails";
 import { useState } from "react";
 import { updateJobInCache } from "@/services/syncService";
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { JobDetails } from "@/components/JobDetails";
+import { JobDetails } from "@/components/jobs/JobDetails";
 import { EmptyJobState } from "@/components/job-list/EmptyJobState";
 import { CheckCircle, Eye, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";

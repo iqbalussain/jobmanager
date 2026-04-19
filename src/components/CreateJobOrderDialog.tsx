@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { JobFormWithImageUpload } from "@/components/job-form/JobFormWithImageUpload";
+import { JobFormWithImageUpload } from "@/components/jobs/job-form/JobFormWithImageUpload";
 
 interface CreateJobOrderDialogProps {
   open: boolean;
