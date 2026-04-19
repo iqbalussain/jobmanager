@@ -1,61 +1,75 @@
 
 
-## Plan: Futuristic Approved Jobs Page with Dialer-Style Job Selector
+## Plan: Production-Grade Refactor — Strip Themes, Reorganize, Polish UI
 
-### Concept
-Transform the Approved Jobs page (`ApprovedJobsSlider.tsx`) into a high-tech command center with two key elements:
-1. **Left panel**: A "dialer" -- a vertical scroll wheel where job numbers roll up/down with 3D perspective, the selected item is centered and glowing
-2. **Right panel**: A holographic job detail card with animated borders, data-stream effects, and a futuristic background
+This is a large, destructive refactor. Before I execute, I need a few decisions so I don't delete things you actually want.
 
-### 1. Dialer-Style Job Number Selector (Left Panel)
+### What I'll do (high-level)
 
-Replace the current flat list with a **3D rotating dial**:
-- Show ~7 visible job numbers at a time in a vertical column
-- The center item is large, bright, neon-glowing (selected)
-- Items above/below progressively shrink, fade, and rotate away (CSS `perspective` + `rotateX` transforms)
-- Mouse wheel / arrow keys / swipe scrolls through jobs with smooth CSS transitions
-- Each item shows job number + mini status dot
-- Up/Down chevron buttons at top and bottom with pulse animation
+**Phase 1 — Remove non-business features**
+- Delete Gaming Mode entirely: `GamingParticles.tsx`, `GamingBootScreen.tsx`, `GamingLeaderboard.tsx`, `useGamingSound.ts`, `CursorGlow.tsx`, `ParticleBackground.tsx`, the `GamingModeContext`, all `useGamingMode()` calls and `gamingMode` conditional branches, the sidebar toggle, the Orbitron font import in `index.html`, and all related CSS in `index.css` (`.gaming-mode`, `.cyber-card`, `.hex-badge`, `.holographic-*`, `.dialer-*`, `.data-stream*`, `.scanline-overlay`, neon keyframes).
+- Delete Ramadan theme entirely: `RamadanFrame.tsx`, `RamadanThemeContext`, `useAdhanNotifications.ts`, `TasbiCounter.tsx`, related CSS, sidebar toggle, Aladhan integration. (Keep the `daily_tasbi` table in the DB but stop reading/writing it.)
+- Revert `ApprovedJobsSlider` from the dialer/holographic version back to a clean list/detail layout.
+- Strip decorative gradients from `ModernDashboard`, `JobCard`, dashboard widgets — replace with neutral shadcn `Card` styling.
 
-**Implementation**: Pure CSS transforms + React state. Each visible item gets a `rotateX` and `scale` based on distance from center. Wrap in a fixed-height container with `overflow: hidden`.
+**Phase 2 — Reorganize structure** (optional, see Q4)
+```text
+src/
+  components/
+    jobs/         JobList, JobCard, JobDetails, JobForm, job-form/*, job-details/*, job-management/*
+    customers/    admin/CustomerManagement, SecureCustomerManagement, dropdowns/CustomerDropdown
+    branches/     BranchJobQueue, BranchLogoUploader
+    dashboard/    existing minus Gaming/Ramadan widgets
+    shared/      FloatingCreateButton, ProtectedRoute, UserProfile, etc.
+    ui/           shadcn — unchanged
+  pages/  hooks/  services/  lib/  types/  utils/
+```
+Update every import. Keep `@/` alias.
 
-### 2. Futuristic Job Details Panel (Right Panel)
+**Phase 3 — Code cleanup**
+- Find and remove unused npm packages from `package.json`.
+- Delete orphaned files (no importers).
+- Consolidate duplicate hooks (e.g. two `use-toast.ts` copies — one in `components/ui/`, one in `hooks/`).
+- Move inline Supabase queries into the `services/` layer.
+- Remove dead `console.log`s and commented-out blocks.
 
-Redesign the right detail panel:
-- **Background**: Animated radial gradient with slow-moving energy lines (CSS keyframes, no canvas)
-- **Header**: Large holographic job number with text-shadow glow, pulsing hexagonal priority badge
-- **Detail cards**: Glassmorphism with animated neon borders (`@keyframes border-travel`)
-- **Data stream effect**: Subtle scrolling binary/hex text in the background (CSS animation on a pseudo-element)
-- **Status badge**: Large, glowing, with animated ring around it
+**Phase 4 — UI polish**
+- Neutral, corporate shadcn theme.
+- Clean sidebar (no theme toggles, no sound toggle).
+- Consistent `Card` / `Table` / `Form` patterns across pages.
+- Fix the build error in `ProjectDetailsSection.tsx:202` (status type cast).
 
-### 3. CSS Additions (`src/index.css`)
+### Risk notes
 
-Add these gaming-mode specific classes:
-- `.dialer-container` -- perspective container for 3D wheel
-- `.dialer-item` -- base item with transition
-- `.dialer-item-active` -- center glow + scale
-- `.holographic-panel` -- animated gradient background with scanlines
-- `.data-stream` -- scrolling pseudo-element with matrix-style text
-- `@keyframes border-travel` -- animated border that moves around the card
-- `.hex-priority` -- hexagonal priority indicator with pulse
+- Touches ~60+ files, deletes ~15+.
+- Folder reorganization breaks every import — done module-by-module with a build check between phases.
+- Single implementation pass, tracked via task tracker.
 
-### 4. File Changes
+### Questions I need answered before I start
 
-**`src/components/job-management/ApprovedJobsSlider.tsx`** -- Major rewrite of the layout:
-- Left panel: Replace flat list with dialer component (inline, ~80 lines)
-  - Calculate visible window of 7 items centered on `selectedJobIndex`
-  - Apply `transform: perspective(800px) rotateX(Ndeg) scale(S)` per item based on offset
-  - Mouse wheel handler for scrolling
-- Right panel: Add holographic styling classes, animated background div, hex priority badge
-- Keep all existing filter/search logic untouched
-- Both panels adapt: normal mode stays clean, gaming mode gets the full futuristic treatment
+**Q1 — Quotation module**
+Your request says to keep "Quotation Management", but project memory says quotations were intentionally removed and `job_order_items` was archived.
+- (a) Skip — don't rebuild quotations *(safest)*
+- (b) Rebuild a minimal quotations page + table from scratch
+- (c) Restore from the deprecated archive *(risky — schema may have drifted)*
 
-**`src/index.css`** -- Add ~60 lines of gaming-mode CSS for dialer and holographic effects
+**Q2 — Which existing features to KEEP** (multi-select)
+- In-app notifications (`DashboardNotifications` + `notifications` table + edge function)
+- Job chat / comments (`JobChat` + `job_order_comments`)
+- AI checklist panel (`AIChecklistPanel` + `daily-gemini-analyze` edge function)
+- Calendar view (`CalendarView` page)
+- Reports page (`ReportsPage` with charts/exports)
+- Job edit audit log (`JobEditLog` + `job_edit_audit`)
 
-### Summary
+**Q3 — Visual style**
+- (a) Neutral slate + single blue accent, light mode only *(classic ERP)*
+- (b) Keep current brand HSL tokens but strip all gradients/glows/animations
+- (c) Standard shadcn light + dark toggle, neutral palette
 
-| File | Action |
-|------|--------|
-| `src/components/job-management/ApprovedJobsSlider.tsx` | Rewrite left panel as 3D dialer, restyle right panel as holographic display |
-| `src/index.css` | Add dialer, holographic, data-stream, border-travel CSS |
+**Q4 — Folder reorganization**
+Renaming ~50 files and rewriting every import is high-risk.
+- (a) Yes — do it now as part of this pass
+- (b) Defer — just remove themes + clean dead code in place; reorganize later
+
+Please answer these (you can reply with letters: e.g. "1a, 2: notifications + reports + audit, 3b, 4b") and I'll proceed.
 
