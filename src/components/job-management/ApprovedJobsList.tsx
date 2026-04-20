@@ -2,7 +2,7 @@ import { ApprovedJobsSlider } from "./ApprovedJobsSlider";
 import { useState } from "react";
 import { Job } from "@/pages/Index";
 import { Card, CardContent } from "@/components/ui/card";
-import { JobDetails } from "@/components/jobs/JobDetails";
+import { JobDetails } from "@/components/JobDetails";
 import { JobListHeader } from "@/components/job-list/JobListHeader";
 import { JobStatsCards } from "@/components/job-list/JobStatsCards";
 import { JobCard } from "@/components/job-list/JobCard";

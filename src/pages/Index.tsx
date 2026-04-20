@@ -1,23 +1,23 @@
 import { useState, lazy, Suspense, useEffect, useCallback } from "react";
-import { MinimalistSidebar } from "@/components/branches/MinimalistSidebar";
+import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useDexieJobs } from "@/hooks/useDexieJobs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { JobDetails } from "@/components/jobs/JobDetails";
-import { CreateJobOrderDialog } from "@/components/jobs/CreateJobOrderDialog";
+import { JobDetails } from "@/components/JobDetails";
+import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 import { useJobActions } from "@/hooks/useJobActions";
 import { updateJobInCache } from "@/services/syncService";
-import { HighPriorityModal } from "@/components/jobs/HighPriorityModal";
+import { HighPriorityModal } from "@/components/HighPriorityModal";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 // Lazy loaded components for performance
-const ModernDashboard = lazy(() => import("@/components/shared/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
-const SettingsView = lazy(() => import("@/components/branches/SettingsView").then(m => ({ default: m.SettingsView })));
-const AdminJobManagement = lazy(() => import("@/components/jobs/AdminJobManagement").then(m => ({ default: m.AdminJobManagement })));
-const AdminManagement = lazy(() => import("@/components/shared/AdminManagement").then(m => ({ default: m.AdminManagement })));
-const ReportsPage = lazy(() => import("@/components/jobs/ReportsPage").then(m => ({ default: m.ReportsPage })));
-const ApprovedJobsList = lazy(() => import("@/components/jobs/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
-const UserAccessManagement = lazy(() => import("@/components/customers/UserAccessManagement").then(m => ({ default: m.default })));
+const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
+const SettingsView = lazy(() => import("@/components/SettingsView").then(m => ({ default: m.SettingsView })));
+const AdminJobManagement = lazy(() => import("@/components/AdminJobManagement").then(m => ({ default: m.AdminJobManagement })));
+const AdminManagement = lazy(() => import("@/components/AdminManagement").then(m => ({ default: m.AdminManagement })));
+const ReportsPage = lazy(() => import("@/components/ReportsPage").then(m => ({ default: m.ReportsPage })));
+const ApprovedJobsList = lazy(() => import("@/components/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
+const UserAccessManagement = lazy(() => import("@/components/UserAccessManagement").then(m => ({ default: m.default })));
 
 export type JobStatus =
   | "pending"

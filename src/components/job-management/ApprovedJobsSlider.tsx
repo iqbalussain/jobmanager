@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { JobDetails } from "@/components/jobs/JobDetails";
+import { JobDetails } from "@/components/JobDetails";
 import { cn } from "@/lib/utils";
 import {
   Building,
