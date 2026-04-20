@@ -33,22 +33,35 @@ const STATUS_OPTIONS = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
-const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+const getStatusClasses = (status: string): string => {
   switch (status) {
-    case "completed":
-    case "finished":
-    case "invoiced":
-      return "default";
-    case "cancelled":
-      return "destructive";
     case "pending":
+      return "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100";
     case "in-progress":
+      return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100";
     case "designing":
-      return "secondary";
+      return "bg-violet-100 text-violet-800 border-violet-200 hover:bg-violet-100";
+    case "out":
+      return "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100";
+    case "completed":
+      return "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100";
+    case "finished":
+      return "bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-100";
+    case "foc_sample":
+      return "bg-pink-100 text-pink-800 border-pink-200 hover:bg-pink-100";
+    case "invoiced":
+      return "bg-slate-800 text-white border-slate-800 hover:bg-slate-800";
+    case "cancelled":
+      return "bg-red-100 text-red-800 border-red-200 hover:bg-red-100";
     default:
-      return "outline";
+      return "bg-muted text-muted-foreground border-border";
   }
 };
+
+const formatStatusLabel = (status: string) =>
+  status === "foc_sample"
+    ? "FOC/Sample"
+    : status.replace("-", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
   const isLocked = job.status === "invoiced";
@@ -141,8 +154,8 @@ export function JobCard({ job, onViewDetails, onStatusChange }: JobCardProps) {
       </CardHeader>
       <CardContent className="pt-0">
         <div className="flex items-center justify-between gap-2">
-          <Badge variant={getStatusBadgeVariant(job.status)}>
-            {job.status.replace("-", " ")}
+          <Badge variant="outline" className={cn("border", getStatusClasses(job.status))}>
+            {formatStatusLabel(job.status)}
           </Badge>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => onViewDetails(job)}>
