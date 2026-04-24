@@ -3,8 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 
 const SYNC_META_ID = 'main';
 const SYNC_INTERVAL = 30000; // 30 seconds
+const REF_SYNC_INTERVAL_MS = 10 * 60_000; // 10 min - reference data rarely changes
+const REPAIR_INTERVAL_MS = 60 * 60_000; // 1 hour - repair check is expensive
+
+// Egress-optimized column lists (excludes large `description` HTML — fetched on demand in JobDetails)
+const JOB_LIST_COLUMNS =
+  'id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,status,priority,branch,assignee,due_date,estimated_hours,actual_hours,total_value,invoice_number,job_order_details,client_name,delivered_at,approval_status,approval_notes,approved_by,approved_at,created_by,created_at,updated_at,description_plain';
 
 let syncIntervalId: ReturnType<typeof setInterval> | null = null;
+let lastRefSyncAt = 0;
+let lastRepairAt = 0;
 
 // Get last sync time
 async function getLastSyncTime(): Promise<string | null> {
@@ -29,12 +37,12 @@ export async function performInitialSync(): Promise<void> {
   
   try {
     // Fetch all reference data first
-    await syncReferenceData();
+    await syncReferenceData(true);
     
     // Fetch all jobs in batches
     const { count } = await supabase
       .from('job_orders')
-      .select('*', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true });
     
     const BATCH_SIZE = 1000;
     const totalBatches = Math.ceil((count || 0) / BATCH_SIZE);
@@ -45,7 +53,7 @@ export async function performInitialSync(): Promise<void> {
       
       const { data: jobOrders, error } = await supabase
         .from('job_orders')
-        .select('*')
+        .select(JOB_LIST_COLUMNS)
         .range(from, to)
         .order('created_at', { ascending: false });
       
@@ -66,7 +74,13 @@ export async function performInitialSync(): Promise<void> {
 }
 
 // Sync reference data (customers, salesmen, designers, job titles)
-async function syncReferenceData(): Promise<void> {
+async function syncReferenceData(force = false): Promise<void> {
+  // Throttle: skip if recently synced (reference data rarely changes)
+  if (!force && Date.now() - lastRefSyncAt < REF_SYNC_INTERVAL_MS) {
+    return;
+  }
+  lastRefSyncAt = Date.now();
+
   const [customersRes, profilesRes, jobTitlesRes] = await Promise.all([
     supabase.from('customers').select('id, name'),
     supabase.from('profiles').select('id, full_name, email, phone, role'),
@@ -171,13 +185,13 @@ export async function performDeltaSync(): Promise<number> {
   console.log('[Sync] Delta sync from:', lastSync);
   
   try {
-    // Sync reference data first
+    // Sync reference data (throttled internally to every 10 min)
     await syncReferenceData();
     
     // Fetch only jobs updated since last sync
     const { data: updatedJobs, error } = await supabase
       .from('job_orders')
-      .select('*')
+      .select(JOB_LIST_COLUMNS)
       .gt('updated_at', lastSync)
       .order('updated_at', { ascending: false });
     
@@ -233,7 +247,7 @@ export async function forceFullResync(): Promise<void> {
 export async function updateJobInCache(jobId: string): Promise<void> {
   const { data: job, error } = await supabase
     .from('job_orders')
-    .select('*')
+    .select(JOB_LIST_COLUMNS)
     .eq('id', jobId)
     .single();
   
@@ -253,6 +267,12 @@ export async function addJobToCache(job: any): Promise<void> {
 
 // Check and repair missing jobs in Dexie
 export async function repairMissingJobs(): Promise<number> {
+  // Throttle: this is expensive (full id scan) - run at most every hour
+  if (Date.now() - lastRepairAt < REPAIR_INTERVAL_MS) {
+    return 0;
+  }
+  lastRepairAt = Date.now();
+
   console.log('[Sync] Checking for missing jobs...');
   
   try {
@@ -288,7 +308,7 @@ export async function repairMissingJobs(): Promise<number> {
       const batchIds = missingJobIds.slice(i, i + BATCH_SIZE);
       const { data: jobs, error: batchError } = await supabase
         .from('job_orders')
-        .select('*')
+        .select(JOB_LIST_COLUMNS)
         .in('id', batchIds);
       
       if (batchError) throw batchError;
