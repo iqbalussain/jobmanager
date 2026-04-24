@@ -11,7 +11,17 @@ import { HighPriorityAlertModal } from "@/components/dashboard/HighPriorityAlert
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60_000, // 5 minutes
+      gcTime: 30 * 60_000, // 30 minutes
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: 'always',
+      retry: 1,
+    },
+  },
+});
 
 function GlobalHighPriorityAlert() {
   const { highPriorityAlert, closeHighPriorityAlert } = useNotifications();

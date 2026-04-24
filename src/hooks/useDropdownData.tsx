@@ -7,7 +7,6 @@ export function useDropdownData() {
   const { data: customers = [], isLoading: customersLoading } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
-      console.log('Fetching customers...');
       const { data, error } = await supabase
         .from('customers')
         .select('id, name')
@@ -17,16 +16,14 @@ export function useDropdownData() {
         console.error('Error fetching customers:', error);
         throw error;
       }
-      console.log('Customers fetched:', data);
       return data as Customer[];
-    }
+    },
+    staleTime: 10 * 60_000,
   });
 
   const { data: designers = [], isLoading: designersLoading } = useQuery({
     queryKey: ['users-designers'],
     queryFn: async () => {
-      console.log('Fetching designers from user profiles and user_roles...');
-      
       // First get users with designer as primary role
       const { data: primaryDesigners, error: error1 } = await supabase
         .from('profiles')
@@ -34,15 +31,11 @@ export function useDropdownData() {
         .eq('role', 'designer')
         .order('full_name');
       
-      console.log('Primary designers query result:', { primaryDesigners, error: error1 });
-      
       // Then get additional users from user_roles table using a separate query
       const { data: userRoleDesigners, error: error2 } = await supabase
         .from('user_roles')
         .select('user_id')
         .eq('role', 'designer');
-      
-      console.log('User roles designers query result:', { userRoleDesigners, error: error2 });
       
       let additionalDesigners = [];
       if (userRoleDesigners && userRoleDesigners.length > 0) {
@@ -54,7 +47,6 @@ export function useDropdownData() {
           .neq('role', 'designer') // Exclude those already found in first query
           .order('full_name');
         
-        console.log('Additional designers from profiles:', { additionalDesignersData, error: error3 });
         additionalDesigners = additionalDesignersData || [];
       }
       
@@ -72,20 +64,18 @@ export function useDropdownData() {
         return acc;
       }, [] as any[]);
       
-      console.log('Final designers list:', uniqueDesigners);
       return uniqueDesigners.map(user => ({
         id: user.id,
         name: user.full_name || 'Unknown Designer',
         phone: user.phone
       })) as Designer[];
-    }
+    },
+    staleTime: 10 * 60_000,
   });
 
   const { data: salesmen = [], isLoading: salesmenLoading } = useQuery({
     queryKey: ['users-salesmen'],
     queryFn: async () => {
-      console.log('Fetching salesmen from user profiles and user_roles...');
-      
       // First get users with salesman as primary role
       const { data: primarySalesmen, error: error1 } = await supabase
         .from('profiles')
@@ -93,15 +83,11 @@ export function useDropdownData() {
         .eq('role', 'salesman')
         .order('full_name');
       
-      console.log('Primary salesmen query result:', { primarySalesmen, error: error1 });
-      
       // Then get additional users from user_roles table using a separate query
       const { data: userRoleSalesmen, error: error2 } = await supabase
         .from('user_roles')
         .select('user_id')
         .eq('role', 'salesman');
-      
-      console.log('User roles salesmen query result:', { userRoleSalesmen, error: error2 });
       
       let additionalSalesmen = [];
       if (userRoleSalesmen && userRoleSalesmen.length > 0) {
@@ -113,7 +99,6 @@ export function useDropdownData() {
           .neq('role', 'salesman') // Exclude those already found in first query
           .order('full_name');
         
-        console.log('Additional salesmen from profiles:', { additionalSalesmenData, error: error3 });
         additionalSalesmen = additionalSalesmenData || [];
       }
       
@@ -131,20 +116,19 @@ export function useDropdownData() {
         return acc;
       }, [] as any[]);
       
-      console.log('Final salesmen list:', uniqueSalesmen);
       return uniqueSalesmen.map(user => ({
         id: user.id,
         name: user.full_name || 'Unknown Salesman',
         email: user.email,
         phone: user.phone
       })) as Salesman[];
-    }
+    },
+    staleTime: 10 * 60_000,
   });
 
   const { data: jobTitles = [], isLoading: jobTitlesLoading } = useQuery({
     queryKey: ['job-titles'],
     queryFn: async () => {
-      console.log('Fetching job titles...');
       const { data, error } = await supabase
         .from('job_titles')
         .select('id, job_title_id')
@@ -154,17 +138,9 @@ export function useDropdownData() {
         console.error('Error fetching job titles:', error);
         return [];
       }
-      console.log('Job titles fetched:', data);
       return data as JobTitle[];
-    }
-  });
-
-  console.log('Dropdown data state:', {
-    customers: customers.length,
-    designers: designers.length,
-    salesmen: salesmen.length,
-    jobTitles: jobTitles.length,
-    isLoading: customersLoading || designersLoading || salesmenLoading || jobTitlesLoading
+    },
+    staleTime: 10 * 60_000,
   });
 
   return {

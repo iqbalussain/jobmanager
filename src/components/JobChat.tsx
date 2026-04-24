@@ -48,7 +48,7 @@ export function JobChat({ job, isOpen, onClose }: JobChatProps) {
       console.log('Fetching comments for job:', job.id);
       const { data: commentsData, error: commentsError } = await supabase
         .from('job_order_comments')
-        .select('*')
+        .select('id, comment, created_by, created_at, job_order_id')
         .eq('job_order_id', job.id)
         .order('created_at', { ascending: true });
 

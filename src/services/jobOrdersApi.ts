@@ -1,10 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// Egress-optimized column list (excludes large `description` HTML)
+const JOB_LIST_COLUMNS =
+  'id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,status,priority,branch,assignee,due_date,estimated_hours,actual_hours,total_value,invoice_number,job_order_details,client_name,delivered_at,approval_status,approval_notes,approved_by,approved_at,created_by,created_at,updated_at,description_plain';
+
 export async function fetchJobOrders() {
   // First, get the total count
   const { count, error: countError } = await supabase
     .from('job_orders')
-    .select('*', { count: 'exact', head: true });
+    .select('id', { count: 'exact', head: true });
   
   if (countError) throw countError;
   
@@ -19,11 +23,7 @@ export async function fetchJobOrders() {
     
     const { data, error } = await supabase
       .from('job_orders')
-      .select(`
-        *,
-        customer:customers!fk_job_orders_customer(id, name),
-        job_title:job_titles(id, job_title_id)
-      `)
+      .select(`${JOB_LIST_COLUMNS},customer:customers!fk_job_orders_customer(id,name),job_title:job_titles(id,job_title_id)`)
       .range(from, to)
       .order('created_at', { ascending: false });
     
@@ -84,7 +84,9 @@ export async function fetchJobOrdersPaginated(
     status?: string;
     branch?: string;
     salesman?: string;
+    salesmanId?: string;
     customer?: string;
+    customerId?: string;
     dateFrom?: string;
     dateTo?: string;
     search?: string;
@@ -92,11 +94,10 @@ export async function fetchJobOrdersPaginated(
 ) {
   let query = supabase
     .from('job_orders')
-    .select(`
-      *,
-      customer:customers!fk_job_orders_customer(id, name),
-      job_title:job_titles(id, job_title_id)
-    `, { count: 'exact' });
+    .select(
+      `${JOB_LIST_COLUMNS},customer:customers!fk_job_orders_customer(id,name),job_title:job_titles(id,job_title_id)`,
+      { count: 'exact' }
+    );
 
   // Apply server-side filters
   if (filters.status && filters.status !== 'all') {
@@ -107,6 +108,14 @@ export async function fetchJobOrdersPaginated(
     query = query.ilike('branch', `%${filters.branch}%`);
   }
   
+  // Server-side filtering by ID when available (avoids over-fetching)
+  if (filters.salesmanId && filters.salesmanId !== 'all') {
+    query = query.eq('salesman_id', filters.salesmanId);
+  }
+  if (filters.customerId && filters.customerId !== 'all') {
+    query = query.eq('customer_id', filters.customerId);
+  }
+
   if (filters.dateFrom) {
     query = query.gte('created_at', filters.dateFrom);
   }
@@ -131,61 +140,52 @@ export async function fetchJobOrdersPaginated(
 
   if (error) throw error;
 
-  // Enrich with designer and salesman data
-  const enrichedData = await Promise.all((data || []).map(async (jobOrder) => {
-    let designer = null;
-    let salesman = null;
-    
-    if (jobOrder.designer_id) {
-      const { data: designerData } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone')
-        .eq('id', jobOrder.designer_id)
-        .single();
-      
-      if (designerData) {
-        designer = {
-          id: designerData.id,
-          name: designerData.full_name || 'Unknown Designer',
-          phone: designerData.phone
-        };
-      }
-    }
-    
-    if (jobOrder.salesman_id) {
-      const { data: salesmanData } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, phone')
-        .eq('id', jobOrder.salesman_id)
-        .single();
-      
-      if (salesmanData) {
-        salesman = {
-          id: salesmanData.id,
-          name: salesmanData.full_name || 'Unknown Salesman',
-          email: salesmanData.email,
-          phone: salesmanData.phone
-        };
-      }
-    }
-    
+  // Batch-fetch designer + salesman profiles in a single query (was N+1)
+  const rows = data || [];
+  const profileIds = Array.from(
+    new Set(
+      rows.flatMap((r: any) => [r.designer_id, r.salesman_id]).filter(Boolean)
+    )
+  );
+
+  const profileMap = new Map<string, any>();
+  if (profileIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, phone')
+      .in('id', profileIds);
+    (profiles || []).forEach((p) => profileMap.set(p.id, p));
+  }
+
+  const enrichedData = rows.map((jobOrder: any) => {
+    const d = jobOrder.designer_id ? profileMap.get(jobOrder.designer_id) : null;
+    const s = jobOrder.salesman_id ? profileMap.get(jobOrder.salesman_id) : null;
     return {
       ...jobOrder,
-      designer,
-      salesman
+      designer: d
+        ? { id: d.id, name: d.full_name || 'Unknown Designer', phone: d.phone }
+        : null,
+      salesman: s
+        ? {
+            id: s.id,
+            name: s.full_name || 'Unknown Salesman',
+            email: s.email,
+            phone: s.phone,
+          }
+        : null,
     };
-  }));
+  });
 
-  // Apply remaining filters that need enriched data
+  // Fallback name-based filters (only used when ID isn't passed)
   let filteredData = enrichedData;
   
-  if (filters.salesman && filters.salesman !== 'all') {
+  if (!filters.salesmanId && filters.salesman && filters.salesman !== 'all') {
     filteredData = filteredData.filter(job => 
       job.salesman?.name === filters.salesman
     );
   }
   
-  if (filters.customer && filters.customer !== 'all') {
+  if (!filters.customerId && filters.customer && filters.customer !== 'all') {
     filteredData = filteredData.filter(job => 
       job.customer?.name === filters.customer
     );

@@ -9,7 +9,7 @@ export async function syncNotifications(userId: string): Promise<void> {
   try {
     const { data, error } = await supabase
       .from("notifications")
-      .select("*")
+      .select("id, user_id, job_id, type, message, payload, read, snoozed_until, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(100);

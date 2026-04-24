@@ -33,7 +33,7 @@ export function JobTitleDropdown({ value, onValueChange, placeholder = "Select j
     try {
       const { data, error } = await supabase
         .from('job_titles')
-        .select('*')
+        .select('id, job_title_id')
         .order('job_title_id', { ascending: true });
 
       if (error) throw error;

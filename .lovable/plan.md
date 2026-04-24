@@ -1,75 +1,112 @@
 
+## Plan: Reduce Supabase Egress (300-400 MB → ~60-100 MB target)
 
-## Plan: Production-Grade Refactor — Strip Themes, Reorganize, Polish UI
+**Constraint honored:** No `supabase.channel()` or `.on('postgres_changes', ...)` code is touched. Realtime stays exactly as-is.
 
-This is a large, destructive refactor. Before I execute, I need a few decisions so I don't delete things you actually want.
+### Where the egress is going (root causes)
 
-### What I'll do (high-level)
+After auditing the code, the top bandwidth offenders are:
 
-**Phase 1 — Remove non-business features**
-- Delete Gaming Mode entirely: `GamingParticles.tsx`, `GamingBootScreen.tsx`, `GamingLeaderboard.tsx`, `useGamingSound.ts`, `CursorGlow.tsx`, `ParticleBackground.tsx`, the `GamingModeContext`, all `useGamingMode()` calls and `gamingMode` conditional branches, the sidebar toggle, the Orbitron font import in `index.html`, and all related CSS in `index.css` (`.gaming-mode`, `.cyber-card`, `.hex-badge`, `.holographic-*`, `.dialer-*`, `.data-stream*`, `.scanline-overlay`, neon keyframes).
-- Delete Ramadan theme entirely: `RamadanFrame.tsx`, `RamadanThemeContext`, `useAdhanNotifications.ts`, `TasbiCounter.tsx`, related CSS, sidebar toggle, Aladhan integration. (Keep the `daily_tasbi` table in the DB but stop reading/writing it.)
-- Revert `ApprovedJobsSlider` from the dialer/holographic version back to a clean list/detail layout.
-- Strip decorative gradients from `ModernDashboard`, `JobCard`, dashboard widgets — replace with neutral shadcn `Card` styling.
+1. **`repairMissingJobs()` runs on every app load** — fetches every `id` from `job_orders` then re-fetches any "missing" rows with `select('*')`. With thousands of jobs, this alone can be ~500 KB–2 MB per session start.
+2. **`syncReferenceData()` runs on initial sync AND every 30-second delta** — re-pulls all customers, all profiles, all job titles every half minute even when nothing changed.
+3. **`select('*')` on `job_orders`** — the table has ~30 columns including `description` (rich-text HTML) and `description_plain`, often several KB per row. A 1000-row batch can be 3-5 MB. Used in `performInitialSync`, `performDeltaSync`, `repairMissingJobs`, `updateJobInCache`, `fetchJobOrders`, `fetchJobOrdersPaginated`.
+4. **`fetchJobOrders()` in `jobOrdersApi.ts`** — duplicates the Dexie initial sync (same data, fetched twice on first paint via `useJobOrdersQuery`).
+5. **`fetchJobOrdersPaginated()`** — does an N+1 lookup: one `profiles` request per row for designer + salesman. 50 rows = 100 extra round trips.
+6. **`useActivities`, `useJobImages`, `JobChat`, `notificationsSync`, `aiSync`, `companies`** — all use `select('*')`.
+7. **TanStack Query has no `staleTime`** — every component remount re-fetches.
 
-**Phase 2 — Reorganize structure** (optional, see Q4)
+### Changes (file-by-file)
+
+**`src/App.tsx`** — Add global QueryClient defaults:
 ```text
-src/
-  components/
-    jobs/         JobList, JobCard, JobDetails, JobForm, job-form/*, job-details/*, job-management/*
-    customers/    admin/CustomerManagement, SecureCustomerManagement, dropdowns/CustomerDropdown
-    branches/     BranchJobQueue, BranchLogoUploader
-    dashboard/    existing minus Gaming/Ramadan widgets
-    shared/      FloatingCreateButton, ProtectedRoute, UserProfile, etc.
-    ui/           shadcn — unchanged
-  pages/  hooks/  services/  lib/  types/  utils/
+staleTime: 5 * 60_000   (5 min — most data doesn't change that fast)
+gcTime:    30 * 60_000  (30 min)
+refetchOnWindowFocus: false
+refetchOnReconnect: 'always'
 ```
-Update every import. Keep `@/` alias.
 
-**Phase 3 — Code cleanup**
-- Find and remove unused npm packages from `package.json`.
-- Delete orphaned files (no importers).
-- Consolidate duplicate hooks (e.g. two `use-toast.ts` copies — one in `components/ui/`, one in `hooks/`).
-- Move inline Supabase queries into the `services/` layer.
-- Remove dead `console.log`s and commented-out blocks.
+**`src/services/syncService.ts`** — biggest wins:
+- Replace every `select('*')` on `job_orders` with an explicit column list (drop `description` from the list-level sync; keep only `description_plain` truncated isn't possible, so just exclude `description` entirely from list sync — fetch on demand in `JobDetails`).
+  Columns kept: `id, job_order_number, customer_id, job_title_id, designer_id, salesman_id, status, priority, branch, assignee, due_date, estimated_hours, actual_hours, total_value, invoice_number, job_order_details, client_name, delivered_at, approval_status, approval_notes, approved_by, approved_at, created_by, created_at, updated_at, description_plain`.
+- **Gate `syncReferenceData()`** behind a 10-minute timestamp check (store `lastRefSync` in `db.syncMeta`). Reference data rarely changes — running it every 30 s is wasteful.
+- **Throttle `repairMissingJobs()`**: only run if last repair was > 1 hour ago (store `lastRepair` in `db.syncMeta`). Currently runs on every page load.
+- **Replace the repair query** `select('id')` with `select('id, updated_at')` and ALSO check Dexie `updated_at` to skip rows already in sync (avoids a second fetch when ids exist but are stale — no extra cost).
+- `updateJobInCache` and `addJobToCache`: keep as-is (single-row, called only after a write).
 
-**Phase 4 — UI polish**
-- Neutral, corporate shadcn theme.
-- Clean sidebar (no theme toggles, no sound toggle).
-- Consistent `Card` / `Table` / `Form` patterns across pages.
-- Fix the build error in `ProjectDetailsSection.tsx:202` (status type cast).
+**`src/services/jobOrdersApi.ts`**:
+- `fetchJobOrders()`: this duplicates the Dexie sync — **deprecate it**. Change `useJobOrdersQuery` to read from Dexie via `useDexieJobs` instead (the dashboard already uses Dexie elsewhere, per the offline-first memory). Removes a full duplicate full-table fetch on first load.
+- `fetchJobOrdersPaginated()`:
+  - Replace `select('*')` with explicit columns.
+  - Replace the N+1 designer/salesman lookup with a single `profiles.select('id, full_name, email, phone').in('id', [...allIds])` after the page loads.
 
-### Risk notes
+**`src/hooks/useActivities.tsx`**: `select('id, action, description, entity_type, entity_id, user_id, created_at')` + add `staleTime: 60_000`.
 
-- Touches ~60+ files, deletes ~15+.
-- Folder reorganization breaks every import — done module-by-module with a build check between phases.
-- Single implementation pass, tracked via task tracker.
+**`src/hooks/useJobImages.tsx`**: `select('id, file_path, file_name, file_type, file_size, image_width, image_height, alt_text, created_at, uploaded_by')` (drop `is_image` from selection — already filtered in WHERE).
 
-### Questions I need answered before I start
+**`src/components/JobChat.tsx`**: `select('id, comment, created_by, created_at')`.
 
-**Q1 — Quotation module**
-Your request says to keep "Quotation Management", but project memory says quotations were intentionally removed and `job_order_items` was archived.
-- (a) Skip — don't rebuild quotations *(safest)*
-- (b) Rebuild a minimal quotations page + table from scratch
-- (c) Restore from the deprecated archive *(risky — schema may have drifted)*
+**`src/services/notificationsSync.ts`**: `select('id, message, type, job_id, read, snoozed_until, payload, created_at')`. Realtime `.on()` subscriptions in this file stay untouched.
 
-**Q2 — Which existing features to KEEP** (multi-select)
-- In-app notifications (`DashboardNotifications` + `notifications` table + edge function)
-- Job chat / comments (`JobChat` + `job_order_comments`)
-- AI checklist panel (`AIChecklistPanel` + `daily-gemini-analyze` edge function)
-- Calendar view (`CalendarView` page)
-- Reports page (`ReportsPage` with charts/exports)
-- Job edit audit log (`JobEditLog` + `job_edit_audit`)
+**`src/services/aiSync.ts`**: `select('id, date, items, created_at')`.
 
-**Q3 — Visual style**
-- (a) Neutral slate + single blue accent, light mode only *(classic ERP)*
-- (b) Keep current brand HSL tokens but strip all gradients/glows/animations
-- (c) Standard shadcn light + dark toggle, neutral palette
+**`src/services/companies.ts`**: `select('id, name, phone, address, email, letterhead_url')`.
 
-**Q4 — Folder reorganization**
-Renaming ~50 files and rewriting every import is high-risk.
-- (a) Yes — do it now as part of this pass
-- (b) Defer — just remove themes + clean dead code in place; reorganize later
+**`src/components/dropdowns/JobTitleDropdown.tsx`**: `select('id, job_title_id')` + wrap in `useQuery` with `staleTime: 10 * 60_000`.
 
-Please answer these (you can reply with letters: e.g. "1a, 2: notifications + reports + audit, 3b, 4b") and I'll proceed.
+**`src/components/settings/DataManagement.tsx`** — CSV export uses `select('*')` for full export. **Leave the CSV `*` calls alone** (export needs everything by design), but limit the profile exports to `select(<headers>)` since headers are already explicit.
 
+### Caching strategy (TanStack Query `staleTime`)
+
+| Hook | staleTime | Why |
+|------|-----------|-----|
+| `useJobOrdersQuery` (now Dexie-backed) | n/a — Dexie | Already cached locally |
+| `useActivities` | 60 s | Activity feed |
+| `useUsers` | 10 min | Profiles change rarely |
+| `useDropdownData` (customers/jobtitles) | 10 min | Reference data |
+| `useNotifications` query path | 30 s | Realtime fills gaps |
+| `useJobImages` | 5 min | Images don't churn |
+| Companies | 30 min | Almost static |
+
+### Filter optimization
+
+`fetchJobOrdersPaginated` currently fetches the page then filters salesman/customer **in JS** by name. Change both to server-side `.eq('salesman_id', id)` / `.eq('customer_id', id)` — requires the UI to pass IDs (it already has them via the dropdown options, just needs threading through). This avoids over-fetching when a single salesman is selected.
+
+### What is NOT changed
+
+- All `supabase.channel(...)` and `.on('postgres_changes', ...)` blocks — left exactly as written.
+- Realtime subscription targets, filters, table names, callbacks — untouched.
+- Database schema, RLS policies, edge functions — no changes.
+- The 30-second sync interval — unchanged (just made cheaper per tick).
+
+### Expected egress impact
+
+| Source | Before | After |
+|--------|--------|-------|
+| `repairMissingJobs` per session | ~1-2 MB | ~50 KB (throttled, smaller select) |
+| `syncReferenceData` per 30 s | ~100-300 KB | ~0 (skipped 95% of ticks) |
+| `performDeltaSync` | varies, big rows | ~40% smaller (no `description`) |
+| `fetchJobOrders` duplicate | full-table (~3-5 MB) | 0 (removed) |
+| Paginated admin page | 50 rows × 2 profile fetches | 1 batched fetch |
+| Refetch on remount | every mount | once per `staleTime` window |
+
+Conservative estimate: **60-75% egress reduction**, landing in the 80-150 MB/month range.
+
+### Files touched
+
+| File | Change |
+|------|--------|
+| `src/App.tsx` | QueryClient defaults |
+| `src/services/syncService.ts` | Explicit columns, throttle ref-sync + repair |
+| `src/services/jobOrdersApi.ts` | Drop full-table fetch, batch profile lookups, explicit columns |
+| `src/hooks/useJobOrdersQuery.tsx` | Read from Dexie instead of network |
+| `src/hooks/useActivities.tsx` | Explicit columns + staleTime |
+| `src/hooks/useJobImages.tsx` | Explicit columns + staleTime |
+| `src/hooks/useDropdownData.tsx` | staleTime |
+| `src/hooks/useUsers.tsx` | staleTime |
+| `src/components/JobChat.tsx` | Explicit columns (Realtime untouched) |
+| `src/services/notificationsSync.ts` | Explicit columns (Realtime untouched) |
+| `src/services/aiSync.ts` | Explicit columns |
+| `src/services/companies.ts` | Explicit columns |
+| `src/components/dropdowns/JobTitleDropdown.tsx` | Explicit columns + cache |
+
+No DB migrations. No Realtime changes. Single implementation pass on approval.

@@ -25,7 +25,7 @@ export function useJobImages(jobOrderId: string) {
     queryFn: async (): Promise<JobImage[]> => {
       const { data, error } = await supabase
         .from('job_order_attachments')
-        .select('*')
+        .select('id, file_name, file_path, file_size, file_type, image_width, image_height, alt_text, created_at, uploaded_by')
         .eq('job_order_id', jobOrderId)
         .eq('is_image', true)
         .order('created_at', { ascending: false });
@@ -37,7 +37,8 @@ export function useJobImages(jobOrderId: string) {
 
       return data || [];
     },
-    enabled: !!jobOrderId
+    enabled: !!jobOrderId,
+    staleTime: 5 * 60_000,
   });
 
   const deleteImageMutation = useMutation({

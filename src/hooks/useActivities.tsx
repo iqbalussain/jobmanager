@@ -23,7 +23,7 @@ export function useActivities() {
       // First get activities
       const { data: activitiesData, error: activitiesError } = await supabase
         .from('activities')
-        .select('*')
+        .select('id, action, description, entity_type, entity_id, user_id, created_at')
         .order('created_at', { ascending: false })
         .limit(10);
       
@@ -63,7 +63,8 @@ export function useActivities() {
         ...activity,
         user_name: userNamesMap.get(activity.user_id) || 'Unknown User'
       }));
-    }
+    },
+    staleTime: 60_000,
   });
 
   useEffect(() => {
