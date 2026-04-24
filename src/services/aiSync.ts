@@ -34,7 +34,7 @@ export async function syncTodayChecklist(): Promise<DailyChecklist | null> {
     
     const { data, error } = await supabase
       .from('daily_checklists')
-      .select('*')
+      .select('id, date, items, created_at')
       .eq('date', today)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -164,7 +164,7 @@ export async function getRecentChecklists(days: number = 7): Promise<DailyCheckl
     
     const { data, error } = await supabase
       .from('daily_checklists')
-      .select('*')
+      .select('id, date, items, created_at')
       .gte('date', startDate.toISOString().split('T')[0])
       .order('date', { ascending: false });
     

@@ -24,7 +24,7 @@ export async function searchCompanies(query: string): Promise<Company[]> {
 export async function getCompanyById(id: string): Promise<Company | null> {
   const { data, error } = await supabase
     .from('companies')
-    .select('*')
+    .select('id, name, letterhead_url, address, phone, email')
     .eq('id', id)
     .single();
   
