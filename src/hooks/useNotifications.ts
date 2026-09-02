@@ -66,7 +66,6 @@ export function useNotifications() {
           filter: `user_id=eq.${user.id}`,
         },
         async (payload) => {
-          console.log("New notification received:", payload.new);
           const newNotif = payload.new as DexieNotification;
           
           await addNotificationToCache({
@@ -129,7 +128,6 @@ export function useNotifications() {
         navigator.vibrate([200, 100, 200]);
       }
     } catch (err) {
-      console.log("Could not play notification sound:", err);
     }
   }, []);
   

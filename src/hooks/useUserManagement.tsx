@@ -38,7 +38,6 @@ export function useUserManagement() {
   const { data: profiles = [], isLoading: profilesLoading } = useQuery({
     queryKey: ['profiles'],
     queryFn: async () => {
-      console.log('Fetching profiles...');
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, email, role, department, branch, phone, is_active')
@@ -48,7 +47,6 @@ export function useUserManagement() {
         console.error('Error fetching profiles:', error);
         throw error;
       }
-      console.log('Profiles fetched:', data);
       return data as Profile[];
     }
   });
@@ -63,7 +61,6 @@ export function useUserManagement() {
       branch: string;
       phone: string;
     }) => {
-      console.log('Adding user:', userData.email);
       
       if (!isValidRole(userData.role)) {
         throw new Error(`Invalid role: ${userData.role}. Must be one of: ${allowedRoles.join(', ')}`);

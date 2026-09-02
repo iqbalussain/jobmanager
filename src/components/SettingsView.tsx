@@ -70,7 +70,7 @@ export function SettingsView() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('full_name, email, phone, branch, department')
         .eq('id', user.id)
         .single();
 

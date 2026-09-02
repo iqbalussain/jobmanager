@@ -72,7 +72,6 @@ export function useCreateJobOrder() {
         }
       });
 
-      console.log('Notification sent successfully');
     } catch (error) {
       console.error('Failed to send notification:', error);
     }
@@ -80,8 +79,6 @@ export function useCreateJobOrder() {
 
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: CreateJobOrderData) => {
-      console.log('Starting job order creation for user:', user?.id, 'role:', user?.role);
-      console.log('Job order data:', data);
       
       if (!user) {
         const error = 'User must be authenticated to create job orders';
@@ -99,7 +96,6 @@ export function useCreateJobOrder() {
       let salesmanId = data.salesman_id;
       if (user?.role === 'salesman') {
         salesmanId = user.id;
-        console.log('Override salesman ID with current user ID:', salesmanId);
       }
 
       let attempts = 0;
@@ -108,7 +104,6 @@ export function useCreateJobOrder() {
 
       while (attempts < 5) {
         const jobOrderNumber = await generateJobOrderNumber(data.branch);
-        console.log('Generated job order number:', jobOrderNumber);
 
         const insertData = {
           job_order_number: jobOrderNumber,
@@ -128,7 +123,6 @@ export function useCreateJobOrder() {
           created_by: user.id
         };
         
-        console.log('Inserting job order with data:', insertData);
 
         const { data: inserted, error } = await supabase
           .from('job_orders')
@@ -137,7 +131,6 @@ export function useCreateJobOrder() {
           .single();
 
         if (!error) {
-          console.log('Job order created successfully:', inserted);
           newJobOrder = inserted;
           // Send notification for approval if status is pending (non-blocking)
           if (inserted.status === 'pending') {

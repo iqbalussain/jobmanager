@@ -20,7 +20,6 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
         throw new Error('Customer name must be between 1 and 255 characters');
       }
       
-      console.log('Adding customer:', sanitizedName);
       const { data: result, error } = await supabase
         .from('customers')
         .insert({ name: sanitizedName })
@@ -67,7 +66,6 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
         throw new Error('Invalid phone number format');
       }
       
-      console.log('Adding designer to profiles:', sanitizedName, sanitizedPhone);
       // Note: In a real implementation, you would create a new user account first
       // and then update their profile. For now, this is just a placeholder.
       throw new Error('Adding designers requires proper user account creation flow');
@@ -111,7 +109,6 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
         throw new Error('Invalid phone number format');
       }
       
-      console.log('Adding salesman to profiles:', sanitizedName, sanitizedEmail, sanitizedPhone);
       // Note: In a real implementation, you would create a new user account first
       // and then update their profile. For now, this is just a placeholder.
       throw new Error('Adding salesmen requires proper user account creation flow');
@@ -144,7 +141,6 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
         throw new Error('Job title must be between 1 and 255 characters');
       }
       
-      console.log('Adding job title:', sanitizedTitle);
       const { data: result, error } = await supabase
         .from('job_titles')
         .insert({ job_title_id: sanitizedTitle })
@@ -221,7 +217,6 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
         throw new Error('Full name must be between 1 and 255 characters');
       }
       
-      console.log('Adding user:', sanitizedEmail);
       
       // Create user via Supabase Auth
       const { data: { user }, error: signUpError } = await supabase.auth.signUp({

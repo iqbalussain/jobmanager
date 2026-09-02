@@ -52,7 +52,6 @@ export function useAdminQueries() {
     queryKey: ['customers'],
     queryFn: async () => {
       checkAdminAccess();
-      console.log('Fetching customers...');
       const { data, error } = await supabase
         .from('customers')
         .select('id, name')
@@ -62,7 +61,6 @@ export function useAdminQueries() {
         console.error('Error fetching customers:', error);
         throw error;
       }
-      console.log('Customers fetched:', data);
       return data as Customer[];
     },
     enabled: !!user
@@ -72,7 +70,6 @@ export function useAdminQueries() {
     queryKey: ['designers'],
     queryFn: async () => {
       checkAdminAccess();
-      console.log('Fetching designers from profiles...');
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, phone')
@@ -83,7 +80,6 @@ export function useAdminQueries() {
         console.error('Error fetching designers:', error);
         throw error;
       }
-      console.log('Designers fetched:', data);
       return data.map(profile => ({
         id: profile.id,
         name: profile.full_name || 'Unknown Designer',
@@ -97,7 +93,6 @@ export function useAdminQueries() {
     queryKey: ['salesmen'],
     queryFn: async () => {
       checkAdminAccess();
-      console.log('Fetching salesmen from profiles...');
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, email, phone')
@@ -108,7 +103,6 @@ export function useAdminQueries() {
         console.error('Error fetching salesmen:', error);
         throw error;
       }
-      console.log('Salesmen fetched:', data);
       return data.map(profile => ({
         id: profile.id,
         name: profile.full_name || 'Unknown Salesman',
@@ -123,7 +117,6 @@ export function useAdminQueries() {
     queryKey: ['job-titles'],
     queryFn: async () => {
       checkAdminAccess();
-      console.log('Fetching job titles...');
       const { data, error } = await supabase
         .from('job_titles')
         .select('id, job_title_id')
@@ -133,7 +126,6 @@ export function useAdminQueries() {
         console.error('Error fetching job titles:', error);
         return [];
       }
-      console.log('Job titles fetched:', data);
       return data as JobTitle[];
     },
     enabled: !!user
@@ -143,7 +135,6 @@ export function useAdminQueries() {
     queryKey: ['profiles'],
     queryFn: async () => {
       checkAdminAccess();
-      console.log('Fetching profiles...');
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, email, role, department, branch, phone')
@@ -153,7 +144,6 @@ export function useAdminQueries() {
         console.error('Error fetching profiles:', error);
         throw error;
       }
-      console.log('Profiles fetched:', data);
       return data as Profile[];
     },
     enabled: !!user

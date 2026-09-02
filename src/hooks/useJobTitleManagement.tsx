@@ -17,7 +17,6 @@ export function useJobTitleManagement() {
   const { data: jobTitles = [], isLoading: jobTitlesLoading } = useQuery({
     queryKey: ['job-titles'],
     queryFn: async () => {
-      console.log('Fetching job titles...');
       const { data, error } = await supabase
         .from('job_titles')
         .select('id, job_title_id')
@@ -27,14 +26,12 @@ export function useJobTitleManagement() {
         console.error('Error fetching job titles:', error);
         return [];
       }
-      console.log('Job titles fetched:', data);
       return data as JobTitle[];
     }
   });
 
   const addJobTitleMutation = useMutation({
     mutationFn: async (data: { job_title_id: string }) => {
-      console.log('Adding job title:', data.job_title_id);
       const { data: result, error } = await supabase
         .from('job_titles')
         .insert({ job_title_id: data.job_title_id })
