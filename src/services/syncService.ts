@@ -33,7 +33,6 @@ export async function needsInitialSync(): Promise<boolean> {
 
 // Perform full initial sync
 export async function performInitialSync(): Promise<void> {
-  console.log('[Sync] Starting initial sync...');
   
   try {
     // Fetch all reference data first
@@ -66,7 +65,6 @@ export async function performInitialSync(): Promise<void> {
     }
     
     await setLastSyncTime(new Date().toISOString());
-    console.log(`[Sync] Initial sync complete. ${count} jobs loaded.`);
   } catch (error) {
     console.error('[Sync] Initial sync failed:', error);
     throw error;
@@ -182,7 +180,6 @@ export async function performDeltaSync(): Promise<number> {
     return 0;
   }
   
-  console.log('[Sync] Delta sync from:', lastSync);
   
   try {
     // Sync reference data (throttled internally to every 10 min)
@@ -200,9 +197,7 @@ export async function performDeltaSync(): Promise<number> {
     if (updatedJobs && updatedJobs.length > 0) {
       const enrichedJobs = await enrichJobOrders(updatedJobs);
       await db.jobs.bulkPut(enrichedJobs);
-      console.log(`[Sync] Delta sync complete. ${updatedJobs.length} jobs updated.`);
     } else {
-      console.log('[Sync] Delta sync complete. No changes.');
     }
     
     await setLastSyncTime(new Date().toISOString());
@@ -225,7 +220,6 @@ export function startBackgroundSync() {
     }
   }, SYNC_INTERVAL);
   
-  console.log('[Sync] Background sync started (every 30s)');
 }
 
 // Stop background sync
@@ -233,7 +227,6 @@ export function stopBackgroundSync() {
   if (syncIntervalId) {
     clearInterval(syncIntervalId);
     syncIntervalId = null;
-    console.log('[Sync] Background sync stopped');
   }
 }
 
@@ -273,7 +266,6 @@ export async function repairMissingJobs(): Promise<number> {
   }
   lastRepairAt = Date.now();
 
-  console.log('[Sync] Checking for missing jobs...');
   
   try {
     // Get all job IDs from Supabase
@@ -296,11 +288,9 @@ export async function repairMissingJobs(): Promise<number> {
       .map(job => job.id);
     
     if (missingJobIds.length === 0) {
-      console.log('[Sync] No missing jobs found.');
       return 0;
     }
     
-    console.log(`[Sync] Found ${missingJobIds.length} missing jobs, syncing...`);
     
     // Fetch and sync missing jobs in batches of 100
     const BATCH_SIZE = 100;
@@ -319,7 +309,6 @@ export async function repairMissingJobs(): Promise<number> {
       }
     }
     
-    console.log(`[Sync] Repaired ${missingJobIds.length} missing jobs.`);
     return missingJobIds.length;
   } catch (error) {
     console.error('[Sync] Repair missing jobs failed:', error);

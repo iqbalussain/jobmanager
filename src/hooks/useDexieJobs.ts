@@ -49,7 +49,6 @@ export function useDexieJobs(
           // Check for and repair any missing jobs
           const repairedCount = await repairMissingJobs();
           if (repairedCount > 0) {
-            console.log(`[Sync] Repaired ${repairedCount} missing jobs on startup`);
           }
           setIsSyncing(false);
         }

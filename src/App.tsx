@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { FloatingCreateButton } from "@/components/FloatingCreateButton";
 import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
 import { HighPriorityAlertModal } from "@/components/dashboard/HighPriorityAlertModal";
@@ -38,6 +39,7 @@ function GlobalHighPriorityAlert() {
 
 function App() {
   return (
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <NotificationProvider>
@@ -62,6 +64,7 @@ function App() {
         </NotificationProvider>
       </AuthProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

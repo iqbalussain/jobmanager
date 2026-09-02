@@ -19,7 +19,6 @@ export function useSalesmanManagement() {
   const { data: salesmen = [], isLoading: salesmenLoading } = useQuery({
     queryKey: ['salesmen'],
     queryFn: async () => {
-      console.log('Fetching salesmen from profiles...');
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, email, phone')
@@ -30,7 +29,6 @@ export function useSalesmanManagement() {
         console.error('Error fetching salesmen:', error);
         throw error;
       }
-      console.log('Salesmen fetched:', data);
       return data.map(profile => ({
         id: profile.id,
         name: profile.full_name || 'Unknown Salesman',
@@ -42,7 +40,6 @@ export function useSalesmanManagement() {
 
   const addSalesmanMutation = useMutation({
     mutationFn: async (data: { name: string; email: string; phone: string }) => {
-      console.log('Adding salesman to profiles:', data.name, data.email, data.phone);
       // Note: In a real implementation, you would create a new user account first
       // and then update their profile. For now, this is just a placeholder.
       throw new Error('Adding salesmen requires proper user account creation flow');

@@ -112,7 +112,6 @@ const Index = () => {
           table: 'job_orders'
         },
         async (payload: RealtimePostgresChangesPayload<{ [key: string]: any }>) => {
-          console.log('[Realtime] Job order changed:', payload.eventType);
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             try {
               await updateJobInCache(payload.new.id);

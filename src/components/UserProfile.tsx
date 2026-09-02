@@ -39,7 +39,6 @@ export function UserProfile() {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching profile for user:', user.id);
       
       // Try to fetch profile directly first
       const { data, error: fetchError } = await supabase
@@ -53,7 +52,6 @@ export function UserProfile() {
         
         // If there's an RLS or policy error, try creating a basic profile
         if (fetchError.message?.includes('policy') || fetchError.message?.includes('security')) {
-          console.log('Policy error detected, attempting to create profile...');
           const basicProfile = {
             full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
             role: 'employee',
@@ -66,11 +64,9 @@ export function UserProfile() {
           setError('Failed to load user profile');
         }
       } else if (data) {
-        console.log('Profile loaded:', data);
         setProfile(data);
       } else {
         // Profile doesn't exist, create a basic one from user data
-        console.log('No profile found, creating basic profile from user data...');
         const basicProfile = {
           full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
           role: 'employee',

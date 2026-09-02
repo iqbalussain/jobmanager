@@ -75,7 +75,6 @@ export function JobFormWithImageUpload({ onCancel }: JobFormWithImageUploadProps
 
       // Job order items table doesn't exist - skip item creation
       // Items are stored in job_order_details field instead
-      console.log('Job items count:', jobItems.length);
 
       toast({
         title: "Success",

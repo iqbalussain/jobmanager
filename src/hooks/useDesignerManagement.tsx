@@ -18,7 +18,6 @@ export function useDesignerManagement() {
   const { data: designers = [], isLoading: designersLoading } = useQuery({
     queryKey: ['designers'],
     queryFn: async () => {
-      console.log('Fetching designers from profiles...');
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, phone')
@@ -29,7 +28,6 @@ export function useDesignerManagement() {
         console.error('Error fetching designers:', error);
         throw error;
       }
-      console.log('Designers fetched:', data);
       return data.map(profile => ({
         id: profile.id,
         name: profile.full_name || 'Unknown Designer',
@@ -40,7 +38,6 @@ export function useDesignerManagement() {
 
   const addDesignerMutation = useMutation({
     mutationFn: async (data: { name: string; phone: string }) => {
-      console.log('This mutation is now a placeholder that requires proper user creation flow');
       throw new Error('Adding designers requires creating user accounts first');
     },
     onSuccess: () => {

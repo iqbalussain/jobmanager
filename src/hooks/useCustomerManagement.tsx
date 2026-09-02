@@ -17,7 +17,6 @@ export function useCustomerManagement() {
   const { data: customers = [], isLoading: customersLoading } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
-      console.log('Fetching customers...');
       const { data, error } = await supabase
         .from('customers')
         .select('id, name')
@@ -27,14 +26,12 @@ export function useCustomerManagement() {
         console.error('Error fetching customers:', error);
         throw error;
       }
-      console.log('Customers fetched:', data);
       return data as Customer[];
     }
   });
 
   const addCustomerMutation = useMutation({
     mutationFn: async (data: { name: string }) => {
-      console.log('Adding customer:', data.name);
       const { data: result, error } = await supabase
         .from('customers')
         .insert({ name: data.name })

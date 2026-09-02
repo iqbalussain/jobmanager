@@ -33,7 +33,6 @@ export async function syncNotifications(userId: string): Promise<void> {
       }));
       
       await db.notifications.bulkPut(notifications);
-      console.log(`Synced ${notifications.length} notifications to Dexie`);
     }
   } catch (err) {
     console.error("Error syncing notifications:", err);

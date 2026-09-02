@@ -23,12 +23,10 @@ export function SecureCustomerManagement() {
 
   const handleUpdate = async (id: string, data: { name: string }) => {
     // Update functionality would need to be implemented in useAdminMutations
-    console.log('Update customer:', id, data);
   };
 
   const handleDelete = async (id: string) => {
     // Delete functionality would need to be implemented in useAdminMutations
-    console.log('Delete customer:', id);
   };
 
   return (

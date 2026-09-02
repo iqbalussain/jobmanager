@@ -45,7 +45,6 @@ export function JobChat({ job, isOpen, onClose }: JobChatProps) {
   const fetchComments = async () => {
     setIsLoading(true);
     try {
-      console.log('Fetching comments for job:', job.id);
       const { data: commentsData, error: commentsError } = await supabase
         .from('job_order_comments')
         .select('id, comment, created_by, created_at, job_order_id')
@@ -104,7 +103,6 @@ export function JobChat({ job, isOpen, onClose }: JobChatProps) {
 
     setIsSending(true);
     try {
-      console.log('Sending comment for job:', job.id);
       const { data, error } = await supabase
         .from('job_order_comments')
         .insert({

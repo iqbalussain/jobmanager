@@ -52,7 +52,6 @@ export function ReportsPage() {
       const startDate = startOfMonth(selectedDate);
       const endDate = endOfMonth(selectedDate);
 
-      console.log('Generating report for:', { startDate, endDate, reportType });
 
       // Updated query to use the foreign key relationships
       const { data: jobOrders, error } = await supabase
@@ -71,7 +70,6 @@ export function ReportsPage() {
         throw new Error(`Database error: ${error.message}`);
       }
 
-      console.log('Retrieved job orders:', jobOrders?.length || 0);
 
       if (!jobOrders || jobOrders.length === 0) {
         setReportData([]);
