@@ -38,12 +38,13 @@ export function JobEditLog({ jobOrderId, jobOrderNumber, isOpen, onClose }: JobE
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ["job-order-logs", jobOrderId],
     queryFn: async (): Promise<LogEntry[]> => {
-      // Step 1: Fetch logs
+      // Step 1: Fetch logs (snapshot excluded — fetched on demand when reverting)
       const { data: logsData, error: logsError } = await supabase
         .from("job_order_logs")
-        .select("*")
+        .select("id,changed_at,changed_by,action,changed_fields")
         .eq("job_order_id", jobOrderId)
-        .order("changed_at", { ascending: true });
+        .order("changed_at", { ascending: false })
+        .limit(100);
 
       if (logsError) {
         console.error("Error fetching logs:", logsError);
