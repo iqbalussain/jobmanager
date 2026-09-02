@@ -33,7 +33,7 @@ export function CustomerDropdown({ value, onValueChange, placeholder = "Select c
     try {
       const { data, error } = await supabase
         .from('customers')
-        .select('*')
+        .select('id, name')
         .order('name', { ascending: true });
 
       if (error) throw error;

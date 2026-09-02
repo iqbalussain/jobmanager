@@ -204,23 +204,23 @@ export function DataManagement() {
 
         csvData = generateCSV(transformedData, headers);
       } else if (exportType === 'designers') {
-        const { data, error } = await supabase.from('profiles').select('*').eq('role', 'designer');
+        const { data, error } = await supabase.from('profiles').select('id, full_name, email, phone, branch, department, is_active').eq('role', 'designer');
         if (error) throw error;
         csvData = generateCSV(data || [], ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
       } else if (exportType === 'salesmen') {
-        const { data, error } = await supabase.from('profiles').select('*').eq('role', 'salesman');
+        const { data, error } = await supabase.from('profiles').select('id, full_name, email, phone, branch, department, is_active').eq('role', 'salesman');
         if (error) throw error;
         csvData = generateCSV(data || [], ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
       } else if (exportType === 'customers') {
-        const { data, error } = await supabase.from('customers').select('*');
+        const { data, error } = await supabase.from('customers').select('id, name');
         if (error) throw error;
         csvData = generateCSV(data || [], ['id', 'name']);
       } else if (exportType === 'job_titles') {
-        const { data, error } = await supabase.from('job_titles').select('*');
+        const { data, error } = await supabase.from('job_titles').select('id, job_title_id, created_at');
         if (error) throw error;
         csvData = generateCSV(data || [], ['id', 'job_title_id', 'created_at']);
       } else {
-        const { data, error } = await supabase.from('profiles').select('*');
+        const { data, error } = await supabase.from('profiles').select('id, full_name, email, phone, role, branch, department, is_active, created_at');
         if (error) throw error;
         csvData = generateCSV(data || [], ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
       }

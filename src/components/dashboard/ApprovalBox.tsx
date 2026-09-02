@@ -116,7 +116,7 @@ export function ApprovalBox() {
 
   const handleViewJob = async (jobId: string) => {
     try {
-      const { data: jobOrder, error } = await supabase.from('job_orders').select('*').eq('id', jobId).single();
+      const { data: jobOrder, error } = await supabase.from('job_orders').select('id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,assignee,priority,status,due_date,estimated_hours,created_at,branch,job_order_details,invoice_number,total_value,created_by,approval_status,delivered_at,client_name').eq('id', jobId).single();
       if (error) throw error;
       const [customerData, designerData, salesmanData, jobTitleData] = await Promise.all([
         supabase.from('customers').select('name').eq('id', jobOrder.customer_id).single(),
