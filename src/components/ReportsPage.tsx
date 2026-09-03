@@ -57,7 +57,7 @@ export function ReportsPage() {
       const { data: jobOrders, error } = await supabase
         .from('job_orders')
         .select(`
-          *,
+          id, job_order_number, status, branch, total_value, created_at,
           customers!fk_job_orders_customer(name),
           salesman_profiles:profiles!fk_job_orders_salesman(full_name),
           designer_profiles:profiles!fk_job_orders_designer(full_name)
