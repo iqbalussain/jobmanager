@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { JobDetails } from "@/components/JobDetails";
 import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 import { useJobActions } from "@/hooks/useJobActions";
-import { updateJobInCache } from "@/services/syncService";
+import { removeJobFromCache, updateJobInCache } from "@/services/syncService";
 import { HighPriorityModal } from "@/components/HighPriorityModal";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import type { DashboardJob as Job, JobOrderRecord, JobOrderUpdatePayload, JobStatus } from "@/types/jobOrder";
@@ -63,7 +63,7 @@ const Index = () => {
   
   // Use Dexie for offline-first job data
   // Pass true for returnAllJobs to get all jobs for dashboard stats
-  const { jobs: dexieJobs, isLoading, isSyncing, refresh } = useDexieJobs({}, 1, 50, true);
+  const { jobs: dexieJobs, isLoading, isSyncing, syncError, refresh } = useDexieJobs({}, 1, 50, true);
   const { setJobStatus } = useJobActions();
 
   const restrictedRoles: Partial<Record<typeof currentView, string[]>> = {
@@ -112,12 +112,18 @@ const Index = () => {
         async (payload: RealtimePostgresChangesPayload<JobOrderRecord>) => {
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             try {
-              await updateJobInCache(payload.new.id);
+              if (!user) return;
+              await updateJobInCache(payload.new.id, user.id);
               refresh();
             } catch (e) {
               console.error('[Realtime] Failed to update cache:', e);
             }
           } else if (payload.eventType === 'DELETE') {
+            if (!user) return;
+            const deletedJobId = payload.old.id;
+            if (typeof deletedJobId === 'string') {
+              await removeJobFromCache(deletedJobId, user.id);
+            }
             refresh();
           }
         }
@@ -127,7 +133,7 @@ const Index = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refresh]);
+  }, [refresh, user]);
 
   const transformedJobs: Job[] = (dexieJobs || []).map(transformDexieJobOrder);
 
@@ -239,6 +245,20 @@ const Index = () => {
         onViewChange={handleSidebarViewChange}
       />
       <div className="flex-1 overflow-y-auto">
+        {(isSyncing || syncError) && (
+          <div
+            role="status"
+            className={`px-4 py-2 text-sm ${
+              syncError
+                ? "bg-destructive/10 text-destructive"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {syncError
+              ? `Data sync failed: ${syncError}. Retry with Refresh.`
+              : "Synchronizing the latest job data..."}
+          </div>
+        )}
         <Suspense fallback={<LoadingSpinner />}>
           {renderContent()}
         </Suspense>

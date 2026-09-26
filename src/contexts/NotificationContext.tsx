@@ -27,49 +27,33 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'app_notifications';
-
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Server-backed notifications and their offline cache are managed by
+  // useNotifications. This context only owns transient in-app alerts.
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   const [highPriorityAlert, setHighPriorityAlert] = useState<HighPriorityAlert | null>(null);
-
-  const saveNotifications = (newNotifications: AppNotification[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newNotifications));
-    setNotifications(newNotifications);
-  };
 
   const addNotification = useCallback((notification: Omit<AppNotification, 'id' | 'time'>) => {
     const newNotification: AppNotification = {
       ...notification,
       id: crypto.randomUUID(),
-      time: new Date().toLocaleString(),
+      time: new Date().toISOString(),
     };
     
     setNotifications(prev => {
       const updated = [newNotification, ...prev].slice(0, 50); // Keep last 50
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
   }, []);
 
   const markAsRead = useCallback((id: string) => {
     setNotifications(prev => {
-      const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      return updated;
+      return prev.map(n => n.id === id ? { ...n, read: true } : n);
     });
   }, []);
 
   const clearNotifications = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
     setNotifications([]);
   }, []);
 

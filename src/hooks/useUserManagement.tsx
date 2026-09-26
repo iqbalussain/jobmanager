@@ -65,45 +65,31 @@ export function useUserManagement() {
       if (!isValidRole(userData.role)) {
         throw new Error(`Invalid role: ${userData.role}. Must be one of: ${allowedRoles.join(', ')}`);
       }
-      
-      const { data: { user }, error: signUpError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          data: {
-            full_name: userData.fullName,
-          }
-        }
-      });
 
-      if (signUpError) {
-        console.error('Error creating user:', signUpError);
-        throw signUpError;
-      }
-
-      if (!user?.id) {
-        throw new Error('Failed to create user');
-      }
-
-      const { data: result, error } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: userData.email,
-          full_name: userData.fullName,
-          role: userData.role as Role,
-          department: userData.department || null,
-          branch: userData.branch || null,
-          phone: userData.phone || null
-        })
-        .select()
-        .single();
-
+      const { data, error } = await supabase.functions.invoke<{ profile: Profile }>(
+        'admin-create-user',
+        {
+          body: {
+            email: userData.email,
+            password: userData.password,
+            fullName: userData.fullName,
+            role: userData.role,
+            department: userData.department || null,
+            branch: userData.branch || null,
+            phone: userData.phone || null,
+          },
+        },
+      );
       if (error) {
-        console.error('Error adding profile:', error);
+        console.error('Error creating user:', error);
         throw error;
       }
-      return result;
+
+      if (!data?.profile) {
+        throw new Error('User was created without a profile response');
+      }
+
+      return data.profile;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles'] });

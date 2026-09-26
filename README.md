@@ -52,9 +52,10 @@ npm run lint
 npm run build
 ```
 
-The browser cache is powered by Dexie and is synchronized with Supabase in the
-background. Production deployments should apply Supabase migrations and deploy the
-Edge Functions before exposing the frontend.
+The browser cache is powered by Dexie, isolated per signed-in user, and synchronized
+with Supabase in the background. Sync work is serialized, retried on failure, and
+reconciles hard-deleted jobs during cache repair. Production deployments should apply
+Supabase migrations and deploy the Edge Functions before exposing the frontend.
 
 ## Lovable project
 

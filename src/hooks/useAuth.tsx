@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { activateCacheForUser } from '@/lib/dexieDb';
 
 interface AuthContextType {
   user: User | null;
@@ -20,18 +21,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let authEventReceived = false;
+    let sessionVersion = 0;
+    let activeUserId: string | null = null;
+
+    const applySession = async (nextSession: Session | null) => {
+      const version = ++sessionVersion;
+      const nextUserId = nextSession?.user.id ?? null;
+
+      if (activeUserId !== nextUserId) {
+        setUser(null);
+        setSession(null);
+      }
+
+      try {
+        await activateCacheForUser(nextUserId);
+        if (version !== sessionVersion) return;
+        activeUserId = nextUserId;
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+      } catch (error) {
+        console.error('Failed to isolate the local cache for the active user:', error);
+        if (version !== sessionVersion) return;
+        activeUserId = null;
+        setSession(null);
+        setUser(null);
+      } finally {
+        if (version === sessionVersion) setLoading(false);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+      (_event, nextSession) => {
+        authEventReceived = true;
+        void applySession(nextSession);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      if (!authEventReceived) void applySession(currentSession);
     });
 
     return () => subscription.unsubscribe();

@@ -12,6 +12,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface AnalysisResult {
@@ -87,29 +88,61 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check for cron secret header (for scheduled invocations)
     const cronSecret = Deno.env.get("CRON_SECRET");
     const authHeader = req.headers.get("authorization");
     const cronHeader = req.headers.get("x-cron-secret");
     
-    // Allow if: has valid JWT auth OR has valid cron secret
     const hasCronAuth = cronSecret && cronHeader === cronSecret;
-    const hasJwtAuth = authHeader?.startsWith("Bearer ");
-    
-    if (!hasCronAuth && !hasJwtAuth) {
-      console.error("Unauthorized: Missing valid authentication");
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (!hasCronAuth) {
+      if (!authHeader?.startsWith("Bearer ")) {
+        console.error("Unauthorized: Missing valid authentication");
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const token = authHeader.slice("Bearer ".length);
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !user) {
+        console.error("Unauthorized: Invalid user token", authError);
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: profile, error: roleError } = await supabase
+        .from("profiles")
+        .select("role, is_active")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (roleError) {
+        console.error("Failed to verify checklist access:", roleError);
+        return new Response(
+          JSON.stringify({ error: "Unable to verify permissions" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (
+        !profile?.is_active ||
+        (profile.role !== "admin" &&
+          profile.role !== "manager" &&
+          profile.role !== "job_order_manager")
+      ) {
+        return new Response(
+          JSON.stringify({ error: "Checklist access is restricted" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     if (!geminiApiKey) {
       throw new Error("GEMINI_API_KEY not configured. Set it in Supabase secrets.");
     }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     console.log("Starting daily Gemini analysis...");
 

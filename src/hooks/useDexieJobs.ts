@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { db, DexieJobOrder } from '@/lib/dexieDb';
+import { db } from '@/lib/dexieDb';
 import { 
   needsInitialSync, 
   performInitialSync, 
@@ -9,6 +9,7 @@ import {
   repairMissingJobs
 } from '@/services/syncService';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface JobFilters {
   status?: string;
@@ -26,55 +27,69 @@ export function useDexieJobs(
   pageSize: number = 50,
   returnAllJobs: boolean = false
 ) {
+  const { user } = useAuth();
+  const userId = user?.id;
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
   // Initialize sync on mount
   useEffect(() => {
+    let cancelled = false;
     const initSync = async () => {
+      if (!userId) {
+        setIsLoading(false);
+        setIsSyncing(false);
+        setSyncError(null);
+        return;
+      }
       setIsLoading(true);
       setSyncError(null);
       
       try {
         if (await needsInitialSync()) {
           setIsSyncing(true);
-          await performInitialSync();
-          setIsSyncing(false);
+          await performInitialSync(userId);
         } else {
           // Quick delta sync on load
           setIsSyncing(true);
-          await performDeltaSync();
+          await performDeltaSync(userId);
           
           // Check for and repair any missing jobs
-          const repairedCount = await repairMissingJobs();
-          if (repairedCount > 0) {
-          }
-          setIsSyncing(false);
+          await repairMissingJobs(userId);
         }
         
         // Start background sync
-        startBackgroundSync();
+        if (!cancelled) {
+          setIsSyncing(false);
+          startBackgroundSync(userId, (error) => {
+            if (cancelled) return;
+            setSyncError(error ? (error instanceof Error ? error.message : 'Sync failed') : null);
+          });
+        }
       } catch (error) {
         console.error('Sync initialization error:', error);
-        setSyncError(error instanceof Error ? error.message : 'Sync failed');
-        setIsSyncing(false);
+        if (!cancelled) {
+          setSyncError(error instanceof Error ? error.message : 'Sync failed');
+          setIsSyncing(false);
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
     
     initSync();
     
     return () => {
+      cancelled = true;
       stopBackgroundSync();
     };
-  }, []);
+  }, [userId]);
 
   // Live query all jobs from Dexie
   const allJobs = useLiveQuery(
-    () => db.jobs.orderBy('created_at').reverse().toArray(),
-    []
+    () => userId ? db.jobs.orderBy('created_at').reverse().toArray() : [],
+    [userId]
   );
 
   // Apply filters client-side
@@ -172,15 +187,18 @@ export function useDexieJobs(
 
   // Manual refresh
   const refresh = useCallback(async () => {
+    if (!user) return;
     setIsSyncing(true);
+    setSyncError(null);
     try {
-      await performDeltaSync();
+      await performDeltaSync(user.id);
     } catch (error) {
       console.error('Manual refresh error:', error);
+      setSyncError(error instanceof Error ? error.message : 'Sync failed');
     } finally {
       setIsSyncing(false);
     }
-  }, []);
+  }, [user]);
 
   return {
     jobs: paginatedJobs,
@@ -198,15 +216,21 @@ export function useDexieJobs(
 
 // Hook to get customers from Dexie
 export function useDexieCustomers() {
-  return useLiveQuery(() => db.customers.orderBy('name').toArray(), []);
+  const { user } = useAuth();
+  const userId = user?.id;
+  return useLiveQuery(() => userId ? db.customers.orderBy('name').toArray() : [], [userId]);
 }
 
 // Hook to get salesmen from Dexie
 export function useDexieSalesmen() {
-  return useLiveQuery(() => db.salesmen.orderBy('name').toArray(), []);
+  const { user } = useAuth();
+  const userId = user?.id;
+  return useLiveQuery(() => userId ? db.salesmen.orderBy('name').toArray() : [], [userId]);
 }
 
 // Hook to get job titles from Dexie
 export function useDexieJobTitles() {
-  return useLiveQuery(() => db.jobTitles.toArray(), []);
+  const { user } = useAuth();
+  const userId = user?.id;
+  return useLiveQuery(() => userId ? db.jobTitles.toArray() : [], [userId]);
 }

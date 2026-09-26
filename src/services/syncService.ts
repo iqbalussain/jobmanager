@@ -1,4 +1,4 @@
-import { db, DexieJobOrder, clearAllData } from '@/lib/dexieDb';
+import { db, DexieJobOrder, clearAllData, withCacheUser } from '@/lib/dexieDb';
 import { supabase } from '@/integrations/supabase/client';
 import type { JobOrderRecord } from '@/types/jobOrder';
 
@@ -15,6 +15,31 @@ type JobOrderSyncRecord = Omit<JobOrderRecord, 'description'>;
 let syncIntervalId: ReturnType<typeof setInterval> | null = null;
 let lastRefSyncAt = 0;
 let lastRepairAt = 0;
+let syncQueue: Promise<void> = Promise.resolve();
+let initialSyncPromise: { userId: string; promise: Promise<void> } | null = null;
+let deltaSyncPromise: { userId: string; promise: Promise<number> } | null = null;
+let repairSyncPromise: { userId: string; promise: Promise<number> } | null = null;
+
+function runSync<T>(operation: () => Promise<T>): Promise<T> {
+  const result = syncQueue.then(operation, operation);
+  syncQueue = result.then(() => undefined, () => undefined);
+  return result;
+}
+
+async function retrySync<T>(operation: () => Promise<T>): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (attempt < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt));
+      }
+    }
+  }
+  throw lastError;
+}
 
 // Get last sync time
 async function getLastSyncTime(): Promise<string | null> {
@@ -23,8 +48,10 @@ async function getLastSyncTime(): Promise<string | null> {
 }
 
 // Update last sync time
-async function setLastSyncTime(time: string) {
-  await db.syncMeta.put({ id: SYNC_META_ID, lastSyncTime: time, syncInProgress: false });
+async function setLastSyncTime(userId: string, time: string) {
+  await withCacheUser(userId, [], () =>
+    db.syncMeta.put({ id: SYNC_META_ID, lastSyncTime: time, syncInProgress: false, ownerUserId: userId }),
+  );
 }
 
 // Check if initial sync is needed
@@ -33,80 +60,87 @@ export async function needsInitialSync(): Promise<boolean> {
   return count === 0;
 }
 
-// Perform full initial sync
-export async function performInitialSync(): Promise<void> {
-  
-  try {
-    // Fetch all reference data first
-    await syncReferenceData(true);
-    
-    // Fetch all jobs in batches
-    const { count } = await supabase
+async function syncInitialData(userId: string): Promise<void> {
+  await syncReferenceData(userId, true);
+
+  const { count, error: countError } = await supabase
+    .from('job_orders')
+    .select('id', { count: 'exact', head: true });
+  if (countError) throw countError;
+
+  const BATCH_SIZE = 1000;
+  const totalBatches = Math.ceil((count || 0) / BATCH_SIZE);
+
+  for (let batch = 0; batch < totalBatches; batch++) {
+    const from = batch * BATCH_SIZE;
+    const to = from + BATCH_SIZE - 1;
+
+    const { data: jobOrders, error } = await supabase
       .from('job_orders')
-      .select('id', { count: 'exact', head: true });
-    
-    const BATCH_SIZE = 1000;
-    const totalBatches = Math.ceil((count || 0) / BATCH_SIZE);
-    
-    for (let batch = 0; batch < totalBatches; batch++) {
-      const from = batch * BATCH_SIZE;
-      const to = from + BATCH_SIZE - 1;
-      
-      const { data: jobOrders, error } = await supabase
-        .from('job_orders')
-        .select(JOB_LIST_COLUMNS)
-        .range(from, to)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      if (jobOrders && jobOrders.length > 0) {
-        const enrichedJobs = await enrichJobOrders(jobOrders);
-        await db.jobs.bulkPut(enrichedJobs);
-      }
+      .select(JOB_LIST_COLUMNS)
+      .range(from, to)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (jobOrders && jobOrders.length > 0) {
+      const enrichedJobs = await enrichJobOrders(jobOrders);
+      await withCacheUser(userId, [db.jobs], () => db.jobs.bulkPut(enrichedJobs));
     }
-    
-    await setLastSyncTime(new Date().toISOString());
-  } catch (error) {
-    console.error('[Sync] Initial sync failed:', error);
-    throw error;
   }
+
+  await setLastSyncTime(userId, new Date().toISOString());
+}
+
+// Perform full initial sync
+export function performInitialSync(userId: string): Promise<void> {
+  if (initialSyncPromise?.userId === userId) return initialSyncPromise.promise;
+
+  const sync = runSync(() => retrySync(() => syncInitialData(userId)));
+  const trackedSync = sync.finally(() => {
+    if (initialSyncPromise?.promise === trackedSync) initialSyncPromise = null;
+  });
+  initialSyncPromise = { userId, promise: trackedSync };
+  return trackedSync;
 }
 
 // Sync reference data (customers, salesmen, designers, job titles)
-async function syncReferenceData(force = false): Promise<void> {
+async function syncReferenceData(userId: string, force = false): Promise<void> {
   // Throttle: skip if recently synced (reference data rarely changes)
   if (!force && Date.now() - lastRefSyncAt < REF_SYNC_INTERVAL_MS) {
     return;
   }
-  lastRefSyncAt = Date.now();
 
   const [customersRes, profilesRes, jobTitlesRes] = await Promise.all([
     supabase.from('customers').select('id, name'),
     supabase.from('profiles').select('id, full_name, email, phone, role'),
     supabase.from('job_titles').select('id, job_title_id')
   ]);
+  if (customersRes.error) throw customersRes.error;
+  if (profilesRes.error) throw profilesRes.error;
+  if (jobTitlesRes.error) throw jobTitlesRes.error;
   
-  if (customersRes.data) {
-    await db.customers.bulkPut(customersRes.data.map(c => ({ id: c.id, name: c.name })));
-  }
-  
-  if (profilesRes.data) {
-    const salesmen = profilesRes.data
-      .filter(p => p.role === 'salesman' || p.role === 'admin' || p.role === 'manager')
-      .map(p => ({ id: p.id, name: p.full_name || 'Unknown', email: p.email, phone: p.phone }));
-    
-    const designers = profilesRes.data
-      .filter(p => p.role === 'designer' || p.role === 'admin' || p.role === 'manager')
-      .map(p => ({ id: p.id, name: p.full_name || 'Unknown', phone: p.phone }));
-    
-    await db.salesmen.bulkPut(salesmen);
-    await db.designers.bulkPut(designers);
-  }
-  
-  if (jobTitlesRes.data) {
-    await db.jobTitles.bulkPut(jobTitlesRes.data);
-  }
+  await withCacheUser(userId, [db.customers, db.salesmen, db.designers, db.jobTitles], async () => {
+    if (customersRes.data) {
+      await db.customers.bulkPut(customersRes.data.map(c => ({ id: c.id, name: c.name })));
+    }
+
+    if (profilesRes.data) {
+      const salesmen = profilesRes.data
+        .filter(p => p.role === 'salesman' || p.role === 'admin' || p.role === 'manager')
+        .map(p => ({ id: p.id, name: p.full_name || 'Unknown', email: p.email, phone: p.phone }));
+
+      const designers = profilesRes.data
+        .filter(p => p.role === 'designer' || p.role === 'admin' || p.role === 'manager')
+        .map(p => ({ id: p.id, name: p.full_name || 'Unknown', phone: p.phone }));
+
+      await db.salesmen.bulkPut(salesmen);
+      await db.designers.bulkPut(designers);
+    }
+
+    if (jobTitlesRes.data) await db.jobTitles.bulkPut(jobTitlesRes.data);
+  });
+  lastRefSyncAt = Date.now();
 }
 
 // Enrich job orders with related data from Dexie
@@ -179,18 +213,18 @@ async function enrichJobOrders(jobOrders: JobOrderSyncRecord[]): Promise<DexieJo
 }
 
 // Delta sync - fetch only updated records
-export async function performDeltaSync(): Promise<number> {
-  const lastSync = await getLastSyncTime();
-  
-  if (!lastSync) {
-    await performInitialSync();
-    return 0;
-  }
-  
-  
-  try {
+export function performDeltaSync(userId: string): Promise<number> {
+  if (deltaSyncPromise?.userId === userId) return deltaSyncPromise.promise;
+
+  const sync = runSync(() => retrySync(async () => {
+    const lastSync = await getLastSyncTime();
+    if (!lastSync) {
+      await syncInitialData(userId);
+      return 0;
+    }
+
     // Sync reference data (throttled internally to every 10 min)
-    await syncReferenceData();
+    await syncReferenceData(userId);
     
     // Fetch only jobs updated since last sync
     const { data: updatedJobs, error } = await supabase
@@ -203,27 +237,31 @@ export async function performDeltaSync(): Promise<number> {
     
     if (updatedJobs && updatedJobs.length > 0) {
       const enrichedJobs = await enrichJobOrders(updatedJobs);
-      await db.jobs.bulkPut(enrichedJobs);
-    } else {
+      await withCacheUser(userId, [db.jobs], () => db.jobs.bulkPut(enrichedJobs));
     }
     
-    await setLastSyncTime(new Date().toISOString());
+    await setLastSyncTime(userId, new Date().toISOString());
     return updatedJobs?.length || 0;
-  } catch (error) {
-    console.error('[Sync] Delta sync failed:', error);
-    throw error;
-  }
+  }));
+  const trackedSync = sync.finally(() => {
+    if (deltaSyncPromise?.promise === trackedSync) deltaSyncPromise = null;
+  });
+  deltaSyncPromise = { userId, promise: trackedSync };
+  return trackedSync;
 }
 
 // Start background sync
-export function startBackgroundSync() {
+export function startBackgroundSync(userId: string, onError: (error: unknown | null) => void) {
   if (syncIntervalId) return;
   
   syncIntervalId = setInterval(async () => {
     try {
-      await performDeltaSync();
+      await performDeltaSync(userId);
+      await repairMissingJobs(userId);
+      onError(null);
     } catch (error) {
       console.error('[Sync] Background sync error:', error);
+      onError(error);
     }
   }, SYNC_INTERVAL);
   
@@ -238,13 +276,15 @@ export function stopBackgroundSync() {
 }
 
 // Force full resync
-export async function forceFullResync(): Promise<void> {
-  await clearAllData();
-  await performInitialSync();
+export async function forceFullResync(userId: string): Promise<void> {
+  await runSync(async () => {
+    await clearAllData(userId);
+    await retrySync(() => syncInitialData(userId));
+  });
 }
 
 // Update a single job in Dexie after Supabase write
-export async function updateJobInCache(jobId: string): Promise<void> {
+export async function updateJobInCache(jobId: string, userId: string): Promise<void> {
   const { data: job, error } = await supabase
     .from('job_orders')
     .select(JOB_LIST_COLUMNS)
@@ -255,54 +295,72 @@ export async function updateJobInCache(jobId: string): Promise<void> {
   
   if (job) {
     const [enriched] = await enrichJobOrders([job]);
-    await db.jobs.put(enriched);
+    await withCacheUser(userId, [db.jobs], () => db.jobs.put(enriched));
   }
+}
+
+export async function removeJobFromCache(jobId: string, userId: string): Promise<void> {
+  await withCacheUser(userId, [db.jobs], () => db.jobs.delete(jobId));
 }
 
 // Add a new job to Dexie after Supabase insert
 export async function addJobToCache(job: JobOrderRecord): Promise<void> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  if (!data.user) throw new Error('Cannot cache a job without an authenticated user');
+
   const [enriched] = await enrichJobOrders([job]);
-  await db.jobs.put(enriched);
+  await withCacheUser(data.user.id, [db.jobs], () => db.jobs.put(enriched));
 }
 
-// Check and repair missing jobs in Dexie
-export async function repairMissingJobs(): Promise<number> {
-  // Throttle: this is expensive (full id scan) - run at most every hour
-  if (Date.now() - lastRepairAt < REPAIR_INTERVAL_MS) {
-    return 0;
-  }
-  lastRepairAt = Date.now();
+// Check and repair missing and deleted jobs in Dexie
+export function repairMissingJobs(userId: string): Promise<number> {
+  if (repairSyncPromise?.userId === userId) return repairSyncPromise.promise;
 
-  
-  try {
-    // Get all job IDs from Supabase
-    const { data: supabaseJobs, error } = await supabase
-      .from('job_orders')
-      .select('id')
-      .order('updated_at', { ascending: false });
-    
-    if (error) throw error;
-    if (!supabaseJobs) return 0;
+  const sync = runSync(() => retrySync(async () => {
+    if (Date.now() - lastRepairAt < REPAIR_INTERVAL_MS) return 0;
+
+    // Use keyset pagination so the repair includes every row beyond Supabase's page limit.
+    const supabaseJobs: Array<{ id: string }> = [];
+    const BATCH_SIZE = 1000;
+    let afterId: string | null = null;
+    while (true) {
+      let query = supabase
+        .from('job_orders')
+        .select('id')
+        .order('id', { ascending: true })
+        .limit(BATCH_SIZE);
+      if (afterId) query = query.gt('id', afterId);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      if (!data) throw new Error('Job ID reconciliation returned no data');
+      if (data.length === 0) break;
+
+      supabaseJobs.push(...data);
+      afterId = data[data.length - 1].id;
+      if (data.length < BATCH_SIZE) break;
+    }
     
     // Get all job IDs from Dexie
-    const dexieJobIds = new Set(
-      (await db.jobs.toArray()).map(j => j.id)
-    );
+    const cachedJobs = await db.jobs.toArray();
+    const dexieJobIds = new Set(cachedJobs.map((job) => job.id));
+    const supabaseJobIds = new Set(supabaseJobs.map((job) => job.id));
     
-    // Find missing jobs
     const missingJobIds = supabaseJobs
       .filter(job => !dexieJobIds.has(job.id))
       .map(job => job.id);
-    
-    if (missingJobIds.length === 0) {
-      return 0;
+    const deletedJobIds = cachedJobs
+      .filter((job) => !supabaseJobIds.has(job.id))
+      .map((job) => job.id);
+    if (deletedJobIds.length > 0) {
+      await withCacheUser(userId, [db.jobs], () => db.jobs.bulkDelete(deletedJobIds));
     }
-    
-    
-    // Fetch and sync missing jobs in batches of 100
-    const BATCH_SIZE = 100;
-    for (let i = 0; i < missingJobIds.length; i += BATCH_SIZE) {
-      const batchIds = missingJobIds.slice(i, i + BATCH_SIZE);
+
+    // Fetch and sync missing jobs in batches of 100.
+    const MISSING_JOB_BATCH_SIZE = 100;
+    for (let i = 0; i < missingJobIds.length; i += MISSING_JOB_BATCH_SIZE) {
+      const batchIds = missingJobIds.slice(i, i + MISSING_JOB_BATCH_SIZE);
       const { data: jobs, error: batchError } = await supabase
         .from('job_orders')
         .select(JOB_LIST_COLUMNS)
@@ -312,13 +370,16 @@ export async function repairMissingJobs(): Promise<number> {
       
       if (jobs && jobs.length > 0) {
         const enrichedJobs = await enrichJobOrders(jobs);
-        await db.jobs.bulkPut(enrichedJobs);
+        await withCacheUser(userId, [db.jobs], () => db.jobs.bulkPut(enrichedJobs));
       }
     }
-    
-    return missingJobIds.length;
-  } catch (error) {
-    console.error('[Sync] Repair missing jobs failed:', error);
-    return 0;
-  }
+
+    lastRepairAt = Date.now();
+    return missingJobIds.length + deletedJobIds.length;
+  }));
+  const trackedSync = sync.finally(() => {
+    if (repairSyncPromise?.promise === trackedSync) repairSyncPromise = null;
+  });
+  repairSyncPromise = { userId, promise: trackedSync };
+  return trackedSync;
 }

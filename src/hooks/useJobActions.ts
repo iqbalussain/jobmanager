@@ -26,6 +26,8 @@ export function useJobActions() {
 
   // Set job status with role-based restrictions via RPC
   const setJobStatus = useCallback(async (jobId: string, status: JobStatus) => {
+    if (!user) throw new Error('A signed-in user is required to update job status');
+
     const { data, error } = await supabase.rpc('update_job_status', {
       p_job_id: jobId,
       p_new_status: status
@@ -67,7 +69,7 @@ export function useJobActions() {
     }
 
     // Update Dexie cache
-    await updateJobInCache(jobId);
+    await updateJobInCache(jobId, user.id);
 
     toast({
       title: 'Status Updated',
@@ -75,7 +77,7 @@ export function useJobActions() {
     });
 
     return result;
-  }, [toast]);
+  }, [toast, user]);
 
   // Check if job is locked (invoiced)
   const isJobLocked = useCallback((status: JobStatus) => {

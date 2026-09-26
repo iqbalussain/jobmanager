@@ -59,8 +59,9 @@ export interface DexieJobTitle {
 
 export interface DexieSyncMeta {
   id: string;
-  lastSyncTime: string;
-  syncInProgress: boolean;
+  lastSyncTime?: string;
+  syncInProgress?: boolean;
+  ownerUserId?: string | null;
 }
 
 export interface DexieJobEditAudit {
@@ -128,12 +129,53 @@ class JobOrderDatabase extends Dexie {
 
 export const db = new JobOrderDatabase();
 
+export async function withCacheUser<T>(
+  userId: string,
+  tables: Table[],
+  operation: () => Promise<T>,
+): Promise<T> {
+  return db.transaction('rw', [db.syncMeta, ...tables], async () => {
+    const owner = await db.syncMeta.get('main');
+    if (owner?.ownerUserId !== userId) {
+      throw new Error('The local cache no longer belongs to the active user');
+    }
+    return operation();
+  });
+}
+
+const cacheTables = [
+  db.jobs,
+  db.customers,
+  db.salesmen,
+  db.designers,
+  db.jobTitles,
+  db.jobEditAudit,
+  db.notifications,
+  db.dailyChecklists,
+] as const;
+
+let cacheOwnerChange: Promise<void> = Promise.resolve();
+
+export function activateCacheForUser(userId: string | null): Promise<void> {
+  const change = cacheOwnerChange.then(() =>
+    db.transaction('rw', ...cacheTables, db.syncMeta, async () => {
+      const owner = await db.syncMeta.get('main');
+      if (owner && owner.ownerUserId === userId) return;
+
+      await Promise.all(cacheTables.map((table) => table.clear()));
+      await db.syncMeta.clear();
+      await db.syncMeta.put({ id: 'main', ownerUserId: userId });
+    }),
+  );
+  cacheOwnerChange = change.catch(() => undefined);
+  return change;
+}
+
 // Helper to clear all data (useful for full resync)
-export async function clearAllData() {
-  await db.jobs.clear();
-  await db.customers.clear();
-  await db.salesmen.clear();
-  await db.designers.clear();
-  await db.jobTitles.clear();
-  await db.syncMeta.clear();
+export async function clearAllData(userId: string) {
+  await withCacheUser(userId, [...cacheTables], async () => {
+    await Promise.all(cacheTables.map((table) => table.clear()));
+    await db.syncMeta.clear();
+    await db.syncMeta.put({ id: 'main', ownerUserId: userId });
+  });
 }

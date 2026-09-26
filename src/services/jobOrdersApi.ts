@@ -124,6 +124,45 @@ export async function fetchJobOrdersPaginated(
   totalCount: number;
   totalPages: number;
 }> {
+  const salesmanFilter = filters.salesman?.trim();
+  const customerFilter = filters.customer?.trim();
+
+  let salesmanIds: string[] | undefined;
+  if (
+    !filters.salesmanId &&
+    salesmanFilter &&
+    salesmanFilter !== 'all'
+  ) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('full_name', salesmanFilter);
+
+    if (error) throw error;
+    salesmanIds = (data || []).map((profile) => profile.id);
+    if (salesmanIds.length === 0) {
+      return { data: [], totalCount: 0, totalPages: 0 };
+    }
+  }
+
+  let customerIds: string[] | undefined;
+  if (
+    !filters.customerId &&
+    customerFilter &&
+    customerFilter !== 'all'
+  ) {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('name', customerFilter);
+
+    if (error) throw error;
+    customerIds = (data || []).map((customer) => customer.id);
+    if (customerIds.length === 0) {
+      return { data: [], totalCount: 0, totalPages: 0 };
+    }
+  }
+
   let query = supabase
     .from('job_orders')
     .select(JOB_LIST_SELECT, { count: 'exact' });
@@ -141,9 +180,13 @@ export async function fetchJobOrdersPaginated(
 
   if (filters.salesmanId && filters.salesmanId !== 'all') {
     query = query.eq('salesman_id', filters.salesmanId);
+  } else if (salesmanIds) {
+    query = query.in('salesman_id', salesmanIds);
   }
   if (filters.customerId && filters.customerId !== 'all') {
     query = query.eq('customer_id', filters.customerId);
+  } else if (customerIds) {
+    query = query.in('customer_id', customerIds);
   }
 
   if (filters.dateFrom) {
@@ -168,15 +211,7 @@ export async function fetchJobOrdersPaginated(
 
   if (error) throw error;
 
-  let enrichedData = await enrichWithProfiles(data || []);
-
-  if (!filters.salesmanId && filters.salesman && filters.salesman !== 'all') {
-    enrichedData = enrichedData.filter((job) => job.salesman?.name === filters.salesman);
-  }
-
-  if (!filters.customerId && filters.customer && filters.customer !== 'all') {
-    enrichedData = enrichedData.filter((job) => job.customer?.name === filters.customer);
-  }
+  const enrichedData = await enrichWithProfiles(data || []);
 
   const totalCount = count || 0;
   return {

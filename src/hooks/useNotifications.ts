@@ -12,48 +12,63 @@ import {
 
 export function useNotifications() {
   const { user } = useAuth();
+  const userId = user?.id;
   const [showHighPriorityModal, setShowHighPriorityModal] = useState(false);
   const [hasPlayedSound, setHasPlayedSound] = useState(false);
+  const [notificationSyncError, setNotificationSyncError] = useState<string | null>(null);
   
   // Live query for unread high-priority notifications
   const notifications = useLiveQuery(
     async () => {
-      if (!user) return [];
+      if (!userId) return [];
       const now = new Date().toISOString();
       return db.notifications
-        .where("type")
-        .equals("high_priority_pending")
+        .where("user_id")
+        .equals(userId)
         .filter((n) => !n.read && (!n.snoozed_until || n.snoozed_until < now))
+        .filter((n) => n.type === "high_priority_pending")
         .toArray();
     },
-    [user],
+    [userId],
     []
   );
   
   // All notifications for history
   const allNotifications = useLiveQuery(
     async () => {
-      if (!user) return [];
-      return db.notifications
-        .orderBy("created_at")
-        .reverse()
-        .limit(50)
-        .toArray();
+      if (!userId) return [];
+      const userNotifications = await db.notifications.where("user_id").equals(userId).toArray();
+      return userNotifications
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))
+        .slice(0, 50);
     },
-    [user],
+    [userId],
     []
   );
   
   // Initial sync
   useEffect(() => {
-    if (user) {
-      syncNotifications(user.id);
+    if (!userId) {
+      setNotificationSyncError(null);
+      return;
     }
-  }, [user]);
+    let active = true;
+    setNotificationSyncError(null);
+    syncNotifications(userId).catch((error: unknown) => {
+      console.error("Notification sync failed:", error);
+      if (active) {
+        setNotificationSyncError(error instanceof Error ? error.message : "Notification sync failed");
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [userId]);
   
   // Subscribe to realtime notifications
   useEffect(() => {
     if (!user) return;
+    let active = true;
     
     const channel = supabase
       .channel("notifications-changes")
@@ -68,26 +83,33 @@ export function useNotifications() {
         async (payload) => {
           const newNotif = payload.new as DexieNotification;
           
-          await addNotificationToCache({
-            id: newNotif.id,
-            user_id: newNotif.user_id,
-            job_id: newNotif.job_id,
-            type: newNotif.type,
-            message: newNotif.message,
-            payload: newNotif.payload || {},
-            read: newNotif.read,
-            snoozed_until: newNotif.snoozed_until,
-            created_at: newNotif.created_at,
-          });
-          
-          // Show modal for high priority notifications
-          if (newNotif.type === "high_priority_pending") {
-            setShowHighPriorityModal(true);
-            
-            // Play sound if not already played
-            if (!hasPlayedSound) {
-              playNotificationSound();
-              setHasPlayedSound(true);
+          try {
+            await addNotificationToCache({
+              id: newNotif.id,
+              user_id: newNotif.user_id,
+              job_id: newNotif.job_id,
+              type: newNotif.type,
+              message: newNotif.message,
+              payload: newNotif.payload || {},
+              read: newNotif.read,
+              snoozed_until: newNotif.snoozed_until,
+              created_at: newNotif.created_at,
+            }, user.id);
+
+              if (!active) return;
+              setNotificationSyncError(null);
+              if (newNotif.type === "high_priority_pending") {
+              setShowHighPriorityModal(true);
+
+              if (!hasPlayedSound) {
+                playNotificationSound();
+                setHasPlayedSound(true);
+              }
+            }
+          } catch (error) {
+            console.error("Realtime notification cache update failed:", error);
+            if (active) {
+              setNotificationSyncError(error instanceof Error ? error.message : "Notification sync failed");
             }
           }
         }
@@ -95,6 +117,7 @@ export function useNotifications() {
       .subscribe();
     
     return () => {
+      active = false;
       supabase.removeChannel(channel);
     };
   }, [user, hasPlayedSound]);
@@ -132,29 +155,29 @@ export function useNotifications() {
   }, []);
   
   const acknowledgeNotification = useCallback(async (notificationId: string) => {
-    await markNotificationRead(notificationId);
-  }, []);
+    if (user) await markNotificationRead(notificationId, user.id);
+  }, [user]);
   
   const snoozeNotificationHandler = useCallback(async (notificationId: string) => {
-    await snoozeNotification(notificationId);
-  }, []);
+    if (user) await snoozeNotification(notificationId, user.id);
+  }, [user]);
   
   const acknowledgeAll = useCallback(async () => {
     if (!notifications) return;
     for (const notif of notifications) {
-      await markNotificationRead(notif.id);
+      if (user) await markNotificationRead(notif.id, user.id);
     }
     setShowHighPriorityModal(false);
-  }, [notifications]);
+  }, [notifications, user]);
   
   const snoozeAll = useCallback(async () => {
     if (!notifications) return;
     for (const notif of notifications) {
-      await snoozeNotification(notif.id);
+      if (user) await snoozeNotification(notif.id, user.id);
     }
     setShowHighPriorityModal(false);
     setHasPlayedSound(false);
-  }, [notifications]);
+  }, [notifications, user]);
   
   const closeModal = useCallback(() => {
     setShowHighPriorityModal(false);
@@ -170,5 +193,6 @@ export function useNotifications() {
     acknowledgeAll,
     snoozeAll,
     unreadCount: notifications?.length || 0,
+    notificationSyncError,
   };
 }
