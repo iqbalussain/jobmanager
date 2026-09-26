@@ -1,3 +1,16 @@
+import { Constants, type Tables, type TablesInsert, type TablesUpdate } from '@/integrations/supabase/types';
+
+export type JobOrderRecord = Tables<'job_orders'>;
+export type JobOrderInsert = TablesInsert<'job_orders'>;
+export type JobOrderUpdate = TablesUpdate<'job_orders'>;
+export type JobStatus = JobOrderRecord['status'];
+export type JobPriority = JobOrderRecord['priority'];
+export type ApprovalStatus = 'pending_approval' | 'approved' | 'rejected';
+const JOB_STATUS_VALUES: ReadonlySet<string> = new Set(Constants.public.Enums.job_status);
+
+export function isJobStatus(value: string): value is JobStatus {
+  return JOB_STATUS_VALUES.has(value);
+}
 
 export interface Customer {
   id: string;
@@ -22,39 +35,59 @@ export interface JobTitle {
   job_title_id: string;
 }
 
-export type JobStatus = 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced';
-export type ApprovalStatus = 'pending_approval' | 'approved' | 'rejected';
-
-export interface JobOrder {
-  id: string;
-  job_order_number: string;
-  customer_id: string;
-  job_type_id: string | null;
-  job_title_id: string | null;
-  assignee: string | null;
-  designer_id: string | null;
-  salesman_id: string | null;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: JobStatus;
-  approval_status: ApprovalStatus;
-  due_date: string | null;
-  estimated_hours: number | null;
-  actual_hours: number | null;
-  branch: string | null;
-  job_order_details: string | null;
-  total_value: number | null;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
+export type JobOrderListRecord = Omit<JobOrderRecord, 'description'> & {
   customer: Customer | null;
+  job_title: JobTitle | null;
   designer: Designer | null;
   salesman: Salesman | null;
-  job_title: JobTitle | null;
-  title?: string;
-  description?: string;
-  invoice_number?: string;
-  approved_by?: string | null;
-  approved_at?: string | null;
-  delivered_at?: string | null;
-  client_name?: string | null;
+};
+
+export type JobOrder = JobOrderListRecord & {
+  title: string;
+  description: string;
+};
+
+export interface DashboardJob {
+  id: string;
+  jobOrderNumber: string;
+  title: string;
+  customer: string;
+  assignee?: string;
+  designer?: string;
+  salesman?: string;
+  priority: JobPriority;
+  status: JobStatus;
+  dueDate: string;
+  estimatedHours: number;
+  createdAt: string;
+  branch?: string;
+  jobOrderDetails?: string;
+  invoiceNumber?: string;
+  totalValue?: number;
+  customer_id?: string;
+  job_title_id?: string;
+  created_by?: string;
+  approval_status?: string;
+  deliveredAt?: string;
+  clientName?: string;
+}
+
+export type JobOrderUpdatePayload = {
+  id: string;
+} & JobOrderUpdate;
+
+export interface CreateJobOrderData {
+  customer_id: NonNullable<JobOrderInsert['customer_id']>;
+  job_title_id: NonNullable<JobOrderInsert['job_title_id']>;
+  designer_id: NonNullable<JobOrderInsert['designer_id']>;
+  salesman_id: NonNullable<JobOrderInsert['salesman_id']>;
+  assignee: NonNullable<JobOrderInsert['assignee']>;
+  priority: JobPriority;
+  status: JobStatus;
+  due_date: NonNullable<JobOrderInsert['due_date']>;
+  estimated_hours: NonNullable<JobOrderInsert['estimated_hours']>;
+  branch: NonNullable<JobOrderInsert['branch']>;
+  job_order_details: NonNullable<JobOrderInsert['job_order_details']>;
+  delivered_at?: JobOrderInsert['delivered_at'];
+  client_name?: JobOrderInsert['client_name'];
 }

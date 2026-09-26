@@ -1,4 +1,5 @@
-import { useState, lazy, Suspense, useEffect, useCallback } from "react";
+import { useState, lazy, Suspense, useEffect, useCallback, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useDexieJobs } from "@/hooks/useDexieJobs";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +10,10 @@ import { useJobActions } from "@/hooks/useJobActions";
 import { updateJobInCache } from "@/services/syncService";
 import { HighPriorityModal } from "@/components/HighPriorityModal";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type { DashboardJob as Job, JobOrderRecord, JobOrderUpdatePayload, JobStatus } from "@/types/jobOrder";
+import { transformDexieJobOrder } from "@/utils/jobOrderTransforms";
+import { updateJobOrder } from "@/services/jobOrdersApi";
+import Unauthorized from "./Unauthorized";
 
 // Lazy loaded components for performance
 const ModernDashboard = lazy(() => import("@/components/ModernDashboard").then(m => ({ default: m.ModernDashboard })));
@@ -19,39 +24,7 @@ const ReportsPage = lazy(() => import("@/components/ReportsPage").then(m => ({ d
 const ApprovedJobsList = lazy(() => import("@/components/job-management/ApprovedJobsList").then(m => ({ default: m.ApprovedJobsList })));
 const UserAccessManagement = lazy(() => import("@/components/UserAccessManagement").then(m => ({ default: m.default })));
 
-export type JobStatus =
-  | "pending"
-  | "in-progress"
-  | "completed"
-  | "cancelled"
-  | "designing"
-  | "finished"
-  | "invoiced";
-
-export interface Job {
-  id: string;
-  jobOrderNumber: string;
-  title: string;
-  customer: string;
-  assignee?: string;
-  designer?: string;
-  salesman?: string;
-  priority: "low" | "medium" | "high";
-  status: JobStatus;
-  dueDate: string;
-  estimatedHours: number;
-  createdAt: string;
-  branch?: string;
-  jobOrderDetails?: string;
-  invoiceNumber?: string;
-  totalValue?: number;
-  customer_id?: string;
-  job_title_id?: string;
-  created_by?: string;
-  approval_status?: string;
-  deliveredAt?: string;
-  clientName?: string;
-}
+export type { DashboardJob as Job, JobStatus } from "@/types/jobOrder";
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-64">
@@ -60,17 +33,29 @@ const LoadingSpinner = () => (
 );
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<
-    | "dashboard"
-    | "approved-jobs"
-    | "settings"
-    | "admin"
-    | "admin-management"
-    | "reports"
-    | "user-access"
-  >("dashboard");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const currentView = useMemo(() => {
+    switch (location.pathname) {
+      case "/jobs/approved":
+        return "approved-jobs" as const;
+      case "/settings":
+        return "settings" as const;
+      case "/admin/jobs":
+        return "admin" as const;
+      case "/admin/users":
+        return "admin-management" as const;
+      case "/admin/access":
+        return "user-access" as const;
+      case "/reports":
+        return "reports" as const;
+      default:
+        return "dashboard" as const;
+    }
+  }, [location.pathname]);
 
   const [userRole, setUserRole] = useState<string>("employee");
+  const [userRoleLoading, setUserRoleLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
@@ -81,10 +66,20 @@ const Index = () => {
   const { jobs: dexieJobs, isLoading, isSyncing, refresh } = useDexieJobs({}, 1, 50, true);
   const { setJobStatus } = useJobActions();
 
+  const restrictedRoles: Partial<Record<typeof currentView, string[]>> = {
+    admin: ["admin", "manager"],
+    "admin-management": ["admin", "manager"],
+    "user-access": ["admin"],
+    reports: ["admin", "manager", "salesman"],
+  };
+
   // Fetch role on load
   useEffect(() => {
     const fetchUserRole = async () => {
-      if (!user) return;
+      if (!user) {
+        setUserRoleLoading(false);
+        return;
+      }
       try {
         const { data } = await supabase
           .from("profiles")
@@ -94,9 +89,12 @@ const Index = () => {
 
         if (data?.role) setUserRole(data.role);
       } catch {
-        // Handle error silently
+        setUserRole("employee");
+      } finally {
+        setUserRoleLoading(false);
       }
     };
+    setUserRoleLoading(true);
     fetchUserRole();
   }, [user]);
 
@@ -111,7 +109,7 @@ const Index = () => {
           schema: 'public',
           table: 'job_orders'
         },
-        async (payload: RealtimePostgresChangesPayload<{ [key: string]: any }>) => {
+        async (payload: RealtimePostgresChangesPayload<JobOrderRecord>) => {
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             try {
               await updateJobInCache(payload.new.id);
@@ -131,40 +129,18 @@ const Index = () => {
     };
   }, [refresh]);
 
-  // Transform Dexie jobs to the Job interface
-  const transformedJobs: Job[] = (dexieJobs || []).map((order) => ({
-    id: order.id,
-    jobOrderNumber: order.job_order_number,
-    title: (order.job_title ?? order.job_title_id ?? `Job Order ${order.job_order_number}`) as string,
-  // DESCRIPTION / DETAILS come from job_order_details
-    jobOrderDetails: order.job_order_details || "",
-    customer: order.customer_name || "Unknown Customer",
-    assignee: order.assignee || "Unassigned",
-    priority: order.priority as Job["priority"],
-    status: order.status as JobStatus,
-    dueDate: order.due_date || new Date().toISOString().split("T")[0],
-    createdAt: order.created_at?.split("T")[0] || new Date().toISOString().split("T")[0],
-    estimatedHours: order.estimated_hours || 0,
-    branch: order.branch || "",
-    designer: order.designer_name || "Unassigned",
-    salesman: order.salesman_name || "Unassigned",
-    totalValue: order.total_value || 0,
-    created_by: order.created_by,
-    invoiceNumber: order.invoice_number || "",
-    approval_status: order.approval_status,
-    deliveredAt: order.delivered_at || "",
-    clientName: order.client_name || "",
-  }));
+  const transformedJobs: Job[] = (dexieJobs || []).map(transformDexieJobOrder);
 
   const handleStatusUpdate = async (jobId: string, status: JobStatus) => {
     await setJobStatus(jobId, status);
   };
 
-  const handleJobDataUpdate = async (jobData: { id: string; [key: string]: any }) => {
+  const handleJobDataUpdate = async (jobData: JobOrderUpdatePayload) => {
     // Update job in Supabase then sync to Dexie
     try {
-      await supabase.from("job_orders").update(jobData).eq("id", jobData.id);
-      await updateJobInCache(jobData.id);
+      const { id, ...updates } = jobData;
+      await updateJobOrder(id, updates);
+      await updateJobInCache(id);
     } catch (error) {
       console.error("Failed to update job:", error);
     }
@@ -187,7 +163,16 @@ const Index = () => {
     if (view === "create") {
       handleCreateJob();
     } else {
-      setCurrentView(view as any);
+      const paths: Record<string, string> = {
+        dashboard: "/dashboard",
+        "approved-jobs": "/jobs/approved",
+        settings: "/settings",
+        admin: "/admin/jobs",
+        "admin-management": "/admin/users",
+        "user-access": "/admin/access",
+        reports: "/reports",
+      };
+      navigate(paths[view] || "/dashboard");
     }
   };
 
@@ -236,8 +221,16 @@ const Index = () => {
     | "reports"
     | "user-access"
   ) => {
-    setCurrentView(view);
+    handleViewChange(view);
   };
+
+  const requiredRoles = restrictedRoles[currentView];
+  if (userRoleLoading) {
+    return <LoadingSpinner />;
+  }
+  if (requiredRoles && !requiredRoles.includes(userRole)) {
+    return <Unauthorized />;
+  }
 
   return (
     <div className="ml-20 flex-1 overflow-y-auto min-h-screen" style={{ background: 'var(--gradient-background)' }}>

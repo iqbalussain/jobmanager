@@ -1,5 +1,6 @@
 import { db, DexieJobOrder, clearAllData } from '@/lib/dexieDb';
 import { supabase } from '@/integrations/supabase/client';
+import type { JobOrderRecord } from '@/types/jobOrder';
 
 const SYNC_META_ID = 'main';
 const SYNC_INTERVAL = 30000; // 30 seconds
@@ -9,6 +10,7 @@ const REPAIR_INTERVAL_MS = 60 * 60_000; // 1 hour - repair check is expensive
 // Egress-optimized column lists (excludes large `description` HTML — fetched on demand in JobDetails)
 const JOB_LIST_COLUMNS =
   'id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,status,priority,branch,assignee,due_date,estimated_hours,actual_hours,total_value,invoice_number,job_order_details,client_name,delivered_at,approval_status,approval_notes,approved_by,approved_at,created_by,created_at,updated_at,description_plain';
+type JobOrderSyncRecord = Omit<JobOrderRecord, 'description'>;
 
 let syncIntervalId: ReturnType<typeof setInterval> | null = null;
 let lastRefSyncAt = 0;
@@ -108,11 +110,17 @@ async function syncReferenceData(force = false): Promise<void> {
 }
 
 // Enrich job orders with related data from Dexie
-async function enrichJobOrders(jobOrders: any[]): Promise<DexieJobOrder[]> {
-  const customerIds = [...new Set(jobOrders.map(j => j.customer_id).filter(Boolean))] as string[];
-  const salesmanIds = [...new Set(jobOrders.map(j => j.salesman_id).filter(Boolean))] as string[];
-  const designerIds = [...new Set(jobOrders.map(j => j.designer_id).filter(Boolean))] as string[];
-  const jobTitleIds = [...new Set(jobOrders.map(j => j.job_title_id).filter(Boolean))] as string[];
+async function enrichJobOrders(jobOrders: JobOrderSyncRecord[]): Promise<DexieJobOrder[]> {
+  const customerIds = Array.from(new Set(jobOrders.map((job) => job.customer_id)));
+  const salesmanIds = Array.from(
+    new Set(jobOrders.map((job) => job.salesman_id).filter((id): id is string => id !== null)),
+  );
+  const designerIds = Array.from(
+    new Set(jobOrders.map((job) => job.designer_id).filter((id): id is string => id !== null)),
+  );
+  const jobTitleIds = Array.from(
+    new Set(jobOrders.map((job) => job.job_title_id).filter((id): id is string => id !== null)),
+  );
   
   const [customers, salesmen, designers, jobTitles] = await Promise.all([
     customerIds.length > 0 ? db.customers.where('id').anyOf(customerIds).toArray() : [],
@@ -142,11 +150,11 @@ async function enrichJobOrders(jobOrders: any[]): Promise<DexieJobOrder[]> {
     customer_id: job.customer_id,
     customer_name: customerObjects.get(job.customer_id)?.name || 'Unknown Customer',
     job_title_id: job.job_title_id,
-    job_title: jobTitleMap.get(job.job_title_id) || 'No Title',
+    job_title: job.job_title_id ? jobTitleMap.get(job.job_title_id) || 'No Title' : 'No Title',
     designer_id: job.designer_id,
-    designer_name: designerMap.get(job.designer_id) || 'Unassigned',
+    designer_name: job.designer_id ? designerMap.get(job.designer_id) || 'Unassigned' : 'Unassigned',
     salesman_id: job.salesman_id,
-    salesman_name: salesmanMap.get(job.salesman_id) || 'Unassigned',
+    salesman_name: job.salesman_id ? salesmanMap.get(job.salesman_id) || 'Unassigned' : 'Unassigned',
     status: job.status,
     priority: job.priority,
     branch: job.branch,
@@ -166,7 +174,6 @@ async function enrichJobOrders(jobOrders: any[]): Promise<DexieJobOrder[]> {
     created_by: job.created_by,
     created_at: job.created_at,
     updated_at: job.updated_at,
-    description: job.description,
     description_plain: job.description_plain
   }));
 }
@@ -253,7 +260,7 @@ export async function updateJobInCache(jobId: string): Promise<void> {
 }
 
 // Add a new job to Dexie after Supabase insert
-export async function addJobToCache(job: any): Promise<void> {
+export async function addJobToCache(job: JobOrderRecord): Promise<void> {
   const [enriched] = await enrichJobOrders([job]);
   await db.jobs.put(enriched);
 }

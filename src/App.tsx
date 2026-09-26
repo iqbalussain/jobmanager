@@ -11,6 +11,7 @@ import { NotificationProvider, useNotifications } from "@/contexts/NotificationC
 import { HighPriorityAlertModal } from "@/components/dashboard/HighPriorityAlertModal";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Unauthorized from "./pages/Unauthorized";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +55,42 @@ function App() {
                       <Index />
                     </ProtectedRoute>
                   } />
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/jobs/approved" element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/jobs" element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/users" element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/access" element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/reports" element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/unauthorized" element={<Unauthorized />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <FloatingCreateButton />

@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { JobOrder, JobStatus } from '@/types/jobOrder';
+import type { JobOrder, JobOrderUpdatePayload, JobStatus } from '@/types/jobOrder';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { updateJobOrder, updateJobOrderStatus } from '@/services/jobOrdersApi';
 
 export function useJobOrderMutations() {
   const { toast } = useToast();
@@ -13,11 +14,7 @@ export function useJobOrderMutations() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: JobStatus }) => {
-      const { error } = await supabase
-        .from('job_orders')
-        .update({ status })
-        .eq('id', id);
-      if (error) throw error;
+      await updateJobOrderStatus(id, status);
       return { id, status };
     },
     
@@ -60,15 +57,11 @@ export function useJobOrderMutations() {
   const approveJob = useMutation({
     mutationFn: async ({ jobId }: { jobId: string }) => {
       const { data: user } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from('job_orders')
-        .update({ 
-          approval_status: 'approved',
-          approved_by: user.user?.id,
-          approved_at: new Date().toISOString()
-        })
-        .eq('id', jobId);
-      if (error) throw error;
+      await updateJobOrder(jobId, {
+        approval_status: 'approved',
+        approved_by: user.user?.id,
+        approved_at: new Date().toISOString(),
+      });
       return { jobId };
     },
     
@@ -77,7 +70,7 @@ export function useJobOrderMutations() {
       await queryClient.cancelQueries({ queryKey: ['pending-approvals'] });
       
       const previousJobOrders = queryClient.getQueryData(['job-orders', user?.id]);
-      const previousPendingJobs = queryClient.getQueryData(['pending-approvals']);
+      const previousPendingJobs = queryClient.getQueryData<JobOrder[]>(['pending-approvals']);
       
       queryClient.setQueryData(['job-orders', user?.id], (old: JobOrder[] | undefined) => {
         if (!old) return old;
@@ -86,7 +79,7 @@ export function useJobOrderMutations() {
         );
       });
       
-      queryClient.setQueryData(['pending-approvals'], (old: any[] | undefined) => {
+      queryClient.setQueryData<JobOrder[]>(['pending-approvals'], (old) => {
         if (!old) return old;
         return old.filter(job => job.id !== jobId);
       });
@@ -123,28 +116,25 @@ export function useJobOrderMutations() {
   });
 
   const updateJobData = useMutation({
-    mutationFn: async (jobData: { id: string; priority?: 'low' | 'medium' | 'high' | 'urgent'; [key: string]: any }) => {
+    mutationFn: async (jobData: JobOrderUpdatePayload) => {
       const { id, ...updateData } = jobData;
       
       // First get the current job to check if priority changed
-      const { data: currentJob } = await supabase
+      const { data: currentJob, error: currentJobError } = await supabase
         .from('job_orders')
         .select('priority, job_order_number')
         .eq('id', id)
         .single();
-      
-      const { error } = await supabase
-        .from('job_orders')
-        .update(updateData as any)
-        .eq('id', id);
-      if (error) throw error;
+      if (currentJobError) throw currentJobError;
+
+      await updateJobOrder(id, updateData);
       
       return { 
-        id, 
+        id,
+        changes: updateData,
         priority: updateData.priority,
         previousPriority: currentJob?.priority,
         job_order_number: currentJob?.job_order_number,
-        ...updateData
       };
     },
     
@@ -153,7 +143,7 @@ export function useJobOrderMutations() {
         if (!oldData) return oldData;
         return oldData.map(job => 
           job.id === updatedData.id 
-            ? { ...job, ...updatedData }
+            ? { ...job, ...updatedData.changes }
             : job
         );
       });

@@ -2,39 +2,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import type { Tables } from '@/integrations/supabase/types';
+import type { Customer, Designer, JobTitle, Salesman } from '@/types/jobOrder';
 
-export interface Customer {
-  id: string;
-  name: string;
-}
-
-export interface Designer {
-  id: string;
-  name: string;
-  phone: string | null;
-}
-
-export interface Salesman {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-}
-
-export interface JobTitle {
-  id: string;
-  job_title_id: string;
-}
-
-export interface Profile {
-  id: string;
-  full_name: string | null;
-  email: string;
-  role: string;
-  department: string | null;
-  branch: string | null;
-  phone: string | null;
-}
+export type { Customer, Designer, JobTitle, Salesman };
+export type Profile = Pick<
+  Tables<'profiles'>,
+  'id' | 'full_name' | 'email' | 'role' | 'department' | 'branch' | 'phone'
+>;
 
 export function useAdminQueries() {
   const { user } = useAuth();
@@ -61,7 +36,7 @@ export function useAdminQueries() {
         console.error('Error fetching customers:', error);
         throw error;
       }
-      return data as Customer[];
+      return data;
     },
     enabled: !!user
   });
@@ -84,7 +59,7 @@ export function useAdminQueries() {
         id: profile.id,
         name: profile.full_name || 'Unknown Designer',
         phone: profile.phone
-      })) as Designer[];
+      }));
     },
     enabled: !!user
   });
@@ -108,7 +83,7 @@ export function useAdminQueries() {
         name: profile.full_name || 'Unknown Salesman',
         email: profile.email,
         phone: profile.phone
-      })) as Salesman[];
+      }));
     },
     enabled: !!user
   });
@@ -126,7 +101,7 @@ export function useAdminQueries() {
         console.error('Error fetching job titles:', error);
         return [];
       }
-      return data as JobTitle[];
+      return data;
     },
     enabled: !!user
   });
@@ -144,7 +119,7 @@ export function useAdminQueries() {
         console.error('Error fetching profiles:', error);
         throw error;
       }
-      return data as Profile[];
+      return data;
     },
     enabled: !!user
   });

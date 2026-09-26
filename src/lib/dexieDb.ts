@@ -1,37 +1,38 @@
 import Dexie, { Table } from 'dexie';
+import type { JobOrderRecord } from '@/types/jobOrder';
 
-export interface DexieJobOrder {
-  id: string;
-  job_order_number: string;
-  customer_id: string;
+export type DexieJobOrder = Pick<
+  JobOrderRecord,
+  'id' | 'job_order_number' | 'customer_id' | 'status' | 'priority' |
+  'approval_status' | 'created_by' | 'created_at' | 'updated_at'
+> & Partial<
+  Pick<
+    JobOrderRecord,
+    | 'job_title_id'
+    | 'designer_id'
+    | 'salesman_id'
+    | 'branch'
+    | 'assignee'
+    | 'due_date'
+    | 'estimated_hours'
+    | 'actual_hours'
+    | 'total_value'
+    | 'invoice_number'
+    | 'job_order_details'
+    | 'client_name'
+    | 'delivered_at'
+    | 'approval_notes'
+    | 'approved_by'
+    | 'approved_at'
+    | 'description_plain'
+  >
+> & {
   customer_name?: string;
-  job_title_id?: string;
   job_title?: string;
-  designer_id?: string;
   designer_name?: string;
-  salesman_id?: string;
   salesman_name?: string;
-  status: string;
-  priority: string;
-  branch?: string;
-  assignee?: string;
-  due_date?: string;
-  estimated_hours?: number;
-  actual_hours?: number;
-  total_value?: number;
-  invoice_number?: string;
-  job_order_details?: string;
-  client_name?: string;
-  delivered_at?: string;
-  approval_status: string;
-  approval_notes?: string;
-  approved_by?: string;
-  approved_at?: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  is_synced?: boolean; // Track sync status
-}
+  is_synced?: boolean;
+};
 
 export interface DexieCustomer {
   id: string;

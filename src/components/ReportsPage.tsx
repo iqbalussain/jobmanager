@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 
+type ReportType = "customer" | "salesman" | "branch";
+
 interface ReportData {
   customerName: string;
   salesmanName: string;
@@ -30,7 +32,7 @@ interface ReportData {
 }
 
 export function ReportsPage() {
-  const [reportType, setReportType] = useState<"customer" | "salesman" | "branch">("customer");
+  const [reportType, setReportType] = useState<ReportType>("customer");
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [reportData, setReportData] = useState<ReportData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -121,7 +123,7 @@ export function ReportsPage() {
     }
   };
 
-  const processReportData = (jobs: any[], type: string): ReportData[] => {
+  const processReportData = (jobs: any[], type: ReportType): ReportData[] => {
     const groupedData: { [key: string]: any } = {};
 
     jobs.forEach(job => {
@@ -229,7 +231,12 @@ export function ReportsPage() {
       row.totalJobs > 0 ? (row.totalValue / row.totalJobs).toFixed(2) : '0.00'
     ]);
 
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
+    const escapeCell = (value: unknown) => {
+      const text = String(value ?? '');
+      return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    };
+
+    return [headers, ...rows].map(row => row.map(escapeCell).join(',')).join('\n');
   };
 
   useEffect(() => {
@@ -291,7 +298,11 @@ export function ReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="reportType">Report Type</Label>
-              <Select value={reportType} onValueChange={(value: any) => setReportType(value)}>
+              <Select value={reportType} onValueChange={(value) => {
+                if (value === "customer" || value === "salesman" || value === "branch") {
+                  setReportType(value);
+                }
+              }}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

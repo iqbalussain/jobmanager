@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { subscribeJobEdits, JobEditAudit } from '@/lib/realtime';
 import { updateJobInCache } from '@/services/syncService';
+import type { JobStatus } from '@/types/jobOrder';
 
 export function useJobActions() {
   const { toast } = useToast();
@@ -24,7 +25,7 @@ export function useJobActions() {
   }, [user?.id, toast]);
 
   // Set job status with role-based restrictions via RPC
-  const setJobStatus = useCallback(async (jobId: string, status: string) => {
+  const setJobStatus = useCallback(async (jobId: string, status: JobStatus) => {
     const { data, error } = await supabase.rpc('update_job_status', {
       p_job_id: jobId,
       p_new_status: status
@@ -39,7 +40,22 @@ export function useJobActions() {
       return { success: false, error: error.message };
     }
 
-    const result = data as { success: boolean; error?: string; job_order_number?: string };
+    if (
+      data === null ||
+      typeof data !== 'object' ||
+      Array.isArray(data) ||
+      typeof data.success !== 'boolean'
+    ) {
+      throw new Error('Status update returned an invalid response');
+    }
+
+    const result = {
+      success: data.success,
+      ...(typeof data.error === 'string' ? { error: data.error } : {}),
+      ...(typeof data.job_order_number === 'string'
+        ? { job_order_number: data.job_order_number }
+        : {}),
+    };
     
     if (!result.success) {
       toast({
@@ -62,7 +78,7 @@ export function useJobActions() {
   }, [toast]);
 
   // Check if job is locked (invoiced)
-  const isJobLocked = useCallback((status: string) => {
+  const isJobLocked = useCallback((status: JobStatus) => {
     return status === 'invoiced';
   }, []);
 

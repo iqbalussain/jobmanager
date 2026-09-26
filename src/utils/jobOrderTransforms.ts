@@ -1,53 +1,60 @@
-
+import type { DexieJobOrder } from '@/lib/dexieDb';
+import type { DashboardJob, JobOrder, JobOrderListRecord } from '@/types/jobOrder';
 import { sanitizeHtml } from '@/utils/inputValidation';
-import { JobOrder, Designer, Salesman, Customer, JobTitle, JobStatus, ApprovalStatus } from '@/types/jobOrder';
 
-export function transformJobOrderData(data: any[]): JobOrder[] {
-  return data?.map(order => {
-    // Handle designer with proper null checks
-    let designer: Designer | null = null;
-    if (order.designer && order.designer !== null && typeof order.designer === 'object' && 'id' in order.designer) {
-      const designerData = order.designer as any;
-      designer = {
-        id: designerData.id,
-        name: sanitizeHtml(designerData.name || 'Unknown Designer'),
-        phone: designerData.phone
-      };
-    }
-
-    // Handle salesman with proper null checks
-    let salesman: Salesman | null = null;
-    if (order.salesman && order.salesman !== null && typeof order.salesman === 'object' && 'id' in order.salesman) {
-      const salesmanData = order.salesman as any;
-      salesman = {
-        id: salesmanData.id,
-        name: sanitizeHtml(salesmanData.name || 'Unknown Salesman'),
-        email: salesmanData.email,
-        phone: salesmanData.phone
-      };
-    }
-
-    // Handle job title properly
-    let jobTitleDisplay = '';
-    if (order.job_title && typeof order.job_title === 'object' && 'job_title_id' in order.job_title) {
-      jobTitleDisplay = sanitizeHtml(order.job_title.job_title_id || '');
-    }
+export function transformJobOrderData(data: JobOrderListRecord[]): JobOrder[] {
+  return data.map((order) => {
+    const customer = order.customer
+      ? { ...order.customer, name: sanitizeHtml(order.customer.name) }
+      : null;
+    const designer = order.designer
+      ? { ...order.designer, name: sanitizeHtml(order.designer.name) }
+      : null;
+    const salesman = order.salesman
+      ? { ...order.salesman, name: sanitizeHtml(order.salesman.name) }
+      : null;
+    const jobTitle = order.job_title
+      ? { ...order.job_title, job_title_id: sanitizeHtml(order.job_title.job_title_id) }
+      : null;
+    const details = order.job_order_details || '';
 
     return {
       ...order,
-      status: order.status as JobStatus,
-      approval_status: (order.approval_status || 'pending_approval') as ApprovalStatus,
-      customer: order.customer && typeof order.customer === 'object' && 'id' in order.customer 
-        ? order.customer as Customer 
-        : null,
+      customer,
       designer,
       salesman,
-      job_title: order.job_title && typeof order.job_title === 'object' && 'id' in order.job_title
-        ? order.job_title as JobTitle
-        : null,
-      // Use the proper job title for display
-      title: jobTitleDisplay || sanitizeHtml(order.job_order_details || `Job Order ${order.job_order_number}`),
-      description: sanitizeHtml(order.job_order_details || '')
+      job_title: jobTitle,
+      title: jobTitle?.job_title_id || sanitizeHtml(details || `Job Order ${order.job_order_number}`),
+      description: sanitizeHtml(details),
     };
-  }) || [];
+  });
+}
+
+export function transformDexieJobOrder(order: DexieJobOrder): DashboardJob {
+  const today = new Date().toISOString().split('T')[0];
+
+  return {
+    id: order.id,
+    jobOrderNumber: order.job_order_number,
+    title: order.job_title ?? order.job_title_id ?? `Job Order ${order.job_order_number}`,
+    jobOrderDetails: order.job_order_details || '',
+    customer: order.customer_name || 'Unknown Customer',
+    assignee: order.assignee || 'Unassigned',
+    priority: order.priority,
+    status: order.status,
+    dueDate: order.due_date || today,
+    createdAt: order.created_at.split('T')[0] || today,
+    estimatedHours: order.estimated_hours || 0,
+    branch: order.branch || '',
+    designer: order.designer_name || 'Unassigned',
+    salesman: order.salesman_name || 'Unassigned',
+    totalValue: order.total_value || 0,
+    created_by: order.created_by,
+    invoiceNumber: order.invoice_number || '',
+    approval_status: order.approval_status,
+    deliveredAt: order.delivered_at || '',
+    clientName: order.client_name || '',
+    customer_id: order.customer_id,
+    job_title_id: order.job_title_id ?? undefined,
+  };
 }

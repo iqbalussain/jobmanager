@@ -5,12 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { shareJobOrderViaWhatsApp } from "@/utils/whatsappShare";
+import { updateJobOrder } from "@/services/jobOrdersApi";
+import type { JobOrderUpdate, JobOrderUpdatePayload } from "@/types/jobOrder";
 
 interface UseJobDetailsProps {
   job: Job | null;
   isEditMode: boolean;
   onClose: () => void;
-  onJobUpdated?: (jobData: { id: string; [key: string]: any }) => void;
+  onJobUpdated?: (jobData: JobOrderUpdatePayload) => void;
 }
 
 export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJobDetailsProps) {
@@ -80,7 +82,7 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
     setIsLoading(true);
     
     // Optimistic update - show changes immediately
-    const updateData: any = {
+    const updateData: JobOrderUpdate = {
       priority: editData.priority,
       due_date: editData.dueDate,
       estimated_hours: editData.estimatedHours,
@@ -109,12 +111,7 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
     }
 
     try {
-      const { error } = await supabase
-        .from('job_orders')
-        .update(updateData)
-        .eq('id', job.id);
-
-      if (error) throw error;
+      await updateJobOrder(job.id, updateData);
 
       toast({
         title: "Success",
@@ -133,7 +130,7 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
           due_date: job.dueDate,
           estimated_hours: job.estimatedHours,
           branch: job.branch,
-          job_titles: job.title,
+          job_title_id: job.job_title_id,
           job_order_details: job.jobOrderDetails,
           delivered_at: job.deliveredAt,
           invoice_number: job.invoiceNumber
@@ -157,10 +154,7 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
     try {
       // If there's an invoice number and user is authorized, save it first
       if (invoiceNumber && invoiceNumber !== job.invoiceNumber && canEditInvoice) {
-        await supabase
-          .from('job_orders')
-          .update({ invoice_number: invoiceNumber })
-          .eq('id', job.id);
+        await updateJobOrder(job.id, { invoice_number: invoiceNumber });
         
         // Update parent state as well
         if (onJobUpdated) {

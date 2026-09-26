@@ -1,6 +1,62 @@
-# Welcome to your Lovable project
+# Job Manager
 
-## Project info
+An offline-aware job-order management application for managing customers, assignments,
+approvals, statuses, notifications, reports, and role-based administration.
+
+## Project structure
+
+- `src/pages/Index.tsx` provides the authenticated application shell.
+- `src/types/jobOrder.ts` contains the canonical job-domain types.
+- `src/utils/jobOrderTransforms.ts` contains database/cache-to-UI transformations.
+- `src/services/` contains Supabase APIs and synchronization services.
+- `src/lib/dexieDb.ts` defines the offline IndexedDB cache.
+- `supabase/migrations/` contains database schema and RLS changes.
+- `supabase/functions/` contains authenticated Edge Functions.
+
+## Application routes
+
+Authenticated views are available at:
+
+- `/dashboard`
+- `/jobs/approved`
+- `/settings`
+- `/reports`
+- `/admin/jobs`
+- `/admin/users`
+- `/admin/access`
+
+Access is enforced by both the application and Supabase policies. Users without the
+required role are shown the unauthorized page.
+
+## Local development
+
+Create a `.env` file with the public Supabase settings:
+
+```sh
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_PROJECT_ID=...
+VITE_SUPABASE_PUBLISHABLE_KEY=...
+```
+
+Then install dependencies and start the application:
+
+```sh
+npm install
+npm run dev
+```
+
+Useful checks:
+
+```sh
+npm run lint
+npm run build
+```
+
+The browser cache is powered by Dexie and is synchronized with Supabase in the
+background. Production deployments should apply Supabase migrations and deploy the
+Edge Functions before exposing the frontend.
+
+## Lovable project
 
 **URL**: https://lovable.dev/projects/095e06d9-c491-47ec-9d35-0647fb9fe1de
 

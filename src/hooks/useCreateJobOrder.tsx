@@ -3,22 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/contexts/NotificationContext';
-
-export interface CreateJobOrderData {
-  customer_id: string;
-  job_title_id: string;
-  designer_id: string;
-  salesman_id: string;
-  assignee: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'finished' | 'cancelled' | 'invoiced';
-  due_date: string;
-  estimated_hours: number;
-  branch: string;
-  job_order_details: string;
-  delivered_at?: string;
-  client_name?: string;
-}
+import type { CreateJobOrderData, JobOrderRecord } from '@/types/jobOrder';
 
 export function useCreateJobOrder() {
   const { toast } = useToast();
@@ -34,10 +19,10 @@ export function useCreateJobOrder() {
       console.error('Error generating job order number:', error);
       throw error;
     }
-    return data as string;
+    return data;
   };
 
-  const sendNotification = async (jobData: any) => {
+  const sendNotification = async (jobData: JobOrderRecord) => {
     try {
       // Get customer and job title details for notification
       const { data: customer } = await supabase
@@ -46,17 +31,21 @@ export function useCreateJobOrder() {
         .eq('id', jobData.customer_id)
         .single();
 
-      const { data: jobTitle } = await supabase
-        .from('job_titles')
-        .select('job_title_id')
-        .eq('id', jobData.job_title_id)
-        .single();
+      const { data: jobTitle } = jobData.job_title_id
+        ? await supabase
+            .from('job_titles')
+            .select('job_title_id')
+            .eq('id', jobData.job_title_id)
+            .single()
+        : { data: null };
 
-      const { data: salesman } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', jobData.salesman_id)
-        .single();
+      const { data: salesman } = jobData.salesman_id
+        ? await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', jobData.salesman_id)
+            .single()
+        : { data: null };
 
       // Send notification via edge function
       await supabase.functions.invoke('send-notification', {
@@ -94,13 +83,12 @@ export function useCreateJobOrder() {
       }
 
       let salesmanId = data.salesman_id;
-      if (user?.role === 'salesman') {
+      if (user.user_metadata?.role === 'salesman') {
         salesmanId = user.id;
       }
 
       let attempts = 0;
-      let newJobOrder = null;
-      let insertError = null;
+      let newJobOrder: JobOrderRecord | null = null;
 
       while (attempts < 5) {
         const jobOrderNumber = await generateJobOrderNumber(data.branch);
@@ -148,13 +136,7 @@ export function useCreateJobOrder() {
           continue;
         }
 
-        insertError = error;
-        break;
-      }
-
-      if (insertError) {
-        console.error('Supabase insert error:', insertError);
-        throw insertError;
+        throw error;
       }
 
       if (!newJobOrder) {
