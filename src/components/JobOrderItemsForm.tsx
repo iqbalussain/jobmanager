@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { JobTitleDropdown } from "@/components/dropdowns/JobTitleDropdown";
 import { useJobOrderItems, CreateJobOrderItemData } from "@/hooks/useJobOrderItems";
+import { formatOmaniRial } from "@/utils/currency";
 
 interface JobOrderItemsFormProps {
   jobOrderId: string;
@@ -95,9 +96,9 @@ export function JobOrderItemsForm({ jobOrderId, readOnly = false }: JobOrderItem
                         Qty: {item.quantity}
                       </span>
                     )}
-                    {item.unit_price && (
+                    {item.unit_price != null && (
                       <span className="text-sm text-muted-foreground">
-                        @ ${item.unit_price} = ${item.total_price?.toFixed(2)}
+                        @ {formatOmaniRial(item.unit_price)} = {formatOmaniRial(item.total_price)}
                       </span>
                     )}
                   </div>
@@ -157,17 +158,18 @@ export function JobOrderItemsForm({ jobOrderId, readOnly = false }: JobOrderItem
                 />
               </div>
               <div>
-                <Label htmlFor="unit-price">Unit Price (Optional)</Label>
+                <Label htmlFor="unit-price">Unit Price (OMR, Optional)</Label>
                 <Input
                   id="unit-price"
                   type="number"
-                  step="0.01"
+                  min="0"
+                  step="0.001"
                   value={newItem.unit_price || ""}
                   onChange={(e) => setNewItem({ 
                     ...newItem, 
                     unit_price: e.target.value ? parseFloat(e.target.value) : undefined 
                   })}
-                  placeholder="0.00"
+                  placeholder="0.000"
                 />
               </div>
             </div>
@@ -196,7 +198,7 @@ export function JobOrderItemsForm({ jobOrderId, readOnly = false }: JobOrderItem
           <Card className="w-fit">
             <CardContent className="p-4">
               <div className="text-lg font-semibold">
-                Total: ${calculateTotal().toFixed(2)}
+                Total: {formatOmaniRial(calculateTotal())}
               </div>
             </CardContent>
           </Card>

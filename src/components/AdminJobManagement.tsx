@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { JobDetails } from "@/components/JobDetails";
 import { useDexieJobs, JobFilters } from "@/hooks/useDexieJobs";
 import { updateJobInCache } from "@/services/syncService";
+import { formatOmaniRial } from "@/utils/currency";
 
 interface AdminJobManagementProps {
   onViewDetails?: (job: Job) => void;
@@ -401,6 +402,9 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
                       {editingTotalValue[job.id] !== undefined ? (
                         <div className="flex items-center gap-2">
                           <Input
+                            type="number"
+                            min="0"
+                            step="0.001"
                             value={editingTotalValue[job.id]}
                             onChange={(e) =>
                               setEditingTotalValue(prev => ({ ...prev, [job.id]: e.target.value }))
@@ -416,7 +420,7 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <span>${job.total_value?.toFixed(2) || "0.00"}</span>
+                          <span>{formatOmaniRial(job.total_value)}</span>
                           <Button size="sm" variant="ghost" onClick={() =>
                             setEditingTotalValue(prev => ({
                               ...prev,

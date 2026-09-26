@@ -18,6 +18,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { formatOmaniRial } from "@/utils/currency";
 
 type ReportType = "customer" | "salesman" | "branch";
 
@@ -217,8 +218,8 @@ export function ReportsPage() {
       'Total Jobs',
       'Completed Jobs',
       'Completion Rate (%)',
-      'Total Value (R.O)',
-      'Average Job Value (R.O)'
+      'Total Value (ر.ع.)',
+      'Average Job Value (ر.ع.)'
     ];
 
     const rows = reportData.map(row => [
@@ -227,8 +228,8 @@ export function ReportsPage() {
       row.totalJobs,
       row.completedJobs,
       row.totalJobs > 0 ? ((row.completedJobs / row.totalJobs) * 100).toFixed(1) : '0.0',
-      row.totalValue.toFixed(2),
-      row.totalJobs > 0 ? (row.totalValue / row.totalJobs).toFixed(2) : '0.00'
+      formatOmaniRial(row.totalValue),
+      formatOmaniRial(row.totalJobs > 0 ? row.totalValue / row.totalJobs : 0)
     ]);
 
     const escapeCell = (value: unknown) => {
@@ -337,7 +338,7 @@ export function ReportsPage() {
             <DollarSign className="h-8 w-8 text-green-600" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold">${summaryStats.totalRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold">{formatOmaniRial(summaryStats.totalRevenue)}</p>
             </div>
           </CardContent>
         </Card>
@@ -367,7 +368,7 @@ export function ReportsPage() {
             <DollarSign className="h-8 w-8 text-orange-600" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Avg Job Value</p>
-              <p className="text-2xl font-bold">${summaryStats.averageJobValue.toFixed(2)}</p>
+              <p className="text-2xl font-bold">{formatOmaniRial(summaryStats.averageJobValue)}</p>
             </div>
           </CardContent>
         </Card>
@@ -422,8 +423,8 @@ export function ReportsPage() {
                           {completionRate.toFixed(1)}%
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium">${row.totalValue.toFixed(2)}</TableCell>
-                      <TableCell>${avgJobValue.toFixed(2)}</TableCell>
+                      <TableCell className="font-medium">{formatOmaniRial(row.totalValue)}</TableCell>
+                      <TableCell>{formatOmaniRial(avgJobValue)}</TableCell>
                       {reportType !== 'branch' && <TableCell>{row.branch}</TableCell>}
                     </TableRow>
                   );

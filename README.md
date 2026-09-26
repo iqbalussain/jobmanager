@@ -3,6 +3,9 @@
 An offline-aware job-order management application for managing customers, assignments,
 approvals, statuses, notifications, reports, and role-based administration.
 
+All monetary amounts use Omani rials (OMR), displayed with the `ر.ع.` symbol and
+three decimal places.
+
 ## Project structure
 
 - `src/pages/Index.tsx` provides the authenticated application shell.

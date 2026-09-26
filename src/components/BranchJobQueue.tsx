@@ -15,6 +15,7 @@ import {
   Filter
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatOmaniRial } from "@/utils/currency";
 
 interface BranchJobQueueProps {
   jobs: Job[];
@@ -169,7 +170,7 @@ export function BranchJobQueue({ jobs, onViewJob }: BranchJobQueueProps) {
                   </div>
                   <div className="flex items-center gap-1">
                     <TrendingUp className="w-4 h-4" />
-                    <span>${data.totalValue.toFixed(2)}</span>
+                    <span>{formatOmaniRial(data.totalValue)}</span>
                   </div>
                 </div>
               </div>
