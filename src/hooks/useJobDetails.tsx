@@ -4,7 +4,6 @@ import { Job } from "@/pages/Index";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { exportJobOrderToPDF } from "@/utils/pdfExport";
 import { shareJobOrderViaWhatsApp } from "@/utils/whatsappShare";
 
 interface UseJobDetailsProps {
@@ -169,6 +168,7 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
         }
       }
 
+      const { exportJobOrderToPDF } = await import("@/utils/pdfExport");
       await exportJobOrderToPDF(job, invoiceNumber);
       toast({
         title: "Success",
