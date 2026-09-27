@@ -25,9 +25,16 @@ interface WorkflowBucketProps {
   onSelect: (job: Job) => void;
 }
 
-function WorkflowBucket({ title, jobs: bucketJobs, icon: Icon, assigneeFor, onSelect }: WorkflowBucketProps) {
+function WorkflowBucket({
+  title,
+  jobs: bucketJobs,
+  icon: Icon,
+  assigneeFor,
+  onSelect,
+  animationDelay,
+}: WorkflowBucketProps & { animationDelay: number }) {
   return (
-    <Card>
+    <Card className="dashboard-card-enter" style={{ animationDelay: `${animationDelay}ms` }}>
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Icon className="h-4 w-4 text-muted-foreground" />
@@ -118,15 +125,13 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
     status: 'pending' | 'in-progress' | 'designing' | 'completed' | 'invoiced' | 'total' | 'active' | 'cancelled',
     title: string
   ) => {
-    if (status === 'cancelled') {
-      setSelectedStatus({ status, title });
-      setStatusModalOpen(true);
-    }
+    setSelectedStatus({ status, title });
+    setStatusModalOpen(true);
   };
 
   return (
     <div className="space-y-6 p-6 min-h-screen">
-      <div className="flex items-center justify-between">
+      <div className="dashboard-card-enter flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-1">Dashboard</h1>
           <p className="text-muted-foreground">
@@ -201,20 +206,27 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
       </div>
 
       {/* High Priority Reminder Banner */}
-      <HighPriorityReminder jobs={jobs} onViewJob={handleViewDetails} />
+      <div className="dashboard-card-enter" style={{ animationDelay: "80ms" }}>
+        <HighPriorityReminder jobs={jobs} onViewJob={handleViewDetails} />
+      </div>
 
-      <section aria-label="Uncompleted work and bottlenecks" className="space-y-3">
+      <section
+        aria-label="Uncompleted work and bottlenecks"
+        className="dashboard-card-enter space-y-3"
+        style={{ animationDelay: "140ms" }}
+      >
         <div>
           <h2 className="text-xl font-semibold">Uncompleted Work</h2>
           <p className="text-sm text-muted-foreground">Current workflow queues and the person or team responsible.</p>
         </div>
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div className="flex flex-col gap-4">
           <WorkflowBucket
             title="Pending Design"
             jobs={pendingDesignJobs}
             icon={Palette}
             assigneeFor={(job) => job.designer && job.designer !== "Unassigned" ? job.designer : assignedTo(job)}
             onSelect={handleViewDetails}
+            animationDelay={180}
           />
           <WorkflowBucket
             title="Pending Approval"
@@ -222,6 +234,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
             icon={FileCheck2}
             assigneeFor={(job) => job.assignee && job.assignee !== "Unassigned" ? job.assignee : "Management / Admin"}
             onSelect={handleViewDetails}
+            animationDelay={240}
           />
           <WorkflowBucket
             title="In Production / Execution"
@@ -229,6 +242,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
             icon={Cog}
             assigneeFor={assignedTo}
             onSelect={handleViewDetails}
+            animationDelay={300}
           />
           <WorkflowBucket
             title="Pending Invoicing"
@@ -236,16 +250,17 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
             icon={Receipt}
             assigneeFor={(job) => job.assignee && job.assignee !== "Unassigned" ? job.assignee : "Admin"}
             onSelect={handleViewDetails}
+            animationDelay={360}
           />
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-        <div className="lg:col-span-6">
+      <div className="flex flex-col gap-6">
+        <div className="dashboard-card-enter" style={{ animationDelay: "420ms" }}>
           <ApprovalBox />
         </div>
 
-        <div className="lg:col-span-4">
+        <div className="dashboard-card-enter" style={{ animationDelay: "480ms" }}>
           <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
         </div>
       </div>
