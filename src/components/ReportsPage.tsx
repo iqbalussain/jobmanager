@@ -57,44 +57,80 @@ export function ReportsPage() {
 
 
       // Updated query to use the foreign key relationships
-      const { data: jobOrders, error } = await supabase
-        .from('job_orders')
-        .select(`
-          id, job_order_number, status, branch, total_value, created_at,
-          customers!fk_job_orders_customer(name),
-          salesman_profiles:profiles!fk_job_orders_salesman(full_name),
-          designer_profiles:profiles!fk_job_orders_designer(full_name)
-        `)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
+      const pageSize = 500;
+      let afterId: string | null = null;
+      let totalRevenue = 0;
+      let totalJobs = 0;
+      let completedJobs = 0;
+      const groupedData = new Map<string, {
+        name: string;
+        totalJobs: number;
+        completedJobs: number;
+        totalValue: number;
+        branch: string;
+      }>();
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw new Error(`Database error: ${error.message}`);
+      while (true) {
+        let query = supabase
+          .from('job_orders')
+          .select(`
+            id, status, branch, total_value,
+            customers!fk_job_orders_customer(name),
+            salesman_profiles:profiles!fk_job_orders_salesman(full_name)
+          `)
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .order('id', { ascending: true })
+          .limit(pageSize);
+        if (afterId) query = query.gt('id', afterId);
+
+        const { data: jobOrders, error } = await query;
+        if (error) {
+          console.error('Supabase report query failed:', error.code);
+          throw new Error(`Database error: ${error.message}`);
+        }
+        if (!jobOrders || jobOrders.length === 0) break;
+
+        for (const job of jobOrders) {
+          const groupName = reportType === 'customer'
+            ? job.customers?.name || 'Unknown Customer'
+            : reportType === 'salesman'
+              ? job.salesman_profiles?.full_name || 'Unassigned'
+              : job.branch || 'Unknown Branch';
+          const group = groupedData.get(groupName) || {
+            name: groupName,
+            totalJobs: 0,
+            completedJobs: 0,
+            totalValue: 0,
+            branch: job.branch || 'N/A',
+          };
+          const jobValue = Number(job.total_value || 0);
+          const isCompleted = job.status === 'completed' || job.status === 'invoiced';
+
+          group.totalJobs++;
+          group.totalValue += jobValue;
+          if (isCompleted) group.completedJobs++;
+          groupedData.set(groupName, group);
+          totalJobs++;
+          totalRevenue += jobValue;
+          if (isCompleted) completedJobs++;
+        }
+
+        afterId = jobOrders[jobOrders.length - 1].id;
+        if (jobOrders.length < pageSize) break;
       }
 
-
-      if (!jobOrders || jobOrders.length === 0) {
-        setReportData([]);
-        setSummaryStats({
-          totalRevenue: 0,
-          totalJobs: 0,
-          completionRate: 0,
-          averageJobValue: 0
-        });
-        return;
-      }
-
-      // Process data based on report type
-      const processedData = processReportData(jobOrders, reportType);
+      const processedData: ReportData[] = Array.from(groupedData.values(), (group) => ({
+        customerName: reportType === 'customer' ? group.name : '',
+        salesmanName: reportType === 'salesman' ? group.name : '',
+        totalJobs: group.totalJobs,
+        completedJobs: group.completedJobs,
+        totalValue: group.totalValue,
+        averageCompletionTime: 0,
+        branch: group.branch,
+      }));
       setReportData(processedData);
 
-      // Calculate summary statistics
-      const totalRevenue = jobOrders.reduce((sum, job) => sum + (job.total_value || 0), 0);
-      const totalJobs = jobOrders.length;
-      const completedJobs = jobOrders.filter(job => 
-        job.status === 'completed' || job.status === 'invoiced'
-      ).length;
       const completionRate = totalJobs > 0 ? (completedJobs / totalJobs) * 100 : 0;
       const averageJobValue = totalJobs > 0 ? totalRevenue / totalJobs : 0;
 
@@ -122,66 +158,6 @@ export function ReportsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const processReportData = (jobs: any[], type: ReportType): ReportData[] => {
-    const groupedData: { [key: string]: any } = {};
-
-    jobs.forEach(job => {
-      let groupKey = '';
-      let groupName = '';
-
-      try {
-        switch (type) {
-          case 'customer':
-            groupKey = job.customers?.name || 'Unknown Customer';
-            groupName = groupKey;
-            break;
-          case 'salesman':
-            groupKey = job.salesman_profiles?.full_name || 'Unassigned';
-            groupName = groupKey;
-            break;
-          case 'branch':
-            groupKey = job.branch || 'Unknown Branch';
-            groupName = groupKey;
-            break;
-          default:
-            groupKey = 'Unknown';
-            groupName = 'Unknown';
-        }
-
-        if (!groupedData[groupKey]) {
-          groupedData[groupKey] = {
-            name: groupName,
-            totalJobs: 0,
-            completedJobs: 0,
-            totalValue: 0,
-            jobs: [],
-            branch: job.branch || 'N/A'
-          };
-        }
-
-        groupedData[groupKey].totalJobs++;
-        groupedData[groupKey].totalValue += Number(job.total_value || 0);
-        groupedData[groupKey].jobs.push(job);
-        
-        if (job.status === 'completed' || job.status === 'invoiced') {
-          groupedData[groupKey].completedJobs++;
-        }
-      } catch (error) {
-        console.error('Error processing job:', job, error);
-      }
-    });
-
-    return Object.values(groupedData).map((group: any) => ({
-      customerName: type === 'customer' ? group.name : '',
-      salesmanName: type === 'salesman' ? group.name : '',
-      totalJobs: group.totalJobs,
-      completedJobs: group.completedJobs,
-      totalValue: group.totalValue,
-      averageCompletionTime: 0,
-      branch: group.branch
-    }));
   };
 
   const exportReport = () => {

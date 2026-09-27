@@ -60,14 +60,17 @@ with Supabase in the background. Sync work is serialized, retried on failure, an
 reconciles hard-deleted jobs during cache repair. Production deployments should apply
 Supabase migrations and deploy the Edge Functions before exposing the frontend.
 
-Workflow alerts poll existing job-order data every 20 seconds for newly created and
-approved jobs (designers, salesmen, and admins) and completed jobs (admins). Unread
-alerts are kept in browser local storage so they survive tab closure and synchronize
-between tabs without adding database fields or tables. Admin completion alerts stay
-open until an invoice number is saved and the job is marked invoiced. Desktop alerts
-are optional and can be enabled from the dashboard notification menu; sound and
-desktop delivery depend on browser permission and autoplay policies. The dashboard
-groups cached active jobs into design, approval, execution, and invoicing queues.
+Workflow alerts query only job orders changed since the previous 20-second poll for
+newly created and approved jobs (designers, salesmen, and admins) and completed jobs
+(admins). Poll pages and report pages are processed incrementally rather than loading
+the full result set into memory. Unread alerts are kept in browser local storage so
+they survive tab closure and synchronize between tabs without adding database
+fields or tables. The legacy full-table alert snapshot is removed on startup.
+Admin completion alerts stay open until an invoice number is saved and the job is
+marked invoiced. Desktop alerts are optional and can be enabled from the dashboard
+notification menu; sound and desktop delivery depend on browser permission and
+autoplay policies. The dashboard groups cached active jobs into design, approval,
+execution, and invoicing queues.
 
 ## Lovable project
 

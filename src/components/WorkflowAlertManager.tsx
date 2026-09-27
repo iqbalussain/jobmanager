@@ -13,6 +13,9 @@ type WorkflowJob = {
   job_order_number: string;
   status: string;
   approval_status: string;
+  created_at: string;
+  approved_at: string | null;
+  updated_at: string;
 };
 
 type WorkflowAlert = {
@@ -22,10 +25,9 @@ type WorkflowAlert = {
   jobOrderNumber: string;
 };
 
-type JobSnapshot = Record<string, WorkflowJob>;
-
 const POLL_INTERVAL = 20_000;
-const JOB_SELECT = "id,job_order_number,status,approval_status";
+const POLL_BATCH_SIZE = 200;
+const JOB_SELECT = "id,job_order_number,status,approval_status,created_at,approved_at,updated_at";
 
 function getStoredAlerts(key: string): WorkflowAlert[] {
   try {
@@ -103,7 +105,11 @@ export function WorkflowAlertManager() {
     () => userId ? `jobmanager:workflow-alerts:${userId}` : null,
     [userId],
   );
-  const snapshotKey = useMemo(
+  const pollCursorKey = useMemo(
+    () => userId ? `jobmanager:workflow-poll-cursor:${userId}` : null,
+    [userId],
+  );
+  const legacySnapshotKey = useMemo(
     () => userId ? `jobmanager:workflow-snapshot:${userId}` : null,
     [userId],
   );
@@ -119,6 +125,11 @@ export function WorkflowAlertManager() {
 
     setRole(null);
     setAlerts(getStoredAlerts(alertKey));
+    try {
+      if (legacySnapshotKey) localStorage.removeItem(legacySnapshotKey);
+    } catch (error) {
+      console.error("Failed to remove the legacy workflow snapshot:", error);
+    }
     let active = true;
     let interval: ReturnType<typeof setInterval> | undefined;
 
@@ -139,122 +150,129 @@ export function WorkflowAlertManager() {
       setRole(currentRole);
       if (!["designer", "salesman", "admin"].includes(currentRole)) return;
 
-      let snapshot: JobSnapshot = {};
-      let hasBaseline = false;
+      let lastPollAt = new Date(Date.now() - POLL_INTERVAL).toISOString();
       try {
-        const storedSnapshot = snapshotKey ? localStorage.getItem(snapshotKey) : null;
-        if (storedSnapshot !== null) {
-          snapshot = JSON.parse(storedSnapshot) as JobSnapshot;
-          hasBaseline = true;
+        if (pollCursorKey) {
+          const storedCursor = localStorage.getItem(pollCursorKey);
+          const storedCursorTime = storedCursor ? Date.parse(storedCursor) : Number.NaN;
+          if (
+            Number.isFinite(storedCursorTime) &&
+            storedCursorTime <= Date.now() &&
+            Date.now() - storedCursorTime <= POLL_INTERVAL * 2
+          ) {
+            lastPollAt = new Date(storedCursorTime).toISOString();
+          }
         }
       } catch (error) {
-        console.error("Failed to read workflow polling snapshot:", error);
+        console.error("Failed to initialize workflow poll cursor:", error);
       }
 
-      const poll = async () => {
-        const { count, error: countError } = await supabase
-          .from("job_orders")
-          .select("id", { count: "exact", head: true });
+      let isPolling = false;
+      const pollChangedJobs = async () => {
+        const pollStartedAt = new Date().toISOString();
+        let offset = 0;
+        let addedAlerts: WorkflowAlert[] = [];
 
-        if (!active) return;
-        if (countError) {
-          console.error("Workflow alert polling failed:", countError);
-          return;
-        }
-
-        const jobs: WorkflowJob[] = [];
-        const batchSize = 1000;
-        const batchCount = Math.ceil((count || 0) / batchSize);
-        for (let batch = 0; batch < batchCount; batch++) {
+        while (active) {
           const { data, error } = await supabase
             .from("job_orders")
             .select(JOB_SELECT)
+            .gt("updated_at", lastPollAt)
+            .lte("updated_at", pollStartedAt)
+            .order("updated_at", { ascending: true })
             .order("id", { ascending: true })
-            .range(batch * batchSize, (batch + 1) * batchSize - 1);
+            .range(offset, offset + POLL_BATCH_SIZE - 1);
 
           if (error) {
             console.error("Workflow alert polling failed:", error);
             return;
           }
-          jobs.push(...(data || []));
-        }
-        if (!active) return;
 
-        const nextSnapshot: JobSnapshot = Object.fromEntries(
-          jobs.map((job) => [job.id, job]),
-        );
+          const changedJobs: WorkflowJob[] = data || [];
+          if (changedJobs.length === 0) break;
 
-        if (hasBaseline && alertKey) {
-          const nextAlerts: WorkflowAlert[] = [];
-          for (const job of Object.values(nextSnapshot)) {
-            const previous = snapshot[job.id];
-            if (!previous) {
-              nextAlerts.push({
-                id: `created:${job.id}`,
+          const nextAlerts = changedJobs.flatMap((job): WorkflowAlert[] => {
+            const jobAlerts: WorkflowAlert[] = [];
+            if (Date.parse(job.created_at) > Date.parse(lastPollAt)) {
+              jobAlerts.push({
+                id: `created:${job.id}:${job.created_at}`,
                 type: "created",
                 jobId: job.id,
                 jobOrderNumber: job.job_order_number,
               });
-              continue;
             }
-
-            if (previous.approval_status !== "approved" && job.approval_status === "approved") {
-              nextAlerts.push({
-                id: `approved:${job.id}`,
+            if (job.approval_status === "approved" && job.approved_at &&
+              Date.parse(job.approved_at) > Date.parse(lastPollAt)) {
+              jobAlerts.push({
+                id: `approved:${job.id}:${job.approved_at}`,
                 type: "approved",
                 jobId: job.id,
                 jobOrderNumber: job.job_order_number,
               });
             }
-
-            if (currentRole === "admin" && previous.status !== "completed" && job.status === "completed") {
-              nextAlerts.push({
+            if (currentRole === "admin" && job.status === "completed") {
+              jobAlerts.push({
                 id: `completed:${job.id}`,
                 type: "completed",
                 jobId: job.id,
                 jobOrderNumber: job.job_order_number,
               });
             }
-          }
+            return jobAlerts;
+          });
+          addedAlerts.push(...nextAlerts);
 
-          if (nextAlerts.length > 0) {
-            const existingAlerts = getStoredAlerts(alertKey);
-            const knownIds = new Set(existingAlerts.map((alert) => alert.id));
-            const addedAlerts = nextAlerts.filter((alert) => !knownIds.has(alert.id));
-            if (addedAlerts.length > 0) {
-              const updatedAlerts = [...existingAlerts, ...addedAlerts];
-              persistAlerts(alertKey, updatedAlerts);
-              setAlerts(updatedAlerts);
-              if (document.visibilityState !== "visible" && "Notification" in window && Notification.permission === "granted") {
-                addedAlerts.forEach((alert) => {
-                  try {
-                    new Notification(
-                      alert.type === "completed" ? "Invoice required" : "Job order update",
-                      { body: `Job ${alert.jobOrderNumber} ${alert.type === "completed" ? "is completed and needs an invoice." : alert.type === "approved" ? "has been approved." : "was created."}` },
-                    );
-                  } catch (notificationError) {
-                    console.error("Failed to display desktop workflow alert:", notificationError);
-                  }
-                });
-              }
-              if (audioRef.current) {
-                audioRef.current.currentTime = 0;
-                void audioRef.current.play().catch((error: unknown) => {
-                  console.info("Workflow notification sound could not play:", error);
-                });
-              }
+          if (changedJobs.length < POLL_BATCH_SIZE) break;
+          offset += changedJobs.length;
+        }
+
+        if (!active || !alertKey) return;
+        if (addedAlerts.length > 0) {
+          const existingAlerts = getStoredAlerts(alertKey);
+          const knownIds = new Set(existingAlerts.map((alert) => alert.id));
+          addedAlerts = addedAlerts.filter((alert) => !knownIds.has(alert.id));
+          if (addedAlerts.length > 0) {
+            const updatedAlerts = [...existingAlerts, ...addedAlerts];
+            persistAlerts(alertKey, updatedAlerts);
+            setAlerts(updatedAlerts);
+            if (document.visibilityState !== "visible" && "Notification" in window && Notification.permission === "granted") {
+              addedAlerts.forEach((alert) => {
+                try {
+                  new Notification(
+                    alert.type === "completed" ? "Invoice required" : "Job order update",
+                    { body: `Job ${alert.jobOrderNumber} ${alert.type === "completed" ? "is completed and needs an invoice." : alert.type === "approved" ? "has been approved." : "was created."}` },
+                  );
+                } catch (notificationError) {
+                  console.error("Failed to display desktop workflow alert:", notificationError);
+                }
+              });
+            }
+            if (audioRef.current) {
+              audioRef.current.currentTime = 0;
+              void audioRef.current.play().catch((error: unknown) => {
+                console.info("Workflow notification sound could not play:", error);
+              });
             }
           }
         }
 
-        snapshot = nextSnapshot;
-        hasBaseline = true;
-        if (snapshotKey) {
+        lastPollAt = pollStartedAt;
+        if (pollCursorKey) {
           try {
-            localStorage.setItem(snapshotKey, JSON.stringify(snapshot));
+            localStorage.setItem(pollCursorKey, lastPollAt);
           } catch (storageError) {
-            console.error("Failed to save workflow polling snapshot:", storageError);
+            console.error("Failed to save workflow poll cursor:", storageError);
           }
+        }
+      };
+
+      const poll = async () => {
+        if (isPolling) return;
+        isPolling = true;
+        try {
+          await pollChangedJobs();
+        } finally {
+          isPolling = false;
         }
       };
 
@@ -282,7 +300,7 @@ export function WorkflowAlertManager() {
       if (interval) clearInterval(interval);
       window.removeEventListener("storage", handleStorage);
     };
-  }, [alertKey, snapshotKey, userId]);
+  }, [alertKey, legacySnapshotKey, pollCursorKey, userId]);
 
   useEffect(() => {
     setInvoiceNumber("");

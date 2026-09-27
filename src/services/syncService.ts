@@ -226,22 +226,33 @@ export function performDeltaSync(userId: string): Promise<number> {
     // Sync reference data (throttled internally to every 10 min)
     await syncReferenceData(userId);
     
-    // Fetch only jobs updated since last sync
-    const { data: updatedJobs, error } = await supabase
-      .from('job_orders')
-      .select(JOB_LIST_COLUMNS)
-      .gt('updated_at', lastSync)
-      .order('updated_at', { ascending: false });
-    
-    if (error) throw error;
-    
-    if (updatedJobs && updatedJobs.length > 0) {
+    const syncStartedAt = new Date().toISOString();
+    const batchSize = 500;
+    let offset = 0;
+    let updatedCount = 0;
+
+    while (true) {
+      const { data: updatedJobs, error } = await supabase
+        .from('job_orders')
+        .select(JOB_LIST_COLUMNS)
+        .gt('updated_at', lastSync)
+        .lte('updated_at', syncStartedAt)
+        .order('updated_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(offset, offset + batchSize - 1);
+
+      if (error) throw error;
+      if (!updatedJobs || updatedJobs.length === 0) break;
+
       const enrichedJobs = await enrichJobOrders(updatedJobs);
       await withCacheUser(userId, [db.jobs], () => db.jobs.bulkPut(enrichedJobs));
+      updatedCount += updatedJobs.length;
+      if (updatedJobs.length < batchSize) break;
+      offset += updatedJobs.length;
     }
-    
-    await setLastSyncTime(userId, new Date().toISOString());
-    return updatedJobs?.length || 0;
+
+    await setLastSyncTime(userId, syncStartedAt);
+    return updatedCount;
   }));
   const trackedSync = sync.finally(() => {
     if (deltaSyncPromise?.promise === trackedSync) deltaSyncPromise = null;
