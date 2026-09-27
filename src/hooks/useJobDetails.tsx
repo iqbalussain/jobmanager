@@ -102,7 +102,11 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
 
     // Only include invoice_number if user is authorized
     if (canEditInvoice) {
-      updateData.invoice_number = invoiceNumber || null;
+      const normalizedInvoiceNumber = invoiceNumber.trim();
+      updateData.invoice_number = normalizedInvoiceNumber || null;
+      if (normalizedInvoiceNumber) {
+        updateData.status = 'invoiced';
+      }
     }
 
     // Call the callback to update the parent component's state immediately
@@ -153,12 +157,21 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
     setIsExporting(true);
     try {
       // If there's an invoice number and user is authorized, save it first
-      if (invoiceNumber && invoiceNumber !== job.invoiceNumber && canEditInvoice) {
-        await updateJobOrder(job.id, { invoice_number: invoiceNumber });
+      const normalizedInvoiceNumber = invoiceNumber.trim();
+      if (normalizedInvoiceNumber && normalizedInvoiceNumber !== job.invoiceNumber && canEditInvoice) {
+        await updateJobOrder(job.id, {
+          invoice_number: normalizedInvoiceNumber,
+          status: 'invoiced',
+          updated_at: new Date().toISOString(),
+        });
         
         // Update parent state as well
         if (onJobUpdated) {
-          onJobUpdated({ id: job.id, invoice_number: invoiceNumber });
+          onJobUpdated({
+            id: job.id,
+            invoice_number: normalizedInvoiceNumber,
+            status: 'invoiced',
+          });
         }
       }
 
@@ -186,15 +199,21 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
     setIsSharing(true);
     try {
       // If there's an invoice number and user is authorized, save it first
-      if (invoiceNumber && invoiceNumber !== job.invoiceNumber && canEditInvoice) {
-        await supabase
-          .from('job_orders')
-          .update({ invoice_number: invoiceNumber })
-          .eq('id', job.id);
+      const normalizedInvoiceNumber = invoiceNumber.trim();
+      if (normalizedInvoiceNumber && normalizedInvoiceNumber !== job.invoiceNumber && canEditInvoice) {
+        await updateJobOrder(job.id, {
+          invoice_number: normalizedInvoiceNumber,
+          status: 'invoiced',
+          updated_at: new Date().toISOString(),
+        });
         
         // Update parent state as well
         if (onJobUpdated) {
-          onJobUpdated({ id: job.id, invoice_number: invoiceNumber });
+          onJobUpdated({
+            id: job.id,
+            invoice_number: normalizedInvoiceNumber,
+            status: 'invoiced',
+          });
         }
       }
 
