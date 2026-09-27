@@ -11,6 +11,9 @@ interface DashboardNotificationsProps {
 
 export function DashboardNotifications({ notifications: propNotifications, onNotificationClick }: DashboardNotificationsProps) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [desktopPermission, setDesktopPermission] = useState(
+    typeof Notification === "undefined" ? "unsupported" : Notification.permission,
+  );
   const { notifications: contextNotifications, markAsRead, clearNotifications } = useNotifications();
 
   const notifications = propNotifications || contextNotifications;
@@ -19,6 +22,15 @@ export function DashboardNotifications({ notifications: propNotifications, onNot
   const handleNotificationClick = (id: string) => {
     markAsRead(id);
     onNotificationClick?.(id);
+  };
+
+  const enableDesktopNotifications = async () => {
+    if (typeof Notification === "undefined") return;
+    try {
+      setDesktopPermission(await Notification.requestPermission());
+    } catch (error) {
+      console.error("Failed to request desktop notification permission:", error);
+    }
   };
 
   return (
@@ -83,6 +95,19 @@ export function DashboardNotifications({ notifications: propNotifications, onNot
               ))
             )}
           </div>
+          {desktopPermission === "default" && (
+            <div className="border-t p-3">
+              <Button variant="outline" size="sm" className="w-full" onClick={enableDesktopNotifications}>
+                Enable desktop alerts
+              </Button>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Show job updates when this tab is in the background.
+              </p>
+            </div>
+          )}
+          {desktopPermission === "granted" && (
+            <p className="border-t p-3 text-xs text-muted-foreground">Desktop alerts are enabled.</p>
+          )}
         </div>
       )}
     </div>

@@ -60,6 +60,15 @@ with Supabase in the background. Sync work is serialized, retried on failure, an
 reconciles hard-deleted jobs during cache repair. Production deployments should apply
 Supabase migrations and deploy the Edge Functions before exposing the frontend.
 
+Workflow alerts poll existing job-order data every 20 seconds for newly created and
+approved jobs (designers, salesmen, and admins) and completed jobs (admins). Unread
+alerts are kept in browser local storage so they survive tab closure and synchronize
+between tabs without adding database fields or tables. Admin completion alerts stay
+open until an invoice number is saved and the job is marked invoiced. Desktop alerts
+are optional and can be enabled from the dashboard notification menu; sound and
+desktop delivery depend on browser permission and autoplay policies. The dashboard
+groups cached active jobs into design, approval, execution, and invoicing queues.
+
 ## Lovable project
 
 **URL**: https://lovable.dev/projects/095e06d9-c491-47ec-9d35-0647fb9fe1de

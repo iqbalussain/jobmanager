@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { FloatingCreateButton } from "@/components/FloatingCreateButton";
+import { WorkflowAlertManager } from "@/components/WorkflowAlertManager";
 import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
 import { HighPriorityAlertModal } from "@/components/dashboard/HighPriorityAlertModal";
 import Index from "./pages/Index";
@@ -96,6 +97,7 @@ function App() {
                 <FloatingCreateButton />
               </BrowserRouter>
               <GlobalHighPriorityAlert />
+              <WorkflowAlertManager />
             </div>
           </TooltipProvider>
         </NotificationProvider>

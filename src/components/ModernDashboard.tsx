@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { Job } from "@/pages/Index";
 import { JobDetails } from "@/components/JobDetails";
 import { JobStatusModal } from "@/components/JobStatusModal";
@@ -6,14 +6,62 @@ import { DashboardNotifications } from "@/components/dashboard/DashboardNotifica
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
 import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
 import { HighPriorityReminder } from "@/components/dashboard/HighPriorityReminder";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Eye } from "lucide-react";
+import { Search, Eye, Palette, FileCheck2, Cog, Receipt, UserRound } from "lucide-react";
 
 interface ModernDashboardProps {
   jobs: Job[];
   onViewChange?: (view: "dashboard" | "jobs" | "settings" | "admin" | "admin-management" | "reports") => void;
   onStatusUpdate?: (jobId: string, status: string) => void;
+}
+
+interface WorkflowBucketProps {
+  title: string;
+  jobs: Job[];
+  icon: ComponentType<{ className?: string }>;
+  assigneeFor: (job: Job) => string;
+  onSelect: (job: Job) => void;
+}
+
+function WorkflowBucket({ title, jobs: bucketJobs, icon: Icon, assigneeFor, onSelect }: WorkflowBucketProps) {
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Icon className="h-4 w-4 text-muted-foreground" />
+          {title}
+        </CardTitle>
+        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold">{bucketJobs.length}</span>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {bucketJobs.length === 0 ? (
+          <p className="py-3 text-sm text-muted-foreground">Nothing waiting here.</p>
+        ) : (
+          <div className="max-h-64 space-y-2 overflow-y-auto">
+            {bucketJobs.map((job) => (
+              <button
+                key={job.id}
+                type="button"
+                onClick={() => onSelect(job)}
+                className="flex w-full items-start justify-between gap-3 rounded-md border p-3 text-left hover:bg-muted/50"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium">{job.jobOrderNumber} · {job.title}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{job.customer}</span>
+                </span>
+                <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                  <UserRound className="h-3.5 w-3.5" />
+                  {assigneeFor(job)}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export function ModernDashboard({ jobs }: ModernDashboardProps) {
@@ -42,6 +90,24 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
     invoiced: jobs.filter(job => job.status === "invoiced").length,
     cancelled: jobs.filter(job => job.status === "cancelled").length,
   };
+
+  const pendingApprovalJobs = jobs.filter(
+    job => job.approval_status === "pending_approval" &&
+      job.status !== "completed" &&
+      job.status !== "finished" &&
+      job.status !== "invoiced" &&
+      job.status !== "cancelled",
+  );
+  const pendingDesignJobs = jobs.filter(
+    job => (job.status === "pending" || job.status === "designing") &&
+      job.approval_status !== "pending_approval",
+  );
+  const executionJobs = jobs.filter(
+    job => job.status === "in-progress" || job.status === "out" || job.status === "foc_sample",
+  );
+  const pendingInvoiceJobs = jobs.filter(job => job.status === "completed" || job.status === "finished");
+  const assignedTo = (job: Job) =>
+    [job.assignee, job.designer, job.salesman].find((name) => name && name !== "Unassigned") || "Unassigned";
 
   const handleViewDetails = (job: Job) => {
     setSelectedJob(job);
@@ -136,6 +202,43 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
 
       {/* High Priority Reminder Banner */}
       <HighPriorityReminder jobs={jobs} onViewJob={handleViewDetails} />
+
+      <section aria-label="Uncompleted work and bottlenecks" className="space-y-3">
+        <div>
+          <h2 className="text-xl font-semibold">Uncompleted Work</h2>
+          <p className="text-sm text-muted-foreground">Current workflow queues and the person or team responsible.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <WorkflowBucket
+            title="Pending Design"
+            jobs={pendingDesignJobs}
+            icon={Palette}
+            assigneeFor={(job) => job.designer && job.designer !== "Unassigned" ? job.designer : assignedTo(job)}
+            onSelect={handleViewDetails}
+          />
+          <WorkflowBucket
+            title="Pending Approval"
+            jobs={pendingApprovalJobs}
+            icon={FileCheck2}
+            assigneeFor={(job) => job.assignee && job.assignee !== "Unassigned" ? job.assignee : "Management / Admin"}
+            onSelect={handleViewDetails}
+          />
+          <WorkflowBucket
+            title="In Production / Execution"
+            jobs={executionJobs}
+            icon={Cog}
+            assigneeFor={assignedTo}
+            onSelect={handleViewDetails}
+          />
+          <WorkflowBucket
+            title="Pending Invoicing"
+            jobs={pendingInvoiceJobs}
+            icon={Receipt}
+            assigneeFor={(job) => job.assignee && job.assignee !== "Unassigned" ? job.assignee : "Admin"}
+            onSelect={handleViewDetails}
+          />
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
         <div className="lg:col-span-6">
