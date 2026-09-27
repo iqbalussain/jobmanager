@@ -1,13 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle, XCircle, AlertCircle, Eye } from "lucide-react";
+import { Clock, CheckCircle, XCircle, AlertCircle, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { JobDetails } from "@/components/JobDetails";
-import { useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { updateJobInCache } from "@/services/syncService";
 
 interface PendingJob {
@@ -25,6 +25,13 @@ export function ApprovalBox() {
   const queryClient = useQueryClient();
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef<number | null>(null);
+  const activePointerId = useRef<number | null>(null);
+  const wheelDeltaX = useRef(0);
+  const wheelTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: pendingJobs = [], isLoading } = useQuery({
     queryKey: ['pending-approvals'],
@@ -117,6 +124,76 @@ export function ApprovalBox() {
     approvalMutation.mutate({ jobId, action });
   };
 
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (event.pointerId !== activePointerId.current || dragStartX.current === null) return;
+      setDragOffset(event.clientX - dragStartX.current);
+    };
+
+    const finishDrag = (event: PointerEvent) => {
+      if (event.pointerId !== activePointerId.current || dragStartX.current === null) return;
+      const distance = event.clientX - dragStartX.current;
+      if (Math.abs(distance) > 60) {
+        setActiveCardIndex((index) => Math.max(0, Math.min(pendingJobs.length - 1, index + (distance < 0 ? 1 : -1))));
+      }
+      dragStartX.current = null;
+      activePointerId.current = null;
+      setDragOffset(0);
+      setIsDragging(false);
+    };
+
+    const cancelDrag = (event: PointerEvent) => {
+      if (event.pointerId !== activePointerId.current) return;
+      dragStartX.current = null;
+      activePointerId.current = null;
+      setDragOffset(0);
+      setIsDragging(false);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", finishDrag);
+    window.addEventListener("pointercancel", cancelDrag);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", finishDrag);
+      window.removeEventListener("pointercancel", cancelDrag);
+    };
+  }, [isDragging, pendingJobs.length]);
+
+  useEffect(() => {
+    setActiveCardIndex((index) => Math.min(index, Math.max(0, pendingJobs.length - 1)));
+  }, [pendingJobs.length]);
+
+  useEffect(() => () => {
+    if (wheelTimeout.current) clearTimeout(wheelTimeout.current);
+  }, []);
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLElement>) => {
+    if (!event.isPrimary || (event.target instanceof Element && event.target.closest("button"))) return;
+    dragStartX.current = event.clientX;
+    activePointerId.current = event.pointerId;
+    setIsDragging(true);
+  };
+
+  const handleWheel = (event: ReactWheelEvent<HTMLElement>) => {
+    if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) || Math.abs(event.deltaX) < 5) return;
+    event.preventDefault();
+    wheelDeltaX.current += event.deltaX;
+    if (wheelTimeout.current) clearTimeout(wheelTimeout.current);
+    wheelTimeout.current = setTimeout(() => {
+      const direction = wheelDeltaX.current < 0 ? 1 : -1;
+      if (Math.abs(wheelDeltaX.current) >= 30) {
+        setActiveCardIndex((index) => Math.max(0, Math.min(pendingJobs.length - 1, index + direction)));
+      }
+      wheelDeltaX.current = 0;
+      wheelTimeout.current = null;
+    }, 80);
+  };
+
+  const activeJob = pendingJobs[activeCardIndex];
+
   const handleViewJob = async (jobId: string) => {
     try {
       const { data: jobOrder, error } = await supabase.from('job_orders').select('id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,assignee,priority,status,due_date,estimated_hours,created_at,branch,job_order_details,invoice_number,total_value,created_by,approval_status,delivered_at,client_name').eq('id', jobId).single();
@@ -176,39 +253,97 @@ export function ApprovalBox() {
             <p className="text-sm">No pending approvals</p>
           </div>
         ) : (
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {pendingJobs.map((job) => (
-              <div key={job.id} className="p-3 rounded-md border bg-muted/30">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-sm text-foreground">{job.job_order_number}</h4>
-                    <p className="text-xs text-muted-foreground">{job.customer_name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{job.job_order_details}</p>
+          <div className="mx-auto w-full max-w-2xl">
+            <div className="relative h-[276px] sm:h-[250px]">
+              {Array.from({ length: Math.min(3, pendingJobs.length) }, (_, index) => {
+                const depth = Math.min(3, pendingJobs.length) - index - 1;
+                return (
+                  <div
+                    key={`approval-card-layer-${depth}`}
+                    aria-hidden="true"
+                    className="absolute inset-x-0 top-0 h-full rounded-lg border bg-card shadow-md transition-[transform,opacity] duration-300 ease-out motion-reduce:duration-0"
+                    style={{
+                      zIndex: index,
+                      opacity: 1 - depth * 0.18,
+                      transform: `translateY(${depth * 10}px) scale(${1 - depth * 0.025})`,
+                    }}
+                  />
+                );
+              })}
+              <article
+                key={activeJob?.id}
+                onPointerDown={handlePointerDown}
+                onWheel={handleWheel}
+                className="absolute inset-x-0 top-0 z-10 h-full select-none rounded-lg border bg-card p-4 shadow-xl transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-0"
+                style={{
+                  transform: `translateX(${dragOffset}px) rotate(${dragOffset / 30}deg)`,
+                  transition: isDragging ? "none" : undefined,
+                  touchAction: "pan-y",
+                }}
+              >
+                {activeJob && (
+                  <div className="flex h-full flex-col justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="mb-2 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h4 className="truncate font-semibold text-foreground">{activeJob.job_order_number}</h4>
+                          <p className="mt-0.5 truncate text-sm text-muted-foreground">{activeJob.customer_name}</p>
+                        </div>
+                        <Badge variant="secondary" className="shrink-0">Pending</Badge>
+                      </div>
+                      <p className="max-h-10 overflow-hidden text-sm text-muted-foreground">{activeJob.job_order_details || "No job details provided."}</p>
+                    </div>
+                    <div>
+                      <div className="mb-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(activeJob.created_at).toLocaleDateString()}
+                        </span>
+                        <span className="truncate">Created by: {activeJob.created_by_name}</span>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button size="sm" variant="outline" onClick={() => handleViewJob(activeJob.id)} className="h-8 px-2 text-xs">
+                          <Eye className="mr-1 h-3 w-3" />View
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => handleApproval(activeJob.id, 'approve')} disabled={approvalMutation.isPending} className="h-8 px-2 text-xs">
+                          <CheckCircle className="mr-1 h-3 w-3" />Approve
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => handleApproval(activeJob.id, 'reject')} disabled={approvalMutation.isPending} className="h-8 px-2 text-xs text-destructive">
+                          <XCircle className="mr-1 h-3 w-3" />Reject
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <Badge variant="secondary">Pending</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="w-3 h-3" />
-                    <span>{new Date(job.created_at).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="outline" onClick={() => handleViewJob(job.id)} className="h-7 px-2 text-xs">
-                      <Eye className="w-3 h-3 mr-1" />View
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleApproval(job.id, 'approve')} disabled={approvalMutation.isPending} className="h-7 px-2 text-xs">
-                      <CheckCircle className="w-3 h-3 mr-1" />Approve
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleApproval(job.id, 'reject')} disabled={approvalMutation.isPending} className="h-7 px-2 text-xs text-destructive">
-                      <XCircle className="w-3 h-3 mr-1" />Reject
-                    </Button>
-                  </div>
-                </div>
-                <div className="mt-2 text-xs text-muted-foreground">
-                  Created by: {job.created_by_name}
-                </div>
-              </div>
-            ))}
+                )}
+              </article>
+            </div>
+            <div className="mt-3 flex items-center justify-center gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Previous pending approval"
+                onClick={() => setActiveCardIndex((index) => Math.max(0, index - 1))}
+                disabled={activeCardIndex === 0}
+                className="h-8 w-8"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="min-w-12 text-center text-xs tabular-nums text-muted-foreground" aria-live="polite">
+                {activeCardIndex + 1} / {pendingJobs.length}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Next pending approval"
+                onClick={() => setActiveCardIndex((index) => Math.min(pendingJobs.length - 1, index + 1))}
+                disabled={activeCardIndex >= pendingJobs.length - 1}
+                className="h-8 w-8"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>

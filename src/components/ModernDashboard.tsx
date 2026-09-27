@@ -1,4 +1,4 @@
-import { useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { Job } from "@/pages/Index";
 import { JobDetails } from "@/components/JobDetails";
 import { JobStatusModal } from "@/components/JobStatusModal";
@@ -9,7 +9,7 @@ import { HighPriorityReminder } from "@/components/dashboard/HighPriorityReminde
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Eye, Palette, FileCheck2, Cog, Receipt, UserRound } from "lucide-react";
+import { Search, Eye, Palette, FileCheck2, Cog, Receipt, UserRound, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ModernDashboardProps {
   jobs: Job[];
@@ -33,6 +33,89 @@ function WorkflowBucket({
   onSelect,
   animationDelay,
 }: WorkflowBucketProps & { animationDelay: number }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef<number | null>(null);
+  const activePointerId = useRef<number | null>(null);
+  const suppressClick = useRef(false);
+  const wheelDeltaX = useRef(0);
+  const wheelTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setActiveIndex((index) => Math.min(index, Math.max(0, bucketJobs.length - 1)));
+  }, [bucketJobs.length]);
+
+  useEffect(() => () => {
+    if (wheelTimeout.current) clearTimeout(wheelTimeout.current);
+  }, []);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (event.pointerId !== activePointerId.current || dragStartX.current === null) return;
+      setDragOffset(event.clientX - dragStartX.current);
+    };
+
+    const finishDrag = (event: PointerEvent) => {
+      if (event.pointerId !== activePointerId.current || dragStartX.current === null) return;
+      const distance = event.clientX - dragStartX.current;
+      if (Math.abs(distance) > 60) {
+        setActiveIndex((index) => {
+          const nextIndex = Math.max(0, Math.min(bucketJobs.length - 1, index + (distance < 0 ? 1 : -1)));
+          if (nextIndex !== index) suppressClick.current = true;
+          return nextIndex;
+        });
+      }
+      dragStartX.current = null;
+      activePointerId.current = null;
+      setDragOffset(0);
+      setIsDragging(false);
+    };
+
+    const cancelDrag = (event: PointerEvent) => {
+      if (event.pointerId !== activePointerId.current) return;
+      dragStartX.current = null;
+      activePointerId.current = null;
+      setDragOffset(0);
+      setIsDragging(false);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", finishDrag);
+    window.addEventListener("pointercancel", cancelDrag);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", finishDrag);
+      window.removeEventListener("pointercancel", cancelDrag);
+    };
+  }, [bucketJobs.length, isDragging]);
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!event.isPrimary) return;
+    dragStartX.current = event.clientX;
+    activePointerId.current = event.pointerId;
+    setIsDragging(true);
+  };
+
+  const handleWheel = (event: ReactWheelEvent<HTMLButtonElement>) => {
+    if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) || Math.abs(event.deltaX) < 5) return;
+    event.preventDefault();
+    wheelDeltaX.current += event.deltaX;
+    if (wheelTimeout.current) clearTimeout(wheelTimeout.current);
+    wheelTimeout.current = setTimeout(() => {
+      if (Math.abs(wheelDeltaX.current) >= 30) {
+        const direction = wheelDeltaX.current < 0 ? 1 : -1;
+        setActiveIndex((index) => Math.max(0, Math.min(bucketJobs.length - 1, index + direction)));
+      }
+      wheelDeltaX.current = 0;
+      wheelTimeout.current = null;
+    }, 80);
+  };
+
+  const activeJob = bucketJobs[activeIndex];
+
   return (
     <Card className="dashboard-card-enter" style={{ animationDelay: `${animationDelay}ms` }}>
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
@@ -46,25 +129,85 @@ function WorkflowBucket({
         {bucketJobs.length === 0 ? (
           <p className="py-3 text-sm text-muted-foreground">Nothing waiting here.</p>
         ) : (
-          <div className="max-h-64 space-y-2 overflow-y-auto">
-            {bucketJobs.map((job, index) => (
+          <div className="mx-auto w-full max-w-2xl">
+            <div className="relative h-40 sm:h-36">
+              {Array.from({ length: Math.min(3, bucketJobs.length) }, (_, index) => {
+                const depth = Math.min(3, bucketJobs.length) - index - 1;
+                return (
+                  <div
+                    key={`workflow-card-layer-${depth}`}
+                    aria-hidden="true"
+                    className="absolute inset-x-0 top-0 h-full rounded-lg border bg-card shadow-md transition-[transform,opacity] duration-300 ease-out motion-reduce:duration-0"
+                    style={{
+                      zIndex: index,
+                      opacity: 1 - depth * 0.18,
+                      transform: `translateY(${depth * 9}px) scale(${1 - depth * 0.025})`,
+                    }}
+                  />
+                );
+              })}
               <button
-                key={job.id}
+                key={activeJob?.id}
                 type="button"
-                onClick={() => onSelect(job)}
-                className="dashboard-card-enter flex w-full items-start justify-between gap-3 rounded-md border p-3 text-left hover:bg-muted/50"
-                style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
+                onClick={(event) => {
+                  if (suppressClick.current) {
+                    suppressClick.current = false;
+                    event.preventDefault();
+                    return;
+                  }
+                  if (activeJob) onSelect(activeJob);
+                }}
+                onPointerDown={handlePointerDown}
+                onWheel={handleWheel}
+                className="absolute inset-x-0 top-0 z-10 flex h-full items-start justify-between gap-3 rounded-lg border bg-card p-4 text-left shadow-xl transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-muted/30 motion-reduce:duration-0"
+                style={{
+                  transform: `translateX(${dragOffset}px) rotate(${dragOffset / 35}deg)`,
+                  transition: isDragging ? "none" : undefined,
+                  touchAction: "pan-y",
+                }}
               >
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium">{job.jobOrderNumber} · {job.title}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{job.customer}</span>
-                </span>
-                <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-                  <UserRound className="h-3.5 w-3.5" />
-                  {assigneeFor(job)}
-                </span>
+                {activeJob && (
+                  <>
+                    <span className="min-w-0 space-y-1">
+                      <span className="block truncate text-sm font-semibold">{activeJob.jobOrderNumber} · {activeJob.title}</span>
+                      <span className="block truncate text-sm text-muted-foreground">{activeJob.customer}</span>
+                      <span className="block pt-1 text-xs text-muted-foreground">{activeIndex + 1} of {bucketJobs.length} in queue</span>
+                    </span>
+                    <span className="flex max-w-[40%] shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                      <UserRound className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{assigneeFor(activeJob)}</span>
+                    </span>
+                  </>
+                )}
               </button>
-            ))}
+            </div>
+            <div className="mt-3 flex items-center justify-center gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Previous ${title.toLowerCase()} job`}
+                onClick={() => setActiveIndex((index) => Math.max(0, index - 1))}
+                disabled={activeIndex === 0}
+                className="h-8 w-8"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="min-w-12 text-center text-xs tabular-nums text-muted-foreground" aria-live="polite">
+                {activeIndex + 1} / {bucketJobs.length}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Next ${title.toLowerCase()} job`}
+                onClick={() => setActiveIndex((index) => Math.min(bucketJobs.length - 1, index + 1))}
+                disabled={activeIndex >= bucketJobs.length - 1}
+                className="h-8 w-8"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
