@@ -93,7 +93,10 @@ export function ApprovalBox() {
       return { previousPendingJobs };
     },
     onSuccess: async ({ jobId }, { action }) => {
-      try { await updateJobInCache(jobId); } catch (e) { console.error('Failed to update cache:', e); }
+      try {
+        if (!user) throw new Error('A signed-in user is required to update the local cache');
+        await updateJobInCache(jobId, user.id);
+      } catch (e) { console.error('Failed to update cache:', e); }
       toast({
         title: action === 'approve' ? "Job Approved" : "Job Rejected",
         description: `Job order has been ${action}d successfully.`,

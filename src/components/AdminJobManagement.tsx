@@ -124,7 +124,11 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
   const handleStatusChange = async (jobId: string, newStatus: string) => {
     const { error } = await supabase.from("job_orders").update({ status: newStatus as any }).eq("id", jobId);
     if (!error) {
-      await updateJobInCache(jobId);
+      if (!user) {
+        toast({ title: "Update failed", description: "A signed-in user is required to refresh the local cache.", variant: "destructive" });
+        return;
+      }
+      await updateJobInCache(jobId, user.id);
       toast({ title: "Status updated" });
     }
   };
@@ -132,7 +136,11 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
   const handleTotalValueUpdate = async (jobId: string, newValue: string) => {
     const { error } = await supabase.from("job_orders").update({ total_value: parseFloat(newValue) }).eq("id", jobId);
     if (!error) {
-      await updateJobInCache(jobId);
+      if (!user) {
+        toast({ title: "Update failed", description: "A signed-in user is required to refresh the local cache.", variant: "destructive" });
+        return;
+      }
+      await updateJobInCache(jobId, user.id);
       toast({ title: "Updated" });
       setEditingTotalValue(prev => {
         const newState = { ...prev };

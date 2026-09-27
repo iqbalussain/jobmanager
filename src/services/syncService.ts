@@ -284,7 +284,11 @@ export async function forceFullResync(userId: string): Promise<void> {
 }
 
 // Update a single job in Dexie after Supabase write
-export async function updateJobInCache(jobId: string, userId: string): Promise<void> {
+export async function updateJobInCache(jobId: string, userId?: string): Promise<void> {
+  if (!userId) {
+    throw new Error('A signed-in user is required to update the local job cache');
+  }
+
   const { data: job, error } = await supabase
     .from('job_orders')
     .select(JOB_LIST_COLUMNS)

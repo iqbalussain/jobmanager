@@ -146,7 +146,10 @@ const Index = () => {
     try {
       const { id, ...updates } = jobData;
       await updateJobOrder(id, updates);
-      await updateJobInCache(id);
+      if (!user) {
+        throw new Error('A signed-in user is required to update the local cache');
+      }
+      await updateJobInCache(id, user.id);
     } catch (error) {
       console.error("Failed to update job:", error);
     }
