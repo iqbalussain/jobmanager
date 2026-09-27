@@ -25,9 +25,21 @@ type WorkflowAlert = {
   jobOrderNumber: string;
 };
 
+interface WorkflowAlertsUpdatedDetail {
+  key: string;
+  alerts: WorkflowAlert[];
+}
+
+declare global {
+  interface WindowEventMap {
+    "workflow-alerts-updated": CustomEvent<WorkflowAlertsUpdatedDetail>;
+  }
+}
+
 const POLL_INTERVAL = 20_000;
 const POLL_BATCH_SIZE = 200;
 const JOB_SELECT = "id,job_order_number,status,approval_status,created_at,approved_at,updated_at";
+const WORKFLOW_ALERTS_UPDATED_EVENT = "workflow-alerts-updated";
 
 function getStoredAlerts(key: string): WorkflowAlert[] {
   try {
@@ -45,6 +57,11 @@ function getStoredAlerts(key: string): WorkflowAlert[] {
 function persistAlerts(key: string, alerts: WorkflowAlert[]) {
   try {
     localStorage.setItem(key, JSON.stringify(alerts));
+    window.dispatchEvent(
+      new CustomEvent(WORKFLOW_ALERTS_UPDATED_EVENT, {
+        detail: { key, alerts },
+      }),
+    );
   } catch (error) {
     console.error("Failed to save workflow alerts:", error);
   }
@@ -293,12 +310,21 @@ export function WorkflowAlertManager() {
     const handleStorage = (event: StorageEvent) => {
       if (event.key === alertKey) setAlerts(getStoredAlerts(alertKey));
     };
+    const handleSameTabUpdate = (
+      event: WindowEventMap["workflow-alerts-updated"],
+    ) => {
+      if (event.detail?.key === alertKey && Array.isArray(event.detail.alerts)) {
+        setAlerts(event.detail.alerts);
+      }
+    };
     window.addEventListener("storage", handleStorage);
+    window.addEventListener(WORKFLOW_ALERTS_UPDATED_EVENT, handleSameTabUpdate);
 
     return () => {
       active = false;
       if (interval) clearInterval(interval);
       window.removeEventListener("storage", handleStorage);
+      window.removeEventListener(WORKFLOW_ALERTS_UPDATED_EVENT, handleSameTabUpdate);
     };
   }, [alertKey, legacySnapshotKey, pollCursorKey, userId]);
 

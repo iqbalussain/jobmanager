@@ -12,7 +12,7 @@ interface DashboardNotificationsProps {
 export function DashboardNotifications({ notifications: propNotifications, onNotificationClick }: DashboardNotificationsProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [desktopPermission, setDesktopPermission] = useState(
-    typeof Notification === "undefined" ? "unsupported" : Notification.permission,
+    typeof Notification === "undefined" ? "unsupported" as const : Notification.permission,
   );
   const { notifications: contextNotifications, markAsRead, clearNotifications } = useNotifications();
 
@@ -27,10 +27,18 @@ export function DashboardNotifications({ notifications: propNotifications, onNot
   const enableDesktopNotifications = async () => {
     if (typeof Notification === "undefined") return;
     try {
-      setDesktopPermission(await Notification.requestPermission());
+      const permission = await Notification.requestPermission();
+      setDesktopPermission(permission);
     } catch (error) {
       console.error("Failed to request desktop notification permission:", error);
     }
+  };
+
+  const toggleNotifications = () => {
+    if (typeof Notification !== "undefined") {
+      setDesktopPermission(Notification.permission);
+    }
+    setShowNotifications((isOpen) => !isOpen);
   };
 
   return (
@@ -38,7 +46,7 @@ export function DashboardNotifications({ notifications: propNotifications, onNot
       <Button
         variant="outline"
         size="sm"
-        onClick={() => setShowNotifications(!showNotifications)}
+        onClick={toggleNotifications}
         className="relative"
       >
         <Bell className="w-4 h-4" />
@@ -107,6 +115,16 @@ export function DashboardNotifications({ notifications: propNotifications, onNot
           )}
           {desktopPermission === "granted" && (
             <p className="border-t p-3 text-xs text-muted-foreground">Desktop alerts are enabled.</p>
+          )}
+          {desktopPermission === "denied" && (
+            <p role="status" className="border-t p-3 text-xs text-muted-foreground">
+              Desktop alerts are blocked. Allow notifications for this site in your browser settings, then reload.
+            </p>
+          )}
+          {desktopPermission === "unsupported" && (
+            <p role="status" className="border-t p-3 text-xs text-muted-foreground">
+              Desktop alerts are not supported by this browser. In-app alerts still work while the portal is open.
+            </p>
           )}
         </div>
       )}

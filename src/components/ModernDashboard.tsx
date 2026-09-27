@@ -47,12 +47,13 @@ function WorkflowBucket({
           <p className="py-3 text-sm text-muted-foreground">Nothing waiting here.</p>
         ) : (
           <div className="max-h-64 space-y-2 overflow-y-auto">
-            {bucketJobs.map((job) => (
+            {bucketJobs.map((job, index) => (
               <button
                 key={job.id}
                 type="button"
                 onClick={() => onSelect(job)}
-                className="flex w-full items-start justify-between gap-3 rounded-md border p-3 text-left hover:bg-muted/50"
+                className="dashboard-card-enter flex w-full items-start justify-between gap-3 rounded-md border p-3 text-left hover:bg-muted/50"
+                style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
               >
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium">{job.jobOrderNumber} · {job.title}</span>

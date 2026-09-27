@@ -70,7 +70,8 @@ Admin completion alerts stay open until an invoice number is saved and the job i
 marked invoiced. Desktop alerts are optional and can be enabled from the dashboard
 notification menu; sound and desktop delivery depend on browser permission and
 autoplay policies. The dashboard groups cached active jobs into design, approval,
-execution, and invoicing queues.
+execution, and invoicing queues. Queue items animate in with a short stagger; browsers
+using a reduced-motion preference intentionally skip the animation.
 
 ## Lovable project
 
