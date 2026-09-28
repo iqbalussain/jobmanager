@@ -23,11 +23,16 @@ import { useDexieJobs, JobFilters } from "@/hooks/useDexieJobs";
 import { updateJobInCache } from "@/services/syncService";
 import { formatOmaniRial } from "@/utils/currency";
 
+type JobDataUpdate = {
+  id: string;
+  [key: string]: unknown;
+};
+
 interface AdminJobManagementProps {
   onViewDetails?: (job: Job) => void;
   onStatusChange?: (jobId: string, status: string) => void;
   onStatusUpdate?: (jobId: string, status: JobStatus) => void;
-  onJobDataUpdate?: (jobData: { id: string; [key: string]: any }) => void;
+  onJobDataUpdate?: (jobData: JobDataUpdate) => void;
 }
 
 const PAGE_SIZE = 50;
@@ -122,7 +127,7 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
   };
 
   const handleStatusChange = async (jobId: string, newStatus: string) => {
-    const { error } = await supabase.from("job_orders").update({ status: newStatus as any }).eq("id", jobId);
+    const { error } = await supabase.from("job_orders").update({ status: newStatus as JobStatus }).eq("id", jobId);
     if (!error) {
       if (!user) {
         toast({ title: "Update failed", description: "A signed-in user is required to refresh the local cache.", variant: "destructive" });

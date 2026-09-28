@@ -35,14 +35,37 @@ export function JobChat({ job, isOpen, onClose }: JobChatProps) {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Fetch comments for the job
-  useEffect(() => {
-    if (isOpen && job.id) {
-      fetchComments();
-    }
-  }, [isOpen, job.id]);
+  const processCommentsWithProfiles = React.useCallback(
+    async (commentsData: Array<{
+      id: string;
+      comment: string;
+      created_by: string;
+      created_at: string;
+      job_order_id: string;
+    }>) => {
+      const userIds = [...new Set(commentsData.map((comment) => comment.created_by))];
 
-  const fetchComments = async () => {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
+      const commentsWithProfiles = commentsData.map((comment) => ({
+        ...comment,
+        user_profile:
+          profilesData?.find((profile) => profile.id === comment.created_by) || { full_name: 'Unknown User' },
+      }));
+
+      setComments(commentsWithProfiles as Comment[]);
+    },
+    [],
+  );
+
+  const fetchComments = React.useCallback(async () => {
     setIsLoading(true);
     try {
       const { data: commentsData, error: commentsError } = await supabase
@@ -66,37 +89,20 @@ export function JobChat({ job, isOpen, onClose }: JobChatProps) {
       console.error('Error fetching comments:', error);
       setComments([]);
       toast({
-        title: "Error",
-        description: "Failed to load comments",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to load comments',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [job.id, processCommentsWithProfiles, toast]);
 
-  const processCommentsWithProfiles = async (commentsData: any[]) => {
-    // Get unique user IDs
-    const userIds = [...new Set(commentsData.map(comment => comment.created_by))];
-    
-    // Fetch user profiles separately
-    const { data: profilesData, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .in('id', userIds);
-
-    if (profilesError) {
-      console.error('Error fetching profiles:', profilesError);
+  useEffect(() => {
+    if (isOpen && job.id) {
+      fetchComments();
     }
-
-    // Combine comments with user profiles
-    const commentsWithProfiles = commentsData.map(comment => ({
-      ...comment,
-      user_profile: profilesData?.find(profile => profile.id === comment.created_by) || { full_name: 'Unknown User' }
-    }));
-
-    setComments(commentsWithProfiles);
-  };
+  }, [isOpen, job.id, fetchComments]);
 
   const sendComment = async () => {
     if (!newComment.trim() || !user) return;

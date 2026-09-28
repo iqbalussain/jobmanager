@@ -7,7 +7,7 @@ import {
   CheckCircle,
   UserCheck,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,11 +46,9 @@ export function MinimalistSidebar({
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (user) fetchUserProfile();
-  }, [user]);
+  const fetchUserProfile = useCallback(async () => {
+    if (!user) return;
 
-  const fetchUserProfile = async () => {
     try {
       const { data } = await supabase
         .from("profiles")
@@ -70,7 +68,13 @@ export function MinimalistSidebar({
         role: "employee",
       });
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user, fetchUserProfile]);
 
   const mainMenuItems = [
     { title: "Dashboard", icon: Home, view: "dashboard" as const },
@@ -85,9 +89,9 @@ export function MinimalistSidebar({
     { title: "Reports & Analytics", icon: BarChart3, view: "reports" as const, roles: ["admin", "manager", "salesman"] },
   ];
 
-  const canAccessMenuItem = (item: any) => {
+  const canAccessMenuItem = (item: { roles?: string[] }) => {
     if (!item.roles) return true;
-    return item.roles.includes(userProfile?.role);
+    return item.roles.includes(userProfile?.role ?? "");
   };
 
   return (
