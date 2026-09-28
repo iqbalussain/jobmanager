@@ -1,9 +1,13 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { subscribeJobEdits } from "@/lib/realtime";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { FloatingCreateButton } from "@/components/FloatingCreateButton";
@@ -39,6 +43,26 @@ function GlobalHighPriorityAlert() {
   );
 }
 
+function JobEditNotifications() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const userId = user?.id;
+
+  useEffect(() => {
+    if (!userId) return;
+
+    return subscribeJobEdits((audit) => {
+      const editorName = audit.edited_by_name || "Someone";
+      toast({
+        title: `Job #${audit.job_order_number} updated`,
+        description: `${editorName} made changes to this job. Click to view.`,
+      });
+    }, userId);
+  }, [userId, toast]);
+
+  return null;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -49,6 +73,7 @@ function App() {
             <div className="min-h-screen bg-background">
               <Toaster />
               <Sonner />
+              <JobEditNotifications />
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={

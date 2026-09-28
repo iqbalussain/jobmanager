@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface JobEditAudit {
   id: string;
@@ -12,14 +11,14 @@ export interface JobEditAudit {
   created_at: string;
 }
 
-let channel: RealtimeChannel | null = null;
+let subscriptionId = 0;
 
 export function subscribeJobEdits(
   onEvent: (audit: JobEditAudit) => void,
-  currentUserId?: string
+  currentUserId: string
 ): () => void {
-  channel = supabase
-    .channel('job-edit-audit-changes')
+  const channel = supabase
+    .channel(`job-edit-audit-changes-${++subscriptionId}`)
     .on(
       'postgres_changes',
       {
@@ -29,17 +28,17 @@ export function subscribeJobEdits(
       },
       (payload) => {
         const audit = payload.new as JobEditAudit;
-        // Don't notify the user who made the edit
-        if (currentUserId && audit.edited_by === currentUserId) return;
+        if (audit.edited_by === currentUserId) return;
         onEvent(audit);
       }
     )
-    .subscribe();
+    .subscribe((status, error) => {
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('Job edit realtime subscription failed:', error);
+      }
+    });
 
   return () => {
-    if (channel) {
-      supabase.removeChannel(channel);
-      channel = null;
-    }
+    void supabase.removeChannel(channel);
   };
 }

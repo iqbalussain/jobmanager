@@ -1,28 +1,13 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { subscribeJobEdits, JobEditAudit } from '@/lib/realtime';
 import { updateJobInCache } from '@/services/syncService';
 import type { JobStatus } from '@/types/jobOrder';
 
 export function useJobActions() {
   const { toast } = useToast();
   const { user } = useAuth();
-
-  // Subscribe to job edits and show toasts
-  useEffect(() => {
-    const handleEditEvent = (audit: JobEditAudit) => {
-      const editorName = audit.edited_by_name || 'Someone';
-      toast({
-        title: `Job #${audit.job_order_number} updated`,
-        description: `${editorName} made changes to this job. Click to view.`,
-      });
-    };
-
-    const unsubscribe = subscribeJobEdits(handleEditEvent, user?.id);
-    return unsubscribe;
-  }, [user?.id, toast]);
 
   // Set job status with role-based restrictions via RPC
   const setJobStatus = useCallback(async (jobId: string, status: JobStatus) => {
