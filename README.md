@@ -66,8 +66,9 @@ newly created and approved jobs (designers, salesmen, and admins) and completed 
 the full result set into memory. Unread alerts are kept in browser local storage so
 they survive tab closure and synchronize between tabs without adding database
 fields or tables. The legacy full-table alert snapshot is removed on startup.
-Admin completion alerts stay open until an invoice number is saved and the job is
-marked invoiced. Desktop alerts are optional and can be enabled from the dashboard
+Admin completion alerts remain queued until an invoice number is saved and the job
+is marked invoiced; closing the dialog hides it until the next page load. Desktop
+alerts are optional and can be enabled from the dashboard
 notification menu; sound and desktop delivery depend on browser permission and
 autoplay policies. The dashboard groups cached active jobs into design, approval,
 execution, and invoicing queues. Queue items animate in with a short stagger; browsers

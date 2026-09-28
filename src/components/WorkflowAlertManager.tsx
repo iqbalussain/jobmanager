@@ -127,6 +127,8 @@ export function WorkflowAlertManager() {
   const { setJobStatus } = useJobActions();
   const [role, setRole] = useState<string | null>(null);
   const [alerts, setAlerts] = useState<WorkflowAlert[]>([]);
+  const [temporarilyDismissedCompletionAlerts, setTemporarilyDismissedCompletionAlerts] =
+    useState<Set<string>>(() => new Set());
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<JobStatus | "">("");
   const [viewJob, setViewJob] = useState<DashboardJob | null>(null);
@@ -146,18 +148,24 @@ export function WorkflowAlertManager() {
     () => userId ? `jobmanager:workflow-snapshot:${userId}` : null,
     [userId],
   );
-  const activeAlert = alerts.find((alert) => role === "admin" || alert.type !== "completed") || null;
+  const activeAlert = alerts.find(
+    (alert) =>
+      (role === "admin" || alert.type !== "completed") &&
+      !(alert.type === "completed" && temporarilyDismissedCompletionAlerts.has(alert.id)),
+  ) || null;
   const isCompletionAlert = activeAlert?.type === "completed";
 
   useEffect(() => {
     if (!userId || !alertKey) {
       setRole(null);
       setAlerts([]);
+      setTemporarilyDismissedCompletionAlerts(new Set());
       return;
     }
 
     setRole(null);
     setAlerts(getStoredAlerts(alertKey));
+    setTemporarilyDismissedCompletionAlerts(new Set());
     try {
       if (legacySnapshotKey) localStorage.removeItem(legacySnapshotKey);
     } catch (error) {
@@ -512,7 +520,19 @@ export function WorkflowAlertManager() {
       <Dialog
         open={!!activeAlert}
         onOpenChange={(open) => {
-          if (!open && !isCompletionAlert) dismissActiveAlert();
+          if (!open && activeAlert) {
+            if (isCompletionAlert) {
+              setTemporarilyDismissedCompletionAlerts((previous) => {
+                const dismissed = new Set(previous);
+                alerts
+                  .filter((alert) => alert.type === "completed")
+                  .forEach((alert) => dismissed.add(alert.id));
+                return dismissed;
+              });
+            } else {
+              dismissActiveAlert();
+            }
+          }
         }}
       >
         <DialogContent
