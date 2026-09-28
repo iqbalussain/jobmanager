@@ -74,7 +74,8 @@ execution, and invoicing queues. Queue items animate in with a short stagger; br
 using a reduced-motion preference intentionally skip the animation.
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Install Node.js 20.19.x or 22.12+ and npm before starting the app. You can install
+Node.js with [nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 Follow these steps:
 

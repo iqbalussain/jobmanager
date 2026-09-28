@@ -8,16 +8,18 @@ interface Props {
 
 interface State {
   error: Error | null;
+  componentStack: string | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { error: null };
+  state: State = { error: null, componentStack: null };
 
   static getDerivedStateFromError(error: Error): State {
-    return { error };
+    return { error, componentStack: null };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    this.setState({ componentStack: info.componentStack ?? null });
     console.error("Unhandled UI error:", error, info.componentStack);
   }
 
@@ -36,9 +38,16 @@ export class ErrorBoundary extends Component<Props, State> {
               An unexpected error occurred. Reloading usually fixes it. If the problem
               persists, contact your administrator.
             </p>
-            <pre className="text-xs text-left text-muted-foreground bg-muted rounded p-3 overflow-x-auto">
-              {this.state.error.message}
-            </pre>
+            <p className="text-sm text-left text-muted-foreground bg-muted rounded p-3 break-words">
+              {this.state.error.message || String(this.state.error)}
+            </p>
+            <details className="text-left text-xs text-muted-foreground">
+              <summary className="cursor-pointer">Technical details</summary>
+              <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded bg-muted p-3">
+                {this.state.error.stack || String(this.state.error)}
+                {this.state.componentStack && `\n\nReact component stack:${this.state.componentStack}`}
+              </pre>
+            </details>
             <Button onClick={this.handleReload}>Reload application</Button>
           </div>
         </div>
