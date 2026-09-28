@@ -1,18 +1,26 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, FileText } from "lucide-react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, CheckCircle2, Eye, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { updateJobOrder } from "@/services/jobOrdersApi";
+import { useJobActions } from "@/hooks/useJobActions";
+import type { DashboardJob, JobStatus } from "@/types/jobOrder";
+
+const JobDetails = lazy(() =>
+  import("@/components/JobDetails").then((module) => ({ default: module.JobDetails })),
+);
 
 type WorkflowJob = {
   id: string;
   job_order_number: string;
   status: string;
   approval_status: string;
+  designer_id: string | null;
   created_at: string;
   approved_at: string | null;
   updated_at: string;
@@ -38,8 +46,13 @@ declare global {
 
 const POLL_INTERVAL = 20_000;
 const POLL_BATCH_SIZE = 200;
-const JOB_SELECT = "id,job_order_number,status,approval_status,created_at,approved_at,updated_at";
+const JOB_SELECT = "id,job_order_number,status,approval_status,designer_id,created_at,approved_at,updated_at";
 const WORKFLOW_ALERTS_UPDATED_EVENT = "workflow-alerts-updated";
+const DESIGNER_STATUSES: JobStatus[] = ["pending", "completed", "out", "foc_sample", "finished"];
+
+function canApproveJobs(role: string | null): boolean {
+  return role === "admin" || role === "manager" || role === "job_order_manager";
+}
 
 function getStoredAlerts(key: string): WorkflowAlert[] {
   try {
@@ -111,9 +124,12 @@ const chimeDataUrl = createChimeDataUrl();
 export function WorkflowAlertManager() {
   const { user } = useAuth();
   const userId = user?.id;
+  const { setJobStatus } = useJobActions();
   const [role, setRole] = useState<string | null>(null);
   const [alerts, setAlerts] = useState<WorkflowAlert[]>([]);
   const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<JobStatus | "">("");
+  const [viewJob, setViewJob] = useState<DashboardJob | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -165,7 +181,7 @@ export function WorkflowAlertManager() {
 
       const currentRole = profile?.role || "";
       setRole(currentRole);
-      if (!["designer", "salesman", "admin"].includes(currentRole)) return;
+      if (!["designer", "salesman", "admin", "manager", "job_order_manager"].includes(currentRole)) return;
 
       let lastPollAt = new Date(Date.now() - POLL_INTERVAL).toISOString();
       try {
@@ -218,8 +234,13 @@ export function WorkflowAlertManager() {
                 jobOrderNumber: job.job_order_number,
               });
             }
-            if (job.approval_status === "approved" && job.approved_at &&
-              Date.parse(job.approved_at) > Date.parse(lastPollAt)) {
+            if (
+              currentRole === "designer" &&
+              job.designer_id === userId &&
+              job.approval_status === "approved" &&
+              job.approved_at &&
+              Date.parse(job.approved_at) > Date.parse(lastPollAt)
+            ) {
               jobAlerts.push({
                 id: `approved:${job.id}:${job.approved_at}`,
                 type: "approved",
@@ -330,6 +351,7 @@ export function WorkflowAlertManager() {
 
   useEffect(() => {
     setInvoiceNumber("");
+    setSelectedStatus("");
     setSubmitError(null);
   }, [activeAlert?.id]);
 
@@ -369,6 +391,114 @@ export function WorkflowAlertManager() {
     } catch (error) {
       console.error("Failed to save invoice and update job status:", error);
       setSubmitError(error instanceof Error ? error.message : "Failed to save the invoice.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const approveNewJob = async () => {
+    if (!userId || !activeAlert || activeAlert.type !== "created" || !canApproveJobs(role)) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      const { data, error } = await supabase
+        .from("job_orders")
+        .update({
+          approval_status: "approved",
+          approved_by: userId,
+          approved_at: new Date().toISOString(),
+        })
+        .eq("id", activeAlert.jobId)
+        .eq("approval_status", "pending_approval")
+        .select("id")
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) throw new Error("This job is no longer awaiting approval.");
+      dismissActiveAlert();
+    } catch (error) {
+      console.error("Failed to approve new job order:", error);
+      setSubmitError(error instanceof Error ? error.message : "Failed to approve the job order.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const openJobDetails = async () => {
+    if (!activeAlert) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      const { data: jobOrder, error } = await supabase
+        .from("job_orders")
+        .select("id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,assignee,priority,status,due_date,estimated_hours,created_at,branch,job_order_details,invoice_number,total_value,created_by,approval_status,delivered_at,client_name")
+        .eq("id", activeAlert.jobId)
+        .single();
+      if (error) throw error;
+
+      const [customerResult, designerResult, salesmanResult, jobTitleResult] = await Promise.all([
+        supabase.from("customers").select("name").eq("id", jobOrder.customer_id).single(),
+        jobOrder.designer_id
+          ? supabase.from("profiles").select("full_name").eq("id", jobOrder.designer_id).single()
+          : Promise.resolve({ data: null, error: null }),
+        jobOrder.salesman_id
+          ? supabase.from("profiles").select("full_name").eq("id", jobOrder.salesman_id).single()
+          : Promise.resolve({ data: null, error: null }),
+        jobOrder.job_title_id
+          ? supabase.from("job_titles").select("job_title_id").eq("id", jobOrder.job_title_id).single()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+      const lookupError = customerResult.error || designerResult.error || salesmanResult.error || jobTitleResult.error;
+      if (lookupError) throw lookupError;
+
+      setViewJob({
+        id: jobOrder.id,
+        title: jobTitleResult.data?.job_title_id || "Unknown Job Title",
+        customer: customerResult.data?.name || "Unknown Customer",
+        designer: designerResult.data?.full_name || "Unassigned",
+        salesman: salesmanResult.data?.full_name || "Unassigned",
+        assignee: jobOrder.assignee || undefined,
+        jobOrderNumber: jobOrder.job_order_number,
+        priority: jobOrder.priority,
+        status: jobOrder.status,
+        dueDate: jobOrder.due_date || "",
+        estimatedHours: jobOrder.estimated_hours || 0,
+        createdAt: jobOrder.created_at,
+        branch: jobOrder.branch || undefined,
+        jobOrderDetails: jobOrder.job_order_details || undefined,
+        invoiceNumber: jobOrder.invoice_number || undefined,
+        totalValue: jobOrder.total_value || undefined,
+        customer_id: jobOrder.customer_id,
+        job_title_id: jobOrder.job_title_id || undefined,
+        created_by: jobOrder.created_by,
+        approval_status: jobOrder.approval_status,
+        deliveredAt: jobOrder.delivered_at || undefined,
+        clientName: jobOrder.client_name || undefined,
+      });
+    } catch (error) {
+      console.error("Failed to load job order details:", error);
+      setSubmitError(error instanceof Error ? error.message : "Failed to load job details.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const saveDesignerStatus = async () => {
+    if (!activeAlert || activeAlert.type !== "approved" || !selectedStatus) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      const result = await setJobStatus(activeAlert.jobId, selectedStatus);
+      if (!result.success) {
+        throw new Error(result.error || "The job status was not updated.");
+      }
+      dismissActiveAlert();
+    } catch (error) {
+      console.error("Failed to update approved job status:", error);
+      setSubmitError(error instanceof Error ? error.message : "Failed to update the job status.");
     } finally {
       setIsSubmitting(false);
     }
@@ -427,6 +557,53 @@ export function WorkflowAlertManager() {
                 </Button>
               </DialogFooter>
             </form>
+          ) : activeAlert?.type === "created" ? (
+            <>
+              {submitError && <p role="alert" className="text-sm text-destructive">{submitError}</p>}
+              <DialogFooter>
+                <Button variant="outline" onClick={openJobDetails} disabled={isSubmitting}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View
+                </Button>
+                {canApproveJobs(role) && (
+                  <Button onClick={approveNewJob} disabled={isSubmitting}>
+                    {isSubmitting ? "Approving..." : "Approve"}
+                  </Button>
+                )}
+              </DialogFooter>
+            </>
+          ) : activeAlert?.type === "approved" ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="workflow-job-status">Update job status</Label>
+                <Select
+                  value={selectedStatus}
+                  onValueChange={(value) => {
+                    if (DESIGNER_STATUSES.includes(value as JobStatus)) {
+                      setSelectedStatus(value as JobStatus);
+                    }
+                  }}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="workflow-job-status">
+                    <SelectValue placeholder="Select a status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DESIGNER_STATUSES.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status === "foc_sample" ? "FOC Sample" : status === "out" ? "Out" : status.replace("-", " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {submitError && <p role="alert" className="text-sm text-destructive">{submitError}</p>}
+              <DialogFooter>
+                <Button onClick={saveDesignerStatus} disabled={isSubmitting || !selectedStatus}>
+                  {isSubmitting ? "Saving..." : "Save status"}
+                </Button>
+              </DialogFooter>
+            </div>
           ) : (
             <DialogFooter>
               <Button onClick={dismissActiveAlert}>Got it</Button>
@@ -434,6 +611,13 @@ export function WorkflowAlertManager() {
           )}
         </DialogContent>
       </Dialog>
+      <Suspense fallback={null}>
+        <JobDetails
+          isOpen={!!viewJob}
+          onClose={() => setViewJob(null)}
+          job={viewJob}
+        />
+      </Suspense>
     </>
   );
 }

@@ -60,6 +60,7 @@ const Index = () => {
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
   const { user } = useAuth();
+  const userId = user?.id;
   
   // Use Dexie for offline-first job data
   // Pass true for returnAllJobs to get all jobs for dashboard stats
@@ -76,7 +77,7 @@ const Index = () => {
   // Fetch role on load
   useEffect(() => {
     const fetchUserRole = async () => {
-      if (!user) {
+      if (!userId) {
         setUserRoleLoading(false);
         return;
       }
@@ -84,7 +85,7 @@ const Index = () => {
         const { data } = await supabase
           .from("profiles")
           .select("role")
-          .eq("id", user.id)
+          .eq("id", userId)
           .single();
 
         if (data?.role) setUserRole(data.role);
@@ -96,7 +97,7 @@ const Index = () => {
     };
     setUserRoleLoading(true);
     fetchUserRole();
-  }, [user]);
+  }, [userId]);
 
   // Real-time subscription to job_orders for live updates
   useEffect(() => {
@@ -112,19 +113,17 @@ const Index = () => {
         async (payload: RealtimePostgresChangesPayload<JobOrderRecord>) => {
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             try {
-              if (!user) return;
-              await updateJobInCache(payload.new.id, user.id);
-              refresh();
+              if (!userId) return;
+              await updateJobInCache(payload.new.id, userId);
             } catch (e) {
               console.error('[Realtime] Failed to update cache:', e);
             }
           } else if (payload.eventType === 'DELETE') {
-            if (!user) return;
+            if (!userId) return;
             const deletedJobId = payload.old.id;
             if (typeof deletedJobId === 'string') {
-              await removeJobFromCache(deletedJobId, user.id);
+              await removeJobFromCache(deletedJobId, userId);
             }
-            refresh();
           }
         }
       )
@@ -133,7 +132,7 @@ const Index = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refresh, user]);
+  }, [userId]);
 
   const transformedJobs: Job[] = (dexieJobs || []).map(transformDexieJobOrder);
 

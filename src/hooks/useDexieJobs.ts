@@ -187,18 +187,18 @@ export function useDexieJobs(
 
   // Manual refresh
   const refresh = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
     setIsSyncing(true);
     setSyncError(null);
     try {
-      await performDeltaSync(user.id);
+      await performDeltaSync(userId);
     } catch (error) {
       console.error('Manual refresh error:', error);
       setSyncError(error instanceof Error ? error.message : 'Sync failed');
     } finally {
       setIsSyncing(false);
     }
-  }, [user]);
+  }, [userId]);
 
   return {
     jobs: paginatedJobs,

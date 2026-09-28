@@ -9,7 +9,7 @@ import { HighPriorityReminder } from "@/components/dashboard/HighPriorityReminde
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Eye, Palette, FileCheck2, Cog, Receipt, UserRound, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Eye, Palette, Cog, Receipt, UserRound, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ModernDashboardProps {
   jobs: Job[];
@@ -242,13 +242,6 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
     cancelled: jobs.filter(job => job.status === "cancelled").length,
   };
 
-  const pendingApprovalJobs = jobs.filter(
-    job => job.approval_status === "pending_approval" &&
-      job.status !== "completed" &&
-      job.status !== "finished" &&
-      job.status !== "invoiced" &&
-      job.status !== "cancelled",
-  );
   const pendingDesignJobs = jobs.filter(
     job => (job.status === "pending" || job.status === "designing") &&
       job.approval_status !== "pending_approval",
@@ -373,20 +366,12 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
             animationDelay={180}
           />
           <WorkflowBucket
-            title="Pending Approval"
-            jobs={pendingApprovalJobs}
-            icon={FileCheck2}
-            assigneeFor={(job) => job.assignee && job.assignee !== "Unassigned" ? job.assignee : "Management / Admin"}
-            onSelect={handleViewDetails}
-            animationDelay={240}
-          />
-          <WorkflowBucket
             title="In Production / Execution"
             jobs={executionJobs}
             icon={Cog}
             assigneeFor={assignedTo}
             onSelect={handleViewDetails}
-            animationDelay={300}
+            animationDelay={240}
           />
           <WorkflowBucket
             title="Pending Invoicing"
@@ -394,7 +379,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
             icon={Receipt}
             assigneeFor={(job) => job.assignee && job.assignee !== "Unassigned" ? job.assignee : "Admin"}
             onSelect={handleViewDetails}
-            animationDelay={360}
+            animationDelay={300}
           />
         </div>
       </section>
