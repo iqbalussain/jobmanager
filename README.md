@@ -72,23 +72,6 @@ notification menu; sound and desktop delivery depend on browser permission and
 autoplay policies. The dashboard groups cached active jobs into design, approval,
 execution, and invoicing queues. Queue items animate in with a short stagger; browsers
 using a reduced-motion preference intentionally skip the animation.
-
-## Lovable project
-
-**URL**: https://lovable.dev/projects/095e06d9-c491-47ec-9d35-0647fb9fe1de
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/095e06d9-c491-47ec-9d35-0647fb9fe1de) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
@@ -109,13 +92,13 @@ npm i
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+**Edit a file directly in GitHub
 
 - Navigate to the desired file(s).
 - Click the "Edit" button (pencil icon) at the top right of the file view.
 - Make your changes and commit the changes.
 
-**Use GitHub Codespaces**
+**Use GitHub Codespaces
 
 - Navigate to the main page of your repository.
 - Click on the "Code" button (green button) near the top right.
