@@ -4,6 +4,7 @@ import { Job } from "@/pages/Index";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/contexts/NotificationContext";
 import { shareJobOrderViaWhatsApp } from "@/utils/whatsappShare";
 import { updateJobOrder } from "@/services/jobOrdersApi";
 import type { JobOrderUpdate, JobOrderUpdatePayload } from "@/types/jobOrder";
@@ -24,9 +25,21 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
   const [userRole, setUserRole] = useState<string>('');
   const { toast } = useToast();
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
 
   // Check if user is authorized to edit invoice numbers
   const canEditInvoice = userRole === 'admin' || userRole === 'manager' || userRole === 'job_order_manager';
+
+  const notifyInvoiceCompletion = (normalizedInvoiceNumber: string) => {
+    if (!job || job.status === "invoiced") return;
+
+    addNotification({
+      type: "invoice_completed",
+      message: `Job #${job.jobOrderNumber} has been invoiced (Invoice #${normalizedInvoiceNumber}).`,
+      jobOrderNumber: job.jobOrderNumber,
+      read: false,
+    });
+  };
 
   useEffect(() => {
     if (job) {
@@ -117,6 +130,9 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
     try {
       await updateJobOrder(job.id, updateData);
 
+      const normalizedInvoiceNumber = invoiceNumber.trim();
+      if (canEditInvoice && normalizedInvoiceNumber) notifyInvoiceCompletion(normalizedInvoiceNumber);
+
       toast({
         title: "Success",
         description: "Job order updated successfully",
@@ -173,6 +189,7 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
             status: 'invoiced',
           });
         }
+        notifyInvoiceCompletion(normalizedInvoiceNumber);
       }
 
       const { exportJobOrderToPDF } = await import("@/utils/pdfExport");
@@ -215,6 +232,7 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
             status: 'invoiced',
           });
         }
+        notifyInvoiceCompletion(normalizedInvoiceNumber);
       }
 
       await shareJobOrderViaWhatsApp(job, invoiceNumber);

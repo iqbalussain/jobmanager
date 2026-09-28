@@ -93,7 +93,15 @@ export function DashboardNotifications({ notifications: propNotifications, onNot
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm">{notification.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
+                      <time
+                        className="text-xs text-muted-foreground mt-1 block"
+                        dateTime={notification.time}
+                      >
+                        Since {new Date(notification.time).toLocaleString(undefined, {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </time>
                     </div>
                     {!notification.read && (
                       <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1.5" />

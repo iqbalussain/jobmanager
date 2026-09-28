@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { toast } from "@/components/ui/sonner";
 
 export interface AppNotification {
   id: string;
-  type: 'high_priority' | 'job_created' | 'status_change' | 'info';
+  type: 'high_priority' | 'job_created' | 'status_change' | 'invoice_completed' | 'info';
   message: string;
   jobOrderNumber?: string;
   time: string;
@@ -29,7 +30,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   // Server-backed notifications and their offline cache are managed by
-  // useNotifications. This context only owns transient in-app alerts.
+  // useNotifications. This context owns the local in-app notification tray.
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   const [highPriorityAlert, setHighPriorityAlert] = useState<HighPriorityAlert | null>(null);
@@ -45,6 +46,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const updated = [newNotification, ...prev].slice(0, 50); // Keep last 50
       return updated;
     });
+    toast(newNotification.message, { duration: 10_000, position: "bottom-right" });
   }, []);
 
   const markAsRead = useCallback((id: string) => {
