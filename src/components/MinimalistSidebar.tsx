@@ -47,7 +47,7 @@ export function MinimalistSidebar({
   const { user } = useAuth();
 
   const fetchUserProfile = useCallback(async () => {
-    if (!user) return;
+    if (!user?.id) return;
 
     try {
       const { data } = await supabase
@@ -68,13 +68,11 @@ export function MinimalistSidebar({
         role: "employee",
       });
     }
-  }, [user]);
+  }, [user?.id, user?.user_metadata?.full_name, user?.email]);
 
   useEffect(() => {
-    if (user) {
-      fetchUserProfile();
-    }
-  }, [user, fetchUserProfile]);
+    fetchUserProfile();
+  }, [fetchUserProfile]);
 
   const mainMenuItems = [
     { title: "Dashboard", icon: Home, view: "dashboard" as const },
