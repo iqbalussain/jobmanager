@@ -18,6 +18,7 @@ export function useJobOrdersQuery() {
       const data = await fetchJobOrders();
       return transformJobOrderData(data);
     },
+    staleTime: 5 * 60_000,
     enabled: !!user
   });
 

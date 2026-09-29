@@ -7,10 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { JobDetails } from "@/components/JobDetails";
 import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 import { useJobActions } from "@/hooks/useJobActions";
-import { removeJobFromCache, updateJobInCache } from "@/services/syncService";
+import { updateJobInCache } from "@/services/syncService";
 import { HighPriorityModal } from "@/components/HighPriorityModal";
-import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import type { DashboardJob as Job, JobOrderRecord, JobOrderUpdatePayload, JobStatus } from "@/types/jobOrder";
+import type { DashboardJob as Job, JobOrderUpdatePayload, JobStatus } from "@/types/jobOrder";
 import { transformDexieJobOrder } from "@/utils/jobOrderTransforms";
 import { updateJobOrder } from "@/services/jobOrdersApi";
 import Unauthorized from "./Unauthorized";
@@ -97,41 +96,6 @@ const Index = () => {
     };
     setUserRoleLoading(true);
     fetchUserRole();
-  }, [userId]);
-
-  // Real-time subscription to job_orders for live updates
-  useEffect(() => {
-    const channel = supabase
-      .channel('job-orders-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'job_orders'
-        },
-        async (payload: RealtimePostgresChangesPayload<JobOrderRecord>) => {
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            try {
-              if (!userId) return;
-              await updateJobInCache(payload.new.id, userId);
-            } catch (e) {
-              console.error('[Realtime] Failed to update cache:', e);
-            }
-          } else if (payload.eventType === 'DELETE') {
-            if (!userId) return;
-            const deletedJobId = payload.old.id;
-            if (typeof deletedJobId === 'string') {
-              await removeJobFromCache(deletedJobId, userId);
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [userId]);
 
   const transformedJobs: Job[] = (dexieJobs || []).map(transformDexieJobOrder);

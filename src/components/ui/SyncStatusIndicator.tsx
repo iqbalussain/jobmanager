@@ -3,8 +3,9 @@ import { Cloud, CloudOff, Database, RefreshCw, CheckCircle2, AlertCircle } from 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { db } from '@/lib/dexieDb';
 import { cn } from '@/lib/utils';
+import { useLiveQuery } from 'dexie-react-hooks';
 
-type SyncState = 'idle' | 'syncing' | 'synced' | 'error' | 'offline';
+type SyncState = 'idle' | 'syncing' | 'synced' | 'error';
 
 interface SyncStatusIndicatorProps {
   className?: string;
@@ -12,45 +13,37 @@ interface SyncStatusIndicatorProps {
 }
 
 export function SyncStatusIndicator({ className, showLabel = true }: SyncStatusIndicatorProps) {
-  const [syncState, setSyncState] = useState<SyncState>('idle');
-  const [localCount, setLocalCount] = useState(0);
-  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const syncInfo = useLiveQuery(async () => {
+    try {
+      const [localCount, meta] = await Promise.all([
+        db.jobs.count(),
+        db.syncMeta.get('main'),
+      ]);
+      return { localCount, lastSyncTime: meta?.lastSyncTime ?? null, hasError: false };
+    } catch (error) {
+      console.error('Error loading sync status:', error);
+      return { localCount: 0, lastSyncTime: null, hasError: true };
+    }
+  }, []);
+  const localCount = syncInfo?.localCount ?? 0;
+  const lastSyncTime = syncInfo?.lastSyncTime ?? null;
+  const syncState: SyncState = syncInfo?.hasError
+    ? 'error'
+    : lastSyncTime
+      ? 'synced'
+      : 'idle';
 
   useEffect(() => {
-    // Check online status
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Load local count and sync meta
-    const loadStatus = async () => {
-      try {
-        const count = await db.jobs.count();
-        setLocalCount(count);
-        
-        const meta = await db.syncMeta.get('main');
-        if (meta?.lastSyncTime) {
-          setLastSyncTime(meta.lastSyncTime);
-          setSyncState('synced');
-        }
-      } catch (error) {
-        console.error('Error loading sync status:', error);
-        setSyncState('error');
-      }
-    };
-
-    loadStatus();
-
-    // Poll for updates every 5 seconds
-    const interval = setInterval(loadStatus, 5000);
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      clearInterval(interval);
     };
   }, []);
 

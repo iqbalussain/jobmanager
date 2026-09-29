@@ -55,17 +55,16 @@ npm run lint
 npm run build
 ```
 
-The browser cache is powered by Dexie, isolated per signed-in user, and synchronized
-with Supabase in the background. Sync work is serialized, retried on failure, and
-reconciles hard-deleted jobs during cache repair. Production deployments should apply
-Supabase migrations and deploy the Edge Functions before exposing the frontend.
+The browser cache is powered by Dexie, isolated per signed-in user, and updated from
+Supabase Realtime row changes. Sync work is serialized, retried on failure, and
+reconciles hard-deleted jobs during startup and after a Realtime reconnect. Production
+deployments should apply Supabase migrations and deploy the Edge Functions before
+exposing the frontend.
 
-Workflow alerts query only job orders changed since the previous 20-second poll for
-newly created and approved jobs (designers, salesmen, and admins) and completed jobs
-(admins). Poll pages and report pages are processed incrementally rather than loading
-the full result set into memory. Unread alerts are kept in browser local storage so
-they survive tab closure and synchronize between tabs without adding database
-fields or tables. The legacy full-table alert snapshot is removed on startup.
+Workflow alerts listen for new job orders and approval or completion status changes
+through Supabase Realtime. Unread alerts are kept in browser local storage so they
+survive tab closure and synchronize between tabs without adding database fields or
+tables. The legacy full-table alert snapshot is removed on startup.
 Admin completion alerts remain queued until an invoice number is saved and the job
 is marked invoiced; closing the dialog hides it until the next page load. Desktop
 alerts are optional and can be enabled from the dashboard

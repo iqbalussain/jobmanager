@@ -4,8 +4,8 @@ import {
   needsInitialSync, 
   performInitialSync, 
   performDeltaSync, 
-  startBackgroundSync, 
-  stopBackgroundSync,
+  startRealtimeSync,
+  stopRealtimeSync,
   repairMissingJobs
 } from '@/services/syncService';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -59,10 +59,10 @@ export function useDexieJobs(
           await repairMissingJobs(userId);
         }
         
-        // Start background sync
+        // Keep the local cache current from row changes instead of polling.
         if (!cancelled) {
           setIsSyncing(false);
-          startBackgroundSync(userId, (error) => {
+          startRealtimeSync(userId, (error) => {
             if (cancelled) return;
             setSyncError(error ? (error instanceof Error ? error.message : 'Sync failed') : null);
           });
@@ -82,7 +82,7 @@ export function useDexieJobs(
     
     return () => {
       cancelled = true;
-      stopBackgroundSync();
+      stopRealtimeSync();
     };
   }, [userId]);
 

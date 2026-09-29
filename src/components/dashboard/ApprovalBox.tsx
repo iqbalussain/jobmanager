@@ -5,10 +5,12 @@ import { Clock, CheckCircle, XCircle, AlertCircle, Eye, ChevronLeft, ChevronRigh
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 import { JobDetails } from "@/components/JobDetails";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { updateJobInCache } from "@/services/syncService";
+import type { JobOrderRecord } from "@/types/jobOrder";
 
 interface PendingJob {
   id: string;
@@ -32,6 +34,38 @@ export function ApprovalBox() {
   const activePointerId = useRef<number | null>(null);
   const wheelDeltaX = useRef(0);
   const wheelTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`approval-job-orders-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'job_orders' },
+        (payload: RealtimePostgresChangesPayload<JobOrderRecord>) => {
+          const affectsPendingApprovals = payload.eventType === 'INSERT'
+            ? payload.new.approval_status === 'pending_approval'
+            : payload.eventType === 'UPDATE'
+              ? payload.new.approval_status === 'pending_approval' ||
+                payload.old.approval_status === 'pending_approval'
+              : payload.old.approval_status === 'pending_approval';
+          if (affectsPendingApprovals) {
+            void queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
+          }
+          void queryClient.invalidateQueries({ queryKey: ['job-orders'] });
+        },
+      )
+      .subscribe((status, error) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error('Approval realtime subscription failed:', error);
+        }
+      });
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [queryClient, user]);
 
   const { data: pendingJobs = [], isLoading } = useQuery({
     queryKey: ['pending-approvals'],

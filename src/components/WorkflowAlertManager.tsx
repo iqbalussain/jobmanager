@@ -7,24 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { updateJobOrder } from "@/services/jobOrdersApi";
 import { useJobActions } from "@/hooks/useJobActions";
-import type { DashboardJob, JobStatus } from "@/types/jobOrder";
+import type { DashboardJob, JobOrderRecord, JobStatus } from "@/types/jobOrder";
 
 const JobDetails = lazy(() =>
   import("@/components/JobDetails").then((module) => ({ default: module.JobDetails })),
 );
-
-type WorkflowJob = {
-  id: string;
-  job_order_number: string;
-  status: string;
-  approval_status: string;
-  designer_id: string | null;
-  created_at: string;
-  approved_at: string | null;
-  updated_at: string;
-};
 
 type WorkflowAlert = {
   id: string;
@@ -44,9 +34,6 @@ declare global {
   }
 }
 
-const POLL_INTERVAL = 20_000;
-const POLL_BATCH_SIZE = 200;
-const JOB_SELECT = "id,job_order_number,status,approval_status,designer_id,created_at,approved_at,updated_at";
 const WORKFLOW_ALERTS_UPDATED_EVENT = "workflow-alerts-updated";
 const DESIGNER_STATUSES: JobStatus[] = ["pending", "completed", "out", "foc_sample", "finished"];
 
@@ -140,10 +127,6 @@ export function WorkflowAlertManager() {
     () => userId ? `jobmanager:workflow-alerts:${userId}` : null,
     [userId],
   );
-  const pollCursorKey = useMemo(
-    () => userId ? `jobmanager:workflow-poll-cursor:${userId}` : null,
-    [userId],
-  );
   const legacySnapshotKey = useMemo(
     () => userId ? `jobmanager:workflow-snapshot:${userId}` : null,
     [userId],
@@ -172,9 +155,8 @@ export function WorkflowAlertManager() {
       console.error("Failed to remove the legacy workflow snapshot:", error);
     }
     let active = true;
-    let interval: ReturnType<typeof setInterval> | undefined;
 
-    const startPolling = async () => {
+    const startRealtimeAlerts = async () => {
       const { data: profile, error: roleError } = await supabase
         .from("profiles")
         .select("role")
@@ -191,51 +173,49 @@ export function WorkflowAlertManager() {
       setRole(currentRole);
       if (!["designer", "salesman", "admin", "manager", "job_order_manager"].includes(currentRole)) return;
 
-      let lastPollAt = new Date(Date.now() - POLL_INTERVAL).toISOString();
-      try {
-        if (pollCursorKey) {
-          const storedCursor = localStorage.getItem(pollCursorKey);
-          const storedCursorTime = storedCursor ? Date.parse(storedCursor) : Number.NaN;
-          if (
-            Number.isFinite(storedCursorTime) &&
-            storedCursorTime <= Date.now() &&
-            Date.now() - storedCursorTime <= POLL_INTERVAL * 2
-          ) {
-            lastPollAt = new Date(storedCursorTime).toISOString();
+      const addAlerts = (addedAlerts: WorkflowAlert[]) => {
+        if (!active || addedAlerts.length === 0) return;
+        const existingAlerts = getStoredAlerts(alertKey);
+        const knownIds = new Set(existingAlerts.map((alert) => alert.id));
+        addedAlerts = addedAlerts.filter((alert) => !knownIds.has(alert.id));
+        if (addedAlerts.length > 0) {
+          const updatedAlerts = [...existingAlerts, ...addedAlerts];
+          persistAlerts(alertKey, updatedAlerts);
+          setAlerts(updatedAlerts);
+          if (document.visibilityState !== "visible" && "Notification" in window && Notification.permission === "granted") {
+            addedAlerts.forEach((alert) => {
+              try {
+                new Notification(
+                  alert.type === "completed" ? "Invoice required" : "Job order update",
+                  { body: `Job ${alert.jobOrderNumber} ${alert.type === "completed" ? "is completed and needs an invoice." : alert.type === "approved" ? "has been approved." : "was created."}` },
+                );
+              } catch (notificationError) {
+                console.error("Failed to display desktop workflow alert:", notificationError);
+              }
+            });
+          }
+          if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            void audioRef.current.play().catch((error: unknown) => {
+              console.info("Workflow notification sound could not play:", error);
+            });
           }
         }
-      } catch (error) {
-        console.error("Failed to initialize workflow poll cursor:", error);
-      }
+      };
 
-      let isPolling = false;
-      const pollChangedJobs = async () => {
-        const pollStartedAt = new Date().toISOString();
-        let offset = 0;
-        let addedAlerts: WorkflowAlert[] = [];
+      const channel = supabase
+        .channel(`workflow-job-alerts-${userId}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "job_orders" },
+          (payload: RealtimePostgresChangesPayload<JobOrderRecord>) => {
+            if (!active || payload.eventType === "DELETE") return;
+            const job = payload.new;
+            const previousJob = payload.old;
+            const addedAlerts: WorkflowAlert[] = [];
 
-        while (active) {
-          const { data, error } = await supabase
-            .from("job_orders")
-            .select(JOB_SELECT)
-            .gt("updated_at", lastPollAt)
-            .lte("updated_at", pollStartedAt)
-            .order("updated_at", { ascending: true })
-            .order("id", { ascending: true })
-            .range(offset, offset + POLL_BATCH_SIZE - 1);
-
-          if (error) {
-            console.error("Workflow alert polling failed:", error);
-            return;
-          }
-
-          const changedJobs: WorkflowJob[] = data || [];
-          if (changedJobs.length === 0) break;
-
-          const nextAlerts = changedJobs.flatMap((job): WorkflowAlert[] => {
-            const jobAlerts: WorkflowAlert[] = [];
-            if (Date.parse(job.created_at) > Date.parse(lastPollAt)) {
-              jobAlerts.push({
+            if (payload.eventType === "INSERT") {
+              addedAlerts.push({
                 id: `created:${job.id}:${job.created_at}`,
                 type: "created",
                 jobId: job.id,
@@ -247,93 +227,47 @@ export function WorkflowAlertManager() {
               job.designer_id === userId &&
               job.approval_status === "approved" &&
               job.approved_at &&
-              Date.parse(job.approved_at) > Date.parse(lastPollAt)
+              (previousJob.approval_status !== "approved" || previousJob.approved_at !== job.approved_at)
             ) {
-              jobAlerts.push({
+              addedAlerts.push({
                 id: `approved:${job.id}:${job.approved_at}`,
                 type: "approved",
                 jobId: job.id,
                 jobOrderNumber: job.job_order_number,
               });
             }
-            if (currentRole === "admin" && job.status === "completed") {
-              jobAlerts.push({
+            if (
+              currentRole === "admin" &&
+              job.status === "completed" &&
+              previousJob.status !== "completed"
+            ) {
+              addedAlerts.push({
                 id: `completed:${job.id}`,
                 type: "completed",
                 jobId: job.id,
                 jobOrderNumber: job.job_order_number,
               });
             }
-            return jobAlerts;
-          });
-          addedAlerts.push(...nextAlerts);
 
-          if (changedJobs.length < POLL_BATCH_SIZE) break;
-          offset += changedJobs.length;
-        }
-
-        if (!active || !alertKey) return;
-        if (addedAlerts.length > 0) {
-          const existingAlerts = getStoredAlerts(alertKey);
-          const knownIds = new Set(existingAlerts.map((alert) => alert.id));
-          addedAlerts = addedAlerts.filter((alert) => !knownIds.has(alert.id));
-          if (addedAlerts.length > 0) {
-            const updatedAlerts = [...existingAlerts, ...addedAlerts];
-            persistAlerts(alertKey, updatedAlerts);
-            setAlerts(updatedAlerts);
-            if (document.visibilityState !== "visible" && "Notification" in window && Notification.permission === "granted") {
-              addedAlerts.forEach((alert) => {
-                try {
-                  new Notification(
-                    alert.type === "completed" ? "Invoice required" : "Job order update",
-                    { body: `Job ${alert.jobOrderNumber} ${alert.type === "completed" ? "is completed and needs an invoice." : alert.type === "approved" ? "has been approved." : "was created."}` },
-                  );
-                } catch (notificationError) {
-                  console.error("Failed to display desktop workflow alert:", notificationError);
-                }
-              });
-            }
-            if (audioRef.current) {
-              audioRef.current.currentTime = 0;
-              void audioRef.current.play().catch((error: unknown) => {
-                console.info("Workflow notification sound could not play:", error);
-              });
-            }
+            addAlerts(addedAlerts);
+          },
+        )
+        .subscribe((status, error) => {
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            console.error("Workflow alert realtime subscription failed:", error);
           }
-        }
-
-        lastPollAt = pollStartedAt;
-        if (pollCursorKey) {
-          try {
-            localStorage.setItem(pollCursorKey, lastPollAt);
-          } catch (storageError) {
-            console.error("Failed to save workflow poll cursor:", storageError);
-          }
-        }
+        });
+      return () => {
+        void supabase.removeChannel(channel);
       };
-
-      const poll = async () => {
-        if (isPolling) return;
-        isPolling = true;
-        try {
-          await pollChangedJobs();
-        } finally {
-          isPolling = false;
-        }
-      };
-
-      await poll();
-      if (active) {
-        interval = setInterval(() => {
-          void poll().catch((error: unknown) => {
-            console.error("Workflow alert polling failed:", error);
-          });
-        }, POLL_INTERVAL);
-      }
     };
 
-    void startPolling().catch((error: unknown) => {
-      console.error("Failed to initialize workflow alerts:", error);
+    let removeChannel: (() => void) | undefined;
+    void startRealtimeAlerts().then((cleanup) => {
+      removeChannel = cleanup;
+      if (!active) cleanup?.();
+    }).catch((error: unknown) => {
+      console.error("Failed to initialize workflow realtime alerts:", error);
     });
 
     const handleStorage = (event: StorageEvent) => {
@@ -351,11 +285,11 @@ export function WorkflowAlertManager() {
 
     return () => {
       active = false;
-      if (interval) clearInterval(interval);
+      removeChannel?.();
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(WORKFLOW_ALERTS_UPDATED_EVENT, handleSameTabUpdate);
     };
-  }, [alertKey, legacySnapshotKey, pollCursorKey, userId]);
+  }, [alertKey, legacySnapshotKey, userId]);
 
   useEffect(() => {
     setInvoiceNumber("");

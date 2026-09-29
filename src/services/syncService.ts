@@ -1,9 +1,9 @@
 import { db, DexieJobOrder, clearAllData, withCacheUser } from '@/lib/dexieDb';
 import { supabase } from '@/integrations/supabase/client';
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import type { JobOrderRecord } from '@/types/jobOrder';
 
 const SYNC_META_ID = 'main';
-const SYNC_INTERVAL = 30000; // 30 seconds
 const REF_SYNC_INTERVAL_MS = 10 * 60_000; // 10 min - reference data rarely changes
 const REPAIR_INTERVAL_MS = 60 * 60_000; // 1 hour - repair check is expensive
 
@@ -12,7 +12,8 @@ const JOB_LIST_COLUMNS =
   'id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,status,priority,branch,assignee,due_date,estimated_hours,actual_hours,total_value,invoice_number,job_order_details,client_name,delivered_at,approval_status,approval_notes,approved_by,approved_at,created_by,created_at,updated_at,description_plain';
 type JobOrderSyncRecord = Omit<JobOrderRecord, 'description'>;
 
-let syncIntervalId: ReturnType<typeof setInterval> | null = null;
+let realtimeChannel: RealtimeChannel | null = null;
+let realtimeUserId: string | null = null;
 let lastRefSyncAt = 0;
 let lastRepairAt = 0;
 let syncQueue: Promise<void> = Promise.resolve();
@@ -261,29 +262,65 @@ export function performDeltaSync(userId: string): Promise<number> {
   return trackedSync;
 }
 
-// Start background sync
-export function startBackgroundSync(userId: string, onError: (error: unknown | null) => void) {
-  if (syncIntervalId) return;
-  
-  syncIntervalId = setInterval(async () => {
-    try {
-      await performDeltaSync(userId);
-      await repairMissingJobs(userId);
-      onError(null);
-    } catch (error) {
-      console.error('[Sync] Background sync error:', error);
-      onError(error);
+async function cacheRealtimeJob(
+  payload: RealtimePostgresChangesPayload<JobOrderRecord>,
+  userId: string,
+): Promise<void> {
+  if (payload.eventType === 'DELETE') {
+    const deletedJobId = payload.old.id;
+    if (typeof deletedJobId === 'string') {
+      await removeJobFromCache(deletedJobId, userId);
     }
-  }, SYNC_INTERVAL);
-  
+    return;
+  }
+
+  const [enriched] = await enrichJobOrders([payload.new]);
+  await withCacheUser(userId, [db.jobs], () => db.jobs.put(enriched));
 }
 
-// Stop background sync
-export function stopBackgroundSync() {
-  if (syncIntervalId) {
-    clearInterval(syncIntervalId);
-    syncIntervalId = null;
+export function startRealtimeSync(
+  userId: string,
+  onError: (error: unknown | null) => void,
+): void {
+  if (realtimeChannel && realtimeUserId === userId) return;
+  stopRealtimeSync();
+  realtimeUserId = userId;
+
+  realtimeChannel = supabase
+    .channel(`job-orders-sync-${userId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'job_orders' },
+      (payload: RealtimePostgresChangesPayload<JobOrderRecord>) => {
+        void cacheRealtimeJob(payload, userId).catch((error: unknown) => {
+          console.error('[Realtime] Failed to update the local job cache:', error);
+          onError(error);
+        });
+      },
+    )
+    .subscribe((status, error) => {
+      if (status === 'SUBSCRIBED') {
+        onError(null);
+        void performDeltaSync(userId)
+          .then(() => repairMissingJobs(userId))
+          .catch((syncError: unknown) => {
+            console.error('[Sync] Failed to reconcile after Realtime connection:', syncError);
+            onError(syncError);
+          });
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        const subscriptionError = error ?? new Error(`Job Realtime subscription ${status.toLowerCase()}`);
+        console.error('[Realtime] Job subscription failed:', subscriptionError);
+        onError(subscriptionError);
+      }
+    });
+}
+
+export function stopRealtimeSync(): void {
+  if (realtimeChannel) {
+    void supabase.removeChannel(realtimeChannel);
+    realtimeChannel = null;
   }
+  realtimeUserId = null;
 }
 
 // Force full resync
