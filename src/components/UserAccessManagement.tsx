@@ -61,7 +61,7 @@ const roleTemplates: Record<ValidRole, string[]> = {
   job_order_manager: ['dashboard', 'jobs', 'reports', 'create_jobs', 'edit_jobs', 'view_all_jobs'],
 };
 
-function UserAccessManagement() {
+export default function UserAccessManagement() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -106,10 +106,10 @@ function UserAccessManagement() {
 
       setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
       
-      // Update permissions based on role template
       if (selectedUser?.id === userId) {
         const templatePermissions = roleTemplates[newRole as ValidRole] || [];
         setUserPermissions(templatePermissions);
+        setSelectedUser(prev => prev ? { ...prev, role: newRole } : null);
       }
 
       toast({
@@ -134,17 +134,16 @@ function UserAccessManagement() {
     );
   };
 
-  const selectUser = (user: UserProfile) => {
-    setSelectedUser(user);
-    // Load permissions based on role template
-    const templatePermissions = roleTemplates[user.role as ValidRole] || [];
+  const selectUser = (userProfile: UserProfile) => {
+    setSelectedUser(userProfile);
+    const templatePermissions = roleTemplates[userProfile.role as ValidRole] || [];
     setUserPermissions(templatePermissions);
   };
 
-  const filteredUsers = users.filter(user => 
-    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(u => 
+    u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const groupedPermissions = {
@@ -198,29 +197,29 @@ function UserAccessManagement() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.map((user) => (
+                    {filteredUsers.map((u) => (
                       <TableRow 
-                        key={user.id}
+                        key={u.id}
                         className={`cursor-pointer transition-colors ${
-                          selectedUser?.id === user.id ? 'bg-blue-50' : 'hover:bg-gray-50'
+                          selectedUser?.id === u.id ? 'bg-blue-50' : 'hover:bg-gray-50'
                         }`}
-                        onClick={() => selectUser(user)}
+                        onClick={() => selectUser(u)}
                       >
                         <TableCell>
                           <div>
-                            <div className="font-medium">{user.full_name || 'N/A'}</div>
-                            <div className="text-sm text-gray-500">{user.email}</div>
+                            <div className="font-medium">{u.full_name || 'N/A'}</div>
+                            <div className="text-sm text-gray-500">{u.email}</div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="capitalize">
-                            {user.role}
+                            {u.role}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <Select
-                            value={user.role}
-                            onValueChange={(newRole) => handleRoleChange(user.id, newRole)}
+                            value={u.role}
+                            onValueChange={(newRole) => handleRoleChange(u.id, newRole)}
                           >
                             <SelectTrigger className="w-32">
                               <SelectValue />
@@ -370,5 +369,3 @@ function UserAccessManagement() {
     </div>
   );
 }
-
-export default UserAccessManagement;
