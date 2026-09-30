@@ -19,6 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { UserProfileDropdown } from "@/components/user-profile/UserProfileDropdown";
+import { NotificationTray } from "@/components/NotificationTray";
 
 interface MinimalistSidebarProps {
   currentView: string;
@@ -162,6 +163,19 @@ export function MinimalistSidebar({
               </TooltipContent>
             </Tooltip>
           ))}
+        </div>
+
+        <div className="mt-2 px-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <NotificationTray />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>Notifications</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Profile */}

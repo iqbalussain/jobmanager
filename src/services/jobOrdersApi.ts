@@ -222,6 +222,10 @@ export async function fetchJobOrdersPaginated(
 }
 
 export async function updateJobOrder(id: string, updates: JobOrderUpdate): Promise<JobOrderRecord> {
+  if (!navigator.onLine) {
+    throw new Error('You are offline. Reconnect before saving this job order.');
+  }
+
   const { data, error } = await supabase
     .from('job_orders')
     .update(updates)

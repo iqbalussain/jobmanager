@@ -27,12 +27,7 @@ export async function syncNotifications(userId: string): Promise<void> {
     snoozed_until: n.snoozed_until,
     created_at: n.created_at,
   }));
-  const syncedIds = new Set(notifications.map((notification) => notification.id));
-  const cachedIds = await db.notifications.where("user_id").equals(userId).primaryKeys();
-  const staleIds = cachedIds.filter((id) => !syncedIds.has(String(id)));
-
   await withCacheUser(userId, [db.notifications], async () => {
-    if (staleIds.length > 0) await db.notifications.bulkDelete(staleIds);
     if (notifications.length > 0) await db.notifications.bulkPut(notifications);
   });
 }

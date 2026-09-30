@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { LogOut, User } from 'lucide-react';
 
 interface UserProfile {
-  full_name: string;
+  full_name: string | null;
   role: string;
   email: string;
   department: string | null;
@@ -17,80 +16,79 @@ interface UserProfile {
 
 export function UserProfile() {
   const { user, signOut } = useAuth();
+  const userId = user?.id;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      fetchProfile();
-    } else {
+    if (!userId || !user) {
       setLoading(false);
-    }
-  }, [user]);
-
-  const fetchProfile = async () => {
-    if (!user) {
-      setLoading(false);
+      setProfile(null);
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
-      
-      
-      // Try to fetch profile directly first
-      const { data, error: fetchError } = await supabase
-        .from('profiles')
-        .select('full_name, role, email, department, branch')
-        .eq('id', user.id)
-        .maybeSingle();
+    let active = true;
 
-      if (fetchError) {
-        console.error('Error fetching profile:', fetchError);
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        setError(null);
         
-        // If there's an RLS or policy error, try creating a basic profile
-        if (fetchError.message?.includes('policy') || fetchError.message?.includes('security')) {
-          const basicProfile = {
+        const { data, error: fetchError } = await supabase
+          .from('profiles')
+          .select('full_name, role, email, department, branch')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (!active) return;
+
+        if (fetchError) {
+          console.error('Error fetching profile:', fetchError);
+          
+          if (fetchError.message?.includes('policy') || fetchError.message?.includes('security')) {
+            setProfile({
+              full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+              role: 'employee',
+              email: user.email || '',
+              department: null,
+              branch: null
+            });
+          } else {
+            setError('Failed to load user profile');
+          }
+        } else if (data) {
+          setProfile(data);
+        } else {
+          setProfile({
             full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
             role: 'employee',
             email: user.email || '',
             department: null,
             branch: null
-          };
-          setProfile(basicProfile);
-        } else {
-          setError('Failed to load user profile');
+          });
         }
-      } else if (data) {
-        setProfile(data);
-      } else {
-        // Profile doesn't exist, create a basic one from user data
-        const basicProfile = {
+      } catch (err) {
+        if (!active) return;
+        console.error('Unexpected error:', err);
+        setProfile({
           full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
           role: 'employee',
           email: user.email || '',
           department: null,
           branch: null
-        };
-        setProfile(basicProfile);
+        });
+      } finally {
+        if (active) setLoading(false);
       }
-    } catch (error) {
-      console.error('Unexpected error:', error);
-      // Fallback to basic profile from user auth data
-      const basicProfile = {
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-        role: 'employee',
-        email: user.email || '',
-        department: null,
-        branch: null
-      };
-      setProfile(basicProfile);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    void fetchProfile();
+
+    return () => {
+      active = false;
+    };
+  }, [userId]);
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -120,7 +118,7 @@ export function UserProfile() {
         <CardContent className="pt-6">
           <div className="text-center">
             <p className="text-sm text-red-600 mb-4">{error}</p>
-            <Button onClick={fetchProfile} variant="outline" size="sm">
+            <Button onClick={() => window.location.reload()} variant="outline" size="sm">
               Retry
             </Button>
           </div>
@@ -135,9 +133,6 @@ export function UserProfile() {
         <CardContent className="pt-6">
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-4">No profile found</p>
-            <Button onClick={fetchProfile} variant="outline" size="sm">
-              Create Profile
-            </Button>
           </div>
         </CardContent>
       </Card>

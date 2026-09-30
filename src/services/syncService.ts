@@ -16,7 +16,9 @@ type JobOrderSyncRecord = Omit<JobOrderRecord, 'description'>;
 let realtimeChannel: RealtimeChannel | null = null;
 let realtimeUserId: string | null = null;
 let lastRefSyncAt = 0;
+let lastRefSyncUserId: string | null = null;
 let lastRepairAt = 0;
+let lastRepairUserId: string | null = null;
 let syncQueue: Promise<void> = Promise.resolve();
 let initialSyncPromise: { userId: string; promise: Promise<void> } | null = null;
 let deltaSyncPromise: { userId: string; promise: Promise<number> } | null = null;
@@ -62,12 +64,12 @@ async function setLastSyncTime(userId: string, time: string) {
 
 // Check if initial sync is needed
 export async function needsInitialSync(): Promise<boolean> {
-  const count = await db.jobs.count();
-  return count === 0;
+  return !(await getLastSyncTime());
 }
 
 async function syncInitialData(userId: string): Promise<void> {
   if (!isSyncAvailable()) return;
+  const syncStartedAt = new Date().toISOString();
   await syncReferenceData(userId, true);
   if (!isSyncAvailable()) return;
 
@@ -99,7 +101,7 @@ async function syncInitialData(userId: string): Promise<void> {
   }
 
   if (isSyncAvailable()) {
-    await setLastSyncTime(userId, new Date().toISOString());
+    await setLastSyncTime(userId, syncStartedAt);
   }
 }
 
@@ -117,8 +119,13 @@ export function performInitialSync(userId: string): Promise<void> {
 
 // Sync reference data (customers, salesmen, designers, job titles)
 async function syncReferenceData(userId: string, force = false): Promise<void> {
+  if (!isSyncAvailable()) return;
   // Throttle: skip if recently synced (reference data rarely changes)
-  if (!force && Date.now() - lastRefSyncAt < REF_SYNC_INTERVAL_MS) {
+  if (
+    !force &&
+    lastRefSyncUserId === userId &&
+    Date.now() - lastRefSyncAt < REF_SYNC_INTERVAL_MS
+  ) {
     return;
   }
 
@@ -130,6 +137,7 @@ async function syncReferenceData(userId: string, force = false): Promise<void> {
   if (customersRes.error) throw customersRes.error;
   if (profilesRes.error) throw profilesRes.error;
   if (jobTitlesRes.error) throw jobTitlesRes.error;
+  if (!isSyncAvailable()) return;
   
   await withCacheUser(userId, [db.customers, db.salesmen, db.designers, db.jobTitles], async () => {
     if (customersRes.data) {
@@ -152,6 +160,7 @@ async function syncReferenceData(userId: string, force = false): Promise<void> {
     if (jobTitlesRes.data) await db.jobTitles.bulkPut(jobTitlesRes.data);
   });
   lastRefSyncAt = Date.now();
+  lastRefSyncUserId = userId;
 }
 
 // Enrich job orders with related data from Dexie
@@ -317,15 +326,11 @@ export function startRealtimeSync(
     .subscribe((status, error) => {
       if (status === 'SUBSCRIBED') {
         onError(null);
-        if (!hasConnected) {
-          hasConnected = true;
-          return;
-        }
-
         if (!isSyncAvailable()) return;
 
         const now = Date.now();
-        if (now - lastReconnectSyncAt < RECONNECT_SYNC_MIN_INTERVAL_MS) return;
+        if (hasConnected && now - lastReconnectSyncAt < RECONNECT_SYNC_MIN_INTERVAL_MS) return;
+        hasConnected = true;
         lastReconnectSyncAt = now;
 
         void performDeltaSync(userId)
@@ -373,9 +378,30 @@ export async function updateJobInCache(jobId: string, userId?: string): Promise<
   if (error) throw error;
   
   if (job) {
-    const [enriched] = await enrichJobOrders([job]);
-    await withCacheUser(userId, [db.jobs], () => db.jobs.put(enriched));
+    await cacheJobOrder(job, userId);
   }
+}
+
+export async function cacheJobOrder(
+  job: JobOrderSyncRecord,
+  userId: string,
+): Promise<void> {
+  const [enriched] = await enrichJobOrders([job]);
+  await withCacheUser(userId, [db.jobs], () => db.jobs.put(enriched));
+}
+
+export async function patchJobOrderCache(
+  jobId: string,
+  updates: Partial<DexieJobOrder>,
+  userId: string,
+): Promise<void> {
+  await withCacheUser(userId, [db.jobs], async () => {
+    const cachedJob = await db.jobs.get(jobId);
+    if (!cachedJob) {
+      throw new Error(`Job ${jobId} is missing from the local cache; refresh the job list and retry.`);
+    }
+    await db.jobs.put({ ...cachedJob, ...updates });
+  });
 }
 
 export async function removeJobFromCache(jobId: string, userId: string): Promise<void> {
@@ -397,7 +423,12 @@ export function repairMissingJobs(userId: string): Promise<number> {
   if (repairSyncPromise?.userId === userId) return repairSyncPromise.promise;
 
   const sync = runSync(() => retrySync(async () => {
-    if (Date.now() - lastRepairAt < REPAIR_INTERVAL_MS) return 0;
+    if (
+      lastRepairUserId === userId &&
+      Date.now() - lastRepairAt < REPAIR_INTERVAL_MS
+    ) {
+      return 0;
+    }
 
     // Use keyset pagination so the repair includes every row beyond Supabase's page limit.
     const supabaseJobs: Array<{ id: string }> = [];
@@ -456,6 +487,7 @@ export function repairMissingJobs(userId: string): Promise<number> {
     }
 
     lastRepairAt = Date.now();
+    lastRepairUserId = userId;
     return missingJobIds.length + deletedJobIds.length;
   }));
   const trackedSync = sync.finally(() => {

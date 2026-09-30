@@ -56,23 +56,30 @@ npm run build
 ```
 
 The browser cache is powered by Dexie, isolated per signed-in user, and updated from
-Supabase Realtime row changes. Sync work is serialized, retried on failure, and
-reconciles hard-deleted jobs during startup and after a Realtime reconnect. Realtime
-sync pauses while the app tab is hidden or the browser is offline, then reconciles
-when the tab becomes visible and online again. Production deployments should apply
-Supabase migrations and deploy the Edge Functions before exposing the frontend.
+Supabase Realtime row changes. Successful job and invoice writes update Dexie from
+the returned database row, avoiding a second fetch; no-op job edits do not send an
+UPDATE. Sync work is serialized, retried on failure, and reconciles hard-deleted jobs
+during startup and after a Realtime reconnect. Realtime sync pauses while the app tab
+is hidden or the browser is offline, then reconciles when the tab becomes visible and
+online again. The notification bell opens a tray; alert dialogs only open when the
+user chooses to review an actionable notification.
+
+No new Edge Function is required for these frontend changes. Supabase Realtime must
+be enabled for `job_orders`, `notifications`, and `job_edit_audit` for live updates
+and alerts to reach connected clients. The existing `send-notification` function is
+still used for pending-job email notifications and must remain deployed for that
+feature. Production deployments should apply the project's Supabase migrations and
+deploy any Edge Functions already used by the app.
 
 Workflow alerts listen for new job orders and approval or completion status changes
 through Supabase Realtime. Unread alerts are kept in browser local storage so they
 survive tab closure and synchronize between tabs without adding database fields or
 tables. The legacy full-table alert snapshot is removed on startup.
-Admin completion alerts remain queued until an invoice number is saved and the job
-is marked invoiced; closing the dialog hides it until the next page load. Desktop
-alerts are optional and can be enabled from the dashboard
-notification menu; sound and desktop delivery depend on browser permission and
-autoplay policies. The dashboard groups cached active jobs into design, approval,
-execution, and invoicing queues. Queue items animate in with a short stagger; browsers
-using a reduced-motion preference intentionally skip the animation.
+Admin completion alerts remain queued in the tray until an invoice number is saved
+and the job is marked invoiced; closing the action dialog leaves the alert available
+for later. The dashboard groups cached active jobs into design, approval, execution,
+and invoicing queues. Queue items animate in with a short stagger; browsers using a
+reduced-motion preference intentionally skip the animation.
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
 Install Node.js 20.19.x or 22.12+ and npm before starting the app. You can install

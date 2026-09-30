@@ -1,20 +1,23 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { JobOrder, JobOrderUpdatePayload, JobStatus } from '@/types/jobOrder';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { updateJobOrder, updateJobOrderStatus } from '@/services/jobOrdersApi';
+import { cacheJobOrder } from '@/services/syncService';
+import { db } from '@/lib/dexieDb';
 
 export function useJobOrderMutations() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { addNotification, showHighPriorityAlert } = useNotifications();
+  const { addNotification } = useNotifications();
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: JobStatus }) => {
-      await updateJobOrderStatus(id, status);
+      if (!user) throw new Error('A signed-in user is required to update a job');
+      const updatedJob = await updateJobOrderStatus(id, status);
+      await cacheJobOrder(updatedJob, user.id);
       return { id, status };
     },
     
@@ -56,12 +59,13 @@ export function useJobOrderMutations() {
 
   const approveJob = useMutation({
     mutationFn: async ({ jobId }: { jobId: string }) => {
-      const { data: user } = await supabase.auth.getUser();
-      await updateJobOrder(jobId, {
+      if (!user) throw new Error('A signed-in user is required to approve a job');
+      const updatedJob = await updateJobOrder(jobId, {
         approval_status: 'approved',
-        approved_by: user.user?.id,
+        approved_by: user.id,
         approved_at: new Date().toISOString(),
       });
+      await cacheJobOrder(updatedJob, user.id);
       return { jobId };
     },
     
@@ -118,23 +122,17 @@ export function useJobOrderMutations() {
   const updateJobData = useMutation({
     mutationFn: async (jobData: JobOrderUpdatePayload) => {
       const { id, ...updateData } = jobData;
-      
-      // First get the current job to check if priority changed
-      const { data: currentJob, error: currentJobError } = await supabase
-        .from('job_orders')
-        .select('priority, job_order_number')
-        .eq('id', id)
-        .single();
-      if (currentJobError) throw currentJobError;
-
-      await updateJobOrder(id, updateData);
+      if (!user) throw new Error('A signed-in user is required to update a job');
+      const currentJob = await db.jobs.get(id);
+      const updatedJob = await updateJobOrder(id, updateData);
+      await cacheJobOrder(updatedJob, user.id);
       
       return { 
         id,
         changes: updateData,
-        priority: updateData.priority,
+        priority: updatedJob.priority,
         previousPriority: currentJob?.priority,
-        job_order_number: currentJob?.job_order_number,
+        job_order_number: updatedJob.job_order_number,
       };
     },
     
@@ -156,7 +154,6 @@ export function useJobOrderMutations() {
           jobOrderNumber: updatedData.job_order_number || undefined,
           read: false
         });
-        showHighPriorityAlert(updatedData.job_order_number || '');
       }
       
       toast({

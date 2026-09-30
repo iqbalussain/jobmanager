@@ -3,13 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { cacheJobOrder } from '@/services/syncService';
 import type { CreateJobOrderData, JobOrderRecord } from '@/types/jobOrder';
 
 export function useCreateJobOrder() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { addNotification, showHighPriorityAlert } = useNotifications();
+  const { addNotification } = useNotifications();
 
   const generateJobOrderNumber = async (branch: string): Promise<string> => {
     const { data, error } = await supabase.rpc('generate_next_job_order_number', {
@@ -73,6 +74,9 @@ export function useCreateJobOrder() {
         const error = 'User must be authenticated to create job orders';
         console.error(error);
         throw new Error(error);
+      }
+      if (!navigator.onLine) {
+        throw new Error('You are offline. Reconnect before creating a job order.');
       }
 
       // Validate required fields
@@ -148,8 +152,16 @@ export function useCreateJobOrder() {
 
     onSuccess: (newJobOrder) => {
       queryClient.invalidateQueries({ queryKey: ['job-orders'] });
+      if (user) {
+        void cacheJobOrder(newJobOrder, user.id).catch((error: unknown) => {
+          console.error('Job was created, but the local cache could not be updated:', error);
+          toast({
+            title: 'Job created; local cache needs refresh',
+            description: 'The job is saved in Supabase. Refresh after reconnecting to update this device.',
+          });
+        });
+      }
       
-      // High Priority Alert - trigger notification and popup
       if (newJobOrder.priority === 'high') {
         addNotification({
           type: 'high_priority',
@@ -157,12 +169,11 @@ export function useCreateJobOrder() {
           jobOrderNumber: newJobOrder.job_order_number,
           read: false
         });
-        showHighPriorityAlert(newJobOrder.job_order_number);
       }
       
       toast({
         title: 'Success',
-        description: 'Job order created successfully. Notification sent for approval.',
+        description: 'Job order created successfully.',
       });
     },
 

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, Eye, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { updateJobOrder } from "@/services/jobOrdersApi";
+import { cacheJobOrder, isSyncAvailable, patchJobOrderCache } from "@/services/syncService";
+import { useNotifications } from "@/contexts/NotificationContext";
 import { useJobActions } from "@/hooks/useJobActions";
 import type { DashboardJob, JobOrderRecord, JobStatus } from "@/types/jobOrder";
 
@@ -28,9 +30,14 @@ interface WorkflowAlertsUpdatedDetail {
   alerts: WorkflowAlert[];
 }
 
+interface WorkflowAlertOpenDetail {
+  id: string;
+}
+
 declare global {
   interface WindowEventMap {
     "workflow-alerts-updated": CustomEvent<WorkflowAlertsUpdatedDetail>;
+    "workflow-alert-open": CustomEvent<WorkflowAlertOpenDetail>;
   }
 }
 
@@ -110,12 +117,12 @@ const chimeDataUrl = createChimeDataUrl();
 
 export function WorkflowAlertManager() {
   const { user } = useAuth();
+  const { addNotification, notifications: localNotifications, markAsRead } = useNotifications();
   const userId = user?.id;
   const { setJobStatus } = useJobActions();
   const [role, setRole] = useState<string | null>(null);
   const [alerts, setAlerts] = useState<WorkflowAlert[]>([]);
-  const [temporarilyDismissedCompletionAlerts, setTemporarilyDismissedCompletionAlerts] =
-    useState<Set<string>>(() => new Set());
+  const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<JobStatus | "">("");
   const [viewJob, setViewJob] = useState<DashboardJob | null>(null);
@@ -131,23 +138,48 @@ export function WorkflowAlertManager() {
     () => userId ? `jobmanager:workflow-snapshot:${userId}` : null,
     [userId],
   );
-  const activeAlert = alerts.find(
+  
+  const activeAlert = useMemo(() => alerts.find(
     (alert) =>
-      (role === "admin" || alert.type !== "completed") &&
-      !(alert.type === "completed" && temporarilyDismissedCompletionAlerts.has(alert.id)),
-  ) || null;
+      alert.id === selectedAlertId &&
+      (role === "admin" || alert.type !== "completed"),
+  ) || null, [alerts, role, selectedAlertId]);
+
   const isCompletionAlert = activeAlert?.type === "completed";
+
+  const publishWorkflowNotifications = useCallback((addedAlerts: WorkflowAlert[]) => {
+    addedAlerts.forEach((alert) => {
+      addNotification({
+        type: alert.type === "completed"
+          ? "invoice_completed"
+          : alert.type === "created"
+            ? "job_created"
+            : "status_change",
+        message: alert.type === "completed"
+          ? `Job #${alert.jobOrderNumber} is completed and needs an invoice.`
+          : alert.type === "approved"
+            ? `Job #${alert.jobOrderNumber} has been approved.`
+            : `Job #${alert.jobOrderNumber} was created.`,
+        jobOrderNumber: alert.jobOrderNumber,
+        actionId: alert.id,
+        read: false,
+      });
+    });
+  }, [addNotification]);
 
   useEffect(() => {
     if (!userId || !alertKey) {
       setRole(null);
       setAlerts([]);
-      setTemporarilyDismissedCompletionAlerts(new Set());
+      setSelectedAlertId(null);
       return;
     }
 
-    setAlerts(getStoredAlerts(alertKey));
-    setTemporarilyDismissedCompletionAlerts(new Set());
+    setRole(null);
+    setSelectedAlertId(null);
+    const savedAlerts = getStoredAlerts(alertKey);
+    setAlerts(savedAlerts);
+    publishWorkflowNotifications(savedAlerts);
     try {
       if (legacySnapshotKey) localStorage.removeItem(legacySnapshotKey);
     } catch (error) {
@@ -156,21 +188,26 @@ export function WorkflowAlertManager() {
 
     let active = true;
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let resolvedRole: string | null = null;
 
     const startRealtimeAlerts = async () => {
-      const { data: profile, error: roleError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
+      if (!active || !isSyncAvailable() || channel) return;
+      if (resolvedRole === null) {
+        const { data: profile, error: roleError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", userId)
+          .single();
 
-      if (!active) return;
-      if (roleError) {
-        console.error("Failed to load workflow alert role:", roleError);
-        return;
+        if (!active || !isSyncAvailable()) return;
+        if (roleError) {
+          console.error("Failed to load workflow alert role:", roleError);
+          return;
+        }
+        resolvedRole = profile?.role || "";
       }
 
-      const currentRole = profile?.role || "";
+      const currentRole = resolvedRole;
       setRole(currentRole);
       if (!["designer", "salesman", "admin", "manager", "job_order_manager"].includes(currentRole)) return;
 
@@ -178,23 +215,12 @@ export function WorkflowAlertManager() {
         if (!active || addedAlerts.length === 0) return;
         const existingAlerts = getStoredAlerts(alertKey);
         const knownIds = new Set(existingAlerts.map((alert) => alert.id));
-        addedAlerts = addedAlerts.filter((alert) => !knownIds.has(alert.id));
-        if (addedAlerts.length > 0) {
-          const updatedAlerts = [...existingAlerts, ...addedAlerts];
+        const filteredAdded = addedAlerts.filter((alert) => !knownIds.has(alert.id));
+        if (filteredAdded.length > 0) {
+          const updatedAlerts = [...existingAlerts, ...filteredAdded];
           persistAlerts(alertKey, updatedAlerts);
           setAlerts(updatedAlerts);
-          if (document.visibilityState !== "visible" && "Notification" in window && Notification.permission === "granted") {
-            addedAlerts.forEach((alert) => {
-              try {
-                new Notification(
-                  alert.type === "completed" ? "Invoice required" : "Job order update",
-                  { body: `Job ${alert.jobOrderNumber} ${alert.type === "completed" ? "is completed and needs an invoice." : alert.type === "approved" ? "has been approved." : "was created."}` },
-                );
-              } catch (notificationError) {
-                console.error("Failed to display desktop workflow alert:", notificationError);
-              }
-            });
-          }
+          publishWorkflowNotifications(filteredAdded);
           if (audioRef.current) {
             audioRef.current.currentTime = 0;
             void audioRef.current.play().catch((error: unknown) => {
@@ -261,9 +287,26 @@ export function WorkflowAlertManager() {
     };
 
     void startRealtimeAlerts();
+    const handleAvailabilityChange = () => {
+      if (isSyncAvailable()) {
+        void startRealtimeAlerts();
+      } else if (channel) {
+        void supabase.removeChannel(channel);
+        channel = null;
+      }
+    };
+    const handleOpenWorkflowAlert = (event: WindowEventMap["workflow-alert-open"]) => {
+      if (getStoredAlerts(alertKey).some((alert) => alert.id === event.detail.id)) {
+        setSelectedAlertId(event.detail.id);
+      }
+    };
 
     const handleStorage = (event: StorageEvent) => {
-      if (event.key === alertKey) setAlerts(getStoredAlerts(alertKey));
+      if (event.key === alertKey) {
+        const updatedAlerts = getStoredAlerts(alertKey);
+        setAlerts(updatedAlerts);
+        publishWorkflowNotifications(updatedAlerts);
+      }
     };
     const handleSameTabUpdate = (
       event: WindowEventMap["workflow-alerts-updated"],
@@ -274,6 +317,10 @@ export function WorkflowAlertManager() {
     };
     window.addEventListener("storage", handleStorage);
     window.addEventListener(WORKFLOW_ALERTS_UPDATED_EVENT, handleSameTabUpdate);
+    window.addEventListener("workflow-alert-open", handleOpenWorkflowAlert);
+    window.addEventListener("online", handleAvailabilityChange);
+    window.addEventListener("offline", handleAvailabilityChange);
+    document.addEventListener("visibilitychange", handleAvailabilityChange);
 
     return () => {
       active = false;
@@ -282,8 +329,12 @@ export function WorkflowAlertManager() {
       }
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(WORKFLOW_ALERTS_UPDATED_EVENT, handleSameTabUpdate);
+      window.removeEventListener("workflow-alert-open", handleOpenWorkflowAlert);
+      window.removeEventListener("online", handleAvailabilityChange);
+      window.removeEventListener("offline", handleAvailabilityChange);
+      document.removeEventListener("visibilitychange", handleAvailabilityChange);
     };
-  }, [userId]);
+  }, [userId, alertKey, legacySnapshotKey, publishWorkflowNotifications]);
 
   useEffect(() => {
     setInvoiceNumber("");
@@ -304,6 +355,11 @@ export function WorkflowAlertManager() {
     const updatedAlerts = currentAlerts.filter((alert) => alert.id !== activeAlert.id);
     persistAlerts(alertKey, updatedAlerts);
     setAlerts(updatedAlerts);
+    setSelectedAlertId(null);
+    const localNotification = localNotifications.find(
+      (notification) => notification.actionId === activeAlert.id,
+    );
+    if (localNotification) markAsRead(localNotification.id);
   };
 
   const submitInvoice = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -318,11 +374,13 @@ export function WorkflowAlertManager() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      await updateJobOrder(activeAlert.jobId, {
+      const updatedJob = await updateJobOrder(activeAlert.jobId, {
         status: "invoiced",
         invoice_number: normalizedInvoiceNumber,
         updated_at: new Date().toISOString(),
       });
+      if (!userId) throw new Error("A signed-in user is required to save the invoice.");
+      await cacheJobOrder(updatedJob, userId);
       dismissActiveAlert();
     } catch (error) {
       console.error("Failed to save invoice and update job status:", error);
@@ -338,12 +396,15 @@ export function WorkflowAlertManager() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
+      if (!navigator.onLine) throw new Error("Reconnect before approving this job.");
+      const approvedAt = new Date().toISOString();
       const { data, error } = await supabase
         .from("job_orders")
         .update({
           approval_status: "approved",
           approved_by: userId,
-          approved_at: new Date().toISOString(),
+          approved_at: approvedAt,
+          updated_at: approvedAt,
         })
         .eq("id", activeAlert.jobId)
         .eq("approval_status", "pending_approval")
@@ -352,6 +413,12 @@ export function WorkflowAlertManager() {
 
       if (error) throw error;
       if (!data) throw new Error("This job is no longer awaiting approval.");
+      await patchJobOrderCache(activeAlert.jobId, {
+        approval_status: "approved",
+        approved_by: userId,
+        approved_at: approvedAt,
+        updated_at: approvedAt,
+      }, userId);
       dismissActiveAlert();
     } catch (error) {
       console.error("Failed to approve new job order:", error);
@@ -448,25 +515,11 @@ export function WorkflowAlertManager() {
       <Dialog
         open={!!activeAlert}
         onOpenChange={(open) => {
-          if (!open && activeAlert) {
-            if (isCompletionAlert) {
-              setTemporarilyDismissedCompletionAlerts((previous) => {
-                const dismissed = new Set(previous);
-                alerts
-                  .filter((alert) => alert.type === "completed")
-                  .forEach((alert) => dismissed.add(alert.id));
-                return dismissed;
-              });
-            } else {
-              dismissActiveAlert();
-            }
-          }
+          if (!open) setSelectedAlertId(null);
         }}
       >
         <DialogContent
           className="sm:max-w-md"
-          onEscapeKeyDown={(event) => event.preventDefault()}
-          onPointerDownOutside={(event) => event.preventDefault()}
         >
           <DialogHeader>
             <div className="mx-auto rounded-full bg-primary/10 p-3">

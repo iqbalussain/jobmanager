@@ -3,10 +3,8 @@ import { db } from '@/lib/dexieDb';
 import { 
   needsInitialSync, 
   performInitialSync, 
-  performDeltaSync, 
   startRealtimeSync,
   stopRealtimeSync,
-  repairMissingJobs,
   isSyncAvailable
 } from '@/services/syncService';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -39,22 +37,20 @@ export function useDexieJobs(
     let cancelled = false;
     let syncInProgress = false;
     let syncPending = false;
+    let hasInitialized = false;
 
     const canSync = () => Boolean(userId) && isSyncAvailable();
 
     const syncAndSubscribe = async () => {
       if (!userId || cancelled || !canSync() || syncInProgress) return;
       syncInProgress = true;
-      setIsLoading(true);
+      if (!hasInitialized) setIsLoading(true);
       setIsSyncing(true);
       setSyncError(null);
 
       try {
         if (await needsInitialSync()) {
           await performInitialSync(userId);
-        } else {
-          await performDeltaSync(userId);
-          await repairMissingJobs(userId);
         }
 
         if (!cancelled && canSync()) {
@@ -71,6 +67,7 @@ export function useDexieJobs(
       } finally {
         syncInProgress = false;
         if (!cancelled) {
+          hasInitialized = true;
           setIsLoading(false);
           setIsSyncing(false);
           if (syncPending && canSync()) {

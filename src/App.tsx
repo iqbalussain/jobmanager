@@ -6,14 +6,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import { subscribeJobEdits } from "@/lib/realtime";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { isSyncAvailable } from "@/services/syncService";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { FloatingCreateButton } from "@/components/FloatingCreateButton";
 import { WorkflowAlertManager } from "@/components/WorkflowAlertManager";
-import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
-import { HighPriorityAlertModal } from "@/components/dashboard/HighPriorityAlertModal";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
@@ -30,35 +30,43 @@ const queryClient = new QueryClient({
   },
 });
 
-function GlobalHighPriorityAlert() {
-  const { highPriorityAlert, closeHighPriorityAlert } = useNotifications();
-
-  return (
-    <HighPriorityAlertModal
-      isOpen={!!highPriorityAlert?.show}
-      onClose={closeHighPriorityAlert}
-      jobOrderNumber={highPriorityAlert?.jobOrderNumber}
-      message={highPriorityAlert?.message}
-    />
-  );
-}
-
 function JobEditNotifications() {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { addNotification } = useNotifications();
   const userId = user?.id;
 
   useEffect(() => {
     if (!userId) return;
 
-    return subscribeJobEdits((audit) => {
-      const editorName = audit.edited_by_name || "Someone";
-      toast({
-        title: `Job #${audit.job_order_number} updated`,
-        description: `${editorName} made changes to this job. Click to view.`,
-      });
-    }, userId);
-  }, [userId, toast]);
+    let stopSubscription: (() => void) | null = null;
+    const updateSubscription = () => {
+      if (isSyncAvailable() && !stopSubscription) {
+        stopSubscription = subscribeJobEdits((audit) => {
+          const editorName = audit.edited_by_name || "Someone";
+          addNotification({
+            type: "status_change",
+            message: `${editorName} updated job #${audit.job_order_number}.`,
+            jobOrderNumber: audit.job_order_number,
+            read: false,
+          });
+        }, userId);
+      } else if (!isSyncAvailable() && stopSubscription) {
+        stopSubscription();
+        stopSubscription = null;
+      }
+    };
+
+    updateSubscription();
+    window.addEventListener("online", updateSubscription);
+    window.addEventListener("offline", updateSubscription);
+    document.addEventListener("visibilitychange", updateSubscription);
+    return () => {
+      window.removeEventListener("online", updateSubscription);
+      window.removeEventListener("offline", updateSubscription);
+      document.removeEventListener("visibilitychange", updateSubscription);
+      stopSubscription?.();
+    };
+  }, [userId, addNotification]);
 
   return null;
 }
@@ -121,7 +129,6 @@ function App() {
                 </Routes>
                 <FloatingCreateButton />
               </BrowserRouter>
-              <GlobalHighPriorityAlert />
               <WorkflowAlertManager />
             </div>
           </TooltipProvider>

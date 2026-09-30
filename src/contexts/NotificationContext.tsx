@@ -1,19 +1,25 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { toast } from "@/components/ui/sonner";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface AppNotification {
   id: string;
   type: 'high_priority' | 'job_created' | 'status_change' | 'invoice_completed' | 'info';
   message: string;
   jobOrderNumber?: string;
+  actionId?: string;
   time: string;
   read: boolean;
 }
 
-interface HighPriorityAlert {
-  show: boolean;
-  jobOrderNumber: string;
-  message: string;
+function isAppNotification(value: unknown): value is AppNotification {
+  if (typeof value !== "object" || value === null) return false;
+  const notification = value as Record<string, unknown>;
+  return typeof notification.id === "string" &&
+    ["high_priority", "job_created", "status_change", "invoice_completed", "info"]
+      .includes(String(notification.type)) &&
+    typeof notification.message === "string" &&
+    typeof notification.time === "string" &&
+    typeof notification.read === "boolean";
 }
 
 interface NotificationContextType {
@@ -21,33 +27,84 @@ interface NotificationContextType {
   addNotification: (notification: Omit<AppNotification, 'id' | 'time'>) => void;
   markAsRead: (id: string) => void;
   clearNotifications: () => void;
-  highPriorityAlert: HighPriorityAlert | null;
-  showHighPriorityAlert: (jobOrderNumber: string, message?: string) => void;
-  closeHighPriorityAlert: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  // Server-backed notifications and their offline cache are managed by
-  // useNotifications. This context owns the local in-app notification tray.
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [hydratedUserId, setHydratedUserId] = useState<string | null>(null);
+  const pendingNotifications = useRef(new Map<string, AppNotification[]>());
 
-  const [highPriorityAlert, setHighPriorityAlert] = useState<HighPriorityAlert | null>(null);
+  useEffect(() => {
+    if (!userId) {
+      setNotifications([]);
+      setHydratedUserId(null);
+      return;
+    }
+
+    const storageKey = `jobmanager:local-notifications:${userId}`;
+    let loaded: AppNotification[] = [];
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed: unknown = JSON.parse(saved);
+        if (!Array.isArray(parsed)) throw new Error("Saved notifications are not a list");
+        loaded = parsed.filter(isAppNotification);
+      }
+    } catch (error) {
+      console.error("Failed to load saved notifications:", error);
+    }
+    const pending = pendingNotifications.current.get(userId) || [];
+    pendingNotifications.current.delete(userId);
+    setNotifications([...pending, ...loaded].slice(0, 50));
+    setHydratedUserId(userId);
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId || hydratedUserId !== userId) return;
+    try {
+      localStorage.setItem(
+        `jobmanager:local-notifications:${userId}`,
+        JSON.stringify(notifications),
+      );
+    } catch (error) {
+      console.error("Failed to save local notifications:", error);
+    }
+  }, [notifications, userId, hydratedUserId]);
+
+  const visibleNotifications = hydratedUserId === userId ? notifications : [];
 
   const addNotification = useCallback((notification: Omit<AppNotification, 'id' | 'time'>) => {
+    if (!userId) return;
     const newNotification: AppNotification = {
       ...notification,
       id: crypto.randomUUID(),
       time: new Date().toISOString(),
     };
+
+    if (hydratedUserId !== userId) {
+      const pending = pendingNotifications.current.get(userId) || [];
+      if (!newNotification.actionId || !pending.some(
+        (savedNotification) => savedNotification.actionId === newNotification.actionId,
+      )) {
+        pendingNotifications.current.set(userId, [newNotification, ...pending].slice(0, 50));
+      }
+      return;
+    }
     
     setNotifications(prev => {
+      if (newNotification.actionId && prev.some(
+        notification => notification.actionId === newNotification.actionId,
+      )) {
+        return prev;
+      }
       const updated = [newNotification, ...prev].slice(0, 50); // Keep last 50
       return updated;
     });
-    toast(newNotification.message, { duration: 10_000, position: "bottom-right" });
-  }, []);
+  }, [userId, hydratedUserId]);
 
   const markAsRead = useCallback((id: string) => {
     setNotifications(prev => {
@@ -59,27 +116,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications([]);
   }, []);
 
-  const showHighPriorityAlert = useCallback((jobOrderNumber: string, message?: string) => {
-    setHighPriorityAlert({
-      show: true,
-      jobOrderNumber,
-      message: message || `⚠ Job ${jobOrderNumber} has been marked as HIGH PRIORITY.`
-    });
-  }, []);
-
-  const closeHighPriorityAlert = useCallback(() => {
-    setHighPriorityAlert(null);
-  }, []);
-
   return (
     <NotificationContext.Provider value={{
-      notifications,
+      notifications: visibleNotifications,
       addNotification,
       markAsRead,
-      clearNotifications,
-      highPriorityAlert,
-      showHighPriorityAlert,
-      closeHighPriorityAlert
+      clearNotifications
     }}>
       {children}
     </NotificationContext.Provider>

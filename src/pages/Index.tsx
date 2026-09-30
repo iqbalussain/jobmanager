@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useEffect, useCallback, useMemo } from "react";
+import { useState, lazy, Suspense, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useDexieJobs } from "@/hooks/useDexieJobs";
@@ -7,11 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { JobDetails } from "@/components/JobDetails";
 import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 import { useJobActions } from "@/hooks/useJobActions";
-import { updateJobInCache } from "@/services/syncService";
-import { HighPriorityModal } from "@/components/HighPriorityModal";
-import type { DashboardJob as Job, JobOrderUpdatePayload, JobStatus } from "@/types/jobOrder";
+import type { DashboardJob as Job, JobStatus } from "@/types/jobOrder";
 import { transformDexieJobOrder } from "@/utils/jobOrderTransforms";
-import { updateJobOrder } from "@/services/jobOrdersApi";
 import Unauthorized from "./Unauthorized";
 
 // Lazy loaded components for performance
@@ -102,24 +99,6 @@ const Index = () => {
 
   const handleStatusUpdate = async (jobId: string, status: JobStatus) => {
     await setJobStatus(jobId, status);
-  };
-
-  const handleJobDataUpdate = async (jobData: JobOrderUpdatePayload) => {
-    // Update job in Supabase then sync to Dexie
-    try {
-      const { id, ...updates } = jobData;
-      await updateJobOrder(id, updates);
-      if (!user) {
-        throw new Error('A signed-in user is required to update the local cache');
-      }
-      await updateJobInCache(id, user.id);
-    } catch (error) {
-      console.error("Failed to update job:", error);
-    }
-  };
-
-  const handleJobApproved = () => {
-    refresh(); // Refresh job orders after approval
   };
 
   const handleViewJob = (job: Job) => {
@@ -235,7 +214,6 @@ const Index = () => {
         isOpen={isJobDetailsOpen}
         onClose={() => setIsJobDetailsOpen(false)}
         job={selectedJob}
-        onJobUpdated={handleJobDataUpdate}
       />
 
       {/* Create Job Order Dialog */}
@@ -243,9 +221,6 @@ const Index = () => {
         open={isCreateJobOpen}
         onOpenChange={setIsCreateJobOpen}
       />
-
-      {/* High Priority Notifications Modal */}
-      <HighPriorityModal />
     </div>
   );
 };

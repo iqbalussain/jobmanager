@@ -7,16 +7,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { shareJobOrderViaWhatsApp } from "@/utils/whatsappShare";
 import { updateJobOrder } from "@/services/jobOrdersApi";
-import type { JobOrderUpdate, JobOrderUpdatePayload } from "@/types/jobOrder";
+import { cacheJobOrder } from "@/services/syncService";
+import type { JobOrderUpdate } from "@/types/jobOrder";
 
 interface UseJobDetailsProps {
   job: Job | null;
   isEditMode: boolean;
   onClose: () => void;
-  onJobUpdated?: (jobData: JobOrderUpdatePayload) => void;
 }
 
-export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJobDetailsProps) {
+export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) {
   const [editData, setEditData] = useState<Partial<Job>>({});
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -61,74 +61,81 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
   }, [job]);
 
   useEffect(() => {
-    if (user) {
-      fetchUserRole();
+    if (!user?.id || !job || !isOpen) {
+      setUserRole('');
+      return;
     }
-  }, [user]);
+    let active = true;
+    setUserRole('');
 
-  const fetchUserRole = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) {
+    const loadRole = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (error) {
+          console.error('Error fetching user role:', error);
+          return;
+        }
+        if (active && data) setUserRole(data.role);
+      } catch (error) {
         console.error('Error fetching user role:', error);
-        return;
       }
-      
-      if (data) {
-        setUserRole(data.role);
-      }
-    } catch (error) {
-      console.error('Error fetching user role:', error);
-    }
-  };
+    };
+    void loadRole();
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id, job?.id, isOpen]);
 
   const handleSave = async () => {
     if (!job) return;
 
-    setIsLoading(true);
-    
-    // Optimistic update - show changes immediately
-    const updateData: JobOrderUpdate = {
-      priority: editData.priority,
-      due_date: editData.dueDate,
-      estimated_hours: editData.estimatedHours,
-      branch: editData.branch,
-      job_order_details: editData.jobOrderDetails,
-      delivered_at: editData.deliveredAt,
-      updated_at: new Date().toISOString()
-    };
-
-    // Include customer_id and job_title_id if they were changed
-    if (editData.customer_id) {
+    const updateData: JobOrderUpdate = {};
+    if (editData.priority !== job.priority) updateData.priority = editData.priority;
+    if (editData.dueDate !== job.dueDate) updateData.due_date = editData.dueDate;
+    if (editData.estimatedHours !== job.estimatedHours) {
+      updateData.estimated_hours = editData.estimatedHours;
+    }
+    if (editData.branch !== job.branch) updateData.branch = editData.branch;
+    if (editData.jobOrderDetails !== job.jobOrderDetails) {
+      updateData.job_order_details = editData.jobOrderDetails;
+    }
+    if (editData.deliveredAt !== job.deliveredAt) {
+      updateData.delivered_at = editData.deliveredAt;
+    }
+    if (editData.customer_id && editData.customer_id !== job.customer_id) {
       updateData.customer_id = editData.customer_id;
     }
-    if (editData.job_title_id) {
+    if (editData.job_title_id && editData.job_title_id !== job.job_title_id) {
       updateData.job_title_id = editData.job_title_id;
     }
 
     // Only include invoice_number if user is authorized
     if (canEditInvoice) {
       const normalizedInvoiceNumber = invoiceNumber.trim();
-      updateData.invoice_number = normalizedInvoiceNumber || null;
-      if (normalizedInvoiceNumber) {
+      if (normalizedInvoiceNumber !== (job.invoiceNumber || "")) {
+        updateData.invoice_number = normalizedInvoiceNumber || null;
+      }
+      if (normalizedInvoiceNumber && job.status !== "invoiced") {
         updateData.status = 'invoiced';
       }
     }
 
-    // Call the callback to update the parent component's state immediately
-    if (onJobUpdated) {
-      onJobUpdated({ id: job.id, ...updateData });
+    if (Object.keys(updateData).length === 0) {
+      onClose();
+      return;
     }
+    updateData.updated_at = new Date().toISOString();
 
+    setIsLoading(true);
     try {
-      await updateJobOrder(job.id, updateData);
+      if (!user) throw new Error("A signed-in user is required to save job changes.");
+      const updatedJob = await updateJobOrder(job.id, updateData);
+      await cacheJobOrder(updatedJob, user.id);
 
       const normalizedInvoiceNumber = invoiceNumber.trim();
       if (canEditInvoice && normalizedInvoiceNumber) notifyInvoiceCompletion(normalizedInvoiceNumber);
@@ -141,22 +148,7 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
       onClose();
     } catch (error) {
       console.error('Error updating job:', error);
-      
-      // Revert the optimistic update on error
-      if (onJobUpdated) {
-        onJobUpdated({ 
-          id: job.id, 
-          priority: job.priority,
-          due_date: job.dueDate,
-          estimated_hours: job.estimatedHours,
-          branch: job.branch,
-          job_title_id: job.job_title_id,
-          job_order_details: job.jobOrderDetails,
-          delivered_at: job.deliveredAt,
-          invoice_number: job.invoiceNumber
-        });
-      }
-      
+
       toast({
         title: "Error",
         description: "Failed to update job order",
@@ -175,20 +167,14 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
       // If there's an invoice number and user is authorized, save it first
       const normalizedInvoiceNumber = invoiceNumber.trim();
       if (normalizedInvoiceNumber && normalizedInvoiceNumber !== job.invoiceNumber && canEditInvoice) {
-        await updateJobOrder(job.id, {
+        if (!user) throw new Error("A signed-in user is required to save the invoice.");
+        const updatedJob = await updateJobOrder(job.id, {
           invoice_number: normalizedInvoiceNumber,
           status: 'invoiced',
           updated_at: new Date().toISOString(),
         });
+        await cacheJobOrder(updatedJob, user.id);
         
-        // Update parent state as well
-        if (onJobUpdated) {
-          onJobUpdated({
-            id: job.id,
-            invoice_number: normalizedInvoiceNumber,
-            status: 'invoiced',
-          });
-        }
         notifyInvoiceCompletion(normalizedInvoiceNumber);
       }
 
@@ -218,20 +204,14 @@ export function useJobDetails({ job, isEditMode, onClose, onJobUpdated }: UseJob
       // If there's an invoice number and user is authorized, save it first
       const normalizedInvoiceNumber = invoiceNumber.trim();
       if (normalizedInvoiceNumber && normalizedInvoiceNumber !== job.invoiceNumber && canEditInvoice) {
-        await updateJobOrder(job.id, {
+        if (!user) throw new Error("A signed-in user is required to save the invoice.");
+        const updatedJob = await updateJobOrder(job.id, {
           invoice_number: normalizedInvoiceNumber,
           status: 'invoiced',
           updated_at: new Date().toISOString(),
         });
+        await cacheJobOrder(updatedJob, user.id);
         
-        // Update parent state as well
-        if (onJobUpdated) {
-          onJobUpdated({
-            id: job.id,
-            invoice_number: normalizedInvoiceNumber,
-            status: 'invoiced',
-          });
-        }
         notifyInvoiceCompletion(normalizedInvoiceNumber);
       }
 

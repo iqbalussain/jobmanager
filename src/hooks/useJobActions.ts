@@ -2,7 +2,8 @@ import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { updateJobInCache } from '@/services/syncService';
+import { patchJobOrderCache } from '@/services/syncService';
+import { db } from '@/lib/dexieDb';
 import type { JobStatus } from '@/types/jobOrder';
 
 export function useJobActions() {
@@ -12,6 +13,16 @@ export function useJobActions() {
   // Set job status with role-based restrictions via RPC
   const setJobStatus = useCallback(async (jobId: string, status: JobStatus) => {
     if (!user) throw new Error('A signed-in user is required to update job status');
+    if (!navigator.onLine) throw new Error('You are offline. Reconnect before changing a job status.');
+    const cachedJob = await db.jobs.get(jobId);
+    if (cachedJob?.status === status) {
+      return {
+        success: true,
+        ...(cachedJob.job_order_number
+          ? { job_order_number: cachedJob.job_order_number }
+          : {}),
+      };
+    }
 
     const { data, error } = await supabase.rpc('update_job_status', {
       p_job_id: jobId,
@@ -53,8 +64,10 @@ export function useJobActions() {
       return result;
     }
 
-    // Update Dexie cache
-    await updateJobInCache(jobId, user.id);
+    await patchJobOrderCache(jobId, {
+      status,
+      updated_at: new Date().toISOString(),
+    }, user.id);
 
     toast({
       title: 'Status Updated',
