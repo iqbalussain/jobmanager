@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Job } from "@/pages/Index";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,9 +13,10 @@ interface UseJobDetailsProps {
   job: Job | null;
   isEditMode: boolean;
   onClose: () => void;
+  isOpen?: boolean; // Added optional isOpen prop
 }
 
-export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) {
+export function useJobDetails({ job, isEditMode, onClose, isOpen = true }: UseJobDetailsProps) {
   const [editData, setEditData] = useState<Partial<Job>>({});
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -164,7 +164,6 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
 
     setIsExporting(true);
     try {
-      // If there's an invoice number and user is authorized, save it first
       const normalizedInvoiceNumber = invoiceNumber.trim();
       if (normalizedInvoiceNumber && normalizedInvoiceNumber !== job.invoiceNumber && canEditInvoice) {
         if (!user) throw new Error("A signed-in user is required to save the invoice.");
@@ -201,7 +200,6 @@ export function useJobDetails({ job, isEditMode, onClose }: UseJobDetailsProps) 
 
     setIsSharing(true);
     try {
-      // If there's an invoice number and user is authorized, save it first
       const normalizedInvoiceNumber = invoiceNumber.trim();
       if (normalizedInvoiceNumber && normalizedInvoiceNumber !== job.invoiceNumber && canEditInvoice) {
         if (!user) throw new Error("A signed-in user is required to save the invoice.");
