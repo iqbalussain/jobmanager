@@ -6,7 +6,8 @@ import {
   performDeltaSync, 
   startRealtimeSync,
   stopRealtimeSync,
-  repairMissingJobs
+  repairMissingJobs,
+  isSyncAvailable
 } from '@/services/syncService';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useAuth } from '@/hooks/useAuth';
@@ -36,32 +37,27 @@ export function useDexieJobs(
   // Initialize sync on mount
   useEffect(() => {
     let cancelled = false;
-    const initSync = async () => {
-      if (!userId) {
-        setIsLoading(false);
-        setIsSyncing(false);
-        setSyncError(null);
-        return;
-      }
+    let syncInProgress = false;
+    let syncPending = false;
+
+    const canSync = () => Boolean(userId) && isSyncAvailable();
+
+    const syncAndSubscribe = async () => {
+      if (!userId || cancelled || !canSync() || syncInProgress) return;
+      syncInProgress = true;
       setIsLoading(true);
+      setIsSyncing(true);
       setSyncError(null);
-      
+
       try {
         if (await needsInitialSync()) {
-          setIsSyncing(true);
           await performInitialSync(userId);
         } else {
-          // Quick delta sync on load
-          setIsSyncing(true);
           await performDeltaSync(userId);
-          
-          // Check for and repair any missing jobs
           await repairMissingJobs(userId);
         }
-        
-        // Keep the local cache current from row changes instead of polling.
-        if (!cancelled) {
-          setIsSyncing(false);
+
+        if (!cancelled && canSync()) {
           startRealtimeSync(userId, (error) => {
             if (cancelled) return;
             setSyncError(error ? (error instanceof Error ? error.message : 'Sync failed') : null);
@@ -69,19 +65,56 @@ export function useDexieJobs(
         }
       } catch (error) {
         console.error('Sync initialization error:', error);
-        if (!cancelled) {
+        if (!cancelled && canSync()) {
           setSyncError(error instanceof Error ? error.message : 'Sync failed');
-          setIsSyncing(false);
         }
       } finally {
-        if (!cancelled) setIsLoading(false);
+        syncInProgress = false;
+        if (!cancelled) {
+          setIsLoading(false);
+          setIsSyncing(false);
+          if (syncPending && canSync()) {
+            syncPending = false;
+            void syncAndSubscribe();
+          }
+        }
       }
     };
-    
-    initSync();
-    
+
+    const handleAvailabilityChange = () => {
+      if (canSync()) {
+        if (syncInProgress) {
+          syncPending = true;
+          return;
+        }
+        void syncAndSubscribe();
+      } else {
+        stopRealtimeSync();
+      }
+    };
+
+    if (userId) {
+      if (canSync()) {
+        void syncAndSubscribe();
+      } else {
+        setIsLoading(false);
+        setIsSyncing(false);
+      }
+    } else {
+      setIsLoading(false);
+      setIsSyncing(false);
+      setSyncError(null);
+    }
+
+    window.addEventListener('online', handleAvailabilityChange);
+    window.addEventListener('offline', handleAvailabilityChange);
+    document.addEventListener('visibilitychange', handleAvailabilityChange);
+
     return () => {
       cancelled = true;
+      window.removeEventListener('online', handleAvailabilityChange);
+      window.removeEventListener('offline', handleAvailabilityChange);
+      document.removeEventListener('visibilitychange', handleAvailabilityChange);
       stopRealtimeSync();
     };
   }, [userId]);
@@ -187,7 +220,7 @@ export function useDexieJobs(
 
   // Manual refresh
   const refresh = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || !isSyncAvailable()) return;
     setIsSyncing(true);
     setSyncError(null);
     try {

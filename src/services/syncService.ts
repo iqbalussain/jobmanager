@@ -6,6 +6,7 @@ import type { JobOrderRecord } from '@/types/jobOrder';
 const SYNC_META_ID = 'main';
 const REF_SYNC_INTERVAL_MS = 10 * 60_000; // 10 min - reference data rarely changes
 const REPAIR_INTERVAL_MS = 60 * 60_000; // 1 hour - repair check is expensive
+const RECONNECT_SYNC_MIN_INTERVAL_MS = 60_000;
 
 // Egress-optimized column lists (excludes large `description` HTML — fetched on demand in JobDetails)
 const JOB_LIST_COLUMNS =
@@ -20,6 +21,10 @@ let syncQueue: Promise<void> = Promise.resolve();
 let initialSyncPromise: { userId: string; promise: Promise<void> } | null = null;
 let deltaSyncPromise: { userId: string; promise: Promise<number> } | null = null;
 let repairSyncPromise: { userId: string; promise: Promise<number> } | null = null;
+
+export function isSyncAvailable(): boolean {
+  return navigator.onLine && document.visibilityState === 'visible';
+}
 
 function runSync<T>(operation: () => Promise<T>): Promise<T> {
   const result = syncQueue.then(operation, operation);
@@ -62,7 +67,9 @@ export async function needsInitialSync(): Promise<boolean> {
 }
 
 async function syncInitialData(userId: string): Promise<void> {
+  if (!isSyncAvailable()) return;
   await syncReferenceData(userId, true);
+  if (!isSyncAvailable()) return;
 
   const { count, error: countError } = await supabase
     .from('job_orders')
@@ -73,6 +80,7 @@ async function syncInitialData(userId: string): Promise<void> {
   const totalBatches = Math.ceil((count || 0) / BATCH_SIZE);
 
   for (let batch = 0; batch < totalBatches; batch++) {
+    if (!isSyncAvailable()) return;
     const from = batch * BATCH_SIZE;
     const to = from + BATCH_SIZE - 1;
 
@@ -90,7 +98,9 @@ async function syncInitialData(userId: string): Promise<void> {
     }
   }
 
-  await setLastSyncTime(userId, new Date().toISOString());
+  if (isSyncAvailable()) {
+    await setLastSyncTime(userId, new Date().toISOString());
+  }
 }
 
 // Perform full initial sync
@@ -218,6 +228,7 @@ export function performDeltaSync(userId: string): Promise<number> {
   if (deltaSyncPromise?.userId === userId) return deltaSyncPromise.promise;
 
   const sync = runSync(() => retrySync(async () => {
+    if (!isSyncAvailable()) return 0;
     const lastSync = await getLastSyncTime();
     if (!lastSync) {
       await syncInitialData(userId);
@@ -226,6 +237,7 @@ export function performDeltaSync(userId: string): Promise<number> {
 
     // Sync reference data (throttled internally to every 10 min)
     await syncReferenceData(userId);
+    if (!isSyncAvailable()) return 0;
     
     const syncStartedAt = new Date().toISOString();
     const batchSize = 500;
@@ -233,6 +245,7 @@ export function performDeltaSync(userId: string): Promise<number> {
     let updatedCount = 0;
 
     while (true) {
+      if (!isSyncAvailable()) return updatedCount;
       const { data: updatedJobs, error } = await supabase
         .from('job_orders')
         .select(JOB_LIST_COLUMNS)
@@ -252,6 +265,7 @@ export function performDeltaSync(userId: string): Promise<number> {
       offset += updatedJobs.length;
     }
 
+    if (!isSyncAvailable()) return updatedCount;
     await setLastSyncTime(userId, syncStartedAt);
     return updatedCount;
   }));
@@ -285,6 +299,8 @@ export function startRealtimeSync(
   if (realtimeChannel && realtimeUserId === userId) return;
   stopRealtimeSync();
   realtimeUserId = userId;
+  let hasConnected = false;
+  let lastReconnectSyncAt = 0;
 
   realtimeChannel = supabase
     .channel(`job-orders-sync-${userId}`)
@@ -301,6 +317,17 @@ export function startRealtimeSync(
     .subscribe((status, error) => {
       if (status === 'SUBSCRIBED') {
         onError(null);
+        if (!hasConnected) {
+          hasConnected = true;
+          return;
+        }
+
+        if (!isSyncAvailable()) return;
+
+        const now = Date.now();
+        if (now - lastReconnectSyncAt < RECONNECT_SYNC_MIN_INTERVAL_MS) return;
+        lastReconnectSyncAt = now;
+
         void performDeltaSync(userId)
           .then(() => repairMissingJobs(userId))
           .catch((syncError: unknown) => {
@@ -377,6 +404,7 @@ export function repairMissingJobs(userId: string): Promise<number> {
     const BATCH_SIZE = 1000;
     let afterId: string | null = null;
     while (true) {
+      if (!isSyncAvailable()) return 0;
       let query = supabase
         .from('job_orders')
         .select('id')
@@ -412,6 +440,7 @@ export function repairMissingJobs(userId: string): Promise<number> {
     // Fetch and sync missing jobs in batches of 100.
     const MISSING_JOB_BATCH_SIZE = 100;
     for (let i = 0; i < missingJobIds.length; i += MISSING_JOB_BATCH_SIZE) {
+      if (!isSyncAvailable()) return 0;
       const batchIds = missingJobIds.slice(i, i + MISSING_JOB_BATCH_SIZE);
       const { data: jobs, error: batchError } = await supabase
         .from('job_orders')

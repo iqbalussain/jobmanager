@@ -57,9 +57,10 @@ npm run build
 
 The browser cache is powered by Dexie, isolated per signed-in user, and updated from
 Supabase Realtime row changes. Sync work is serialized, retried on failure, and
-reconciles hard-deleted jobs during startup and after a Realtime reconnect. Production
-deployments should apply Supabase migrations and deploy the Edge Functions before
-exposing the frontend.
+reconciles hard-deleted jobs during startup and after a Realtime reconnect. Realtime
+sync pauses while the app tab is hidden or the browser is offline, then reconciles
+when the tab becomes visible and online again. Production deployments should apply
+Supabase migrations and deploy the Edge Functions before exposing the frontend.
 
 Workflow alerts listen for new job orders and approval or completion status changes
 through Supabase Realtime. Unread alerts are kept in browser local storage so they
