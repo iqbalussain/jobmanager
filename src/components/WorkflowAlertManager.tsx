@@ -146,7 +146,6 @@ export function WorkflowAlertManager() {
       return;
     }
 
-    setRole(null);
     setAlerts(getStoredAlerts(alertKey));
     setTemporarilyDismissedCompletionAlerts(new Set());
     try {
@@ -154,7 +153,9 @@ export function WorkflowAlertManager() {
     } catch (error) {
       console.error("Failed to remove the legacy workflow snapshot:", error);
     }
+
     let active = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const startRealtimeAlerts = async () => {
       const { data: profile, error: roleError } = await supabase
@@ -203,7 +204,7 @@ export function WorkflowAlertManager() {
         }
       };
 
-      const channel = supabase
+      channel = supabase
         .channel(`workflow-job-alerts-${userId}`)
         .on(
           "postgres_changes",
@@ -211,7 +212,7 @@ export function WorkflowAlertManager() {
           (payload: RealtimePostgresChangesPayload<JobOrderRecord>) => {
             if (!active || payload.eventType === "DELETE") return;
             const job = payload.new;
-            const previousJob = payload.old;
+            const previousJob = payload.old as JobOrderRecord;
             const addedAlerts: WorkflowAlert[] = [];
 
             if (payload.eventType === "INSERT") {
@@ -227,7 +228,7 @@ export function WorkflowAlertManager() {
               job.designer_id === userId &&
               job.approval_status === "approved" &&
               job.approved_at &&
-              (previousJob.approval_status !== "approved" || previousJob.approved_at !== job.approved_at)
+              (previousJob?.approval_status !== "approved" || previousJob?.approved_at !== job.approved_at)
             ) {
               addedAlerts.push({
                 id: `approved:${job.id}:${job.approved_at}`,
@@ -239,7 +240,7 @@ export function WorkflowAlertManager() {
             if (
               currentRole === "admin" &&
               job.status === "completed" &&
-              previousJob.status !== "completed"
+              previousJob?.status !== "completed"
             ) {
               addedAlerts.push({
                 id: `completed:${job.id}`,
@@ -257,18 +258,9 @@ export function WorkflowAlertManager() {
             console.error("Workflow alert realtime subscription failed:", error);
           }
         });
-      return () => {
-        void supabase.removeChannel(channel);
-      };
     };
 
-    let removeChannel: (() => void) | undefined;
-    void startRealtimeAlerts().then((cleanup) => {
-      removeChannel = cleanup;
-      if (!active) cleanup?.();
-    }).catch((error: unknown) => {
-      console.error("Failed to initialize workflow realtime alerts:", error);
-    });
+    void startRealtimeAlerts();
 
     const handleStorage = (event: StorageEvent) => {
       if (event.key === alertKey) setAlerts(getStoredAlerts(alertKey));
@@ -285,11 +277,13 @@ export function WorkflowAlertManager() {
 
     return () => {
       active = false;
-      removeChannel?.();
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(WORKFLOW_ALERTS_UPDATED_EVENT, handleSameTabUpdate);
     };
-  }, [alertKey, legacySnapshotKey, userId]);
+  }, [userId]);
 
   useEffect(() => {
     setInvoiceNumber("");
