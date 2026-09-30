@@ -79,7 +79,7 @@ export function useJobDetails({ job, isEditMode, onClose, isOpen = true }: UseJo
           console.error('Error fetching user role:', error);
           return;
         }
-        if (active && data) setUserRole(data.role);
+        if (active && data) setUserRole(data.role); 
       } catch (error) {
         console.error('Error fetching user role:', error);
       }
