@@ -158,7 +158,7 @@ let cacheOwnerChange: Promise<void> = Promise.resolve();
 
 export function activateCacheForUser(userId: string | null): Promise<void> {
   const change = cacheOwnerChange.then(() =>
-    db.transaction('rw', ...cacheTables, db.syncMeta, async () => {
+    db.transaction('rw', [...cacheTables, db.syncMeta], async () => {
       const owner = await db.syncMeta.get('main');
       if (owner && owner.ownerUserId === userId) return;
 
