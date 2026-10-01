@@ -28,11 +28,11 @@ export function SyncStatusIndicator({ className, showLabel = true }: SyncStatusI
   }, []);
   const localCount = syncInfo?.localCount ?? 0;
   const lastSyncTime = syncInfo?.lastSyncTime ?? null;
-  const syncState: SyncState = syncInfo?.hasError
+  const syncState = (syncInfo?.hasError
     ? 'error'
     : lastSyncTime
       ? 'synced'
-      : 'idle';
+      : 'idle') as SyncState | 'syncing';
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);

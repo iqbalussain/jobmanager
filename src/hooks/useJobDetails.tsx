@@ -215,7 +215,7 @@ export function useJobDetails({ job, isEditMode, onClose, isOpen = true }: UseJo
 
       await shareJobOrderViaWhatsApp(job, invoiceNumber);
       toast({
-        title: "Success",z
+        title: "Success",
         description: "Job order shared via WhatsApp successfully",
       });
     } catch (error) {

@@ -12,6 +12,7 @@ interface JobDetailsProps {
   onClose: () => void;
   job: Job | null;
   isEditMode?: boolean;
+  onJobUpdated?: (updatedJob: any) => void;
 }
 
 export function JobDetails({ isOpen, onClose, job, isEditMode = false }: JobDetailsProps) {
