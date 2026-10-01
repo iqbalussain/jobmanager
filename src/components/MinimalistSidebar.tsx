@@ -88,9 +88,9 @@ export function MinimalistSidebar({
     { title: "Reports & Analytics", icon: BarChart3, view: "reports" as const, roles: ["admin", "manager", "salesman"] },
   ];
 
-  const canAccessMenuItem = (item: { roles?: string[] }) => {
-    if (!item.roles) return true;
-    return item.roles.includes(userProfile?.role ?? "");
+  const canAccessMenuItem = (item: { roles?: readonly string[] } | object) => {
+    if (!(item as { roles?: readonly string[] }).roles) return true;
+    return (item as { roles?: readonly string[] }).roles.includes(userProfile?.role ?? "");
   };
 
   return (
