@@ -7,6 +7,7 @@ import { Download, Upload, FileText, AlertCircle, RefreshCw } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { forceFullResync } from "@/services/syncService";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Select,
   SelectContent,
@@ -31,11 +32,13 @@ export function DataManagement() {
   const [isResyncing, setIsResyncing] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleForceResync = async () => {
     setIsResyncing(true);
     try {
-      await forceFullResync();
+      if (!user) throw new Error("Not signed in");
+      await forceFullResync(user.id);
       toast({
         title: "Sync Complete",
         description: "All jobs have been re-synced from the server.",
