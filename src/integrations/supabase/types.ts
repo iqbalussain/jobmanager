@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
@@ -124,76 +124,38 @@ export type Database = {
         }
         Relationships: []
       }
-      daily_tasbi: {
-        Row: {
-          count: number
-          date: string
-          dhikr: string
-          goal: number
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          count?: number
-          date?: string
-          dhikr: string
-          goal?: number
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          count?: number
-          date?: string
-          dhikr?: string
-          goal?: number
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       job_edit_audit: {
         Row: {
-          created_at: string | null
-          diff: Json | null
-          edited_by: string
+          created_at: string
+          diff: Json
+          edited_by: string | null
           edited_by_name: string | null
           edited_role: string | null
           id: string
           job_id: string
-          job_order_number: string
+          job_order_number: string | null
         }
         Insert: {
-          created_at?: string | null
-          diff?: Json | null
-          edited_by: string
+          created_at?: string
+          diff?: Json
+          edited_by?: string | null
           edited_by_name?: string | null
           edited_role?: string | null
           id?: string
           job_id: string
-          job_order_number: string
+          job_order_number?: string | null
         }
         Update: {
-          created_at?: string | null
-          diff?: Json | null
-          edited_by?: string
+          created_at?: string
+          diff?: Json
+          edited_by?: string | null
           edited_by_name?: string | null
           edited_role?: string | null
           id?: string
           job_id?: string
-          job_order_number?: string
+          job_order_number?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "job_edit_audit_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "job_orders"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       job_order_attachments: {
         Row: {
@@ -595,7 +557,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_job_order_number: { Args: { branch: string }; Returns: string }
       generate_next_job_order_number: {
         Args: { p_branch: string }
         Returns: string
@@ -615,6 +576,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_staff: { Args: { _user_id: string }; Returns: boolean }
       update_job_status: {
         Args: { p_job_id: string; p_new_status: string }
         Returns: Json

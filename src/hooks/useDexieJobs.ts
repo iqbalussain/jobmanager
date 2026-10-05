@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { db } from '@/lib/dexieDb';
-import { performDeltaSync, 
+import { 
   needsInitialSync, 
   performInitialSync, 
   performDeltaSync,
