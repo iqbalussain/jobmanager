@@ -7,14 +7,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Download, Upload, FileText, AlertCircle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { forceFullResync } from "@/services/syncService";
-<<<<<<< HEAD
-import { useAuth } from "@/hooks/useAuth";
-=======
 import { createCustomer, listCustomers } from "@/data/customers";
 import { createJobTitle, listJobTitlesWithCreatedAt } from "@/data/jobTitles";
 import { listProfilesForExport, listProfilesWithDetails } from "@/data/profiles";
 import { listJobOrdersForExport } from "@/data/jobs";
->>>>>>> e1e399e (data stync and job)
 import {
   Select,
   SelectContent,
@@ -44,11 +40,7 @@ export function DataManagement() {
   const handleForceResync = async () => {
     setIsResyncing(true);
     try {
-<<<<<<< HEAD
-      if (!user) throw new Error("Not signed in");
-=======
       if (!user) throw new Error("Sign in before starting a full cache resync.");
->>>>>>> e1e399e (data stync and job)
       await forceFullResync(user.id);
       toast({
         title: "Sync Complete",
