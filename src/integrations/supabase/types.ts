@@ -576,6 +576,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_staff: { Args: { _user_id: string }; Returns: boolean }
       update_job_status: {
         Args: { p_job_id: string; p_new_status: string }
         Returns: Json
