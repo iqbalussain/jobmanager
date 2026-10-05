@@ -1,10 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { cacheJobOrder } from '@/services/syncService';
 import type { CreateJobOrderData, JobOrderRecord } from '@/types/jobOrder';
+import { generateNextJobOrderNumber, insertJobOrder } from '@/data/jobs';
+import { getCustomerName } from '@/data/customers';
+import { getJobTitleName } from '@/data/jobTitles';
+import { getProfileName } from '@/data/profiles';
+import { invokeEdgeFunction } from '@/data/functions';
 
 export function useCreateJobOrder() {
   const { toast } = useToast();
@@ -13,49 +17,26 @@ export function useCreateJobOrder() {
   const { addNotification } = useNotifications();
 
   const generateJobOrderNumber = async (branch: string): Promise<string> => {
-    const { data, error } = await supabase.rpc('generate_next_job_order_number', {
-      p_branch: branch
-    });
-    if (error) {
-      console.error('Error generating job order number:', error);
-      throw error;
-    }
-    return data;
+    return generateNextJobOrderNumber(branch);
   };
 
   const sendNotification = async (jobData: JobOrderRecord) => {
     try {
       // Get customer and job title details for notification
-      const { data: customer } = await supabase
-        .from('customers')
-        .select('name')
-        .eq('id', jobData.customer_id)
-        .single();
-
-      const { data: jobTitle } = jobData.job_title_id
-        ? await supabase
-            .from('job_titles')
-            .select('job_title_id')
-            .eq('id', jobData.job_title_id)
-            .single()
-        : { data: null };
-
-      const { data: salesman } = jobData.salesman_id
-        ? await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', jobData.salesman_id)
-            .single()
-        : { data: null };
+      const [customerName, jobTitleName, salesmanName] = await Promise.all([
+        getCustomerName(jobData.customer_id),
+        jobData.job_title_id ? getJobTitleName(jobData.job_title_id) : null,
+        jobData.salesman_id ? getProfileName(jobData.salesman_id) : null,
+      ]);
 
       // Send notification via edge function
-      await supabase.functions.invoke('send-notification', {
+      await invokeEdgeFunction('send-notification', {
         body: {
           jobOrderNumber: jobData.job_order_number,
-          customerName: customer?.name || 'Unknown',
-          jobTitle: jobTitle?.job_title_id || 'Unknown',
+          customerName: customerName || 'Unknown',
+          jobTitle: jobTitleName || 'Unknown',
           priority: jobData.priority,
-          salesman: salesman?.full_name || 'Unknown',
+          salesman: salesmanName || 'Unknown',
           dueDate: jobData.due_date,
           notificationType: 'email', // You can make this configurable
           recipientEmail: 'manager@company.com' // Configure this in admin settings
@@ -116,31 +97,26 @@ export function useCreateJobOrder() {
         };
         
 
-        const { data: inserted, error } = await supabase
-          .from('job_orders')
-          .insert(insertData)
-          .select()
-          .single();
+        try {
+          newJobOrder = await insertJobOrder(insertData);
+        } catch (error) {
+          if (error instanceof Error && error.message.includes('duplicate key')) {
+            console.warn(`Duplicate job order number: ${jobOrderNumber}. Retrying... (Attempt ${attempts + 1})`);
+            attempts++;
+            continue;
+          }
+          throw error;
+        }
 
-        if (!error) {
-          newJobOrder = inserted;
+        if (newJobOrder) {
           // Send notification for approval if status is pending (non-blocking)
-          if (inserted.status === 'pending') {
-            sendNotification(inserted).catch(err => {
+          if (newJobOrder.status === 'pending') {
+            sendNotification(newJobOrder).catch(err => {
               console.warn('Failed to send notification, but job was created:', err);
             });
           }
           break;
         }
-
-        console.error('Error inserting job order:', error);
-        if (error.message.includes('duplicate key')) {
-          console.warn(`Duplicate job order number: ${jobOrderNumber}. Retrying... (Attempt ${attempts + 1})`);
-          attempts++;
-          continue;
-        }
-
-        throw error;
       }
 
       if (!newJobOrder) {

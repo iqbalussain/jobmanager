@@ -1,9 +1,15 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
 import type { Customer, Designer, JobTitle, Salesman } from '@/types/jobOrder';
+import { listCustomers } from '@/data/customers';
+import { listJobTitles } from '@/data/jobTitles';
+import {
+  listDesigners,
+  listProfilesForAdministration,
+  listSalesmen,
+} from '@/data/profiles';
 
 export type { Customer, Designer, JobTitle, Salesman };
 export type Profile = Pick<
@@ -27,16 +33,7 @@ export function useAdminQueries() {
     queryKey: ['customers'],
     queryFn: async () => {
       checkAdminAccess();
-      const { data, error } = await supabase
-        .from('customers')
-        .select('id, name')
-        .order('name');
-      
-      if (error) {
-        console.error('Error fetching customers:', error);
-        throw error;
-      }
-      return data;
+      return listCustomers();
     },
     enabled: !!user
   });
@@ -45,16 +42,7 @@ export function useAdminQueries() {
     queryKey: ['designers'],
     queryFn: async () => {
       checkAdminAccess();
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone')
-        .eq('role', 'designer')
-        .order('full_name');
-      
-      if (error) {
-        console.error('Error fetching designers:', error);
-        throw error;
-      }
+      const data = await listDesigners();
       return data.map(profile => ({
         id: profile.id,
         name: profile.full_name || 'Unknown Designer',
@@ -68,16 +56,7 @@ export function useAdminQueries() {
     queryKey: ['salesmen'],
     queryFn: async () => {
       checkAdminAccess();
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, phone')
-        .eq('role', 'salesman')
-        .order('full_name');
-      
-      if (error) {
-        console.error('Error fetching salesmen:', error);
-        throw error;
-      }
+      const data = await listSalesmen();
       return data.map(profile => ({
         id: profile.id,
         name: profile.full_name || 'Unknown Salesman',
@@ -92,16 +71,7 @@ export function useAdminQueries() {
     queryKey: ['job-titles'],
     queryFn: async () => {
       checkAdminAccess();
-      const { data, error } = await supabase
-        .from('job_titles')
-        .select('id, job_title_id')
-        .order('job_title_id');
-      
-      if (error) {
-        console.error('Error fetching job titles:', error);
-        return [];
-      }
-      return data;
+      return listJobTitles();
     },
     enabled: !!user
   });
@@ -110,16 +80,7 @@ export function useAdminQueries() {
     queryKey: ['profiles'],
     queryFn: async () => {
       checkAdminAccess();
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, role, department, branch, phone')
-        .order('full_name');
-      
-      if (error) {
-        console.error('Error fetching profiles:', error);
-        throw error;
-      }
-      return data;
+      return listProfilesForAdministration();
     },
     enabled: !!user
   });

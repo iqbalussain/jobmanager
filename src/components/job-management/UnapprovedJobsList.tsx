@@ -7,6 +7,7 @@ import { EmptyJobState } from "@/components/job-list/EmptyJobState";
 import { CheckCircle, Eye, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { updateJobApproval } from "@/data/jobs";
 
 interface UnapprovedJobsListProps {
   jobs: Job[];
@@ -23,16 +24,10 @@ export function UnapprovedJobsList({ jobs, userRole, onJobApproved }: Unapproved
 
   const handleApproval = async (jobId: string, status: 'approved' | 'rejected') => {
     try {
-      const { error } = await supabase
-        .from('job_orders')
-        .update({ 
-          approval_status: status,
-          approved_by: status === 'approved' ? (await supabase.auth.getUser()).data.user?.id : null,
-          approved_at: status === 'approved' ? new Date().toISOString() : null
-        })
-        .eq('id', jobId);
-
-      if (error) throw error;
+      const userId = status === 'approved'
+        ? (await supabase.auth.getUser()).data.user?.id ?? null
+        : null;
+      await updateJobApproval(jobId, status, userId);
 
       toast({
         title: `Job ${status}`,

@@ -1,14 +1,21 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import {
+  deleteJobImageFile,
+  deleteJobImageAttachment,
+  getJobImageSignedUrl,
+  getJobImagePath,
+  listJobImages,
+  updateJobImageAttachment,
+} from '@/data/jobImages';
 
 interface JobImage {
   id: string;
   file_name: string;
   file_path: string;
-  file_size: number;
-  file_type: string;
+  file_size: number | null;
+  file_type: string | null;
   image_width: number | null;
   image_height: number | null;
   alt_text: string | null;
@@ -23,19 +30,7 @@ export function useJobImages(jobOrderId: string) {
   const { data: images = [], isLoading, error } = useQuery({
     queryKey: ['job-images', jobOrderId],
     queryFn: async (): Promise<JobImage[]> => {
-      const { data, error } = await supabase
-        .from('job_order_attachments')
-        .select('id, file_name, file_path, file_size, file_type, image_width, image_height, alt_text, created_at, uploaded_by')
-        .eq('job_order_id', jobOrderId)
-        .eq('is_image', true)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching job images:', error);
-        throw error;
-      }
-
-      return data || [];
+      return listJobImages(jobOrderId);
     },
     enabled: !!jobOrderId,
     staleTime: 5 * 60_000,
@@ -44,28 +39,13 @@ export function useJobImages(jobOrderId: string) {
   const deleteImageMutation = useMutation({
     mutationFn: async (imageId: string) => {
       // First get the image details
-      const { data: image, error: fetchError } = await supabase
-        .from('job_order_attachments')
-        .select('file_path')
-        .eq('id', imageId)
-        .single();
-
-      if (fetchError) throw fetchError;
+      const filePath = await getJobImagePath(imageId);
 
       // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from('job-order-images')
-        .remove([image.file_path]);
-
-      if (storageError) throw storageError;
+      await deleteJobImageFile(filePath);
 
       // Delete from database
-      const { error: dbError } = await supabase
-        .from('job_order_attachments')
-        .delete()
-        .eq('id', imageId);
-
-      if (dbError) throw dbError;
+      await deleteJobImageAttachment(imageId);
 
       return imageId;
     },
@@ -76,11 +56,11 @@ export function useJobImages(jobOrderId: string) {
         description: "Image deleted successfully",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Error deleting image:', error);
       toast({
         title: "Delete Failed",
-        description: error.message || "Failed to delete image",
+        description: error instanceof Error ? error.message : "Failed to delete image",
         variant: "destructive",
       });
     }
@@ -88,12 +68,7 @@ export function useJobImages(jobOrderId: string) {
 
   const updateAltTextMutation = useMutation({
     mutationFn: async ({ imageId, altText }: { imageId: string; altText: string }) => {
-      const { error } = await supabase
-        .from('job_order_attachments')
-        .update({ alt_text: altText })
-        .eq('id', imageId);
-
-      if (error) throw error;
+      await updateJobImageAttachment(imageId, { alt_text: altText });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['job-images', jobOrderId] });
@@ -102,26 +77,18 @@ export function useJobImages(jobOrderId: string) {
         description: "Image description updated",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Error updating alt text:', error);
       toast({
         title: "Update Failed",
-        description: error.message || "Failed to update image description",
+        description: error instanceof Error ? error.message : "Failed to update image description",
         variant: "destructive",
       });
     }
   });
 
   const getImageUrl = async (filePath: string): Promise<string> => {
-    const { data, error } = await supabase.storage
-      .from('job-order-images')
-      .createSignedUrl(filePath, 3600); // 1 hour expiry
-    
-    if (error || !data?.signedUrl) {
-      console.error('Error getting signed URL:', error);
-      return '';
-    }
-    return data.signedUrl;
+    return getJobImageSignedUrl(filePath);
   };
 
   return {

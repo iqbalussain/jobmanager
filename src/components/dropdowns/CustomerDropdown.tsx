@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { createCustomer, listCustomers } from "@/data/customers";
 
 interface Customer {
   id: string;
@@ -31,13 +31,7 @@ export function CustomerDropdown({ value, onValueChange, placeholder = "Select c
 
   const fetchCustomers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('id, name')
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-      setCustomers(data || []);
+      setCustomers(await listCustomers());
     } catch (error) {
       console.error('Error fetching customers:', error);
       toast({
@@ -53,11 +47,7 @@ export function CustomerDropdown({ value, onValueChange, placeholder = "Select c
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('customers')
-        .insert([{ name: newCustomer.trim() }]);
-
-      if (error) throw error;
+      await createCustomer(newCustomer.trim());
 
       toast({
         title: "Success",

@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { createCustomer, listCustomers } from '@/data/customers';
 import { useToast } from '@/hooks/use-toast';
 
 export interface Customer {
@@ -17,32 +17,13 @@ export function useCustomerManagement() {
   const { data: customers = [], isLoading: customersLoading } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('id, name')
-        .order('name');
-      
-      if (error) {
-        console.error('Error fetching customers:', error);
-        throw error;
-      }
-      return data as Customer[];
+      return listCustomers();
     }
   });
 
   const addCustomerMutation = useMutation({
     mutationFn: async (data: { name: string }) => {
-      const { data: result, error } = await supabase
-        .from('customers')
-        .insert({ name: data.name })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error adding customer:', error);
-        throw error;
-      }
-      return result;
+      return createCustomer(data.name);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });

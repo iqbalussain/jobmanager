@@ -2,6 +2,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { createCustomer } from '@/data/customers';
+import { createJobTitle } from '@/data/jobTitles';
+import { insertProfile } from '@/data/profiles';
 import { sanitizeInput, validateEmail, validatePhone, validatePassword } from '@/utils/adminValidation';
 import { isValidRole, type Role } from '@/utils/roleValidation';
 
@@ -20,17 +23,7 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
         throw new Error('Customer name must be between 1 and 255 characters');
       }
       
-      const { data: result, error } = await supabase
-        .from('customers')
-        .insert({ name: sanitizedName })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error adding customer:', error);
-        throw error;
-      }
-      return result;
+      return createCustomer(sanitizedName);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
@@ -141,17 +134,7 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
         throw new Error('Job title must be between 1 and 255 characters');
       }
       
-      const { data: result, error } = await supabase
-        .from('job_titles')
-        .insert({ job_title_id: sanitizedTitle })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error adding job title:', error);
-        throw error;
-      }
-      return result;
+      return createJobTitle(sanitizedTitle);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['job-titles'] });
@@ -239,9 +222,7 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
       }
 
       // Add to profiles table with the user ID
-      const { data: result, error } = await supabase
-        .from('profiles')
-        .insert({
+      const result = await insertProfile({
           id: user.id,
           email: sanitizedEmail,
           full_name: sanitizedFullName,
@@ -249,14 +230,7 @@ export function useAdminMutations(checkAdminAccess: () => boolean) {
           department: sanitizedDepartment || null,
           branch: sanitizedBranch || null,
           phone: sanitizedPhone || null
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error adding profile:', error);
-        throw error;
-      }
+        });
       return result;
     },
     onSuccess: () => {

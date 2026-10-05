@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { getUserProfile } from '@/data/profiles';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,29 +35,10 @@ export function UserProfile() {
         setLoading(true);
         setError(null);
         
-        const { data, error: fetchError } = await supabase
-          .from('profiles')
-          .select('full_name, role, email, department, branch')
-          .eq('id', userId)
-          .maybeSingle();
+        const data = await getUserProfile(userId);
 
         if (!active) return;
-
-        if (fetchError) {
-          console.error('Error fetching profile:', fetchError);
-          
-          if (fetchError.message?.includes('policy') || fetchError.message?.includes('security')) {
-            setProfile({
-              full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-              role: 'employee',
-              email: user.email || '',
-              department: null,
-              branch: null
-            });
-          } else {
-            setError('Failed to load user profile');
-          }
-        } else if (data) {
+        if (data) {
           setProfile(data);
         } else {
           setProfile({

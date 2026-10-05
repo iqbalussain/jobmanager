@@ -6,9 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronDown, ChevronRight, Download, History, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { listJobOrderLogs, restoreJobOrderFromSnapshot, type JobOrderLogEntry } from "@/data/jobAudit";
 
 interface JobEditLogProps {
   jobOrderId: string;
@@ -17,14 +17,7 @@ interface JobEditLogProps {
   onClose: () => void;
 }
 
-interface LogEntry {
-  id: string;
-  changed_at: string;
-  changed_by: string;
-  action: string;
-  changed_fields: Record<string, { old: string; new: string }> | null;
-  user_name?: string;
-}
+type LogEntry = JobOrderLogEntry;
 
 export function JobEditLog({ jobOrderId, jobOrderNumber, isOpen, onClose }: JobEditLogProps) {
   const { toast } = useToast();
@@ -36,49 +29,7 @@ export function JobEditLog({ jobOrderId, jobOrderNumber, isOpen, onClose }: JobE
 
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ["job-order-logs", jobOrderId],
-    queryFn: async (): Promise<LogEntry[]> => {
-      // Snapshot column is intentionally excluded here (large jsonb) — loaded on demand when reverting
-      const { data: logsData, error: logsError } = await supabase
-        .from("job_order_logs")
-        .select("id,changed_at,changed_by,action,changed_fields")
-        .eq("job_order_id", jobOrderId)
-        .order("changed_at", { ascending: false })
-        .limit(100);
-
-      if (logsError) {
-        console.error("Error fetching logs:", logsError);
-        throw logsError;
-      }
-
-      if (!logsData || logsData.length === 0) {
-        return [];
-      }
-
-      const userIds = [...new Set(logsData.map((log) => log.changed_by))];
-
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", userIds);
-
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-      }
-
-      const userNamesMap = new Map<string, string>();
-      (profilesData || []).forEach((profile) => {
-        userNamesMap.set(profile.id, profile.full_name || "Unknown User");
-      });
-
-      return logsData.map((log) => ({
-        id: log.id,
-        changed_at: log.changed_at,
-        changed_by: log.changed_by,
-        action: log.action,
-        changed_fields: log.changed_fields as Record<string, { old: string; new: string }> | null,
-        user_name: userNamesMap.get(log.changed_by) || "Unknown User",
-      }));
-    },
+    queryFn: () => listJobOrderLogs(jobOrderId),
     enabled: isOpen,
     staleTime: 60_000,
   });
@@ -155,28 +106,7 @@ export function JobEditLog({ jobOrderId, jobOrderNumber, isOpen, onClose }: JobE
     if (!confirmed) return;
 
     try {
-      const { data: logRow, error: snapErr } = await supabase
-        .from("job_order_logs")
-        .select("snapshot")
-        .eq("id", log.id)
-        .single();
-
-      if (snapErr) throw snapErr;
-
-      if (!logRow?.snapshot) {
-        toast({
-          title: "Error",
-          description: "No snapshot available for this entry",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { id, created_at, updated_at, ...revertData } = logRow.snapshot as any;
-
-      const { error } = await supabase.from("job_orders").update(revertData).eq("id", jobOrderId);
-
-      if (error) throw error;
+      await restoreJobOrderFromSnapshot(jobOrderId, log.id);
 
       toast({
         title: "Reverted Successfully",

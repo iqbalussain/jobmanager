@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { createJobTitle, listJobTitles } from "@/data/jobTitles";
 
 interface JobTitle {
   id: string;
@@ -31,13 +31,7 @@ export function JobTitleDropdown({ value, onValueChange, placeholder = "Select j
 
   const fetchJobTitles = async () => {
     try {
-      const { data, error } = await supabase
-        .from('job_titles')
-        .select('id, job_title_id')
-        .order('job_title_id', { ascending: true });
-
-      if (error) throw error;
-      setJobTitles(data || []);
+      setJobTitles(await listJobTitles());
     } catch (error) {
       console.error('Error fetching job titles:', error);
       toast({
@@ -53,11 +47,7 @@ export function JobTitleDropdown({ value, onValueChange, placeholder = "Select j
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('job_titles')
-        .insert([{ job_title_id: newTitle.trim() }]);
-
-      if (error) throw error;
+      await createJobTitle(newTitle.trim());
 
       toast({
         title: "Success",

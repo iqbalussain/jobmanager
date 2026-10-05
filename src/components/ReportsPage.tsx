@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { getJobReportPage } from "@/data/jobs";
 import { useToast } from "@/hooks/use-toast";
 import { 
   BarChart3, 
@@ -71,24 +71,12 @@ export function ReportsPage() {
       }>();
 
       while (true) {
-        let query = supabase
-          .from('job_orders')
-          .select(`
-            id, status, branch, total_value,
-            customers!fk_job_orders_customer(name),
-            salesman_profiles:profiles!fk_job_orders_salesman(full_name)
-          `)
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString())
-          .order('id', { ascending: true })
-          .limit(pageSize);
-        if (afterId) query = query.gt('id', afterId);
-
-        const { data: jobOrders, error } = await query;
-        if (error) {
-          console.error('Supabase report query failed:', error.code);
-          throw new Error(`Database error: ${error.message}`);
-        }
+        const jobOrders = await getJobReportPage(
+          startDate.toISOString(),
+          endDate.toISOString(),
+          afterId,
+          pageSize,
+        );
         if (!jobOrders || jobOrders.length === 0) break;
 
         for (const job of jobOrders) {

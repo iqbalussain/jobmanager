@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useDexieJobs } from "@/hooks/useDexieJobs";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { getProfileRole } from "@/data/profiles";
 import { JobDetails } from "@/components/JobDetails";
 import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 import { useJobActions } from "@/hooks/useJobActions";
@@ -78,13 +78,8 @@ const Index = () => {
         return;
       }
       try {
-        const { data } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", userId)
-          .single();
-
-        if (data?.role) setUserRole(data.role);
+        const role = await getProfileRole(userId);
+        if (role) setUserRole(role);
       } catch {
         setUserRole("employee");
       } finally {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Job } from "@/pages/Index";
-import { supabase } from "@/integrations/supabase/client";
+import { getProfileRole } from "@/data/profiles";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -70,16 +70,8 @@ export function useJobDetails({ job, isEditMode, onClose, isOpen = true }: UseJo
 
     const loadRole = async () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        if (error) {
-          console.error('Error fetching user role:', error);
-          return;
-        }
-        if (active && data) setUserRole(data.role); 
+        const role = await getProfileRole(user.id);
+        if (active && role) setUserRole(role);
       } catch (error) {
         console.error('Error fetching user role:', error);
       }

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/data/functions";
 import { useUsers } from "@/hooks/useUsers";
 import { Shield, RefreshCw } from "lucide-react";
 
@@ -40,7 +40,7 @@ export function AdminPasswordReset() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.functions.invoke('admin-reset-password', {
+      const { error } = await invokeEdgeFunction('admin-reset-password', {
         body: {
           userId: selectedUserId,
           newPassword: newPassword
@@ -56,10 +56,10 @@ export function AdminPasswordReset() {
 
       setSelectedUserId("");
       setNewPassword("");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error.message || "Failed to reset password",
+        description: error instanceof Error ? error.message : "Failed to reset password",
         variant: "destructive"
       });
     } finally {

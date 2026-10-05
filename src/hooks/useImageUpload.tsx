@@ -2,6 +2,12 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import {
+  addJobImageAttachment,
+  deleteJobImageFile,
+  getJobImageSignedUrl,
+  uploadJobImage,
+} from '@/data/jobImages';
 
 interface ImageUploadOptions {
   maxSizeKB?: number;
@@ -115,21 +121,12 @@ export function useImageUpload() {
       setUploadProgress(50);
 
       // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('job-order-images')
-        .upload(fileName, processedFile);
-
-      if (uploadError) {
-        throw uploadError;
-      }
+      await uploadJobImage(fileName, processedFile);
 
       setUploadProgress(75);
 
       // Get signed URL (bucket is private)
-      const { data: signedUrlData } = await supabase.storage
-        .from('job-order-images')
-        .createSignedUrl(fileName, 3600); // 1 hour expiry
-      const signedUrl = signedUrlData?.signedUrl || '';
+      const signedUrl = await getJobImageSignedUrl(fileName);
 
       // Get image dimensions
       const img = new Image();
@@ -139,9 +136,8 @@ export function useImageUpload() {
       });
 
       // Save metadata to database
-      const { error: dbError } = await supabase
-        .from('job_order_attachments')
-        .insert({
+      try {
+        await addJobImageAttachment({
           job_order_id: options.jobOrderId,
           file_name: processedFile.name,
           file_path: fileName,
@@ -152,10 +148,9 @@ export function useImageUpload() {
           image_height: dimensions.height,
           uploaded_by: user.id
         });
-
-      if (dbError) {
+      } catch (dbError) {
         // Clean up uploaded file if database insert fails
-        await supabase.storage.from('job-order-images').remove([fileName]);
+        await deleteJobImageFile(fileName);
         throw dbError;
       }
 
@@ -172,17 +167,17 @@ export function useImageUpload() {
         path: fileName
       };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Image upload error:', error);
       toast({
         title: "Upload Failed",
-        description: error.message || "Failed to upload image",
+        description: error instanceof Error ? error.message : "Failed to upload image",
         variant: "destructive",
       });
 
       return {
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : "Failed to upload image",
       };
     } finally {
       setIsUploading(false);

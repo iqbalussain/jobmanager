@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
+import { listJobCreationDates } from '@/data/jobs';
 
 export function useChartData() {
   const { data: dailyJobData = [], isLoading } = useQuery({
@@ -11,17 +11,7 @@ export function useChartData() {
       const endDate = new Date();
       const startDate = subDays(endDate, 6);
       
-      const { data, error } = await supabase
-        .from('job_orders')
-        .select('created_at')
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString())
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching daily job data:', error);
-        throw error;
-      }
+      const data = await listJobCreationDates(startDate.toISOString(), endDate.toISOString());
 
       // Group jobs by date
       const jobsByDate: Record<string, number> = {};

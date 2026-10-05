@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { createJobTitle, listJobTitles } from '@/data/jobTitles';
 import { useToast } from '@/hooks/use-toast';
 
 export interface JobTitle {
@@ -17,32 +17,13 @@ export function useJobTitleManagement() {
   const { data: jobTitles = [], isLoading: jobTitlesLoading } = useQuery({
     queryKey: ['job-titles'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('job_titles')
-        .select('id, job_title_id')
-        .order('job_title_id');
-      
-      if (error) {
-        console.error('Error fetching job titles:', error);
-        return [];
-      }
-      return data as JobTitle[];
+      return listJobTitles();
     }
   });
 
   const addJobTitleMutation = useMutation({
     mutationFn: async (data: { job_title_id: string }) => {
-      const { data: result, error } = await supabase
-        .from('job_titles')
-        .insert({ job_title_id: data.job_title_id })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error adding job title:', error);
-        throw error;
-      }
-      return result;
+      return createJobTitle(data.job_title_id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['job-titles'] });

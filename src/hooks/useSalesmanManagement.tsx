@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { listSalesmen } from '@/data/profiles';
 import { useToast } from '@/hooks/use-toast';
 
 export interface Salesman {
@@ -19,16 +19,7 @@ export function useSalesmanManagement() {
   const { data: salesmen = [], isLoading: salesmenLoading } = useQuery({
     queryKey: ['salesmen'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, phone')
-        .eq('role', 'salesman')
-        .order('full_name');
-      
-      if (error) {
-        console.error('Error fetching salesmen:', error);
-        throw error;
-      }
+      const data = await listSalesmen();
       return data.map(profile => ({
         id: profile.id,
         name: profile.full_name || 'Unknown Salesman',

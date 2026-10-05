@@ -221,7 +221,7 @@ export function JobImageGallery({ jobOrderId, canEdit = true }: JobImageGalleryP
             <div className="mt-2">
               <p className="text-xs text-gray-600 truncate">{image.file_name}</p>
               <p className="text-xs text-gray-500">
-                {Math.round(image.file_size / 1024)}KB
+                {image.file_size === null ? 'Unknown size' : `${Math.round(image.file_size / 1024)}KB`}
                 {image.image_width && image.image_height && (
                   <span> • {image.image_width}×{image.image_height}</span>
                 )}

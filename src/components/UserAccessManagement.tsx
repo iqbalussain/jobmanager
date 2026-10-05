@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { listProfilesForAdministration, updateProfile } from "@/data/profiles";
 import { useAuth } from "@/hooks/useAuth";
 import { UserCheck, Shield, Eye, Edit, Trash2, Plus, Settings, FileText, BarChart3 } from "lucide-react";
 
@@ -76,13 +76,7 @@ export default function UserAccessManagement() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, role, department, branch, phone')
-        .order('full_name');
-
-      if (error) throw error;
-      setUsers(data || []);
+      setUsers(await listProfilesForAdministration());
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
@@ -97,12 +91,7 @@ export default function UserAccessManagement() {
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole as ValidRole })
-        .eq('id', userId);
-
-      if (error) throw error;
+      await updateProfile(userId, { role: newRole as ValidRole });
 
       setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
       

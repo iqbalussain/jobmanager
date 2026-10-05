@@ -30,6 +30,62 @@ export function transformJobOrderData(data: JobOrderListRecord[]): JobOrder[] {
   });
 }
 
+export function transformCachedJobOrders(orders: DexieJobOrder[]): JobOrder[] {
+  return transformJobOrderData(
+    orders.map((order) => ({
+      id: order.id,
+      job_order_number: order.job_order_number,
+      customer_id: order.customer_id,
+      job_title_id: order.job_title_id ?? null,
+      designer_id: order.designer_id ?? null,
+      salesman_id: order.salesman_id ?? null,
+      status: order.status,
+      priority: order.priority,
+      branch: order.branch ?? null,
+      assignee: order.assignee ?? null,
+      due_date: order.due_date ?? null,
+      estimated_hours: order.estimated_hours ?? null,
+      actual_hours: order.actual_hours ?? null,
+      total_value: order.total_value ?? null,
+      invoice_number: order.invoice_number ?? null,
+      job_order_details: order.job_order_details ?? null,
+      client_name: order.client_name ?? null,
+      delivered_at: order.delivered_at ?? null,
+      approval_status: order.approval_status,
+      approval_notes: order.approval_notes ?? null,
+      approved_by: order.approved_by ?? null,
+      approved_at: order.approved_at ?? null,
+      created_by: order.created_by,
+      created_at: order.created_at,
+      updated_at: order.updated_at,
+      description_plain: order.description_plain ?? null,
+      description: null,
+      customer: {
+        id: order.customer_id,
+        name: order.customer_name || 'Unknown Customer',
+      },
+      job_title: order.job_title_id
+        ? { id: order.job_title_id, job_title_id: order.job_title || order.job_title_id }
+        : null,
+      designer: order.designer_id
+        ? {
+            id: order.designer_id,
+            name: order.designer_name || 'Unknown Designer',
+            phone: null,
+          }
+        : null,
+      salesman: order.salesman_id
+        ? {
+            id: order.salesman_id,
+            name: order.salesman_name || 'Unknown Salesman',
+            email: null,
+            phone: null,
+          }
+        : null,
+    })),
+  );
+}
+
 export function transformDexieJobOrder(order: DexieJobOrder): DashboardJob {
   const today = new Date().toISOString().split('T')[0];
 

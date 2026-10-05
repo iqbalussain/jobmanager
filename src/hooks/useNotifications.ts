@@ -1,15 +1,15 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { supabase } from "@/integrations/supabase/client";
-import { db, DexieNotification } from "@/lib/dexieDb";
+import { db } from "@/lib/dexieDb";
 import { useAuth } from "@/hooks/useAuth";
 import { 
   syncNotifications, 
-  addNotificationToCache,
   markNotificationRead,
-  snoozeNotification
-} from "@/services/notificationsSync";
+  snoozeNotification,
+  addRealtimeNotificationToCache,
+} from "@/data/notifications";
 import { isSyncAvailable } from "@/services/syncService";
+import { subscribeToNotifications } from "@/data/realtime";
 
 function playNotificationSound() {
   try {
@@ -98,35 +98,14 @@ export function useNotifications() {
   useEffect(() => {
     if (!userId) return;
     let active = true;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let unsubscribe: (() => void) | null = null;
 
     const startSubscription = () => {
-      if (!active || !isSyncAvailable() || channel) return;
-      channel = supabase
-        .channel(`notifications-changes-${userId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "notifications",
-            filter: `user_id=eq.${userId}`,
-          },
-          async (payload) => {
-            const newNotif = payload.new as DexieNotification;
+      if (!active || !isSyncAvailable() || unsubscribe) return;
+      unsubscribe = subscribeToNotifications(userId, async (newNotif) => {
 
             try {
-              await addNotificationToCache({
-                id: newNotif.id,
-                user_id: newNotif.user_id,
-                job_id: newNotif.job_id,
-                type: newNotif.type,
-                message: newNotif.message,
-                payload: newNotif.payload || {},
-                read: newNotif.read,
-                snoozed_until: newNotif.snoozed_until,
-                created_at: newNotif.created_at,
-              }, userId);
+              await addRealtimeNotificationToCache(newNotif, userId);
 
               if (!active) return;
               setNotificationSyncError(null);
@@ -140,17 +119,15 @@ export function useNotifications() {
                 setNotificationSyncError(error instanceof Error ? error.message : "Notification sync failed");
               }
             }
-          }
-        )
-        .subscribe();
+          });
     };
 
     const handleAvailabilityChange = () => {
       if (isSyncAvailable()) {
         startSubscription();
-      } else if (channel) {
-        void supabase.removeChannel(channel);
-        channel = null;
+      } else if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
       }
     };
 
@@ -164,7 +141,7 @@ export function useNotifications() {
       window.removeEventListener("online", handleAvailabilityChange);
       window.removeEventListener("offline", handleAvailabilityChange);
       document.removeEventListener("visibilitychange", handleAvailabilityChange);
-      if (channel) void supabase.removeChannel(channel);
+      unsubscribe?.();
     };
   }, [userId]);
   

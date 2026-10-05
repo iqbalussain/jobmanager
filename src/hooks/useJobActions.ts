@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { patchJobOrderCache } from '@/services/syncService';
 import { db } from '@/lib/dexieDb';
 import type { JobStatus } from '@/types/jobOrder';
+import { updateJobStatusThroughRpc } from '@/data/jobs';
 
 export function useJobActions() {
   const { toast } = useToast();
@@ -24,37 +24,19 @@ export function useJobActions() {
       };
     }
 
-    const { data, error } = await supabase.rpc('update_job_status', {
-      p_job_id: jobId,
-      p_new_status: status
-    });
-
-    if (error) {
+    let result: Awaited<ReturnType<typeof updateJobStatusThroughRpc>>;
+    try {
+      result = await updateJobStatusThroughRpc(jobId, status);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update job status';
       toast({
         title: 'Error',
-        description: error.message,
+        description: message,
         variant: 'destructive'
       });
-      return { success: false, error: error.message };
+      return { success: false, error: message };
     }
 
-    if (
-      data === null ||
-      typeof data !== 'object' ||
-      Array.isArray(data) ||
-      typeof data.success !== 'boolean'
-    ) {
-      throw new Error('Status update returned an invalid response');
-    }
-
-    const result = {
-      success: data.success,
-      ...(typeof data.error === 'string' ? { error: data.error } : {}),
-      ...(typeof data.job_order_number === 'string'
-        ? { job_order_number: data.job_order_number }
-        : {}),
-    };
-    
     if (!result.success) {
       toast({
         title: 'Status Update Failed',

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { uploadBranchLogo } from "@/data/companies";
 import { BRANCH_CONFIGS } from "@/utils/branchConfig";
 
 interface BranchLogoUploaderProps {
@@ -64,25 +64,7 @@ export function BranchLogoUploader({ isOpen, onClose }: BranchLogoUploaderProps)
 
     try {
       // Create file path
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${selectedBranch.toLowerCase().replace(/\s+/g, '-')}-logo.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      // Upload to Supabase storage
-      const { error: uploadError } = await supabase.storage
-        .from('branch-logos')
-        .upload(filePath, selectedFile, {
-          upsert: true // Replace existing file
-        });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('branch-logos')
-        .getPublicUrl(filePath);
+      await uploadBranchLogo(selectedBranch, selectedFile);
 
       toast({
         title: "Logo uploaded successfully",

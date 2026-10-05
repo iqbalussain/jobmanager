@@ -7,8 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, User } from "lucide-react";
 import { Job } from "@/pages/Index";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { createJobComment, listJobComments, type JobCommentWithProfile } from "@/data/jobChat";
 
 interface JobChatProps {
   job: Job;
@@ -16,16 +16,7 @@ interface JobChatProps {
   onClose: () => void;
 }
 
-interface Comment {
-  id: string;
-  comment: string;
-  created_at: string;
-  created_by: string;
-  job_order_id: string;
-  user_profile?: {
-    full_name: string;
-  };
-}
+type Comment = JobCommentWithProfile;
 
 export function JobChat({ job, isOpen, onClose }: JobChatProps) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -36,51 +27,15 @@ export function JobChat({ job, isOpen, onClose }: JobChatProps) {
   const { toast } = useToast();
 
   const processCommentsWithProfiles = React.useCallback(
-    async (commentsData: Array<{
-      id: string;
-      comment: string;
-      created_by: string;
-      created_at: string;
-      job_order_id: string;
-    }>) => {
-      const userIds = [...new Set(commentsData.map((comment) => comment.created_by))];
-
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', userIds);
-
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-      }
-
-      const commentsWithProfiles = commentsData.map((comment) => ({
-        ...comment,
-        user_profile:
-          profilesData?.find((profile) => profile.id === comment.created_by) || { full_name: 'Unknown User' },
-      }));
-
-      setComments(commentsWithProfiles as Comment[]);
-    },
+    async (commentsData: Comment[]) => setComments(commentsData),
     [],
   );
 
   const fetchComments = React.useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data: commentsData, error: commentsError } = await supabase
-        .from('job_order_comments')
-        .select('id, comment, created_by, created_at, job_order_id')
-        .eq('job_order_id', job.id)
-        .order('created_at', { ascending: true });
-
-      if (commentsError) {
-        console.error('Error fetching comments:', commentsError);
-        setComments([]);
-        return;
-      }
-
-      if (commentsData && commentsData.length > 0) {
+      const commentsData = await listJobComments(job.id);
+      if (commentsData.length > 0) {
         await processCommentsWithProfiles(commentsData);
       } else {
         setComments([]);
@@ -109,32 +64,7 @@ export function JobChat({ job, isOpen, onClose }: JobChatProps) {
 
     setIsSending(true);
     try {
-      const { data, error } = await supabase
-        .from('job_order_comments')
-        .insert({
-          job_order_id: job.id,
-          comment: newComment.trim(),
-          created_by: user.id
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error sending comment:', error);
-        throw error;
-      }
-      
-      // Get the user profile for the new comment
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .single();
-
-      const newCommentWithProfile = {
-        ...data,
-        user_profile: profileData || { full_name: 'Unknown User' }
-      };
+      const newCommentWithProfile = await createJobComment(job.id, user.id, newComment.trim());
 
       setComments(prev => [...prev, newCommentWithProfile]);
       setNewComment('');

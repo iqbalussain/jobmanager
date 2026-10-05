@@ -3,11 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Download, Upload, FileText, AlertCircle, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { forceFullResync } from "@/services/syncService";
+<<<<<<< HEAD
 import { useAuth } from "@/hooks/useAuth";
+=======
+import { createCustomer, listCustomers } from "@/data/customers";
+import { createJobTitle, listJobTitlesWithCreatedAt } from "@/data/jobTitles";
+import { listProfilesForExport, listProfilesWithDetails } from "@/data/profiles";
+import { listJobOrdersForExport } from "@/data/jobs";
+>>>>>>> e1e399e (data stync and job)
 import {
   Select,
   SelectContent,
@@ -37,7 +44,11 @@ export function DataManagement() {
   const handleForceResync = async () => {
     setIsResyncing(true);
     try {
+<<<<<<< HEAD
       if (!user) throw new Error("Not signed in");
+=======
+      if (!user) throw new Error("Sign in before starting a full cache resync.");
+>>>>>>> e1e399e (data stync and job)
       await forceFullResync(user.id);
       toast({
         title: "Sync Complete",
@@ -119,65 +130,21 @@ export function DataManagement() {
       let csvData: string;
       
       if (exportType === 'job_orders') {
-        // Fetch ALL job orders with related data for human-readable export
-        // Use pagination to bypass Supabase's default 1000 row limit
-        let allJobOrders: any[] = [];
-        let from = 0;
-        const batchSize = 1000;
-        let hasMore = true;
-
-        while (hasMore) {
-          const { data: batch, error } = await supabase
-            .from('job_orders')
-            .select(`
-              job_order_number,
-              customer_id,
-              job_title_id,
-              designer_id,
-              salesman_id,
-              priority,
-              status,
-              approval_status,
-              branch,
-              due_date,
-              estimated_hours,
-              actual_hours,
-              job_order_details,
-              invoice_number,
-              delivered_at,
-              client_name,
-              created_at,
-              updated_at
-            `)
-            .range(from, from + batchSize - 1)
-            .order('created_at', { ascending: false });
-
-          if (error) throw error;
-
-          if (batch && batch.length > 0) {
-            allJobOrders = [...allJobOrders, ...batch];
-            from += batchSize;
-            hasMore = batch.length === batchSize;
-          } else {
-            hasMore = false;
-          }
-        }
-
-        const jobOrders = allJobOrders;
+        const jobOrders = await listJobOrdersForExport();
 
         // Fetch related data
-        const [customersRes, jobTitlesRes, profilesRes] = await Promise.all([
-          supabase.from('customers').select('id, name'),
-          supabase.from('job_titles').select('id, job_title_id'),
-          supabase.from('profiles').select('id, full_name')
+        const [customers, jobTitles, profiles] = await Promise.all([
+          listCustomers(),
+          listJobTitlesWithCreatedAt(),
+          listProfilesForExport()
         ]);
 
-        const customersMap = new Map(customersRes.data?.map(c => [c.id, c.name]) || []);
-        const jobTitlesMap = new Map(jobTitlesRes.data?.map(j => [j.id, j.job_title_id]) || []);
-        const profilesMap = new Map(profilesRes.data?.map(p => [p.id, p.full_name]) || []);
+        const customersMap = new Map(customers.map(c => [c.id, c.name]));
+        const jobTitlesMap = new Map(jobTitles.map(j => [j.id, j.job_title_id]));
+        const profilesMap = new Map(profiles.map(p => [p.id, p.full_name]));
 
         // Transform data to human-readable format
-        const transformedData = jobOrders?.map(order => ({
+        const transformedData = jobOrders.map(order => ({
           job_order_number: order.job_order_number,
           customer_name: customersMap.get(order.customer_id) || '',
           job_title: jobTitlesMap.get(order.job_title_id || '') || '',
@@ -207,25 +174,20 @@ export function DataManagement() {
 
         csvData = generateCSV(transformedData, headers);
       } else if (exportType === 'designers') {
-        const { data, error } = await supabase.from('profiles').select('id, full_name, email, phone, branch, department, is_active').eq('role', 'designer');
-        if (error) throw error;
-        csvData = generateCSV(data || [], ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
+        const data = await listProfilesWithDetails('designer');
+        csvData = generateCSV(data, ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
       } else if (exportType === 'salesmen') {
-        const { data, error } = await supabase.from('profiles').select('id, full_name, email, phone, branch, department, is_active').eq('role', 'salesman');
-        if (error) throw error;
-        csvData = generateCSV(data || [], ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
+        const data = await listProfilesWithDetails('salesman');
+        csvData = generateCSV(data, ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
       } else if (exportType === 'customers') {
-        const { data, error } = await supabase.from('customers').select('id, name');
-        if (error) throw error;
-        csvData = generateCSV(data || [], ['id', 'name']);
+        const data = await listCustomers();
+        csvData = generateCSV(data, ['id', 'name']);
       } else if (exportType === 'job_titles') {
-        const { data, error } = await supabase.from('job_titles').select('id, job_title_id, created_at');
-        if (error) throw error;
-        csvData = generateCSV(data || [], ['id', 'job_title_id', 'created_at']);
+        const data = await listJobTitlesWithCreatedAt();
+        csvData = generateCSV(data, ['id', 'job_title_id', 'created_at']);
       } else {
-        const { data, error } = await supabase.from('profiles').select('id, full_name, email, phone, role, branch, department, is_active, created_at');
-        if (error) throw error;
-        csvData = generateCSV(data || [], ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
+        const data = await listProfilesForExport();
+        csvData = generateCSV(data, ['id', 'full_name', 'email', 'phone', 'branch', 'department', 'role', 'is_active', 'created_at']);
       }
 
       const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
@@ -319,21 +281,12 @@ export function DataManagement() {
           }
 
           // Insert data based on type
-          let error;
-          
           if (importType === 'customers') {
-            const result = await supabase
-              .from('customers')
-              .insert({ name: record.name });
-            error = result.error;
+            await createCustomer(record.name);
           } else if (importType === 'job_titles') {
-            const result = await supabase
-              .from('job_titles')
-              .insert({ job_title_id: record.job_title_id });
-            error = result.error;
+            await createJobTitle(record.job_title_id);
           }
 
-          if (error) throw error;
           result.success++;
         } catch (error) {
           result.failed++;

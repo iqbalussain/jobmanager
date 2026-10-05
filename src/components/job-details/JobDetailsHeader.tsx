@@ -5,7 +5,7 @@ import { FileText, Download, MessageCircle, History } from "lucide-react";
 import { Job } from "@/pages/Index";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getProfileRole } from "@/data/profiles";
 import { JobEditLog } from "./JobEditLog";
 
 interface JobDetailsHeaderProps {
@@ -32,12 +32,7 @@ export function JobDetailsHeader({
     queryKey: ["user-role", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      const { data } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-      return data?.role;
+      return getProfileRole(user.id);
     },
     enabled: !!user?.id
   });

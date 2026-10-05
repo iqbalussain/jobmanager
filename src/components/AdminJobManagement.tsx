@@ -14,7 +14,8 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { SyncStatusIndicator } from "@/components/ui/SyncStatusIndicator";
 
-import { supabase } from "@/integrations/supabase/client";
+import { hasUserRole } from "@/data/profiles";
+import { updateJobFields } from "@/data/jobs";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -96,13 +97,11 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
   useEffect(() => {
     const checkRole = async () => {
       if (!user) return;
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .single();
-      setIsAdmin(!!data);
+      try {
+        setIsAdmin(await hasUserRole(user.id, 'admin'));
+      } catch (error) {
+        console.error("Failed to check admin access:", error);
+      }
     };
     checkRole();
   }, [user]);
@@ -127,20 +126,22 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
   };
 
   const handleStatusChange = async (jobId: string, newStatus: string) => {
-    const { error } = await supabase.from("job_orders").update({ status: newStatus as JobStatus }).eq("id", jobId);
-    if (!error) {
+    try {
+      await updateJobFields(jobId, { status: newStatus as JobStatus });
       if (!user) {
         toast({ title: "Update failed", description: "A signed-in user is required to refresh the local cache.", variant: "destructive" });
         return;
       }
       await updateJobInCache(jobId, user.id);
       toast({ title: "Status updated" });
+    } catch (error) {
+      toast({ title: "Update failed", description: error instanceof Error ? error.message : "Unable to update status.", variant: "destructive" });
     }
   };
 
   const handleTotalValueUpdate = async (jobId: string, newValue: string) => {
-    const { error } = await supabase.from("job_orders").update({ total_value: parseFloat(newValue) }).eq("id", jobId);
-    if (!error) {
+    try {
+      await updateJobFields(jobId, { total_value: parseFloat(newValue) });
       if (!user) {
         toast({ title: "Update failed", description: "A signed-in user is required to refresh the local cache.", variant: "destructive" });
         return;
@@ -152,6 +153,8 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
         delete newState[jobId];
         return newState;
       });
+    } catch (error) {
+      toast({ title: "Update failed", description: error instanceof Error ? error.message : "Unable to update total value.", variant: "destructive" });
     }
   };
 

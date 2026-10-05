@@ -4,22 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle, XCircle, AlertCircle, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 import { JobDetails } from "@/components/JobDetails";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { updateJobInCache } from "@/services/syncService";
-import type { JobOrderRecord } from "@/types/jobOrder";
-
-interface PendingJob {
-  id: string;
-  job_order_number: string;
-  customer_name: string;
-  created_at: string;
-  job_order_details: string;
-  created_by_name: string;
-}
+import {
+  getJobOrderDetails,
+  listPendingApprovalJobs,
+  updateJobApproval,
+  type PendingApprovalJob,
+} from "@/data/jobs";
+import { subscribeToJobOrderChanges } from "@/data/realtime";
 
 export function ApprovalBox() {
   const { user } = useAuth();
@@ -38,12 +33,7 @@ export function ApprovalBox() {
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel(`approval-job-orders-${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'job_orders' },
-        (payload: RealtimePostgresChangesPayload<JobOrderRecord>) => {
+    const unsubscribe = subscribeToJobOrderChanges(user.id, (payload) => {
           const affectsPendingApprovals = payload.eventType === 'INSERT'
             ? payload.new.approval_status === 'pending_approval'
             : payload.eventType === 'UPDATE'
@@ -54,81 +44,33 @@ export function ApprovalBox() {
             void queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
           }
           void queryClient.invalidateQueries({ queryKey: ['job-orders'] });
-        },
-      )
-      .subscribe((status, error) => {
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error('Approval realtime subscription failed:', error);
-        }
-      });
+        }, (status, error) => {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error('Approval realtime subscription failed:', error);
+          }
+        });
 
     return () => {
-      void supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [queryClient, user]);
 
   const { data: pendingJobs = [], isLoading } = useQuery({
     queryKey: ['pending-approvals'],
-    queryFn: async (): Promise<PendingJob[]> => {
-      const { data: jobOrders, error } = await supabase
-        .from('job_orders')
-        .select(`
-          id,
-          job_order_number,
-          job_order_details,
-          created_at,
-          created_by,
-          customer:customers!fk_job_orders_customer(name)
-        `)
-        .eq('approval_status', 'pending_approval')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const jobsWithCreators = await Promise.all(
-        jobOrders.map(async (job) => {
-          let createdByName = 'Unknown User';
-          if (job.created_by) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('id', job.created_by)
-              .single();
-            if (profile?.full_name) createdByName = profile.full_name;
-          }
-          return {
-            id: job.id,
-            job_order_number: job.job_order_number,
-            customer_name: job.customer?.name || 'Unknown Customer',
-            created_at: job.created_at,
-            job_order_details: job.job_order_details || '',
-            created_by_name: createdByName
-          };
-        })
-      );
-      return jobsWithCreators;
-    },
+    queryFn: (): Promise<PendingApprovalJob[]> => listPendingApprovalJobs(),
     enabled: !!user
   });
 
   const approvalMutation = useMutation({
     mutationFn: async ({ jobId, action }: { jobId: string; action: 'approve' | 'reject' }) => {
-      const { error } = await supabase
-        .from('job_orders')
-        .update({
-          approval_status: action === 'approve' ? 'approved' : 'rejected',
-          approved_by: user?.id,
-          approved_at: new Date().toISOString()
-        })
-        .eq('id', jobId);
-      if (error) throw error;
+      await updateJobApproval(jobId, action === 'approve' ? 'approved' : 'rejected', user?.id ?? null);
       return { jobId, action };
     },
     onMutate: async ({ jobId }) => {
       await queryClient.cancelQueries({ queryKey: ['pending-approvals'] });
       await queryClient.cancelQueries({ queryKey: ['job-orders'] });
       const previousPendingJobs = queryClient.getQueryData(['pending-approvals']);
-      queryClient.setQueryData(['pending-approvals'], (old: PendingJob[] | undefined) =>
+      queryClient.setQueryData(['pending-approvals'], (old: PendingApprovalJob[] | undefined) =>
         old ? old.filter(job => job.id !== jobId) : old
       );
       return { previousPendingJobs };
@@ -230,18 +172,11 @@ export function ApprovalBox() {
 
   const handleViewJob = async (jobId: string) => {
     try {
-      const { data: jobOrder, error } = await supabase.from('job_orders').select('id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,assignee,priority,status,due_date,estimated_hours,created_at,branch,job_order_details,invoice_number,total_value,created_by,approval_status,delivered_at,client_name').eq('id', jobId).single();
-      if (error) throw error;
-      const [customerData, designerData, salesmanData, jobTitleData] = await Promise.all([
-        supabase.from('customers').select('name').eq('id', jobOrder.customer_id).single(),
-        jobOrder.designer_id ? supabase.from('profiles').select('full_name').eq('id', jobOrder.designer_id).single() : Promise.resolve({ data: null }),
-        jobOrder.salesman_id ? supabase.from('profiles').select('full_name').eq('id', jobOrder.salesman_id).single() : Promise.resolve({ data: null }),
-        jobOrder.job_title_id ? supabase.from('job_titles').select('job_title_id').eq('id', jobOrder.job_title_id).single() : Promise.resolve({ data: null })
-      ]);
+      const jobOrder = await getJobOrderDetails(jobId);
       setSelectedJob({
-        id: jobOrder.id, title: jobTitleData.data?.job_title_id || 'Unknown Job Title',
-        customer: customerData.data?.name || 'Unknown Customer', designer: designerData.data?.full_name || 'Unassigned',
-        salesman: salesmanData.data?.full_name || 'Unassigned', assignee: jobOrder.assignee,
+        id: jobOrder.id, title: jobOrder.job_title_name || 'Unknown Job Title',
+        customer: jobOrder.customer_name || 'Unknown Customer', designer: jobOrder.designer_name || 'Unassigned',
+        salesman: jobOrder.salesman_name || 'Unassigned', assignee: jobOrder.assignee,
         jobOrderNumber: jobOrder.job_order_number, priority: jobOrder.priority, status: jobOrder.status,
         dueDate: jobOrder.due_date, estimatedHours: jobOrder.estimated_hours || 0, createdAt: jobOrder.created_at,
         branch: jobOrder.branch, jobOrderDetails: jobOrder.job_order_details, invoiceNumber: jobOrder.invoice_number,

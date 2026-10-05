@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,25 +9,27 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, User, Mail, Phone, Building, Shield, UserX, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/data/functions";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Profile } from "@/hooks/useUserManagement";
 
 interface UserManagementProps {
   profiles: Profile[];
   profilesLoading: boolean;
-  userForm: {
-    email: string;
-    password: string;
-    fullName: string;
-    role: string;
-    department: string;
-    branch: string;
-    phone: string;
-  };
-  setUserForm: (form: any) => void;
+  userForm: UserForm;
+  setUserForm: Dispatch<SetStateAction<UserForm>>;
   onAddUser: (e: React.FormEvent) => void;
   isAdding: boolean;
+}
+
+interface UserForm {
+  email: string;
+  password: string;
+  fullName: string;
+  role: string;
+  department: string;
+  branch: string;
+  phone: string;
 }
 
 export function UserManagement({
@@ -46,7 +48,7 @@ export function UserManagement({
     setTogglingStatus(userId);
     
     try {
-      const { error } = await supabase.functions.invoke('toggle-user-status', {
+      const { error } = await invokeEdgeFunction('toggle-user-status', {
         body: {
           userId: userId,
           isActive: !currentStatus
@@ -62,10 +64,10 @@ export function UserManagement({
 
       // Refresh profiles
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error.message || "Failed to update user status",
+        description: error instanceof Error ? error.message : "Failed to update user status",
         variant: "destructive"
       });
     } finally {

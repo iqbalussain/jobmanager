@@ -1,8 +1,9 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeEdgeFunction } from '@/data/functions';
 import { useToast } from '@/hooks/use-toast';
+import { listProfilesWithDetails } from '@/data/profiles';
 
 export interface Profile {
   id: string;
@@ -38,16 +39,7 @@ export function useUserManagement() {
   const { data: profiles = [], isLoading: profilesLoading } = useQuery({
     queryKey: ['profiles'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, role, department, branch, phone, is_active')
-        .order('full_name');
-      
-      if (error) {
-        console.error('Error fetching profiles:', error);
-        throw error;
-      }
-      return data as Profile[];
+      return listProfilesWithDetails() as Promise<Profile[]>;
     }
   });
 
@@ -66,7 +58,7 @@ export function useUserManagement() {
         throw new Error(`Invalid role: ${userData.role}. Must be one of: ${allowedRoles.join(', ')}`);
       }
 
-      const { data, error } = await supabase.functions.invoke<{ profile: Profile }>(
+      const { data, error } = await invokeEdgeFunction<{ profile: Profile }>(
         'admin-create-user',
         {
           body: {

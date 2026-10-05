@@ -10,8 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { listProfilesForAdministration, updateProfile } from "@/data/profiles";
 import { 
   UserCheck, Shield, Eye, Edit, Trash2, Plus, Settings, FileText, 
   BarChart3, Users, Lock, Unlock, Crown, AlertTriangle, Check, X 
@@ -123,13 +123,7 @@ export function AdvancedUserPermissions() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, role, department, branch, phone')
-        .order('full_name');
-
-      if (error) throw error;
-      setUsers(data || []);
+      setUsers(await listProfilesForAdministration());
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
@@ -144,12 +138,7 @@ export function AdvancedUserPermissions() {
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole as ValidRole })
-        .eq('id', userId);
-
-      if (error) throw error;
+      await updateProfile(userId, { role: newRole as ValidRole });
 
       setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
       

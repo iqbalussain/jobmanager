@@ -19,8 +19,8 @@ import {
   Lock
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { getProfileRole, getProfileSettings, updateProfile } from "@/data/profiles";
 import { ChangePasswordDialog } from "@/components/user-profile/ChangePasswordDialog";
 import { AdminPasswordReset } from "@/components/admin/AdminPasswordReset";
 import { DataManagement } from "@/components/settings/DataManagement";
@@ -51,13 +51,11 @@ export function SettingsView() {
   const checkAdminStatus = async () => {
     if (!user) return;
     
-    const { data } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    
-    setIsAdmin(data?.role === 'admin');
+    try {
+      setIsAdmin((await getProfileRole(user.id)) === 'admin');
+    } catch (error) {
+      console.error('Error checking profile role:', error);
+    }
   };
 
   useEffect(() => {
@@ -68,13 +66,7 @@ export function SettingsView() {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('full_name, email, phone, branch, department')
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
+      const data = await getProfileSettings(user.id);
 
       if (data) {
         setProfileData({
@@ -100,18 +92,13 @@ export function SettingsView() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      await updateProfile(user.id, {
           full_name: profileData.fullName,
           phone: profileData.phone,
           branch: profileData.branch,
           department: profileData.department,
           updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
+      });
 
       toast({
         title: "Success",

@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { listDesignerProfiles } from '@/data/profiles';
 import { useToast } from '@/hooks/use-toast';
 
 export interface Designer {
@@ -18,16 +18,7 @@ export function useDesignerManagement() {
   const { data: designers = [], isLoading: designersLoading } = useQuery({
     queryKey: ['designers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone')
-        .or('role.eq.designer,and(role.eq.manager,id.eq.f47e1264-dbb8-4645-a712-013b3d77fed5)')
-        .order('full_name');
-      
-      if (error) {
-        console.error('Error fetching designers:', error);
-        throw error;
-      }
+      const data = await listDesignerProfiles();
       return data.map(profile => ({
         id: profile.id,
         name: profile.full_name || 'Unknown Designer',

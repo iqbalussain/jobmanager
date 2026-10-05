@@ -6,7 +6,13 @@
  */
 
 import { db } from '@/lib/dexieDb';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeEdgeFunction } from '@/data/functions';
+import {
+  getChecklistForDate,
+  getChecklistItems,
+  listChecklistsSince,
+  updateChecklistItems,
+} from '@/data/checklists';
 
 export interface ChecklistItem {
   id: string;
@@ -32,34 +38,19 @@ export async function syncTodayChecklist(): Promise<DailyChecklist | null> {
   try {
     const today = new Date().toISOString().split('T')[0];
     
-    const { data, error } = await supabase
-      .from('daily_checklists')
-      .select('id, date, items, created_at')
-      .eq('date', today)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-    
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // No checklist for today yet
-        return null;
-      }
-      throw error;
-    }
-    
-    if (data) {
-      const checklist: DailyChecklist = {
-        id: data.id,
-        date: data.date,
-        items: data.items as unknown as DailyChecklist['items'],
-        created_at: data.created_at,
-      };
-      
-      // Store in Dexie
-      await db.table('dailyChecklists').put(checklist);
-      return checklist;
-    }
+    const data = await getChecklistForDate(today);
+    if (!data) return null;
+
+    const checklist: DailyChecklist = {
+      id: data.id,
+      date: data.date,
+      items: data.items as unknown as DailyChecklist['items'],
+      created_at: data.created_at ?? `${data.date}T00:00:00.000Z`,
+    };
+
+    // Store in Dexie
+    await db.table('dailyChecklists').put(checklist);
+    return checklist;
   } catch (error) {
     console.error('[AISync] Error syncing today checklist:', error);
     return null;
@@ -101,27 +92,15 @@ export async function markChecklistItemDone(
     }
     
     // Sync to server
-    const { data: current, error: fetchError } = await supabase
-      .from('daily_checklists')
-      .select('items')
-      .eq('id', checklistId)
-      .single();
-    
-    if (fetchError) throw fetchError;
-    
-    const serverItems = current.items as unknown as DailyChecklist['items'];
+    const serverItems = await getChecklistItems(checklistId) as unknown as DailyChecklist['items'];
     const updatedChecklist = serverItems.checklist.map((item: ChecklistItem) =>
       item.id === itemId ? { ...item, done } : item
     );
     
-    const { error: updateError } = await supabase
-      .from('daily_checklists')
-      .update({
-        items: JSON.parse(JSON.stringify({ ...serverItems, checklist: updatedChecklist })),
-      })
-      .eq('id', checklistId);
-    
-    if (updateError) throw updateError;
+    await updateChecklistItems(
+      checklistId,
+      JSON.parse(JSON.stringify({ ...serverItems, checklist: updatedChecklist })),
+    );
     
     return true;
   } catch (error) {
@@ -133,7 +112,7 @@ export async function markChecklistItemDone(
 // Trigger manual analysis run
 export async function runManualAnalysis(): Promise<DailyChecklist | null> {
   try {
-    const { data, error } = await supabase.functions.invoke('daily-gemini-analyze');
+    const { data, error } = await invokeEdgeFunction<{ checklist?: DailyChecklist }>('daily-gemini-analyze');
     
     if (error) throw error;
     
@@ -162,13 +141,7 @@ export async function getRecentChecklists(days: number = 7): Promise<DailyCheckl
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
     
-    const { data, error } = await supabase
-      .from('daily_checklists')
-      .select('id, date, items, created_at')
-      .gte('date', startDate.toISOString().split('T')[0])
-      .order('date', { ascending: false });
-    
-    if (error) throw error;
+    const data = await listChecklistsSince(startDate.toISOString().split('T')[0]);
     
     return (data || []).map(d => ({
       id: d.id,

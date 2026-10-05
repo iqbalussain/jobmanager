@@ -10,7 +10,7 @@ import {
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { getProfileHeader } from "@/data/profiles";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -51,11 +51,7 @@ export function MinimalistSidebar({
     if (!user?.id) return;
 
     try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, role")
-        .eq("id", user.id)
-        .single();
+      const data = await getProfileHeader(user.id);
 
       setUserProfile(
         data || {

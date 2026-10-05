@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { updateJobOrder } from "@/services/jobOrdersApi";
 import { cacheJobOrder, isSyncAvailable, patchJobOrderCache } from "@/services/syncService";
+import { getProfileRole } from "@/data/profiles";
+import { getJobOrderDetails, updatePendingJobApproval } from "@/data/jobs";
+import { subscribeToJobOrderChanges } from "@/data/realtime";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useJobActions } from "@/hooks/useJobActions";
 import type { DashboardJob, JobOrderRecord, JobStatus } from "@/types/jobOrder";
@@ -187,24 +189,21 @@ export function WorkflowAlertManager() {
     }
 
     let active = true;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let unsubscribe: (() => void) | null = null;
     let resolvedRole: string | null = null;
 
     const startRealtimeAlerts = async () => {
-      if (!active || !isSyncAvailable() || channel) return;
+      if (!active || !isSyncAvailable() || unsubscribe) return;
       if (resolvedRole === null) {
-        const { data: profile, error: roleError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", userId)
-          .single();
-
-        if (!active || !isSyncAvailable()) return;
-        if (roleError) {
+        let profileRole: string | null;
+        try {
+          profileRole = await getProfileRole(userId);
+        } catch (roleError) {
           console.error("Failed to load workflow alert role:", roleError);
           return;
         }
-        resolvedRole = profile?.role || "";
+        if (!active || !isSyncAvailable()) return;
+        resolvedRole = profileRole || "";
       }
 
       const currentRole = resolvedRole;
@@ -230,12 +229,9 @@ export function WorkflowAlertManager() {
         }
       };
 
-      channel = supabase
-        .channel(`workflow-job-alerts-${userId}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "job_orders" },
-          (payload: RealtimePostgresChangesPayload<JobOrderRecord>) => {
+      unsubscribe = subscribeToJobOrderChanges(
+        userId,
+        (payload: RealtimePostgresChangesPayload<JobOrderRecord>) => {
             if (!active || payload.eventType === "DELETE") return;
             const job = payload.new;
             const previousJob = payload.old as JobOrderRecord;
@@ -277,22 +273,22 @@ export function WorkflowAlertManager() {
             }
 
             addAlerts(addedAlerts);
-          },
-        )
-        .subscribe((status, error) => {
+        },
+        (status, error) => {
           if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
             console.error("Workflow alert realtime subscription failed:", error);
           }
-        });
+        },
+      );
     };
 
     void startRealtimeAlerts();
     const handleAvailabilityChange = () => {
       if (isSyncAvailable()) {
         void startRealtimeAlerts();
-      } else if (channel) {
-        void supabase.removeChannel(channel);
-        channel = null;
+      } else if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
       }
     };
     const handleOpenWorkflowAlert = (event: WindowEventMap["workflow-alert-open"]) => {
@@ -324,9 +320,7 @@ export function WorkflowAlertManager() {
 
     return () => {
       active = false;
-      if (channel) {
-        void supabase.removeChannel(channel);
-      }
+      unsubscribe?.();
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(WORKFLOW_ALERTS_UPDATED_EVENT, handleSameTabUpdate);
       window.removeEventListener("workflow-alert-open", handleOpenWorkflowAlert);
@@ -398,21 +392,7 @@ export function WorkflowAlertManager() {
     try {
       if (!navigator.onLine) throw new Error("Reconnect before approving this job.");
       const approvedAt = new Date().toISOString();
-      const { data, error } = await supabase
-        .from("job_orders")
-        .update({
-          approval_status: "approved",
-          approved_by: userId,
-          approved_at: approvedAt,
-          updated_at: approvedAt,
-        })
-        .eq("id", activeAlert.jobId)
-        .eq("approval_status", "pending_approval")
-        .select("id")
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!data) throw new Error("This job is no longer awaiting approval.");
+      await updatePendingJobApproval(activeAlert.jobId, userId, approvedAt);
       await patchJobOrderCache(activeAlert.jobId, {
         approval_status: "approved",
         approved_by: userId,
@@ -434,34 +414,14 @@ export function WorkflowAlertManager() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const { data: jobOrder, error } = await supabase
-        .from("job_orders")
-        .select("id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,assignee,priority,status,due_date,estimated_hours,created_at,branch,job_order_details,invoice_number,total_value,created_by,approval_status,delivered_at,client_name")
-        .eq("id", activeAlert.jobId)
-        .single();
-      if (error) throw error;
-
-      const [customerResult, designerResult, salesmanResult, jobTitleResult] = await Promise.all([
-        supabase.from("customers").select("name").eq("id", jobOrder.customer_id).single(),
-        jobOrder.designer_id
-          ? supabase.from("profiles").select("full_name").eq("id", jobOrder.designer_id).single()
-          : Promise.resolve({ data: null, error: null }),
-        jobOrder.salesman_id
-          ? supabase.from("profiles").select("full_name").eq("id", jobOrder.salesman_id).single()
-          : Promise.resolve({ data: null, error: null }),
-        jobOrder.job_title_id
-          ? supabase.from("job_titles").select("job_title_id").eq("id", jobOrder.job_title_id).single()
-          : Promise.resolve({ data: null, error: null }),
-      ]);
-      const lookupError = customerResult.error || designerResult.error || salesmanResult.error || jobTitleResult.error;
-      if (lookupError) throw lookupError;
+      const jobOrder = await getJobOrderDetails(activeAlert.jobId);
 
       setViewJob({
         id: jobOrder.id,
-        title: jobTitleResult.data?.job_title_id || "Unknown Job Title",
-        customer: customerResult.data?.name || "Unknown Customer",
-        designer: designerResult.data?.full_name || "Unassigned",
-        salesman: salesmanResult.data?.full_name || "Unassigned",
+        title: jobOrder.job_title_name || "Unknown Job Title",
+        customer: jobOrder.customer_name || "Unknown Customer",
+        designer: jobOrder.designer_name || "Unassigned",
+        salesman: jobOrder.salesman_name || "Unassigned",
         assignee: jobOrder.assignee || undefined,
         jobOrderNumber: jobOrder.job_order_number,
         priority: jobOrder.priority,

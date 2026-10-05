@@ -3,6 +3,7 @@ import { db } from '@/lib/dexieDb';
 import { performDeltaSync, 
   needsInitialSync, 
   performInitialSync, 
+  performDeltaSync,
   startRealtimeSync,
   stopRealtimeSync,
   isSyncAvailable
