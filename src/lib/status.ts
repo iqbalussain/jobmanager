@@ -1,3 +1,4 @@
+import { Constants } from "@/integrations/supabase/types";
 import type { JobStatus } from "@/types/jobOrder";
 
 export const JOB_STATUSES = Constants.public.Enums.job_status;
