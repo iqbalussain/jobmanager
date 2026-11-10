@@ -9,6 +9,10 @@ import { CreateJobOrderDialog } from "@/components/CreateJobOrderDialog";
 import { useJobActions } from "@/hooks/useJobActions";
 import type { DashboardJob as Job, JobStatus } from "@/types/jobOrder";
 import { transformDexieJobOrder } from "@/utils/jobOrderTransforms";
+import { CommandPalette } from "@/components/command/CommandPalette";
+import { FloatingDock } from "@/components/command/FloatingDock";
+import { QuickInvoiceWidget } from "@/components/command/QuickInvoiceWidget";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import Unauthorized from "./Unauthorized";
 
 // Lazy loaded components for performance
@@ -55,6 +59,9 @@ const Index = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [invoiceSheetOpen, setInvoiceSheetOpen] = useState(false);
+  const [invoiceJobId, setInvoiceJobId] = useState<string | null>(null);
   const { user } = useAuth();
   const userId = user?.id;
   
@@ -131,6 +138,7 @@ const Index = () => {
           <ModernDashboard 
             jobs={transformedJobs} 
             onViewChange={handleViewChange}
+            quickWidget={<QuickInvoiceWidget jobs={transformedJobs} isAdmin={userRole === "admin"} onSaved={refresh} />}
           />
         );
       case "approved-jobs":
@@ -206,6 +214,30 @@ const Index = () => {
           {renderContent()}
         </Suspense>
       </main>
+
+      <FloatingDock
+        currentView={currentView}
+        onNavigate={handleViewChange}
+        onOpenPalette={() => setPaletteOpen(true)}
+        onQuickInvoice={() => { setInvoiceJobId(null); setInvoiceSheetOpen(true); }}
+        canSeeReports={["admin", "manager", "salesman"].includes(userRole)}
+      />
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        jobs={transformedJobs}
+        onNavigate={handleViewChange}
+        onOpenJob={handleViewJob}
+        onQuickInvoice={(job) => { setInvoiceJobId(job?.id ?? null); setInvoiceSheetOpen(true); }}
+      />
+      <Sheet open={invoiceSheetOpen} onOpenChange={setInvoiceSheetOpen}>
+        <SheetContent side="bottom" className="mx-auto max-w-4xl rounded-t-2xl">
+          <SheetHeader><SheetTitle>Update invoice no. & value</SheetTitle></SheetHeader>
+          <div className="mt-4">
+            <QuickInvoiceWidget jobs={transformedJobs} isAdmin={userRole === "admin"} initialJobId={invoiceJobId} onSaved={refresh} />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Job Details Modal */}
       <JobDetails
