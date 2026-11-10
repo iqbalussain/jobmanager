@@ -10,6 +10,7 @@ import { subscribeJobEdits } from "@/lib/realtime";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { isSyncAvailable } from "@/services/syncService";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ThemeProvider } from "next-themes";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { FloatingCreateButton } from "@/components/FloatingCreateButton";
 import { WorkflowAlertManager } from "@/components/WorkflowAlertManager";
@@ -74,6 +75,7 @@ function JobEditNotifications() {
 function App() {
   return (
     <ErrorBoundary>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="theme">
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <NotificationProvider>
@@ -135,6 +137,7 @@ function App() {
         </NotificationProvider>
       </AuthProvider>
     </QueryClientProvider>
+    </ThemeProvider>
     </ErrorBoundary>
   );
 }

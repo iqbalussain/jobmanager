@@ -122,6 +122,8 @@ export function MinimalistSidebar({
                   variant="ghost"
                   size="icon"
                   onClick={() => onViewChange(item.view)}
+                  aria-label={item.title}
+                  aria-current={currentView === item.view ? "page" : undefined}
                   className={cn(
                     "w-10 h-10 mx-auto rounded-md",
                     currentView === item.view
@@ -133,8 +135,6 @@ export function MinimalistSidebar({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">
-                aria-label={item.title}
-                aria-current={currentView === item. view ? "page": undefined}
                 <p>{item.title}</p>
               </TooltipContent>
             </Tooltip>
@@ -150,6 +150,8 @@ export function MinimalistSidebar({
                   variant="ghost"
                   size="icon"
                   onClick={() => onViewChange(item.view)}
+                  aria-label={item.title}
+                  aria-current={currentView === item.view ? "page" : undefined}
                   className={cn(
                     "w-10 h-10 mx-auto rounded-md",
                     currentView === item.view
@@ -161,8 +163,6 @@ export function MinimalistSidebar({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">
-                aria-label={item.title}
-                aria-current={currentView === item. view ? "page": undefined}
                 <p>{item.title}</p>
               </TooltipContent>
             </Tooltip>
@@ -186,7 +186,7 @@ export function MinimalistSidebar({
         <div className="flex flex-col items-center gap-2 p-3 border-t border-sidebar-border mt-auto">
           <UserProfileDropdown userProfile={userProfile} />
         </div>
-      </div>
+      </nav>
     </TooltipProvider>
   );
 }
