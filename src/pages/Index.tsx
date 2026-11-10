@@ -205,7 +205,7 @@ const Index = () => {
         <Suspense fallback={<LoadingSpinner />}>
           {renderContent()}
         </Suspense>
-      </div>
+      </main>
 
       {/* Job Details Modal */}
       <JobDetails
