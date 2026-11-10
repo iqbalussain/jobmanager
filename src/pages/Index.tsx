@@ -24,7 +24,7 @@ export type { DashboardJob as Job, JobStatus } from "@/types/jobOrder";
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-64">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+    <div role="status" aria-label="Loading" className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
   </div>
 );
 
@@ -179,12 +179,15 @@ const Index = () => {
   }
 
   return (
-    <div className="ml-20 flex-1 overflow-y-auto min-h-screen" style={{ background: 'var(--gradient-background)' }}>
+    <div className="ml-16 min-h-screen bg-background">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-20 focus:top-2 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground">
+        Skip to content
+      </a>
       <MinimalistSidebar 
         currentView={currentView} 
         onViewChange={handleSidebarViewChange}
       />
-      <div className="flex-1 overflow-y-auto">
+      <main id="main" className="min-w-0">
         {(isSyncing || syncError) && (
           <div
             role="status"

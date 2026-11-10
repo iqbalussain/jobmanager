@@ -19,6 +19,7 @@ import {
   Lock
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/hooks/useAuth";
 import { getProfileRole, getProfileSettings, updateProfile } from "@/data/profiles";
 import { ChangePasswordDialog } from "@/components/user-profile/ChangePasswordDialog";
@@ -28,7 +29,7 @@ import { DataManagement } from "@/components/settings/DataManagement";
 export function SettingsView() {
   const [notifications, setNotifications] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
   const [isAdmin, setIsAdmin] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -245,19 +246,10 @@ export function SettingsView() {
                 </p>
               </div>
               <Switch
-                checked={darkMode}
-                onCheckedChange={setDarkMode}
+                aria-label="Dark mode"
+                checked={resolvedTheme === "dark"}
+                onCheckedChange={(on) => setTheme(on ? "dark" : "light")}
               />
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label>Theme Color</Label>
-              <div className="flex gap-2">
-                <div className="w-8 h-8 rounded-full bg-blue-600 cursor-pointer border-2 border-blue-600"></div>
-                <div className="w-8 h-8 rounded-full bg-green-600 cursor-pointer border-2 border-transparent hover:border-green-600"></div>
-                <div className="w-8 h-8 rounded-full bg-purple-600 cursor-pointer border-2 border-transparent hover:border-purple-600"></div>
-                <div className="w-8 h-8 rounded-full bg-red-600 cursor-pointer border-2 border-transparent hover:border-red-600"></div>
-              </div>
             </div>
           </CardContent>
         </Card>
