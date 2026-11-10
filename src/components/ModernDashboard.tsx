@@ -9,12 +9,15 @@ import { HighPriorityReminder } from "@/components/dashboard/HighPriorityReminde
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { KpiStrip } from "@/components/command/KpiStrip";
+import type { ReactNode } from "react";
 import { Search, Eye, Palette, Cog, Receipt, UserRound, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ModernDashboardProps {
   jobs: Job[];
   onViewChange?: (view: "dashboard" | "jobs" | "settings" | "admin" | "admin-management" | "reports") => void;
   onStatusUpdate?: (jobId: string, status: string) => void;
+  quickWidget?: ReactNode;
 }
 
 interface WorkflowBucketProps {
@@ -215,7 +218,7 @@ function WorkflowBucket({
   );
 }
 
-export function ModernDashboard({ jobs }: ModernDashboardProps) {
+export function ModernDashboard({ jobs, quickWidget }: ModernDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -267,7 +270,7 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
   };
 
   return (
-    <div className="space-y-6 p-6 min-h-screen">
+    <div className="space-y-6 p-6 pb-28 min-h-screen">
       <div className="dashboard-card-enter flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-1">Dashboard</h1>
@@ -340,6 +343,11 @@ export function ModernDashboard({ jobs }: ModernDashboardProps) {
           </div>
           <DashboardNotifications />
         </div>
+      </div>
+
+      <div className="dashboard-card-enter space-y-3" style={{ animationDelay: "40ms" }}>
+        <KpiStrip jobs={jobs} />
+        {quickWidget}
       </div>
 
       {/* High Priority Reminder Banner */}
