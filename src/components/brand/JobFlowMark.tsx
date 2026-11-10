@@ -19,3 +19,4 @@ export function JobFlowLogo({ className }: { className?: string }) {
       <span className="text-lg font-semibold tracking-tight">JobFlow</span>
     </span>
   );
+}
