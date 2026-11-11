@@ -1,6 +1,5 @@
 import { useState, lazy, Suspense, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MinimalistSidebar } from "@/components/MinimalistSidebar";
 import { useDexieJobs } from "@/hooks/useDexieJobs";
 import { useAuth } from "@/hooks/useAuth";
 import { getProfileRole } from "@/data/profiles";
@@ -187,14 +186,10 @@ const Index = () => {
   }
 
   return (
-    <div className="ml-16 min-h-screen bg-background">
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-20 focus:top-2 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground">
+    <div className="min-h-screen bg-background pb-24">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-2 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground">
         Skip to content
       </a>
-      <MinimalistSidebar 
-        currentView={currentView} 
-        onViewChange={handleSidebarViewChange}
-      />
       <main id="main" className="min-w-0">
         {(isSyncing || syncError) && (
           <div
@@ -220,7 +215,7 @@ const Index = () => {
         onNavigate={handleViewChange}
         onOpenPalette={() => setPaletteOpen(true)}
         onQuickInvoice={() => { setInvoiceJobId(null); setInvoiceSheetOpen(true); }}
-        canSeeReports={["admin", "manager", "salesman"].includes(userRole)}
+        userRole={userRole}
       />
       <CommandPalette
         open={paletteOpen}
