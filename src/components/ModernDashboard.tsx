@@ -270,11 +270,11 @@ export function ModernDashboard({ jobs, quickWidget }: ModernDashboardProps) {
   };
 
   return (
-    <div className="space-y-6 p-6 pb-28 min-h-screen">
+    <div className="space-y-4 px-4 py-4 pb-28 min-h-screen bg-background text-sm md:px-6">
       <div className="dashboard-card-enter flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">Dashboard</h1>
-          <p className="text-muted-foreground">
+          <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-foreground"><span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" />Dashboard</h1>
+          <p className="text-xs text-muted-foreground">
             Overview of your job orders and team activity.
           </p>
         </div>
@@ -290,7 +290,7 @@ export function ModernDashboard({ jobs, quickWidget }: ModernDashboardProps) {
               }}
               onFocus={() => searchQuery && setShowSearchDropdown(true)}
               onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
-              className="pl-10 w-64"
+              className="pl-9 h-8 w-56 text-xs bg-card"
             />
             {showSearchDropdown && searchFilteredJobs.length > 0 && (
               <div className="absolute top-full mt-2 w-full rounded-md border bg-popover text-popover-foreground shadow-lg z-50 max-h-80 overflow-y-auto">
@@ -361,10 +361,10 @@ export function ModernDashboard({ jobs, quickWidget }: ModernDashboardProps) {
         style={{ animationDelay: "140ms" }}
       >
         <div>
-          <h2 className="text-xl font-semibold">Uncompleted Work</h2>
-          <p className="text-sm text-muted-foreground">Current workflow queues and the person or team responsible.</p>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Uncompleted Work</h2>
+          <p className="sr-only">Current workflow queues and the person or team responsible.</p>
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           <WorkflowBucket
             title="Pending Design"
             jobs={pendingDesignJobs}
@@ -392,12 +392,12 @@ export function ModernDashboard({ jobs, quickWidget }: ModernDashboardProps) {
         </div>
       </section>
 
-      <div className="flex flex-col gap-6">
-        <div className="dashboard-card-enter" style={{ animationDelay: "420ms" }}>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <div className="dashboard-card-enter dashboard-scroll-panel" style={{ animationDelay: "420ms" }}>
           <ApprovalBox />
         </div>
 
-        <div className="dashboard-card-enter" style={{ animationDelay: "480ms" }}>
+        <div className="dashboard-card-enter dashboard-scroll-panel" style={{ animationDelay: "480ms" }}>
           <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
         </div>
       </div>
