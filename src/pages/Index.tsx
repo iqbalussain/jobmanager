@@ -186,11 +186,11 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className={currentView === "dashboard" ? "dashboard-shell bg-background" : "min-h-screen bg-background pb-24"}>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-2 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground">
         Skip to content
       </a>
-      <main id="main" className="min-w-0">
+      <main id="main" className={currentView === "dashboard" ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
         {(isSyncing || syncError) && (
           <div
             role="status"
@@ -226,7 +226,7 @@ const Index = () => {
         onQuickInvoice={(job) => { setInvoiceJobId(job?.id ?? null); setInvoiceSheetOpen(true); }}
       />
       <Sheet open={invoiceSheetOpen} onOpenChange={setInvoiceSheetOpen}>
-        <SheetContent side="bottom" className="mx-auto max-w-4xl rounded-t-2xl">
+        <SheetContent side="bottom" className="mx-auto max-h-[85dvh] max-w-4xl overflow-y-auto rounded-t-lg">
           <SheetHeader><SheetTitle>Update invoice no. & value</SheetTitle></SheetHeader>
           <div className="mt-4">
             <QuickInvoiceWidget jobs={transformedJobs} isAdmin={userRole === "admin"} initialJobId={invoiceJobId} onSaved={refresh} />

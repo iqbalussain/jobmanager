@@ -59,21 +59,21 @@ export function QuickInvoiceWidget({ jobs, isAdmin, initialJobId, onSaved }: Pro
   };
 
   return (
-    <div className="rounded-xl border bg-card p-4 shadow-sm">
+    <div className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
       <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
         <Receipt className="h-4 w-4 text-primary" /> Quick invoice update
       </div>
-      <div className="grid gap-3 md:grid-cols-[1.4fr_1fr_1fr_auto] md:items-end">
-        <div className="space-y-1">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-[1.4fr_1fr_1fr_auto] md:items-end">
+        <div className="col-span-2 min-w-0 space-y-1 md:col-span-1">
           <Label>Job order</Label>
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" className="w-full justify-between font-mono">
+              <Button variant="outline" role="combobox" aria-label="Job order" aria-expanded={open} className="w-full gap-2 justify-between font-mono">
                 <span className="truncate">{job ? `${job.jobOrderNumber} · ${job.customer}` : "Pick a job number"}</span>
                 <ChevronsUpDown className="h-4 w-4 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[340px] p-0" align="start">
+            <PopoverContent className="w-[min(340px,calc(100vw-2rem))] p-0" align="start">
               <Command>
                 <CommandInput placeholder="Type job number or customer" />
                 <CommandList>
@@ -100,7 +100,7 @@ export function QuickInvoiceWidget({ jobs, isAdmin, initialJobId, onSaved }: Pro
           <Label htmlFor="qi-value">Value (OMR)</Label>
           <Input id="qi-value" type="number" step="0.001" min="0" value={value} onChange={(e) => setValue(e.target.value)} disabled={!job || locked} className="font-mono" />
         </div>
-        <Button onClick={save} disabled={!job || locked || saving}>{saving ? "Saving…" : "Save"}</Button>
+        <Button className="col-span-2 md:col-span-1" onClick={save} disabled={!job || locked || saving}>{saving ? "Saving…" : "Save"}</Button>
       </div>
       {job && (
         <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
