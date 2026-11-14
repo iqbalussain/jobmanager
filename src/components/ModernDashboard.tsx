@@ -13,6 +13,7 @@ import { KpiStrip } from "@/components/command/KpiStrip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ReactNode } from "react";
 import { useScrollDepth } from "@/hooks/useScrollDepth";
+import { useSlideDirection } from "@/hooks/useSlideDirection";
 import { Search, Eye, Palette, Cog, Receipt, UserRound, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ModernDashboardProps {
@@ -120,6 +121,7 @@ function WorkflowBucket({
   };
 
   const activeJob = bucketJobs[activeIndex];
+  const slideDir = useSlideDirection(activeIndex);
 
   return (
     <Card className="dashboard-card-enter min-w-0" style={{ animationDelay: `${animationDelay}ms` }}>
@@ -165,7 +167,7 @@ function WorkflowBucket({
                 }}
                 onPointerDown={handlePointerDown}
                 onWheel={handleWheel}
-                className="absolute inset-x-0 top-0 z-10 flex h-full w-full flex-col items-start justify-between gap-2 whitespace-normal rounded-lg border bg-card p-3 text-left shadow-sm transition-[transform,opacity] duration-300 hover:bg-muted/30 motion-reduce:duration-0"
+                className={`job-slide-${slideDir} absolute inset-x-0 top-0 z-10 flex h-full w-full flex-col items-start justify-between gap-2 whitespace-normal rounded-lg border bg-card p-3 text-left shadow-sm transition-[transform,opacity] duration-300 hover:bg-muted/30 motion-reduce:duration-0`}
                 style={{
                   transform: `translateX(${dragOffset}px) rotate(${dragOffset / 35}deg)`,
                   transition: isDragging ? "none" : undefined,
