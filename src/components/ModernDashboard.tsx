@@ -222,6 +222,9 @@ function WorkflowBucket({
 }
 
 export function ModernDashboard({ jobs, quickWidget }: ModernDashboardProps) {
+  const [tab, setTab] = useState("work");
+  const workRef = useRef<HTMLDivElement>(null);
+  useScrollDepth(workRef, tab === "work");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
