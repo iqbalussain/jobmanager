@@ -8,7 +8,7 @@ export function KpiStrip({ jobs }: { jobs: Job[] }) {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
   const invoiced = jobs.filter((j) => j.status === "invoiced");
-  const invoicedMonth = invoiced.filter((j) => new Date(j.createdAt).getTime() >= monthStart);
+  const invoicedMonth = invoiced.filter((j) => new Date(j.invoicedAt ?? j.createdAt).getTime() >= monthStart);
   const toBill = jobs.filter((j) => j.status === "completed" || j.status === "finished");
   const active = jobs.filter((j) => ACTIVE.has(j.status));
   const urgent = active.filter((j) => j.priority === "high");
