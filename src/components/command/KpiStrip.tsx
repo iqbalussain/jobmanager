@@ -22,15 +22,15 @@ export function KpiStrip({ jobs }: { jobs: Job[] }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
       {cards.map(({ label, value, hint, icon: Icon, alert }) => (
-        <div key={label} className="rounded-xl border bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {label}
-            <Icon className={alert ? "h-4 w-4 text-destructive" : "h-4 w-4"} />
+        <div key={label} className="min-w-0 rounded-lg border bg-card p-2.5 shadow-sm">
+          <div className="flex items-start justify-between gap-1 text-[11px] font-medium text-muted-foreground">
+            <span>{label}</span>
+            <Icon className={alert ? "h-3.5 w-3.5 shrink-0 text-destructive" : "h-3.5 w-3.5 shrink-0"} />
           </div>
-          <div className="mt-2 font-mono text-2xl font-semibold tabular-nums">{value}</div>
-          <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
+          <div className="mt-1 break-all font-mono text-base font-semibold tabular-nums lg:text-xl">{value}</div>
+          <div className="mt-0.5 text-[10px] text-muted-foreground">{hint}</div>
         </div>
       ))}
     </div>

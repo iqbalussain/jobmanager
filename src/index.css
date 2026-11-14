@@ -98,6 +98,24 @@
 @media (prefers-reduced-motion: reduce) { .dashboard-card-enter { animation: none; } }
 
 @layer components {
+  .dashboard-shell {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  }
+  .dashboard-workspace {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+  .floating-dock {
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
   .dashboard-scroll-panel { @apply max-h-[26rem] overflow-y-auto rounded-lg border border-border bg-card shadow-sm; }
   .dashboard-scroll-panel > * { @apply border-0 shadow-none; }
   .dashboard-card-enter .rounded-lg, .dashboard-card-enter .rounded-xl { @apply shadow-sm; }

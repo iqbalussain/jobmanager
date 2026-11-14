@@ -194,7 +194,7 @@ export function ApprovalBox() {
   if (isLoading) {
     return (
       <Card className="h-full flex flex-col">
-        <CardHeader>
+        <CardHeader className="p-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <AlertCircle className="w-5 h-5" />
             Pending Approvals
@@ -209,13 +209,13 @@ export function ApprovalBox() {
 
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader>
+      <CardHeader className="p-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <AlertCircle className="w-5 h-5" />
           Pending Approvals ({pendingJobs.length})
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 pt-0">
         {pendingJobs.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground">
             <CheckCircle className="w-10 h-10 mx-auto mb-2 text-primary/70" />
@@ -255,12 +255,12 @@ export function ApprovalBox() {
                     <div className="min-w-0">
                       <div className="mb-2 flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <h4 className="truncate font-semibold text-foreground">{activeJob.job_order_number}</h4>
-                          <p className="mt-0.5 truncate text-sm text-muted-foreground">{activeJob.customer_name}</p>
+                          <h4 className="break-words font-semibold text-foreground">{activeJob.job_order_number}</h4>
+                          <p className="mt-0.5 break-words text-sm text-muted-foreground">{activeJob.customer_name}</p>
                         </div>
                         <Badge variant="secondary" className="shrink-0">Pending</Badge>
                       </div>
-                      <p className="max-h-10 overflow-hidden text-sm text-muted-foreground">{activeJob.job_order_details || "No job details provided."}</p>
+                      <p className="max-h-20 overflow-y-auto break-words text-sm text-muted-foreground">{activeJob.job_order_details || "No job details provided."}</p>
                     </div>
                     <div>
                       <div className="mb-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
@@ -270,7 +270,7 @@ export function ApprovalBox() {
                         </span>
                         <span className="truncate">Created by: {activeJob.created_by_name}</span>
                       </div>
-                      <div className="flex justify-end gap-2">
+                      <div className="flex flex-wrap justify-end gap-2">
                         <Button size="sm" variant="outline" onClick={() => handleViewJob(activeJob.id)} className="h-8 px-2 text-xs">
                           <Eye className="mr-1 h-3 w-3" />View
                         </Button>
