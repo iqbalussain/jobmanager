@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { KpiStrip } from "@/components/command/KpiStrip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ReactNode } from "react";
+import { useScrollDepth } from "@/hooks/useScrollDepth";
 import { Search, Eye, Palette, Cog, Receipt, UserRound, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ModernDashboardProps {
@@ -349,15 +350,14 @@ export function ModernDashboard({ jobs, quickWidget }: ModernDashboardProps) {
         <KpiStrip jobs={jobs} />
       </div>
 
-      <Tabs defaultValue="work" className="flex min-h-0 flex-1 flex-col">
-        <TabsList aria-label="Dashboard panels" className="grid h-11 shrink-0 grid-cols-5 gap-0 p-1">
+      <Tabs defaultValue="work" value={tab} onValueChange={setTab} className="flex min-h-0 flex-1 flex-col">
+        <TabsList aria-label="Dashboard panels" className="grid h-11 shrink-0 grid-cols-4 gap-0 p-1">
           <TabsTrigger value="work" className="h-full px-1 text-xs">Work</TabsTrigger>
-          <TabsTrigger value="approvals" className="h-full px-1 text-xs">Approvals</TabsTrigger>
           <TabsTrigger value="status" className="h-full px-1 text-xs">Status</TabsTrigger>
           <TabsTrigger value="invoice" className="h-full px-1 text-xs">Invoice</TabsTrigger>
           <TabsTrigger value="priority" className="h-full px-1 text-xs">Priority</TabsTrigger>
         </TabsList>
-        <TabsContent value="work" className="dashboard-workspace">
+        <TabsContent value="work" ref={workRef} className="dashboard-workspace space-y-4">
       <section
         aria-label="Uncompleted work and bottlenecks"
         className="dashboard-card-enter space-y-2"
@@ -367,7 +367,7 @@ export function ModernDashboard({ jobs, quickWidget }: ModernDashboardProps) {
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Uncompleted Work</h2>
           <p className="sr-only">Current workflow queues and the person or team responsible.</p>
         </div>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div data-scroll-card className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <WorkflowBucket
             title="Pending Design"
             jobs={pendingDesignJobs}
@@ -394,9 +394,10 @@ export function ModernDashboard({ jobs, quickWidget }: ModernDashboardProps) {
           />
         </div>
       </section>
-        </TabsContent>
-        <TabsContent value="approvals" className="dashboard-workspace">
-          <ApprovalBox />
+      <section aria-label="Approvals" data-scroll-card className="space-y-2">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Approvals</h2>
+        <ApprovalBox />
+      </section>
         </TabsContent>
         <TabsContent value="status" className="dashboard-workspace">
           <JobStatusOverview stats={stats} onStatusClick={handleStatusClick} />
