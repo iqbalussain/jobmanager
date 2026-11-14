@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSlideDirection } from "@/hooks/useSlideDirection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle, XCircle, AlertCircle, Eye, ChevronLeft, ChevronRight } from "lucide-react";
@@ -169,6 +170,7 @@ export function ApprovalBox() {
   };
 
   const activeJob = pendingJobs[activeCardIndex];
+  const slideDir = useSlideDirection(activeCardIndex);
 
   const handleViewJob = async (jobId: string) => {
     try {
@@ -243,7 +245,7 @@ export function ApprovalBox() {
                 key={activeJob?.id}
                 onPointerDown={handlePointerDown}
                 onWheel={handleWheel}
-                className="absolute inset-x-0 top-0 z-10 h-full select-none rounded-lg border bg-card p-4 shadow-xl transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-0"
+                className={`job-slide-${slideDir} absolute inset-x-0 top-0 z-10 h-full select-none rounded-lg border bg-card p-4 shadow-xl transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-0`}
                 style={{
                   transform: `translateX(${dragOffset}px) rotate(${dragOffset / 30}deg)`,
                   transition: isDragging ? "none" : undefined,
