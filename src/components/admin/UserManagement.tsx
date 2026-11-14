@@ -127,7 +127,8 @@ export function UserManagement({
                   type="password"
                   value={userForm.password}
                   onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}
-                  placeholder="Enter secure password"
+                  placeholder="At least 8 characters"
+                  minLength={8}
                   className="bg-white/50 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                   required
                 />
