@@ -17,7 +17,7 @@ import type {
 } from '@/types/jobOrder';
 
 export const JOB_LIST_SELECT =
-  'id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,status,priority,branch,assignee,due_date,estimated_hours,actual_hours,total_value,invoice_number,job_order_details,client_name,delivered_at,approval_status,approval_notes,approved_by,approved_at,created_by,created_at,updated_at,description_plain,customer:customers!fk_job_orders_customer(id,name),job_title:job_titles(id,job_title_id)' as const;
+  'id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,status,priority,branch,assignee,due_date,estimated_hours,actual_hours,total_value,invoice_number,invoiced_at,job_order_details,client_name,delivered_at,approval_status,approval_notes,approved_by,approved_at,created_by,created_at,updated_at,description_plain,customer:customers!fk_job_orders_customer(id,name),job_title:job_titles(id,job_title_id)' as const;
 
 const JOB_CREATE_SELECT = `${JOB_LIST_SELECT},description` as const;
 
