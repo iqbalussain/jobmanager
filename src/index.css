@@ -120,3 +120,9 @@
   .dashboard-scroll-panel > * { @apply border-0 shadow-none; }
   .dashboard-card-enter .rounded-lg, .dashboard-card-enter .rounded-xl { @apply shadow-sm; }
 }
+
+[data-scroll-card] {
+  will-change: transform, opacity;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+  transform-origin: center top;
+}
