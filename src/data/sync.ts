@@ -242,6 +242,7 @@ async function enrichJobOrders(jobOrders: JobOrderSyncRecord[]): Promise<DexieJo
     actual_hours: job.actual_hours,
     total_value: job.total_value,
     invoice_number: job.invoice_number,
+    invoiced_at: job.invoiced_at,
     job_order_details: job.job_order_details,
     client_name: job.client_name,
     delivered_at: job.delivered_at,

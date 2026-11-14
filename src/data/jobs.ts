@@ -40,7 +40,7 @@ interface JobOrderFilters {
 }
 
 const JOB_DETAILS_COLUMNS =
-  'id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,assignee,priority,status,due_date,estimated_hours,created_at,branch,job_order_details,invoice_number,total_value,created_by,approval_status,delivered_at,client_name';
+  'id,job_order_number,customer_id,job_title_id,designer_id,salesman_id,assignee,priority,status,due_date,estimated_hours,created_at,branch,job_order_details,invoice_number,invoiced_at,total_value,created_by,approval_status,delivered_at,client_name';
 
 export interface PendingApprovalJob {
   id: string;
