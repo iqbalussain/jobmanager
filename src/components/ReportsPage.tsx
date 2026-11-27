@@ -211,7 +211,7 @@ export function ReportsPage() {
 
   if (error) {
     return (
-      <div className="space-y-6 p-4 md:p-6">
+      <div className="workspace-page space-y-6">
         <PageHeader title="Reports & Analytics" description="Generate detailed reports and analyze business performance" />
         
         <Card className="border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/15">
@@ -235,7 +235,7 @@ export function ReportsPage() {
   }
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="workspace-page space-y-6">
       <PageHeader
         title="Reports & Analytics"
         description="Generate detailed reports and analyze business performance"

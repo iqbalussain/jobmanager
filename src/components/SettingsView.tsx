@@ -122,7 +122,7 @@ export function SettingsView() {
 
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="workspace-page space-y-6">
       <PageHeader title="Settings" description="Manage your application preferences" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

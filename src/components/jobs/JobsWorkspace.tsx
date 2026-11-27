@@ -148,7 +148,7 @@ export function JobsWorkspace({ jobs, loading, onOpenJob }: { jobs: Job[]; loadi
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 pb-2 pt-2 md:px-4">
+    <div className="workspace-page workspace-page-fill gap-2 pb-2">
       <PageHeader title="Jobs" className="shrink-0" />
       <div className="flex shrink-0 flex-wrap items-end gap-2">
         <div role="group" aria-label="View" className="inline-flex rounded-lg bg-muted p-0.5">
@@ -171,13 +171,13 @@ export function JobsWorkspace({ jobs, loading, onOpenJob }: { jobs: Job[]; loadi
       {filtered.length === 0 ? (
         <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">No jobs match these filters.</div>
       ) : view === "board" ? (
-        <div className="-mx-3 flex min-h-0 flex-1 snap-x gap-2 overflow-x-auto px-3 pb-1 md:mx-0 md:px-0">
+        <div className="grid min-h-0 flex-1 snap-x grid-flow-col auto-cols-[80vw] items-stretch gap-2 overflow-x-auto sm:auto-cols-[18rem] xl:auto-cols-fr">
           {columns.map((c) => {
             const shown = limits[c.key] ?? STEP;
             return (
-              <section key={c.key} aria-label={`${c.label}, ${c.list.length} jobs`} className="flex min-h-0 w-[80vw] shrink-0 snap-start flex-col rounded-xl bg-muted/50 p-1.5 sm:w-72 xl:min-w-0 xl:flex-1">
-                <h2 className="flex items-center gap-2 px-1.5 py-1 text-[13px] font-semibold"><span aria-hidden className={cn("h-2 w-2 rounded-full", c.dot)} />{c.label}<span className="ms-auto text-xs font-normal tabular-nums text-muted-foreground">{c.list.length.toLocaleString()}</span></h2>
-                <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-0.5">
+              <section key={c.key} aria-label={`${c.label}, ${c.list.length} jobs`} className="flex min-h-0 min-w-0 snap-start flex-col rounded-xl bg-muted/50 p-1.5">
+                <h2 className="flex shrink-0 items-center gap-2 px-1.5 py-1 text-[13px] font-semibold"><span aria-hidden className={cn("h-2 w-2 rounded-full", c.dot)} />{c.label}<span className="ms-auto text-xs font-normal tabular-nums text-muted-foreground">{c.list.length.toLocaleString()}</span></h2>
+                <div tabIndex={0} aria-label={`${c.label} job cards`} className="board-column-list min-h-0 flex-1 space-y-1.5 overflow-y-auto rounded-md p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   {c.list.slice(0, shown).map(card)}
                   {c.list.length > shown && <Button type="button" variant="ghost" className="h-8 w-full text-xs" onClick={() => setLimits((l) => ({ ...l, [c.key]: shown + STEP }))}>Show {Math.min(STEP, c.list.length - shown)} more</Button>}
                   {c.list.length === 0 && <p className="px-2 py-6 text-center text-xs text-muted-foreground">Nothing here.</p>}

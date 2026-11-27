@@ -25,8 +25,8 @@ export function AdminManagement() {
   const userHook = useUserManagement();
 
   return (
-    <div className="min-h-0 p-4 md:p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <div className="workspace-page min-h-0">
+      <div className="space-y-6">
         {/* Header Section */}
         <PageHeader
           title={(

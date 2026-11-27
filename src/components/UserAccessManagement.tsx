@@ -151,8 +151,8 @@ export default function UserAccessManagement() {
   }
 
   return (
-    <div className="min-h-0 p-4 md:p-6">
-      <div className="mx-auto max-w-7xl">
+    <div className="workspace-page min-h-0">
+      <div>
         <PageHeader title="User Access Management" description="Manage user roles and permissions across the system" className="mb-6" />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

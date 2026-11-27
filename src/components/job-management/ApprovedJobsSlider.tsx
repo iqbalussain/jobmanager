@@ -426,7 +426,7 @@ export function ApprovedJobsSlider({
 
   if (!filteredJobs.length && isLoading) {
     return (
-      <div className="flex h-full min-h-0 flex-col gap-3 p-3 md:p-4">
+      <div className="workspace-page workspace-page-fill h-full gap-3 pb-3">
         <PageHeader title="Approved Jobs" description="Loading locally available jobs…" />
         <div role="status" className="flex min-h-0 flex-1 items-center justify-center rounded-xl border bg-card text-sm text-muted-foreground">
           <RefreshCw className="me-2 h-4 w-4 animate-spin" />Loading jobs
@@ -436,7 +436,7 @@ export function ApprovedJobsSlider({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 p-3 md:p-4">
+    <div className="workspace-page workspace-page-fill h-full gap-3 pb-3">
       <PageHeader title="Approved Jobs" description={`${filteredJobs.length.toLocaleString()} matching · ${jobs.length.toLocaleString()} available`} className="shrink-0" />
       {(isSyncing || isLoading) && (
         <div role="status" className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">

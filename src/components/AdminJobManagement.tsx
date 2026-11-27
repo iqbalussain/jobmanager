@@ -192,7 +192,7 @@ export function AdminJobManagement({ onStatusUpdate, onJobDataUpdate }: AdminJob
   if (!isAdmin) return <div className="p-6">Access Denied</div>;
 
   return (
-    <div className="min-h-0 space-y-6 p-4 md:p-6">
+    <div className="workspace-page min-h-0 space-y-6">
       <PageHeader title="Admin Job Management" />
       
       {/* Sync Status & Jobs Count */}

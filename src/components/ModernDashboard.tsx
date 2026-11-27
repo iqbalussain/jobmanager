@@ -391,7 +391,7 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 px-3 pb-4 pt-3 text-sm md:px-5">
+    <div className="workspace-page flex flex-col gap-3 text-sm">
       <PageHeader title="Dashboard" description={`${greeting}${firstName ? `, ${firstName}` : ""}`} />
 
       <section aria-label="Operational alerts" className="flex shrink-0 flex-wrap items-center gap-1.5">
