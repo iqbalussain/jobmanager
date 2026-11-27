@@ -6,11 +6,12 @@ import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
 import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { SelectedJobPanel } from "@/components/dashboard/SelectedJobPanel";
 import { KpiStrip } from "@/components/command/KpiStrip";
 import { RevenueTrend } from "@/components/dashboard/insights/RevenueTrend";
 import { JobSummaryGauge } from "@/components/dashboard/insights/JobSummaryGauge";
 import { ProductionPipeline, type PipelineRow } from "@/components/dashboard/insights/ProductionPipeline";
-import { ActivityFeed, RecentJobs } from "@/components/dashboard/insights/JobLists";
+import { RecentJobs } from "@/components/dashboard/insights/JobLists";
 import { useProfileHeader } from "@/components/shell/useProfileHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -29,7 +30,6 @@ interface ModernDashboardProps {
   quickWidget?: ReactNode;
 }
 
-type DashboardTab = "work" | "status" | "invoice";
 type WorkQueue = "approvals" | "unapproved" | "urgent" | "production" | "invoice";
 
 interface DashboardSummary {
@@ -259,7 +259,7 @@ function PriorityWorkCenter({
   onViewAll: () => void;
 }) {
   return (
-    <section id="priority-work-center" aria-label="Priority work center" className="scroll-mt-2">
+    <section id="priority-work-center" aria-label="Priority work center" className="scroll-mt-2 rounded-xl border bg-card p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div>
           <h2 className="text-sm font-semibold">Priority work center</h2>
@@ -278,7 +278,7 @@ function PriorityWorkCenter({
           <TabsTrigger value="production" className="min-w-0 px-2 py-1.5 text-xs">Production</TabsTrigger>
           <TabsTrigger value="invoice" className="min-w-0 px-2 py-1.5 text-xs">Ready to invoice</TabsTrigger>
         </TabsList>
-        <Card className="mt-2">
+        <Card className="mt-2 shadow-none">
           <TabsContent value="approvals" className="m-0">
             <ApprovalBox isActive={active} />
           </TabsContent>
@@ -332,7 +332,6 @@ const alertButton =
   "inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, isActive = true }: ModernDashboardProps) {
-  const [tab, setTab] = useState<DashboardTab>("work");
   const [queue, setQueue] = useState<WorkQueue>("approvals");
   const profile = useProfileHeader();
   const { user } = useAuth();
@@ -345,6 +344,9 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
   } | null>(null);
 
   const dashboard = useMemo(() => deriveDashboardSummary(jobs, Date.now()), [jobs]);
+  const [previewJob, setPreviewJob] = useState<Job | null>(null);
+  const previewed = (previewJob && jobs.find((j) => j.id === previewJob.id)) || previewJob
+    || dashboard.urgentJobs[0] || dashboard.unapprovedJobs[0] || dashboard.recentJobs[0] || null;
   const {
     data: pendingApprovalRecords,
     isError: approvalCountError,
@@ -386,7 +388,6 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
   };
 
   const goToWorkQueue = (nextQueue: WorkQueue) => {
-    setTab("work");
     setQueue(nextQueue);
     const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
     requestAnimationFrame(() => {
@@ -395,7 +396,7 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-3 pt-2 text-sm md:px-4">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 px-3 pb-4 pt-3 text-sm md:px-5">
       <PageHeader
         title="Dashboard"
         description={`${greeting}${firstName ? `, ${firstName}` : ""} · ${new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}`}
@@ -468,44 +469,34 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
         />
       </div>
 
-      <section id="dashboard-workspace" aria-label="Dashboard workspace" className="shrink-0 scroll-mt-2">
-        <Tabs value={tab} onValueChange={(value) => setTab(value as DashboardTab)} className="flex flex-col">
-          <TabsList aria-label="Dashboard panels" className="mb-2 grid h-9 w-full max-w-sm grid-cols-3 gap-0 p-1">
-            <TabsTrigger value="work" className="h-full px-1 text-xs">Work</TabsTrigger>
-            <TabsTrigger value="status" className="h-full px-1 text-xs">Status</TabsTrigger>
-            <TabsTrigger value="invoice" className="h-full px-1 text-xs">Invoice</TabsTrigger>
-          </TabsList>
-          <TabsContent value="work" className="dashboard-workspace mt-0 space-y-3">
-            <PriorityWorkCenter
-              active={isActive}
-              queue={queue}
-              onQueueChange={setQueue}
-              summary={dashboard}
-              onOpenJob={handleViewDetails}
-              onViewAll={() => onViewChange?.("jobs")}
-            />
-            <div className="grid min-w-0 gap-2 lg:h-[clamp(14rem,28vh,20rem)] lg:grid-cols-12">
-              <RevenueTrend jobs={jobs} className="h-56 lg:col-span-5 lg:h-auto" />
-              <JobSummaryGauge counts={dashboard.statusCounts} className="h-auto lg:col-span-3 lg:h-auto" />
-              <ProductionPipeline rows={dashboard.pipeline} className="h-auto lg:col-span-4 lg:h-auto" />
-            </div>
-            <div className="grid min-w-0 gap-2 lg:grid-cols-12">
-              <RecentJobs
-                jobs={jobs}
-                recentJobs={dashboard.recentJobs}
-                onOpenJob={handleViewDetails}
-                onViewAll={() => onViewChange?.("jobs")}
-                className="lg:col-span-8"
-              />
-              <ActivityFeed active={isActive} limit={4} className="lg:col-span-4" />
-            </div>
-          </TabsContent>
-          <TabsContent value="status" className="dashboard-workspace mt-0">
-            <JobStatusOverview stats={dashboard.stats} onStatusClick={handleStatusClick} />
-          </TabsContent>
-          <TabsContent value="invoice" className="dashboard-workspace mt-0">{quickWidget}</TabsContent>
-        </Tabs>
-      </section>
+      <div className="grid min-w-0 gap-3 xl:grid-cols-12">
+        <div className="flex min-w-0 flex-col gap-3 xl:col-span-9">
+          <PriorityWorkCenter
+            active={isActive}
+            queue={queue}
+            onQueueChange={setQueue}
+            summary={dashboard}
+            onOpenJob={setPreviewJob}
+            onViewAll={() => onViewChange?.("jobs")}
+          />
+          <div className="grid min-w-0 gap-3 lg:grid-cols-12">
+            <RevenueTrend jobs={jobs} className="h-60 lg:col-span-5" />
+            <JobSummaryGauge counts={dashboard.statusCounts} className="lg:col-span-3" />
+            <ProductionPipeline rows={dashboard.pipeline} className="lg:col-span-4" />
+          </div>
+        </div>
+        <SelectedJobPanel job={previewed} onOpen={handleViewDetails} className="xl:col-span-3 xl:self-start xl:sticky xl:top-3" />
+      </div>
+      <RecentJobs
+        jobs={jobs}
+        recentJobs={dashboard.recentJobs}
+        onOpenJob={handleViewDetails}
+        onViewAll={() => onViewChange?.("jobs")}
+      />
+      <div className="grid min-w-0 gap-3 lg:grid-cols-12">
+        <div className="min-w-0 lg:col-span-5">{quickWidget}</div>
+        <div className="min-w-0 lg:col-span-7"><JobStatusOverview stats={dashboard.stats} onStatusClick={handleStatusClick} /></div>
+      </div>
 
       <JobDetails
         isOpen={isActive && isJobDetailsOpen}
