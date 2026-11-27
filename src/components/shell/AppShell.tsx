@@ -1,3 +1,6 @@
+import { AppFooter } from "@/components/shell/AppFooter";
+import { IdleLock } from "@/components/shell/IdleLock";
+import { DailyWelcomeModal } from "@/components/shell/DailyWelcomeModal";
 import type { ReactNode } from "react";
 import { TopBar } from "./TopBar";
 import { FloatingDock } from "@/components/command/FloatingDock";
@@ -31,6 +34,9 @@ export function AppShell({ children, currentView, userRole, tabs, activeId, onNa
         onOpenPalette={onOpenPalette} onCreateJob={() => onNavigate("create")} onQuickInvoice={onQuickInvoice}
       />
       <main id="main" className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{children}</main>
+      <AppFooter />
+      <IdleLock />
+      <DailyWelcomeModal />
       <FloatingDock currentView={currentView} onNavigate={onNavigate} userRole={userRole} openViews={openViews} />
     </div>
   );

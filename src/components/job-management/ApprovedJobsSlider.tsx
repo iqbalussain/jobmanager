@@ -124,7 +124,7 @@ function VirtualJobList({ jobs, selectedId, resetKey, onSelect }: {
         event.preventDefault();
         selectAt(next);
       }}
-      className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="smooth-list min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {jobs.length === 0 ? (
         <div className="flex h-full min-h-32 items-center justify-center px-4 text-center text-sm text-muted-foreground">

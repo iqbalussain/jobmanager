@@ -32,6 +32,17 @@ export const generatePDFFromElement = async (element: HTMLElement, fileName: str
       heightLeft -= pageHeight;
     }
 
+    const pages = pdf.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(7);
+      pdf.setTextColor(140);
+      const prefix = 'Design & Developed by ';
+      const x = 105 - pdf.getTextWidth(prefix + 'Seyed Ussain') / 2;
+      pdf.text(prefix, x, 292);
+      pdf.setTextColor(109, 40, 217);
+      pdf.textWithLink('Seyed Ussain', x + pdf.getTextWidth(prefix), 292, { url: 'https://amitynode.com' });
+    }
     pdf.save(fileName);
   } catch (error) {
     console.error('Error generating PDF:', error);

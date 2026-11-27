@@ -8,14 +8,16 @@ interface PageHeaderProps {
   className?: string;
 }
 
+/** Visible title bars were removed for a native-app feel; the title stays for screen readers and actions stay visible. */
 export function PageHeader({ title, description, actions, className }: PageHeaderProps) {
   return (
-    <header className={cn("flex min-w-0 flex-wrap items-center justify-between gap-3", className)}>
-      <div className="min-w-0">
-        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
-        {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
-      </div>
-      {actions && <div className="flex min-w-0 flex-wrap items-center gap-2">{actions}</div>}
-    </header>
+    <>
+      <h1 className="sr-only">{title}{description ? <> — {description}</> : null}</h1>
+      {actions && (
+        <header className={cn("flex min-w-0 flex-wrap items-center justify-end gap-2", className)}>
+          {actions}
+        </header>
+      )}
+    </>
   );
 }

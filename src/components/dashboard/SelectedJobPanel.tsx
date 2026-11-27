@@ -2,6 +2,7 @@ import type { Job } from "@/pages/Index";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { SelectedJobApproval } from "@/components/dashboard/SelectedJobApproval";
 import { ArrowRight, Building2, CalendarDays, Clock, Flag, PenTool, User } from "lucide-react";
 
 function fmtDate(value?: string) {
@@ -54,6 +55,7 @@ export function SelectedJobPanel({ job, onOpen, className = "" }: { job: Job | n
             <p className="text-[11px] text-muted-foreground">Created on</p>
             <p className="text-xs font-medium">{fmtDate(job.createdAt)}</p>
           </div>
+          {job.approval_status === "pending_approval" && <SelectedJobApproval jobId={job.id} />}
           <Button type="button" variant="outline" className="mt-auto w-full" onClick={() => onOpen(job)}>
             View full details <ArrowRight className="ms-1 h-3.5 w-3.5" aria-hidden />
           </Button>

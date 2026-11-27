@@ -238,7 +238,7 @@ const Index = () => {
         {tabs.map((tab) => {
           const active = tab.id === activeId;
           if (!active && !mountedTabIds.has(`${userId ?? "anon"}:${tab.id}`)) return null;
-          const fillsViewport = tab.kind === "view" && tab.view === "jobs";
+          const fillsViewport = tab.kind === "view" && (tab.view === "jobs" || tab.view === "approved-jobs");
           return (
             <div
               key={tab.id}

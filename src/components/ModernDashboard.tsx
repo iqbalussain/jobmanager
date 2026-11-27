@@ -3,7 +3,6 @@ import type { Job } from "@/pages/Index";
 import { JobDetails } from "@/components/JobDetails";
 import { JobStatusModal } from "@/components/JobStatusModal";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
-import { ApprovalBox } from "@/components/dashboard/ApprovalBox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SelectedJobPanel } from "@/components/dashboard/SelectedJobPanel";
@@ -271,17 +270,13 @@ function PriorityWorkCenter({
       </div>
 
       <Tabs value={queue} onValueChange={(value) => onQueueChange(value as WorkQueue)}>
-        <TabsList aria-label="Work queues" className="grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-5">
-          <TabsTrigger value="approvals" className="min-w-0 px-2 py-1.5 text-xs">Approvals</TabsTrigger>
+        <TabsList aria-label="Work queues" className="grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-4">
           <TabsTrigger value="unapproved" className="min-w-0 px-2 py-1.5 text-xs">Unapproved</TabsTrigger>
           <TabsTrigger value="urgent" className="min-w-0 px-2 py-1.5 text-xs">Urgent</TabsTrigger>
           <TabsTrigger value="production" className="min-w-0 px-2 py-1.5 text-xs">Production</TabsTrigger>
           <TabsTrigger value="invoice" className="min-w-0 px-2 py-1.5 text-xs">Ready to invoice</TabsTrigger>
         </TabsList>
         <Card className="mt-2 shadow-none">
-          <TabsContent value="approvals" className="m-0">
-            <ApprovalBox isActive={active} />
-          </TabsContent>
           <TabsContent value="unapproved" className="m-0">
             <CardContent className="p-0">
               <QueueList
@@ -332,7 +327,7 @@ const alertButton =
   "inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, isActive = true }: ModernDashboardProps) {
-  const [queue, setQueue] = useState<WorkQueue>("approvals");
+  const [queue, setQueue] = useState<WorkQueue>("unapproved");
   const profile = useProfileHeader();
   const { user } = useAuth();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -397,11 +392,7 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
 
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 px-3 pb-4 pt-3 text-sm md:px-5">
-      <PageHeader
-        title="Dashboard"
-        description={`${greeting}${firstName ? `, ${firstName}` : ""} · ${new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}`}
-        className="shrink-0"
-      />
+      <PageHeader title="Dashboard" description={`${greeting}${firstName ? `, ${firstName}` : ""}`} />
 
       <section aria-label="Operational alerts" className="flex shrink-0 flex-wrap items-center gap-1.5">
         {approvalCountError ? (
@@ -418,7 +409,7 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
         ) : pendingApprovals > 0 ? (
           <button
             type="button"
-            onClick={() => goToWorkQueue("approvals")}
+            onClick={() => goToWorkQueue("unapproved")}
             className={`${alertButton} border-amber-300 bg-amber-50 text-amber-950 hover:bg-amber-100 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100 dark:hover:bg-amber-400/20`}
           >
             <AlertCircle className="h-3.5 w-3.5" aria-hidden />
@@ -469,6 +460,13 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
         />
       </div>
 
+      <div className="grid min-w-0 gap-3 lg:grid-cols-12">
+        <RevenueTrend jobs={jobs} className="h-60 lg:col-span-4" />
+        <JobSummaryGauge counts={dashboard.statusCounts} className="lg:col-span-2" />
+        <ProductionPipeline rows={dashboard.pipeline} className="lg:col-span-3" />
+        <div className="min-w-0 lg:col-span-3">{quickWidget}</div>
+      </div>
+
       <div className="grid min-w-0 gap-3 xl:grid-cols-12">
         <div className="flex min-w-0 flex-col gap-3 xl:col-span-9">
           <PriorityWorkCenter
@@ -479,11 +477,6 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
             onOpenJob={setPreviewJob}
             onViewAll={() => onViewChange?.("jobs")}
           />
-          <div className="grid min-w-0 gap-3 lg:grid-cols-12">
-            <RevenueTrend jobs={jobs} className="h-60 lg:col-span-5" />
-            <JobSummaryGauge counts={dashboard.statusCounts} className="lg:col-span-3" />
-            <ProductionPipeline rows={dashboard.pipeline} className="lg:col-span-4" />
-          </div>
         </div>
         <SelectedJobPanel job={previewed} onOpen={handleViewDetails} className="xl:col-span-3 xl:self-start xl:sticky xl:top-3" />
       </div>
@@ -493,10 +486,7 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
         onOpenJob={handleViewDetails}
         onViewAll={() => onViewChange?.("jobs")}
       />
-      <div className="grid min-w-0 gap-3 lg:grid-cols-12">
-        <div className="min-w-0 lg:col-span-5">{quickWidget}</div>
-        <div className="min-w-0 lg:col-span-7"><JobStatusOverview stats={dashboard.stats} onStatusClick={handleStatusClick} /></div>
-      </div>
+      <JobStatusOverview stats={dashboard.stats} onStatusClick={handleStatusClick} />
 
       <JobDetails
         isOpen={isActive && isJobDetailsOpen}

@@ -128,6 +128,8 @@
 
 @layer components {
   .dashboard-shell { display: flex; flex: 1; min-height: 0; flex-direction: column; overflow: hidden; padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)); }
+  .smooth-list { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { .smooth-list { scroll-behavior: auto; } }
   .workspace-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)); scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
 
   /* One quiet violet wash at the top; everything else is flat. */
