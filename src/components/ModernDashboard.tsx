@@ -67,7 +67,7 @@ const dateKey = (date: Date) =>
 const PIPELINE_STAGES: Array<{ label: string; statuses: string[]; bar: string }> = [
   { label: "Pending", statuses: ["pending"], bar: "bg-amber-500" },
   { label: "Design", statuses: ["designing"], bar: "bg-violet-500" },
-  { label: "Production", statuses: ["in-progress", "out", "foc_sample"], bar: "bg-sky-500" },
+  { label: "Production", statuses: ["in-progress", "out", "foc_sample"], bar: "bg-blue-500" },
   { label: "Ready to bill", statuses: ["completed", "finished"], bar: "bg-teal-500" },
 ];
 

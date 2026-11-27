@@ -23,10 +23,10 @@ const STEP = 25;
 const COLUMNS = [
   { key: "pending", label: "Pending", statuses: ["pending"], dot: "bg-amber-500" },
   { key: "design", label: "Design", statuses: ["designing"], dot: "bg-violet-500" },
-  { key: "production", label: "Production", statuses: ["in-progress", "out", "foc_sample"], dot: "bg-sky-500" },
+  { key: "production", label: "Production", statuses: ["in-progress", "out", "foc_sample"], dot: "bg-blue-500" },
   { key: "bill", label: "Ready to bill", statuses: ["completed", "finished"], dot: "bg-teal-500" },
-  { key: "invoiced", label: "Invoiced", statuses: ["invoiced"], dot: "bg-slate-500" },
-  { key: "cancelled", label: "Cancelled", statuses: ["cancelled"], dot: "bg-rose-500" },
+  { key: "invoiced", label: "Invoiced", statuses: ["invoiced"], dot: "bg-green-600" },
+  { key: "cancelled", label: "Cancelled", statuses: ["cancelled"], dot: "bg-slate-400" },
 ];
 
 const staffOf = (j: Job) => [j.designer, j.assignee, j.salesman].filter((n): n is string => !!n && n !== "Unassigned");
