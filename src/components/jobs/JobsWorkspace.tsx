@@ -13,6 +13,8 @@ import { STATUS_META } from "@/lib/status";
 import { cn } from "@/lib/utils";
 import { formatOmaniRial } from "@/utils/currency";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { useJobActions } from "@/hooks/useJobActions";
+import type { JobStatus } from "@/types/jobOrder";
 
 type View = "board" | "table";
 interface Filters { q: string; status: string; priority: string; staff: string; customer: string; deadline: string; sort: string }
@@ -91,6 +93,16 @@ export function JobsWorkspace({ jobs, loading, onOpenJob }: { jobs: Job[]; loadi
   const [sheet, setSheet] = useState(false);
   const [limits, setLimits] = useState<Record<string, number>>({});
   const q = useDeferredValue(f.q);
+  const { setJobStatus } = useJobActions();
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overCol, setOverCol] = useState<string | null>(null);
+  const dropOn = (colKey: string, jobId: string) => {
+    setOverCol(null); setDragId(null);
+    const col = COLUMNS.find((c) => c.key === colKey);
+    const job = jobs.find((j) => j.id === jobId);
+    if (!col || !job || col.statuses.includes(job.status)) return;
+    void setJobStatus(job.id, col.statuses[0] as JobStatus);
+  };
   const set = (p: Partial<Filters>) => { setF((s) => ({ ...s, ...p })); setLimits({}); };
   useEffect(() => { try { localStorage.setItem(VIEW_KEY, view); } catch { /* storage unavailable */ } }, [view]);
 
@@ -131,7 +143,7 @@ export function JobsWorkspace({ jobs, loading, onOpenJob }: { jobs: Job[]; loadi
   const tableLimit = limits.table ?? 50;
 
   const card = (j: Job) => (
-    <button key={j.id} type="button" onClick={() => onOpenJob(j)} className="block w-full rounded-lg border bg-card p-2.5 text-start shadow-card transition-[box-shadow,border-color] duration-150 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <button key={j.id} type="button" draggable={view === "board"} onDragStart={(e) => { e.dataTransfer.setData("text/plain", j.id); e.dataTransfer.effectAllowed = "move"; setDragId(j.id); }} onDragEnd={() => { setDragId(null); setOverCol(null); }} onClick={() => onOpenJob(j)} className={cn("block cursor-grab active:cursor-grabbing w-full rounded-lg border bg-card p-2.5 text-start shadow-card transition-[box-shadow,border-color] duration-150 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", dragId === j.id && "opacity-50")}>
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-[11px] text-muted-foreground">{j.jobOrderNumber}</span>
         {j.priority === "high" && <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-300">High</span>}
@@ -175,7 +187,7 @@ export function JobsWorkspace({ jobs, loading, onOpenJob }: { jobs: Job[]; loadi
           {columns.map((c) => {
             const shown = limits[c.key] ?? STEP;
             return (
-              <section key={c.key} aria-label={`${c.label}, ${c.list.length} jobs`} className="flex min-h-0 min-w-0 snap-start flex-col rounded-xl bg-muted/50 p-1.5">
+              <section key={c.key} aria-label={`${c.label}, ${c.list.length} jobs`} onDragOver={(e) => { if (!dragId) return; e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (overCol !== c.key) setOverCol(c.key); }} onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOverCol(null); }} onDrop={(e) => { e.preventDefault(); dropOn(c.key, e.dataTransfer.getData("text/plain") || dragId || ""); }} className={cn("flex min-h-0 min-w-0 snap-start flex-col rounded-xl bg-muted/50 p-1.5 transition-colors", overCol === c.key && "bg-primary/10 ring-2 ring-primary/40")}>
                 <h2 className="flex shrink-0 items-center gap-2 px-1.5 py-1 text-[13px] font-semibold"><span aria-hidden className={cn("h-2 w-2 rounded-full", c.dot)} />{c.label}<span className="ms-auto text-xs font-normal tabular-nums text-muted-foreground">{c.list.length.toLocaleString()}</span></h2>
                 <div tabIndex={0} aria-label={`${c.label} job cards`} className="board-column-list min-h-0 flex-1 space-y-1.5 overflow-y-auto rounded-md p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   {c.list.slice(0, shown).map(card)}

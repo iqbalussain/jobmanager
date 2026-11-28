@@ -335,6 +335,7 @@ export function startRealtimeSync(
   realtimeUserId = userId;
   let hasConnected = false;
   let lastReconnectSyncAt = 0;
+  let timeoutTimer: ReturnType<typeof setTimeout> | null = null;
 
   stopRealtimeListener = subscribeToJobOrderChanges(
     userId,
@@ -346,6 +347,7 @@ export function startRealtimeSync(
     },
     (status, error) => {
       if (status === 'SUBSCRIBED') {
+        if (timeoutTimer) { clearTimeout(timeoutTimer); timeoutTimer = null; }
         onError(null);
         if (!isSyncAvailable()) return;
 
@@ -360,7 +362,16 @@ export function startRealtimeSync(
             console.error('[Sync] Failed to reconcile after Realtime connection:', syncError);
             onError(syncError);
           });
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      } else if (status === 'TIMED_OUT') {
+        // Supabase rejoins timed-out channels automatically and the 30s delta sync keeps
+        // data current, so only report when the channel stays down for a while.
+        if (!timeoutTimer) {
+          timeoutTimer = setTimeout(() => {
+            timeoutTimer = null;
+            onError(new Error('Live updates are reconnecting; jobs still refresh every 30 seconds.'));
+          }, 60_000);
+        }
+      } else if (status === 'CHANNEL_ERROR') {
         const subscriptionError = error ?? new Error(`Job Realtime subscription ${status.toLowerCase()}`);
         console.error('[Realtime] Job subscription failed:', subscriptionError);
         onError(subscriptionError);
