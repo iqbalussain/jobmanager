@@ -59,6 +59,10 @@
     --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04);
     --shadow-glass: 0 1px 2px rgb(16 24 40 / 0.06);
     --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.35);
+    --dashboard-surface: 250 75% 97%;
+    --dashboard-border: 258 48% 87%;
+    --shadow-dashboard: 0 2px 6px hsl(258 45% 30% / 0.08);
+    --gradient-promotion: linear-gradient(125deg, hsl(258 74% 38%), hsl(262 83% 58%) 65%, hsl(278 75% 72%));
   }
 
   .dark {
@@ -109,6 +113,9 @@
     --shadow-card: 0 0 0 1px hsl(0 0% 100% / 0.03);
     --shadow-glass: 0 1px 0 hsl(0 0% 100% / 0.04) inset;
     --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.5);
+    --dashboard-surface: 250 22% 12%;
+    --dashboard-border: 258 25% 25%;
+    --shadow-dashboard: 0 2px 6px hsl(0 0% 0% / 0.24);
   }
 }
 
@@ -123,6 +130,17 @@
   from { opacity: 0; transform: translateY(1rem) scale(0.985); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
+.reference-dashboard { background: hsl(var(--dashboard-surface)); }
+.reference-dashboard section, .reference-dashboard [data-kpi] { border-color: hsl(var(--dashboard-border)); box-shadow: var(--shadow-dashboard); }
+.reference-dashboard h2 { letter-spacing: 0; }
+.launch-promotion { background: var(--gradient-promotion); color: hsl(var(--primary-foreground)); }
+.kpi-lavender { --kpi-tone: var(--tone-lavender); --kpi-foreground: var(--tone-lavender-fg); }
+.kpi-peach { --kpi-tone: var(--tone-peach); --kpi-foreground: var(--tone-peach-fg); }
+.kpi-sky { --kpi-tone: var(--tone-sky); --kpi-foreground: var(--tone-sky-fg); }
+.kpi-rose { --kpi-tone: var(--tone-rose); --kpi-foreground: var(--tone-rose-fg); }
+.kpi-mint { --kpi-tone: var(--tone-mint); --kpi-foreground: var(--tone-mint-fg); }
+.reference-dashboard [data-kpi] { background: linear-gradient(115deg, hsl(var(--card)), hsl(var(--kpi-tone))); border-inline-start: 3px solid hsl(var(--kpi-foreground) / 0.6); }
+.kpi-icon { background: hsl(var(--kpi-tone)); color: hsl(var(--kpi-foreground)); }
 .dashboard-card-enter { animation: dashboard-card-enter 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 @media (prefers-reduced-motion: reduce) { .dashboard-card-enter { animation: none; } }
 

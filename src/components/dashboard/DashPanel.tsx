@@ -4,12 +4,12 @@ import { cn } from "@/lib/utils";
 /** Dense card with a slim header. Callers opt into body scrolling when content is bounded. */
 export function DashPanel({ title, action, children, className, bodyClassName }: { title: string; action?: ReactNode; children: ReactNode; className?: string; bodyClassName?: string }) {
   return (
-    <section aria-label={title} className={cn("flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border bg-card shadow-card", className)}>
+    <section aria-label={title} className={cn("flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border bg-card shadow-card", className)}>
       <header className="flex h-9 shrink-0 items-center justify-between gap-2 border-b px-3">
-        <h2 className="text-[13px] font-semibold tracking-tight">{title}</h2>
+        <h2 className="text-[13px] font-semibold tracking-normal">{title}</h2>
         {action}
       </header>
-      <div className={cn("min-h-0 flex-1", bodyClassName ?? "overflow-y-auto")}>{children}</div>
+      <div className={cn("min-h-0 flex-1", bodyClassName ?? "overflow-visible")}>{children}</div>
     </section>
   );
 }

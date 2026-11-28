@@ -3,7 +3,7 @@ import type { Job } from "@/pages/Index";
 import { JobDetails } from "@/components/JobDetails";
 import { JobStatusModal } from "@/components/JobStatusModal";
 import { JobStatusOverview } from "@/components/dashboard/JobStatusOverview";
-import { Card, CardContent } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SelectedJobPanel } from "@/components/dashboard/SelectedJobPanel";
 import { KpiStrip } from "@/components/command/KpiStrip";
@@ -11,10 +11,9 @@ import { RevenueTrend } from "@/components/dashboard/insights/RevenueTrend";
 import { JobSummaryGauge } from "@/components/dashboard/insights/JobSummaryGauge";
 import { ProductionPipeline, type PipelineRow } from "@/components/dashboard/insights/ProductionPipeline";
 import { RecentJobs } from "@/components/dashboard/insights/JobLists";
-import { useProfileHeader } from "@/components/shell/useProfileHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { PageHeader } from "@/components/shell/PageHeader";
+import { LaunchPromotions } from "@/components/dashboard/LaunchPromotions";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { listPendingApprovalJobs } from "@/data/jobs";
@@ -64,10 +63,10 @@ const QUEUE_LIMIT = 8;
 const dateKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const PIPELINE_STAGES: Array<{ label: string; statuses: string[]; bar: string }> = [
-  { label: "Pending", statuses: ["pending"], bar: "bg-amber-500" },
-  { label: "Design", statuses: ["designing"], bar: "bg-violet-500" },
-  { label: "Production", statuses: ["in-progress", "out", "foc_sample"], bar: "bg-blue-500" },
-  { label: "Ready to bill", statuses: ["completed", "finished"], bar: "bg-teal-500" },
+  { label: "Pending", statuses: ["pending"], bar: "bg-peach-foreground" },
+  { label: "Design", statuses: ["designing"], bar: "bg-primary" },
+  { label: "Production", statuses: ["in-progress", "out", "foc_sample"], bar: "bg-sky-foreground" },
+  { label: "Ready to bill", statuses: ["completed", "finished"], bar: "bg-mint-foreground" },
 ];
 
 function insertSortedLimit(list: Job[], job: Job, compare: (left: Job, right: Job) => number) {
@@ -211,10 +210,11 @@ function QueueList({
       <ul className="divide-y">
         {jobs.map((job) => (
           <li key={job.id}>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => onSelect(job)}
-              className="flex min-h-12 w-full min-w-0 items-center gap-2 px-3 py-2 text-start text-sm transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              className="flex h-auto min-h-11 w-full min-w-0 justify-start rounded-none items-center gap-2 px-2 py-2 text-start text-sm font-normal"
             >
               <span className="w-16 shrink-0 font-mono text-xs text-muted-foreground">{job.jobOrderNumber}</span>
               <span className="min-w-0 flex-1">
@@ -229,7 +229,7 @@ function QueueList({
                   {new Date(`${job.dueDate.slice(0, 10)}T12:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
                 </span>
               )}
-            </button>
+            </Button>
           </li>
         ))}
       </ul>
@@ -258,11 +258,10 @@ function PriorityWorkCenter({
   onViewAll: () => void;
 }) {
   return (
-    <section id="priority-work-center" aria-label="Priority work center" className="scroll-mt-2 rounded-xl border bg-card p-3">
+    <section id="priority-work-center" aria-label="Priority work center" className="scroll-mt-2 min-w-0 rounded-lg border bg-card p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold">Priority work center</h2>
-          <p className="text-xs text-muted-foreground">Review queues and open a job to take action.</p>
+          <h2 className="text-[13px] font-semibold">Priority work centre</h2>
         </div>
         <Button type="button" variant="ghost" size="sm" onClick={onViewAll} className="h-8">
           All jobs <ArrowRight className="ms-1 h-3.5 w-3.5 rtl:-scale-x-100" aria-hidden />
@@ -276,7 +275,7 @@ function PriorityWorkCenter({
           <TabsTrigger value="production" className="min-w-0 px-2 py-1.5 text-xs">Production</TabsTrigger>
           <TabsTrigger value="invoice" className="min-w-0 px-2 py-1.5 text-xs">Ready to invoice</TabsTrigger>
         </TabsList>
-        <Card className="mt-2 shadow-none">
+        <div className="mt-2">
           <TabsContent value="unapproved" className="m-0">
             <CardContent className="p-0">
               <QueueList
@@ -317,7 +316,7 @@ function PriorityWorkCenter({
               />
             </CardContent>
           </TabsContent>
-        </Card>
+        </div>
       </Tabs>
     </section>
   );
@@ -328,7 +327,6 @@ const alertButton =
 
 export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, isActive = true }: ModernDashboardProps) {
   const [queue, setQueue] = useState<WorkQueue>("unapproved");
-  const profile = useProfileHeader();
   const { user } = useAuth();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -354,9 +352,6 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
     staleTime: 30_000,
   });
   const pendingApprovals = pendingApprovalRecords?.length ?? dashboard.unapprovedCount;
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const firstName = profile?.full_name?.split(" ")[0];
 
   useEffect(() => {
     if (!isActive) {
@@ -391,60 +386,59 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
   };
 
   return (
-    <div className="workspace-page flex flex-col gap-3 text-sm">
-      <PageHeader title="Dashboard" description={`${greeting}${firstName ? `, ${firstName}` : ""}`} />
+    <div className="workspace-page reference-dashboard flex flex-col gap-3 text-sm">
 
       <section aria-label="Operational alerts" className="flex shrink-0 flex-wrap items-center gap-1.5">
         {approvalCountError ? (
-          <button
+          <Button variant="outline"
             type="button"
             onClick={() => void refetchApprovalCount()}
             className={`${alertButton} border-destructive/30 bg-destructive/5 text-destructive`}
           >
             <AlertCircle className="h-3.5 w-3.5" aria-hidden />
             Approval queue unavailable · Retry
-          </button>
+          </Button>
         ) : approvalCountLoading && pendingApprovalRecords === undefined ? (
           <span role="status" className="text-xs text-muted-foreground">Checking approval queue…</span>
         ) : pendingApprovals > 0 ? (
-          <button
+          <Button variant="outline"
             type="button"
             onClick={() => goToWorkQueue("unapproved")}
-            className={`${alertButton} border-amber-300 bg-amber-50 text-amber-950 hover:bg-amber-100 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100 dark:hover:bg-amber-400/20`}
+            className={`${alertButton} border-peach-foreground/20 bg-peach text-peach-foreground hover:bg-peach/80`}
           >
             <AlertCircle className="h-3.5 w-3.5" aria-hidden />
             {pendingApprovals} awaiting approval
             <span className="font-semibold">Review</span>
-          </button>
+          </Button>
         ) : null}
         {dashboard.overdueCount > 0 && (
-          <button
+          <Button variant="outline"
             type="button"
             onClick={() => goToWorkQueue("urgent")}
             className={`${alertButton} border-destructive/30 bg-destructive/5 text-destructive hover:bg-destructive/10`}
           >
             <CalendarClock className="h-3.5 w-3.5" aria-hidden />
             {dashboard.overdueCount} overdue jobs
-          </button>
+          </Button>
         )}
         {dashboard.highPriorityCount > 0 && (
-          <button
+          <Button variant="outline"
             type="button"
             onClick={() => goToWorkQueue("urgent")}
-            className={`${alertButton} border-amber-300 bg-amber-50 text-amber-950 hover:bg-amber-100 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100 dark:hover:bg-amber-400/20`}
+            className={`${alertButton} border-peach-foreground/20 bg-peach text-peach-foreground hover:bg-peach/80`}
           >
             {dashboard.highPriorityCount} high-priority jobs
-          </button>
+          </Button>
         )}
         {dashboard.waitingInvoiceCount > 0 && (
-          <button
+          <Button variant="outline"
             type="button"
             onClick={() => goToWorkQueue("invoice")}
-            className={`${alertButton} bg-card hover:bg-muted`}
+            className={`${alertButton} border-sky-foreground/20 bg-sky text-sky-foreground hover:bg-sky/80`}
           >
             <Receipt className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
             {dashboard.waitingInvoiceCount} ready to invoice
-          </button>
+          </Button>
         )}
       </section>
 
@@ -460,33 +454,32 @@ export function ModernDashboard({ jobs, quickWidget, onOpenJob, onViewChange, is
         />
       </div>
 
-      <div className="grid min-w-0 gap-3 lg:grid-cols-12">
-        <RevenueTrend jobs={jobs} className="h-60 lg:col-span-4" />
-        <JobSummaryGauge counts={dashboard.statusCounts} className="lg:col-span-2" />
-        <ProductionPipeline rows={dashboard.pipeline} className="lg:col-span-3" />
-        <div className="min-w-0 lg:col-span-3">{quickWidget}</div>
-      </div>
-
       <div className="grid min-w-0 gap-3 xl:grid-cols-12">
-        <div className="flex min-w-0 flex-col gap-3 xl:col-span-9">
-          <PriorityWorkCenter
-            active={isActive}
-            queue={queue}
-            onQueueChange={setQueue}
-            summary={dashboard}
-            onOpenJob={setPreviewJob}
-            onViewAll={() => onViewChange?.("jobs")}
-          />
+        <div className="grid min-w-0 gap-3 xl:col-span-9">
+          <div className="grid min-w-0 gap-3 lg:grid-cols-2">
+            <RevenueTrend jobs={jobs} className="h-80" />
+            <PriorityWorkCenter
+              active={isActive} queue={queue} onQueueChange={setQueue}
+              summary={dashboard} onOpenJob={setPreviewJob}
+              onViewAll={() => onViewChange?.("jobs")}
+            />
+          </div>
+          <div className="grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-3">
+            <JobSummaryGauge counts={dashboard.statusCounts} />
+            <div className="min-w-0">{quickWidget}</div>
+            <ProductionPipeline rows={dashboard.pipeline} className="md:col-span-2 2xl:col-span-1" />
+          </div>
+          <JobStatusOverview stats={dashboard.stats} onStatusClick={handleStatusClick} />
         </div>
-        <SelectedJobPanel job={previewed} onOpen={handleViewDetails} className="xl:col-span-3 xl:self-start xl:sticky xl:top-3" />
+        <div className="flex min-w-0 flex-col gap-3 xl:col-span-3">
+          <SelectedJobPanel job={previewed} onOpen={handleViewDetails} />
+          <div className="mt-auto"><LaunchPromotions /></div>
+        </div>
       </div>
       <RecentJobs
-        jobs={jobs}
-        recentJobs={dashboard.recentJobs}
-        onOpenJob={handleViewDetails}
-        onViewAll={() => onViewChange?.("jobs")}
+        jobs={jobs} recentJobs={dashboard.recentJobs}
+        onOpenJob={handleViewDetails} onViewAll={() => onViewChange?.("jobs")}
       />
-      <JobStatusOverview stats={dashboard.stats} onStatusClick={handleStatusClick} />
 
       <JobDetails
         isOpen={isActive && isJobDetailsOpen}

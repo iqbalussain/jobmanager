@@ -36,10 +36,10 @@ export function KpiCard({ label, value, format, hint, icon: Icon, tone, delta, s
   const up = (delta ?? 0) >= 0;
 
   return (
-    <div data-kpi className="flex min-w-0 items-center justify-between gap-3 rounded-xl border bg-card p-3 shadow-card transition-shadow duration-200 hover:shadow-md">
+    <div data-kpi className={cn(`kpi-${tone}`, "flex min-w-0 items-center justify-between gap-3 rounded-xl border bg-card p-3 shadow-card transition-shadow duration-200 hover:shadow-md")}>
       <div className="min-w-0">
-        <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground"><Icon className={cn("h-3.5 w-3.5 shrink-0", toneText[tone])} aria-hidden /><span className="truncate">{label}</span></div>
-        <div ref={num} className="mt-0.5 whitespace-nowrap text-xl font-semibold tabular-nums tracking-tight sm:text-2xl">{format(value)}</div>
+        <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground"><Icon className={cn("kpi-icon h-7 w-7 shrink-0 rounded-md p-1.5")} aria-hidden /><span className="truncate">{label}</span></div>
+        <div ref={num} className="mt-0.5 break-words text-lg font-semibold tabular-nums tracking-normal sm:text-xl">{format(value)}</div>
         <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
           {delta != null && Number.isFinite(delta) && (
             <span className={cn("inline-flex items-center font-semibold", up ? "text-teal-700 dark:text-teal-300" : "text-rose-700 dark:text-rose-300")}>
