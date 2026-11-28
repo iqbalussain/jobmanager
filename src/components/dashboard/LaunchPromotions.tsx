@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Play, Megaphone } from "lucide-react";
+import { useRef, useState } from "react";
+import { Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import launchVideo from "@/assets/videos/jobflow-launch.mp4.asset.json";
@@ -12,9 +12,11 @@ const promotions = [
   { name: "PayrollSheet", subtitle: "Introduction", video: payrollVideo.url, poster: payrollPoster.url },
 ];
 
-/** Promotional media is separate from job data and only loads when opened. */
+/** Muted looping previews stay mounted while the enlarged player is open. */
 export function LaunchPromotions() {
   const [selected, setSelected] = useState<(typeof promotions)[number] | null>(null);
+  const previews = useRef<Record<string, HTMLVideoElement | null>>({});
+  const trigger = useRef<HTMLButtonElement | null>(null);
   return (
     <aside aria-label="Launch videos" className="launch-promotion rounded-lg border p-4 shadow-card">
       <div className="mb-3 flex items-center justify-between gap-2">
@@ -23,16 +25,15 @@ export function LaunchPromotions() {
       </div>
       <h2 className="text-lg font-semibold leading-snug">Smart Business.<br />Better Results.</h2>
       {promotions.map((promotion) => <div key={promotion.name} className="mt-3 border-t border-primary-foreground/20 pt-3">
-        <div className="grid grid-cols-[5rem_1fr] items-center gap-3">
-          <img src={promotion.poster} alt={`${promotion.name} video preview`} className="aspect-video w-full rounded-md object-cover" loading="lazy" />
-          <div className="min-w-0"><p className="text-sm font-semibold">{promotion.name}</p><p className="text-xs opacity-80">{promotion.subtitle}</p></div>
-        </div>
-        <Button variant="secondary" size="sm" className="mt-2 w-full gap-2" onClick={() => setSelected(promotion)}><Play className="h-3.5 w-3.5" />Watch {promotion.name} video</Button>
+        <Button variant="ghost" className="h-auto w-full overflow-hidden rounded-md p-0 hover:bg-transparent focus-visible:ring-primary-foreground" aria-label={`Enlarge ${promotion.name} video`} onClick={(event) => { trigger.current = event.currentTarget; setSelected(promotion); }}>
+          <video ref={(video) => { previews.current[promotion.name] = video; }} aria-label={`${promotion.name} preview`} src={promotion.video} poster={promotion.poster} autoPlay muted loop playsInline preload="auto" disablePictureInPicture className="pointer-events-none aspect-video w-full object-contain bg-muted" />
+        </Button>
+        <div className="mt-1.5 flex items-baseline justify-between gap-2"><p className="text-sm font-semibold">{promotion.name}</p><p className="text-xs opacity-80">{promotion.subtitle}</p></div>
       </div>)}
       <Dialog open={selected !== null} onOpenChange={(open) => { if (!open) setSelected(null); }}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl" aria-describedby={undefined} onCloseAutoFocus={(event) => { event.preventDefault(); trigger.current?.focus({ preventScroll: true }); }}>
           <DialogHeader><DialogTitle>{selected?.name} launch</DialogTitle></DialogHeader>
-          {selected && <video key={selected.name} aria-label={`${selected.name} launch video`} src={selected.video} poster={selected.poster} controls autoPlay playsInline preload="metadata" className="aspect-video w-full rounded-lg bg-muted" />}
+          {selected && <video key={selected.name} aria-label={`${selected.name} launch video`} src={selected.video} poster={selected.poster} autoPlay muted loop playsInline preload="auto" disablePictureInPicture onLoadedMetadata={(event) => { const preview = previews.current[selected.name]; if (preview) event.currentTarget.currentTime = preview.currentTime; }} className="aspect-video max-h-[75dvh] w-full rounded-lg bg-muted" />}
           {selected?.name === "JobFlow" && <p className="text-xs text-muted-foreground">Launch film includes illustrative dashboard scenes.</p>}
         </DialogContent>
       </Dialog>
